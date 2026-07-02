@@ -1,0 +1,41 @@
+{
+  "name": "api",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "esbuild src/server.ts --bundle --platform=node --format=esm --outfile=dist/server.js --packages=external",
+    "start": "node dist/server.js",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "auth:generate": "better-auth generate --output src/db/schema/auth.ts",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@repo/schemas": "workspace:*",
+    "@trpc/server": "^11",
+    "better-auth": "^1",
+    "cors": "^2",
+    "dotenv": "^16",
+    "drizzle-orm": "^0.45",
+    "express": "^5",
+    "postgres": "^3",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@better-auth/cli": "^1.4.21",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/cors": "^2",
+    "@types/express": "^5",
+    "drizzle-kit": "^0.31",
+    "esbuild": "^0.25",
+    "tsx": "^4",
+    "typescript": "^5.7"
+  }
+}

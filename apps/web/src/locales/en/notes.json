@@ -1,0 +1,14 @@
+{
+  "title": "Notes",
+  "loading": "Loading notes...",
+  "empty": "No notes yet",
+  "form": {
+    "titlePlaceholder": "Title",
+    "contentPlaceholder": "Content (optional)",
+    "create": "Create note",
+    "creating": "Creating..."
+  },
+  "validation": {
+    "titleRequired": "Title is required"
+  }
+}

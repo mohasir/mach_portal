@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: mach_docker_container
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mach_admin
+      POSTGRES_PASSWORD: mach12345678
+      POSTGRES_DB: mach_db
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+volumes:
+  pgdata:
