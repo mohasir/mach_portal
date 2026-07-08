@@ -1,122 +1,92 @@
 'use client';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { Button, Input } from '@repo/ui';
+import { App, Button, Card, Flex, Form, Input, Typography } from 'antd';
 import { signIn, signUp } from '@/lib/auth/client';
 
-const authSchema = z.object({
-  name: z.string().min(1, 'Nombre requerido').optional(),
-  email: z.string().email('Email inválido'),
-  password: z.string().min(8, 'Mínimo 8 caracteres'),
-});
-type AuthInput = z.infer<typeof authSchema>;
+type AuthInput = { name?: string; email: string; password: string };
 
 export function AuthPage() {
+  const { message } = App.useApp();
+  const [form] = Form.useForm<AuthInput>();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof AuthInput, string>>>({});
-  const [apiError, setApiError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const { register, getValues } = useForm<AuthInput>({
-    defaultValues: { email: '', password: '', name: '' },
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setApiError(null);
-
-    const result = authSchema.safeParse(getValues());
-
-    if (!result.success) {
-      const errs: Partial<Record<keyof AuthInput, string>> = {};
-      for (const issue of result.error.issues) {
-        const key = issue.path[0] as keyof AuthInput;
-        if (key) errs[key] = issue.message;
-      }
-      setFieldErrors(errs);
-      return;
-    }
-
-    setFieldErrors({});
+  const onFinish = async (values: AuthInput) => {
     setLoading(true);
-
     try {
-      const data = result.data;
       if (mode === 'signup') {
         const res = await signUp.email({
-          name: data.name ?? data.email,
-          email: data.email,
-          password: data.password,
+          name: values.name ?? values.email,
+          email: values.email,
+          password: values.password,
         });
-        if (res.error) setApiError(res.error.message ?? 'Error al registrar');
+        if (res.error) message.error(res.error.message ?? 'Error al registrar');
+        else message.success('Cuenta creada exitosamente');
       } else {
-        const res = await signIn.email({ email: data.email, password: data.password });
-        if (res.error) setApiError(res.error.message ?? 'Credenciales inválidas');
+        const res = await signIn.email({ email: values.email, password: values.password });
+        if (res.error) message.error(res.error.message ?? 'Credenciales inválidas');
+        else message.success('Sesión iniciada');
       }
     } catch (err) {
-      setApiError(err instanceof Error ? err.message : 'Error inesperado');
+      const isNetwork = err instanceof TypeError && err.message.includes('fetch');
+      message.error(isNetwork ? 'No se pudo conectar con el servidor' : (err instanceof Error ? err.message : 'Error inesperado'));
     } finally {
       setLoading(false);
     }
   };
 
   const switchMode = () => {
-    setMode(mode === 'signin' ? 'signup' : 'signin');
-    setApiError(null);
-    setFieldErrors({});
+    setMode((m) => (m === 'signin' ? 'signup' : 'signin'));
+    form.resetFields();
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-sm space-y-6 rounded-lg border p-8">
-        <h1 className="text-xl font-bold">
+    <Flex justify="center" align="center" className="min-h-screen">
+      <Card className="w-full max-w-90" classNames={{ body: 'p-8' }}>
+        <Typography.Title level={2} className="font-heading text-brown mb-6">
           {mode === 'signin' ? 'Iniciar sesión' : 'Crear cuenta'}
-        </h1>
+        </Typography.Title>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false}>
           {mode === 'signup' && (
-            <div className="space-y-1">
-              <Input {...register('name')} placeholder="Nombre" />
-              {fieldErrors.name && (
-                <p className="text-xs text-destructive">{fieldErrors.name}</p>
-              )}
-            </div>
+            <Form.Item name="name" label="Nombre" rules={[{ required: true, message: 'Nombre requerido' }]}>
+              <Input placeholder="Tu nombre" />
+            </Form.Item>
           )}
 
-          <div className="space-y-1">
-            <Input {...register('email')} type="email" placeholder="Email" />
-            {fieldErrors.email && (
-              <p className="text-xs text-destructive">{fieldErrors.email}</p>
-            )}
-          </div>
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { required: true, message: 'Campo requerido' },
+              { type: 'email', message: 'Email inválido' },
+            ]}
+          >
+            <Input type="email" placeholder="correo@ejemplo.com" />
+          </Form.Item>
 
-          <div className="space-y-1">
-            <Input
-              {...register('password')}
-              type="password"
-              placeholder="Contraseña (mín. 8 chars)"
-            />
-            {fieldErrors.password && (
-              <p className="text-xs text-destructive">{fieldErrors.password}</p>
-            )}
-          </div>
+          <Form.Item
+            name="password"
+            label="Contraseña"
+            rules={[
+              { required: true, message: 'Campo requerido' },
+              { min: 8, message: 'Mínimo 8 caracteres' },
+            ]}
+          >
+            <Input.Password placeholder="Mínimo 8 caracteres" />
+          </Form.Item>
 
-          {apiError && <p className="text-sm text-destructive">{apiError}</p>}
+          <Form.Item className="mb-0">
+            <Button type="primary" htmlType="submit" loading={loading} block>
+              {mode === 'signin' ? 'Entrar' : 'Registrarse'}
+            </Button>
+          </Form.Item>
+        </Form>
 
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? '...' : mode === 'signin' ? 'Entrar' : 'Registrarse'}
-          </Button>
-        </form>
-
-        <button
-          type="button"
-          onClick={switchMode}
-          className="w-full text-sm text-muted-foreground underline-offset-4 hover:underline"
-        >
+        <Button type="link" onClick={switchMode} block className="mt-2 text-muted text-xs">
           {mode === 'signin' ? '¿No tenés cuenta? Registrate' : '¿Ya tenés cuenta? Entrá'}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Card>
+    </Flex>
   );
 }

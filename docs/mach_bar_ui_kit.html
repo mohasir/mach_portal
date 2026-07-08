@@ -1,0 +1,662 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Marcellus&family=Work+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --mb-olive: #91922A;
+  --mb-olive-dark: #6b6c1f;
+  --mb-olive-light: #b4b52e;
+  --mb-olive-faint: #f4f4e8;
+  --mb-mustard: #DACD6B;
+  --mb-mustard-light: #eee8b0;
+  --mb-brown: #4A2C2A;
+  --mb-brown-mid: #7a4a47;
+  --mb-ivory: #F7EED2;
+  --mb-ivory-dark: #ede1b8;
+  --mb-salmon: #F28A86;
+  --mb-salmon-light: #fad5d3;
+  --mb-red: #E13348;
+  --mb-bg: #FDFAF2;
+  --mb-text: #2e2018;
+  --mb-muted: #7a6a55;
+  --mb-border: rgba(145,146,42,0.18);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Work Sans', sans-serif; }
+
+.kit { padding: 24px 20px; background: var(--mb-bg); }
+
+/* SECTION */
+.section { margin-bottom: 40px; }
+.section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mb-muted);
+  border-bottom: 0.5px solid var(--mb-border);
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+/* ROW */
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+
+/* ─── COLORS ─── */
+.swatch-group { display: flex; flex-direction: column; gap: 3px; }
+.swatch-row { display: flex; gap: 3px; }
+.swatch {
+  width: 36px; height: 36px; border-radius: 6px;
+  border: 0.5px solid rgba(0,0,0,0.06);
+  flex-shrink: 0;
+}
+.swatch.lg { width: 56px; height: 56px; border-radius: 8px; }
+.swatch-name { font-size: 9px; color: var(--mb-muted); margin-top: 4px; text-align: center; letter-spacing: 0.03em; }
+
+/* ─── TYPOGRAPHY ─── */
+.typo-row { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.typo-item { display: flex; align-items: baseline; gap: 16px; }
+.typo-meta { font-size: 10px; color: var(--mb-muted); min-width: 130px; flex-shrink: 0; }
+.typo-sample-marcellus { font-family: 'Marcellus', serif; color: var(--mb-brown); }
+.typo-sample-work { font-family: 'Work Sans', sans-serif; color: var(--mb-text); }
+.t-h1 { font-size: 28px; font-weight: 400; }
+.t-h2 { font-size: 22px; font-weight: 400; }
+.t-h3 { font-size: 16px; font-weight: 400; }
+.t-body { font-size: 13px; font-weight: 400; line-height: 1.6; }
+.t-small { font-size: 11px; font-weight: 400; }
+.t-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; }
+.t-caption { font-size: 9px; font-weight: 400; color: var(--mb-muted); }
+
+/* ─── BUTTONS ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 6px;
+  font-family: 'Work Sans', sans-serif; font-size: 12px; font-weight: 500;
+  cursor: pointer; border: none; transition: all 0.15s;
+}
+.btn-primary-mb { background: var(--mb-olive); color: #fff; }
+.btn-secondary-mb { background: transparent; color: var(--mb-olive); border: 1px solid var(--mb-olive); }
+.btn-ghost-mb { background: transparent; color: var(--mb-muted); border: 1px solid var(--mb-border); }
+.btn-danger-mb { background: var(--mb-red); color: #fff; }
+.btn-mustard-mb { background: var(--mb-mustard); color: var(--mb-brown); }
+.btn-sm-mb { padding: 5px 10px; font-size: 10px; }
+.btn-lg-mb { padding: 11px 22px; font-size: 14px; }
+.btn-icon-mb {
+  width: 32px; height: 32px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--mb-olive);
+  border: 1px solid var(--mb-border); border-radius: 6px; cursor: pointer;
+}
+
+/* ─── BADGES ─── */
+.badge-mb {
+  display: inline-block; padding: 3px 9px; border-radius: 20px;
+  font-size: 10px; font-weight: 500; font-family: 'Work Sans', sans-serif;
+}
+.badge-pagado { background: #e8f5e9; color: #2e7d32; }
+.badge-pendiente { background: #fff8e1; color: #856404; }
+.badge-confirmado { background: #e3f2fd; color: #1565c0; }
+.badge-cancelado { background: #fce4ec; color: #880e4f; }
+.badge-lead { background: #f3e5f5; color: #6a1b9a; }
+.badge-nuevo { background: var(--mb-olive-faint); color: var(--mb-olive-dark); }
+
+/* ─── INPUTS ─── */
+.input-mb {
+  padding: 8px 11px;
+  border: 0.5px solid var(--mb-border);
+  border-radius: 6px;
+  font-family: 'Work Sans', sans-serif;
+  font-size: 12px; color: var(--mb-text); background: #fff;
+  width: 180px;
+}
+.input-mb:focus { outline: none; border-color: var(--mb-olive); }
+.input-mb.error { border-color: var(--mb-red); }
+.input-mb.success { border-color: #4caf50; }
+.select-mb {
+  padding: 8px 11px; border: 0.5px solid var(--mb-border); border-radius: 6px;
+  font-family: 'Work Sans', sans-serif; font-size: 12px; color: var(--mb-text);
+  background: #fff; width: 180px; cursor: pointer;
+}
+.field-label-mb {
+  font-size: 10px; font-weight: 500; color: var(--mb-muted);
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;
+  display: block;
+}
+.field-hint { font-size: 10px; color: var(--mb-muted); margin-top: 3px; }
+.field-error { font-size: 10px; color: var(--mb-red); margin-top: 3px; }
+
+/* ─── CHIPS ─── */
+.chip-mb {
+  display: inline-block; padding: 4px 11px;
+  border: 0.5px solid var(--mb-border);
+  border-radius: 20px; font-size: 10px;
+  color: var(--mb-text); background: #fff; cursor: pointer;
+}
+.chip-mb.sel { background: var(--mb-olive); color: #fff; border-color: var(--mb-olive); }
+.chip-mb.disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── CARDS ─── */
+.card-mb {
+  background: #fff; border: 0.5px solid var(--mb-border);
+  border-radius: 10px; padding: 14px 16px;
+}
+.card-ivory { background: var(--mb-ivory); border: 1px solid var(--mb-mustard); border-radius: 10px; padding: 14px 16px; }
+.card-dark { background: var(--mb-brown); border-radius: 10px; padding: 14px 16px; }
+
+/* ─── METRIC CARD ─── */
+.metric-mb {
+  background: #fff; border: 0.5px solid var(--mb-border);
+  border-radius: 10px; padding: 12px 14px; min-width: 110px;
+}
+.metric-mb.olive { background: var(--mb-olive); }
+.metric-label-mb { font-size: 10px; color: var(--mb-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.metric-value-mb { font-family: 'Marcellus', serif; font-size: 24px; color: var(--mb-brown); line-height: 1; }
+.metric-sub-mb { font-size: 10px; color: var(--mb-muted); margin-top: 3px; }
+.metric-mb.olive .metric-label-mb,
+.metric-mb.olive .metric-value-mb,
+.metric-mb.olive .metric-sub-mb { color: #fff; }
+
+/* ─── AVATAR ─── */
+.avatar-mb {
+  border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  font-family: 'Work Sans', sans-serif; font-weight: 500; flex-shrink: 0;
+}
+.av-sm { width: 28px; height: 28px; font-size: 10px; }
+.av-md { width: 36px; height: 36px; font-size: 12px; }
+.av-lg { width: 48px; height: 48px; font-size: 16px; }
+.av-olive { background: var(--mb-olive); color: #fff; }
+.av-brown { background: var(--mb-brown); color: #fff; }
+.av-mustard { background: var(--mb-mustard); color: var(--mb-brown); }
+.av-salmon { background: var(--mb-salmon); color: #fff; }
+
+/* ─── DIVIDER ─── */
+.divider-mb { border: none; border-top: 0.5px solid var(--mb-border); margin: 0; }
+.divider-mustard { border: none; border-top: 1px solid var(--mb-mustard); }
+
+/* ─── PROGRESS / STATUS ─── */
+.progress-wrap { background: var(--mb-ivory-dark); border-radius: 20px; height: 6px; width: 160px; overflow: hidden; }
+.progress-fill { background: var(--mb-olive); height: 100%; border-radius: 20px; }
+
+/* ─── NAV ─── */
+.nav-demo { background: var(--mb-brown); display: flex; gap: 0; border-radius: 8px; overflow: hidden; }
+.nav-tab-demo {
+  padding: 8px 14px; font-family: 'Work Sans', sans-serif;
+  font-size: 11px; font-weight: 500; color: rgba(232,223,200,0.6);
+  cursor: pointer; border-bottom: 2px solid transparent;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.nav-tab-demo.active { color: var(--mb-mustard); border-bottom-color: var(--mb-olive); }
+
+/* ─── TOPBAR DEMO ─── */
+.topbar-demo {
+  background: #2e2018; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 14px; height: 44px;
+  border-radius: 8px;
+}
+.logo-demo { font-family: 'Marcellus', serif; font-size: 18px; color: var(--mb-mustard); }
+
+/* ─── PIPELINE ITEM ─── */
+.p-item-demo {
+  background: var(--mb-bg); border: 0.5px solid var(--mb-border);
+  border-radius: 6px; padding: 8px 10px; font-size: 11px;
+}
+.p-item-demo.confirmed { border-color: rgba(145,146,42,0.4); }
+
+/* ─── STATION HEADER ─── */
+.station-demo {
+  border: 0.5px solid var(--mb-border); border-radius: 8px; overflow: hidden;
+}
+.station-head-demo {
+  background: var(--mb-ivory); padding: 8px 12px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+/* GRID */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+</style>
+
+<div class="kit">
+
+  <!-- HEADER -->
+  <div style="margin-bottom:32px;">
+    <div style="font-family:'Marcellus',serif;font-size:26px;color:var(--mb-brown);margin-bottom:4px;">Mach Bar · UI Kit</div>
+    <div style="font-size:11px;color:var(--mb-muted);letter-spacing:0.08em;text-transform:uppercase;">Brand identity · Design tokens · Components</div>
+  </div>
+
+  <!-- ─── 1. COLOR PALETTE ─── -->
+  <div class="section">
+    <div class="section-label">01 · Color palette</div>
+    <div class="row" style="align-items:flex-start;gap:20px;">
+
+      <div class="swatch-group">
+        <div style="display:flex;gap:3px;">
+          <div class="swatch lg" style="background:var(--mb-olive);"></div>
+        </div>
+        <div class="swatch-name" style="font-size:10px;color:var(--mb-text);font-weight:500;">Verde Oliva<br><span style="color:var(--mb-muted);">#91922A</span></div>
+        <div style="display:flex;gap:3px;margin-top:4px;">
+          <div class="swatch" style="background:var(--mb-olive-faint);"></div>
+          <div class="swatch" style="background:#d4d578;"></div>
+          <div class="swatch" style="background:var(--mb-olive);"></div>
+          <div class="swatch" style="background:var(--mb-olive-dark);"></div>
+        </div>
+      </div>
+
+      <div class="swatch-group">
+        <div style="display:flex;gap:3px;">
+          <div class="swatch lg" style="background:var(--mb-mustard);"></div>
+        </div>
+        <div class="swatch-name" style="font-size:10px;color:var(--mb-text);font-weight:500;">Amarillo Mostaza<br><span style="color:var(--mb-muted);">#DACD6B</span></div>
+        <div style="display:flex;gap:3px;margin-top:4px;">
+          <div class="swatch" style="background:#faf7e0;"></div>
+          <div class="swatch" style="background:var(--mb-mustard-light);"></div>
+          <div class="swatch" style="background:var(--mb-mustard);"></div>
+          <div class="swatch" style="background:#b8aa3e;"></div>
+        </div>
+      </div>
+
+      <div class="swatch-group">
+        <div style="display:flex;gap:3px;">
+          <div class="swatch lg" style="background:var(--mb-brown);"></div>
+        </div>
+        <div class="swatch-name" style="font-size:10px;color:var(--mb-text);font-weight:500;">Marrón Oscuro<br><span style="color:var(--mb-muted);">#4A2C2A</span></div>
+        <div style="display:flex;gap:3px;margin-top:4px;">
+          <div class="swatch" style="background:#f9f2f1;"></div>
+          <div class="swatch" style="background:#c09a98;"></div>
+          <div class="swatch" style="background:var(--mb-brown-mid);"></div>
+          <div class="swatch" style="background:var(--mb-brown);"></div>
+        </div>
+      </div>
+
+      <div class="swatch-group">
+        <div style="display:flex;gap:3px;">
+          <div class="swatch lg" style="background:var(--mb-ivory);"></div>
+        </div>
+        <div class="swatch-name" style="font-size:10px;color:var(--mb-text);font-weight:500;">Marfil<br><span style="color:var(--mb-muted);">#F7EED2</span></div>
+        <div style="display:flex;gap:3px;margin-top:4px;">
+          <div class="swatch" style="background:var(--mb-bg);"></div>
+          <div class="swatch" style="background:var(--mb-ivory);"></div>
+          <div class="swatch" style="background:var(--mb-ivory-dark);"></div>
+          <div class="swatch" style="background:#d4c89a;"></div>
+        </div>
+      </div>
+
+      <div class="swatch-group">
+        <div style="display:flex;gap:3px;">
+          <div class="swatch lg" style="background:var(--mb-salmon);"></div>
+        </div>
+        <div class="swatch-name" style="font-size:10px;color:var(--mb-text);font-weight:500;">Rosa Salmón<br><span style="color:var(--mb-muted);">#F28A86</span></div>
+        <div style="display:flex;gap:3px;margin-top:4px;">
+          <div class="swatch" style="background:#fef0ef;"></div>
+          <div class="swatch" style="background:var(--mb-salmon-light);"></div>
+          <div class="swatch" style="background:var(--mb-salmon);"></div>
+          <div class="swatch" style="background:#d45a56;"></div>
+        </div>
+      </div>
+
+      <div class="swatch-group">
+        <div style="display:flex;gap:3px;">
+          <div class="swatch lg" style="background:var(--mb-red);"></div>
+        </div>
+        <div class="swatch-name" style="font-size:10px;color:var(--mb-text);font-weight:500;">Rojo Rosado<br><span style="color:var(--mb-muted);">#E13348</span></div>
+        <div style="display:flex;gap:3px;margin-top:4px;">
+          <div class="swatch" style="background:#fceef0;"></div>
+          <div class="swatch" style="background:#f5b3bb;"></div>
+          <div class="swatch" style="background:var(--mb-red);"></div>
+          <div class="swatch" style="background:#9e1f2d;"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Semantic roles -->
+    <div style="margin-top:18px;">
+      <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--mb-muted);margin-bottom:10px;">Semantic roles</div>
+      <div class="row">
+        <div style="text-align:center;">
+          <div style="width:44px;height:20px;background:var(--mb-olive);border-radius:4px;"></div>
+          <div style="font-size:9px;color:var(--mb-muted);margin-top:3px;">Primary action</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:44px;height:20px;background:var(--mb-mustard);border-radius:4px;"></div>
+          <div style="font-size:9px;color:var(--mb-muted);margin-top:3px;">Highlight / accent</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:44px;height:20px;background:var(--mb-brown);border-radius:4px;"></div>
+          <div style="font-size:9px;color:var(--mb-muted);margin-top:3px;">Nav / dark surface</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:44px;height:20px;background:var(--mb-ivory);border:0.5px solid var(--mb-border);border-radius:4px;"></div>
+          <div style="font-size:9px;color:var(--mb-muted);margin-top:3px;">Quote / preview bg</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:44px;height:20px;background:var(--mb-salmon);border-radius:4px;"></div>
+          <div style="font-size:9px;color:var(--mb-muted);margin-top:3px;">Warning / alert</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:44px;height:20px;background:var(--mb-red);border-radius:4px;"></div>
+          <div style="font-size:9px;color:var(--mb-muted);margin-top:3px;">Error / destructive</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 2. TYPOGRAPHY ─── -->
+  <div class="section">
+    <div class="section-label">02 · Typography</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div>
+        <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--mb-muted);margin-bottom:12px;">Marcellus · Headings</div>
+        <div class="typo-sample-marcellus t-h1" style="margin-bottom:6px;">Heading 1 — 28px</div>
+        <div class="typo-sample-marcellus t-h2" style="margin-bottom:6px;">Heading 2 — 22px</div>
+        <div class="typo-sample-marcellus t-h3" style="margin-bottom:6px;">Heading 3 — 16px</div>
+        <div style="font-size:9px;color:var(--mb-muted);margin-top:8px;">Serif · weight 400 · elegant &amp; editorial</div>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--mb-muted);margin-bottom:12px;">Work Sans · Body &amp; UI</div>
+        <div class="typo-sample-work" style="font-size:16px;font-weight:500;margin-bottom:6px;">Body large — 16px/500</div>
+        <div class="typo-sample-work t-body" style="margin-bottom:6px;">Body regular — 13px/400 · paragraph text para descripciones y contenido del portal.</div>
+        <div class="typo-sample-work t-small" style="margin-bottom:6px;color:var(--mb-muted);">Small — 11px/400 · metadata, timestamps</div>
+        <div class="typo-sample-work t-label" style="margin-bottom:6px;color:var(--mb-muted);">Label — 10px/600 uppercase · field labels</div>
+        <div class="typo-sample-work t-caption" style="margin-bottom:6px;">Caption — 9px/400 · hints, footnotes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 3. BUTTONS ─── -->
+  <div class="section">
+    <div class="section-label">03 · Buttons</div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div>
+        <div style="font-size:9px;color:var(--mb-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Variants</div>
+        <div class="row">
+          <button class="btn btn-primary-mb"><i class="ti ti-plus" aria-hidden="true"></i>Primary</button>
+          <button class="btn btn-secondary-mb"><i class="ti ti-download" aria-hidden="true"></i>Secondary</button>
+          <button class="btn btn-ghost-mb">Ghost</button>
+          <button class="btn btn-mustard-mb"><i class="ti ti-star" aria-hidden="true"></i>Highlight</button>
+          <button class="btn btn-danger-mb"><i class="ti ti-trash" aria-hidden="true"></i>Destructive</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--mb-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Sizes</div>
+        <div class="row" style="align-items:center;">
+          <button class="btn btn-primary-mb btn-sm-mb">Small</button>
+          <button class="btn btn-primary-mb">Default</button>
+          <button class="btn btn-primary-mb btn-lg-mb">Large</button>
+          <button class="btn-icon-mb"><i class="ti ti-send" style="font-size:14px;" aria-hidden="true"></i></button>
+          <button class="btn-icon-mb"><i class="ti ti-download" style="font-size:14px;" aria-hidden="true"></i></button>
+          <button class="btn-icon-mb"><i class="ti ti-trash" style="font-size:14px;" aria-hidden="true"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 4. BADGES & CHIPS ─── -->
+  <div class="section">
+    <div class="section-label">04 · Badges &amp; chips</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <div style="font-size:9px;color:var(--mb-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Status badges</div>
+        <div class="row">
+          <span class="badge-mb badge-pagado">Pagado</span>
+          <span class="badge-mb badge-pendiente">Pendiente</span>
+          <span class="badge-mb badge-confirmado">Confirmado</span>
+          <span class="badge-mb badge-cancelado">Cancelado</span>
+          <span class="badge-mb badge-lead">Lead</span>
+          <span class="badge-mb badge-nuevo">Activo</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--mb-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Selection chips — catálogo de estaciones</div>
+        <div class="row">
+          <span class="chip-mb sel">Lotus Biscoff</span>
+          <span class="chip-mb sel">M&amp;Ms</span>
+          <span class="chip-mb">Coconut Flakes</span>
+          <span class="chip-mb">Crushed Oreo</span>
+          <span class="chip-mb disabled">Mazapan</span>
+          <span class="chip-mb">White Chocolate</span>
+        </div>
+        <div style="font-size:9px;color:var(--mb-muted);margin-top:6px;">Verde = seleccionado · Gris opaco = límite alcanzado</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 5. FORM ELEMENTS ─── -->
+  <div class="section">
+    <div class="section-label">05 · Form elements</div>
+    <div class="row" style="align-items:flex-start;gap:20px;">
+      <div>
+        <label class="field-label-mb">Nombre del cliente</label>
+        <input class="input-mb" type="text" placeholder="Sarah Rivera">
+        <div class="field-hint">Nombre completo del contacto</div>
+      </div>
+      <div>
+        <label class="field-label-mb">Tipo de evento</label>
+        <select class="select-mb">
+          <option>Cumpleaños</option>
+          <option>Baby Shower</option>
+          <option>Boda</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label-mb">Número de personas</label>
+        <input class="input-mb success" type="number" value="50">
+        <div style="font-size:10px;color:#4caf50;margin-top:3px;"><i class="ti ti-check" style="font-size:11px;" aria-hidden="true"></i> Mínimo cumplido</div>
+      </div>
+      <div>
+        <label class="field-label-mb">Dirección exacta</label>
+        <input class="input-mb error" type="text" placeholder="123 Main St...">
+        <div class="field-error"><i class="ti ti-alert-circle" style="font-size:11px;" aria-hidden="true"></i> Campo requerido</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 6. CARDS ─── -->
+  <div class="section">
+    <div class="section-label">06 · Cards</div>
+    <div class="row" style="align-items:flex-start;">
+
+      <div class="card-mb" style="width:200px;">
+        <div style="font-size:10px;color:var(--mb-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Default card</div>
+        <div style="font-family:'Marcellus',serif;font-size:15px;color:var(--mb-brown);margin-bottom:6px;">Cumpleaños · Bronx</div>
+        <div style="font-size:11px;color:var(--mb-muted);">Crepaletas · 60 personas</div>
+        <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
+          <span class="badge-mb badge-confirmado">Confirmado</span>
+          <span style="font-size:11px;font-weight:500;color:var(--mb-olive);">$795</span>
+        </div>
+      </div>
+
+      <div class="card-ivory" style="width:200px;">
+        <div style="font-size:9px;color:var(--mb-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Ivory card — cotización</div>
+        <div style="font-family:'Marcellus',serif;font-size:15px;color:var(--mb-olive);margin-bottom:2px;">Mach Bar</div>
+        <div style="font-size:9px;color:var(--mb-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">Snack Bar &amp; Drinks</div>
+        <div style="font-size:10px;color:var(--mb-muted);">Sarah Rivera · 10 jul 2026</div>
+        <div style="font-family:'Marcellus',serif;font-size:20px;color:var(--mb-olive);text-align:right;margin-top:6px;">$1,200.00</div>
+      </div>
+
+      <div class="card-dark" style="width:200px;">
+        <div style="font-size:9px;color:rgba(232,223,200,0.5);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Dark card — nav</div>
+        <div style="font-family:'Marcellus',serif;font-size:18px;color:var(--mb-mustard);margin-bottom:4px;">Mach Bar</div>
+        <div style="font-size:10px;color:rgba(232,223,200,0.6);">Admin Portal · Hellen A.</div>
+      </div>
+
+      <div>
+        <div style="font-size:9px;color:var(--mb-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Metric cards</div>
+        <div style="display:flex;gap:8px;">
+          <div class="metric-mb olive">
+            <div class="metric-label-mb">Eventos</div>
+            <div class="metric-value-mb">14</div>
+            <div class="metric-sub-mb">↑ 4 vs mayo</div>
+          </div>
+          <div class="metric-mb">
+            <div class="metric-label-mb">Ingresos</div>
+            <div class="metric-value-mb">$11k</div>
+            <div class="metric-sub-mb">Jun 2026</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── 7. AVATARS ─── -->
+  <div class="section">
+    <div class="section-label">07 · Avatars</div>
+    <div class="row" style="align-items:center;">
+      <div style="text-align:center;">
+        <div class="avatar-mb av-sm av-olive" style="margin:0 auto 4px;">HA</div>
+        <div style="font-size:9px;color:var(--mb-muted);">SM · 28px</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="avatar-mb av-md av-olive" style="margin:0 auto 4px;">HA</div>
+        <div style="font-size:9px;color:var(--mb-muted);">MD · 36px</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="avatar-mb av-lg av-olive" style="margin:0 auto 4px;">HA</div>
+        <div style="font-size:9px;color:var(--mb-muted);">LG · 48px</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="avatar-mb av-md av-brown" style="margin:0 auto 4px;">SR</div>
+        <div style="font-size:9px;color:var(--mb-muted);">Brown</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="avatar-mb av-md av-mustard" style="margin:0 auto 4px;">MR</div>
+        <div style="font-size:9px;color:var(--mb-muted);">Mustard</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="avatar-mb av-md av-salmon" style="margin:0 auto 4px;">LM</div>
+        <div style="font-size:9px;color:var(--mb-muted);">Salmon</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 8. NAVIGATION ─── -->
+  <div class="section">
+    <div class="section-label">08 · Navigation</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <div style="font-size:9px;color:var(--mb-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Top bar</div>
+        <div class="topbar-demo">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="logo-demo">Mach Bar</span>
+            <span style="font-size:9px;color:rgba(232,223,200,0.4);letter-spacing:0.14em;text-transform:uppercase;">Admin</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:11px;color:rgba(232,223,200,0.55);">Hellen A.</span>
+            <div class="avatar-mb av-sm av-olive">HA</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--mb-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Nav tabs</div>
+        <div class="nav-demo">
+          <div class="nav-tab-demo active"><i class="ti ti-layout-dashboard" style="font-size:12px;" aria-hidden="true"></i> Dashboard</div>
+          <div class="nav-tab-demo"><i class="ti ti-file-invoice" style="font-size:12px;" aria-hidden="true"></i> Cotizaciones</div>
+          <div class="nav-tab-demo"><i class="ti ti-calendar-event" style="font-size:12px;" aria-hidden="true"></i> Eventos</div>
+          <div class="nav-tab-demo"><i class="ti ti-users" style="font-size:12px;" aria-hidden="true"></i> Clientes</div>
+          <div class="nav-tab-demo"><i class="ti ti-layout-kanban" style="font-size:12px;" aria-hidden="true"></i> Pipeline</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 9. STATION BUILDER COMPONENT ─── -->
+  <div class="section">
+    <div class="section-label">09 · Station builder — component</div>
+    <div style="max-width:380px;">
+      <div class="station-demo">
+        <div class="station-head-demo">
+          <div style="display:flex;align-items:center;gap:7px;">
+            <i class="ti ti-chevron-down" style="font-size:12px;color:var(--mb-muted);transform:rotate(180deg);" aria-hidden="true"></i>
+            <span style="font-weight:500;font-size:12px;color:var(--mb-brown);">Crepaletas</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;color:var(--mb-olive);font-weight:500;">50p · $663</span>
+            <button class="btn-icon-mb" style="width:24px;height:24px;"><i class="ti ti-x" style="font-size:11px;" aria-hidden="true"></i></button>
+          </div>
+        </div>
+        <div style="padding:10px 12px;background:#fff;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+            <span style="font-size:10px;color:var(--mb-muted);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;">Personas (mín.30)</span>
+            <input class="qty-input" style="width:64px;padding:4px 8px;border:0.5px solid var(--mb-border);border-radius:5px;font-size:12px;text-align:center;" value="50">
+            <span style="font-size:10px;color:var(--mb-muted);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;margin-left:8px;">Precio/p ($)</span>
+            <input class="qty-input" style="width:72px;padding:4px 8px;border:0.5px solid var(--mb-border);border-radius:5px;font-size:12px;text-align:center;" value="13.25">
+          </div>
+          <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--mb-muted);margin-bottom:5px;">Toppings (elige 7) <span style="color:var(--mb-olive);">3/7</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+            <span class="chip-mb sel">Lotus Biscoff</span>
+            <span class="chip-mb sel">M&amp;Ms</span>
+            <span class="chip-mb sel">Crushed Oreo</span>
+            <span class="chip-mb">Mini Marshmallows</span>
+            <span class="chip-mb">Coconut Flakes</span>
+            <span class="chip-mb">Rainbow Sprinkles</span>
+            <span class="chip-mb">White Chocolate</span>
+          </div>
+          <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--mb-muted);margin-bottom:5px;">Frutas (elige 2) <span style="color:var(--mb-muted);">0/2</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">
+            <span class="chip-mb">Banana</span>
+            <span class="chip-mb">Strawberry</span>
+            <span class="chip-mb">Blueberry</span>
+            <span class="chip-mb">Raspberry</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 10. SPACING & DIVIDERS ─── -->
+  <div class="section">
+    <div class="section-label">10 · Spacing, dividers &amp; states</div>
+    <div class="row" style="align-items:flex-start;gap:28px;">
+      <div>
+        <div style="font-size:9px;color:var(--mb-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Dividers</div>
+        <div style="width:200px;">
+          <hr class="divider-mb" style="margin-bottom:8px;">
+          <div style="font-size:10px;color:var(--mb-muted);margin-bottom:8px;">Default — rgba olive 18%</div>
+          <hr class="divider-mustard" style="margin-bottom:8px;">
+          <div style="font-size:10px;color:var(--mb-muted);">Mustard — cotizaciones</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--mb-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div>
+            <div style="font-size:10px;color:var(--mb-muted);margin-bottom:4px;">Toppings 3/7</div>
+            <div class="progress-wrap"><div class="progress-fill" style="width:43%;"></div></div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--mb-muted);margin-bottom:4px;">Frutas 2/2</div>
+            <div class="progress-wrap"><div class="progress-fill" style="width:100%;background:var(--mb-mustard);"></div></div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--mb-muted);margin-bottom:4px;">Cócteles 1/3</div>
+            <div class="progress-wrap"><div class="progress-fill" style="width:33%;"></div></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--mb-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Pipeline items</div>
+        <div style="display:flex;flex-direction:column;gap:5px;width:180px;">
+          <div class="p-item-demo">
+            <div style="font-size:10px;font-weight:500;margin-bottom:2px;">Amanda Torres</div>
+            <div style="font-size:9px;color:var(--mb-muted);">Baby Shower · Queens NY</div>
+          </div>
+          <div class="p-item-demo confirmed">
+            <div style="font-size:10px;font-weight:500;margin-bottom:2px;">Sarah Rivera</div>
+            <div style="font-size:9px;color:var(--mb-muted);">18 Años · Jun 29 · Brooklyn</div>
+            <div style="font-size:9px;color:var(--mb-olive);margin-top:2px;">→ María R. asignada</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="border-top:0.5px solid var(--mb-border);padding-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+    <div style="font-family:'Marcellus',serif;font-size:14px;color:var(--mb-olive);">Mach Bar · UI Kit v1.0</div>
+    <div style="font-size:10px;color:var(--mb-muted);">Marcellus + Work Sans · Olive · Mustard · Brown · Ivory · Salmon</div>
+  </div>
+
+</div>

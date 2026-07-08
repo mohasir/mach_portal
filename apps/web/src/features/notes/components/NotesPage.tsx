@@ -1,58 +1,53 @@
 'use client';
+import { Form, Input, Button } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { Button, Input } from '@repo/ui';
+import type { CreateNoteInput } from '@repo/schemas';
 import { signOut } from '@/lib/auth/client';
 import { useNotesList, useCreateNote } from '../hooks/useNotes';
 
 export function NotesPage() {
   const { t } = useTranslation('notes');
+  const [form] = Form.useForm<CreateNoteInput>();
   const { data: notes, isLoading } = useNotesList();
-  const { form, onSubmit, isPending } = useCreateNote();
+  const { createNote, isPending } = useCreateNote();
+
+  const onFinish = async (values: CreateNoteInput) => {
+    await createNote(values);
+    form.resetFields();
+  };
 
   return (
-    <div className="container mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
-        <Button variant="outline" size="sm" onClick={() => signOut()}>
-          Salir
-        </Button>
+        <h1 className="font-heading m-0 text-2xl text-brown">{t('title')}</h1>
+        <Button size="small" onClick={() => signOut()}>Salir</Button>
       </div>
 
-      <form onSubmit={onSubmit} className="mb-8 flex gap-2">
-        <Input
-          {...form.register('title')}
-          placeholder={t('form.titlePlaceholder')}
-          className="max-w-xs"
-        />
-        <Input
-          {...form.register('content')}
-          placeholder={t('form.contentPlaceholder')}
-          className="max-w-xs"
-        />
-        <Button type="submit" disabled={isPending}>
-          {isPending ? t('form.creating') : t('form.create')}
-        </Button>
-      </form>
-
-      {form.formState.errors.title && (
-        <p className="mb-4 text-sm text-destructive">
-          {form.formState.errors.title.message}
-        </p>
-      )}
+      <Form form={form} onFinish={onFinish} layout="inline" className="mb-8">
+        <Form.Item name="title" rules={[{ required: true, message: t('validation.titleRequired') }]}>
+          <Input placeholder={t('form.titlePlaceholder')} className="w-[200px]" />
+        </Form.Item>
+        <Form.Item name="content">
+          <Input placeholder={t('form.contentPlaceholder')} className="w-[200px]" />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" loading={isPending}>
+            {isPending ? t('form.creating') : t('form.create')}
+          </Button>
+        </Form.Item>
+      </Form>
 
       {isLoading ? (
-        <p className="text-muted-foreground">{t('loading')}</p>
+        <p className="text-muted">{t('loading')}</p>
       ) : (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {notes?.map((note) => (
-            <div key={note.id} className="rounded-lg border p-4">
-              <h3 className="font-medium">{note.title}</h3>
-              {note.content && <p className="text-muted-foreground">{note.content}</p>}
+            <div key={note.id} className="rounded-[10px] border-[0.5px] border-line bg-surface p-4">
+              <h3 className="m-0 mb-1 font-medium">{note.title}</h3>
+              {note.content && <p className="m-0 text-muted">{note.content}</p>}
             </div>
           ))}
-          {notes?.length === 0 && (
-            <p className="text-muted-foreground">{t('empty')}</p>
-          )}
+          {notes?.length === 0 && <p className="text-muted">{t('empty')}</p>}
         </div>
       )}
     </div>
