@@ -1,17 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface UiState {
+interface LocaleState {
   locale: string;
   setLocale: (locale: string) => void;
 }
 
-export const useUiStore = create<UiState>()(
+export const useLocaleStore = create<LocaleState>()(
   persist(
     (set) => ({
       locale: 'es',
       setLocale: (locale) => set({ locale }),
     }),
-    { name: 'ui-store' },
+    { name: 'locale' },
   ),
 );

@@ -1,6 +1,22 @@
 import type { Metadata } from 'next';
-import '@repo/ui/globals.css';
+import { Marcellus, Work_Sans } from 'next/font/google';
+import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { Providers } from './providers';
+import '@/theme/globals.css';
+
+const marcellus = Marcellus({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-marcellus',
+  display: 'swap',
+});
+
+const workSans = Work_Sans({
+  weight: ['300', '400', '500', '600'],
+  subsets: ['latin'],
+  variable: '--font-work-sans',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Mach Portal',
@@ -9,9 +25,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" className={`${marcellus.variable} ${workSans.variable}`}>
       <body>
-        <Providers>{children}</Providers>
+        <AntdRegistry layer>
+          <Providers>{children}</Providers>
+        </AntdRegistry>
       </body>
     </html>
   );

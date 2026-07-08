@@ -1,0 +1,43 @@
+@layer theme, base, antd, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+  --color-primary:    var(--ant-color-primary);
+  --color-error:      var(--ant-color-error);
+  --color-warning:    var(--ant-color-warning);
+  --color-success:    var(--ant-color-success);
+  --color-foreground: var(--ant-color-text);
+  --color-muted:      var(--ant-color-text-secondary);
+  --color-background: var(--ant-color-bg-layout);
+  --color-surface:    var(--ant-color-bg-container);
+  --color-line:       var(--ant-color-border);
+
+  /* ── Brand colors ── */
+  --color-brown:       #4a2c2a;
+  --color-brown-mid:   #7a4a47;
+  --color-mustard:     #dacd6b;
+  --color-ivory:       #f7eed2;
+  --color-ivory-dark:  #ede1b8;
+  --color-salmon:      #f28a86;
+  --color-olive-faint: #f4f4e8;
+
+  --font-sans:    var(--font-work-sans);
+  --font-heading: var(--font-marcellus);
+}
+
+@utility text-small {
+  font-size: 11px;
+}
+
+@utility text-label {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+@utility text-caption {
+  font-size: 9px;
+  color: var(--color-muted);
+}
