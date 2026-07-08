@@ -1,0 +1,11 @@
+{
+  "errors": {
+    "generic": "Ocurrió un error inesperado",
+    "NOTE_NOT_FOUND": "La nota no existe o no te pertenece",
+    "UNAUTHORIZED": "Tu sesión expiró, iniciá sesión de nuevo",
+    "FORBIDDEN": "No tenés permiso para esta acción",
+    "NOT_FOUND": "Recurso no encontrado",
+    "BAD_REQUEST": "Datos inválidos",
+    "INTERNAL_SERVER_ERROR": "Error del servidor"
+  }
+}

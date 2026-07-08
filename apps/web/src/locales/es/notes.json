@@ -2,11 +2,28 @@
   "title": "Notas",
   "loading": "Cargando notas...",
   "empty": "No hay notas todavía",
+  "index": {
+    "add": "Nueva nota"
+  },
+  "columns": {
+    "title": "Título",
+    "content": "Contenido"
+  },
+  "create": {
+    "title": "Crear nota"
+  },
+  "edit": {
+    "title": "Editar nota"
+  },
+  "delete": {
+    "confirmTitle": "¿Eliminar esta nota?"
+  },
   "form": {
+    "title": "Título",
+    "content": "Contenido",
     "titlePlaceholder": "Título",
     "contentPlaceholder": "Contenido (opcional)",
-    "create": "Crear nota",
-    "creating": "Creando..."
+    "save": "Guardar"
   },
   "validation": {
     "titleRequired": "El título es obligatorio"

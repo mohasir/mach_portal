@@ -2,11 +2,28 @@
   "title": "Notes",
   "loading": "Loading notes...",
   "empty": "No notes yet",
+  "index": {
+    "add": "New note"
+  },
+  "columns": {
+    "title": "Title",
+    "content": "Content"
+  },
+  "create": {
+    "title": "Create note"
+  },
+  "edit": {
+    "title": "Edit note"
+  },
+  "delete": {
+    "confirmTitle": "Delete this note?"
+  },
   "form": {
+    "title": "Title",
+    "content": "Content",
     "titlePlaceholder": "Title",
     "contentPlaceholder": "Content (optional)",
-    "create": "Create note",
-    "creating": "Creating..."
+    "save": "Save"
   },
   "validation": {
     "titleRequired": "Title is required"

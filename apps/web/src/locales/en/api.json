@@ -1,0 +1,11 @@
+{
+  "errors": {
+    "generic": "An unexpected error occurred",
+    "NOTE_NOT_FOUND": "The note does not exist or is not yours",
+    "UNAUTHORIZED": "Your session expired, please sign in again",
+    "FORBIDDEN": "You don't have permission for this action",
+    "NOT_FOUND": "Resource not found",
+    "BAD_REQUEST": "Invalid data",
+    "INTERNAL_SERVER_ERROR": "Server error"
+  }
+}

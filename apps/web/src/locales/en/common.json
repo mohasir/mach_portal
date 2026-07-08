@@ -5,5 +5,6 @@
   "save": "Save",
   "cancel": "Cancel",
   "delete": "Delete",
-  "edit": "Edit"
+  "edit": "Edit",
+  "logout": "Logout"
 }
