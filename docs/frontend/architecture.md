@@ -471,7 +471,7 @@ export const { signIn, signUp, signOut, useSession } = authClient;
 
 ### 8.2 Autorización por roles/permisos (configurado)
 
-Better Auth provee RBAC nativo con los plugins **`access`** + **`admin`**. Está **implementado** y es el equivalente del `@repo/guards` de la arquitectura original: el catálogo se define **una vez** en el paquete compartido **`@repo/auth`** y se consume en backend y frontend.
+Better Auth provee RBAC nativo con los plugins **`access`** + **`admin`**. Está **implementado** y es el equivalente del `@repo/guards` de la arquitectura original: el catálogo se define **una vez** en el paquete compartido **`@repo/guards`** y se consume en backend y frontend.
 
 **Catálogo compartido** (`packages/auth/src/index.ts`) — editá acá roles y permisos:
 
@@ -502,7 +502,7 @@ export function hasPermission(role, permissions) {
 
 ```ts
 import { admin } from 'better-auth/plugins';
-import { ac, roles, DEFAULT_ROLE, ADMIN_ROLES } from '@repo/auth';
+import { ac, roles, DEFAULT_ROLE, ADMIN_ROLES } from '@repo/guards';
 export const auth = betterAuth({ /* ... */, plugins: [admin({ ac, roles, defaultRole: DEFAULT_ROLE, adminRoles: ADMIN_ROLES })] });
 
 // guardedProcedure: protege un procedure por permiso, evaluando el rol de la sesión
@@ -540,7 +540,7 @@ export function useCan() {
 </Can>
 ```
 
-> **Coherencia BE↔FE garantizada:** backend y frontend importan el **mismo** `ac`/`roles`/`hasPermission` de `@repo/auth`. Cambiar un permiso en el catálogo lo cambia en ambos lados a la vez — igual que el `@repo/guards` de la arquitectura original.
+> **Coherencia BE↔FE garantizada:** backend y frontend importan el **mismo** `ac`/`roles`/`hasPermission` de `@repo/guards`. Cambiar un permiso en el catálogo lo cambia en ambos lados a la vez — igual que el `@repo/guards` de la arquitectura original.
 
 > **Asignar roles:** los nuevos usuarios reciben `DEFAULT_ROLE` (`member`). Para hacer admin a alguien: `UPDATE "user" SET role='admin' WHERE email=...` o el endpoint `authClient.admin.setRole`. Usuarios previos a la columna tienen `role` NULL → caen a `member`.
 

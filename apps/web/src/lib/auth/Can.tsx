@@ -1,6 +1,6 @@
 'use client';
 import type { ReactNode } from 'react';
-import type { PermissionCheck } from '@repo/auth';
+import type { PermissionCheck } from '@repo/guards';
 import { useCan } from '@/lib/auth/useCan';
 
 interface CanProps {

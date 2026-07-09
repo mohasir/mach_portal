@@ -1,9 +1,15 @@
 {
-  "name": "@repo/auth",
+  "name": "@repo/guards",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
   "dependencies": { "better-auth": "^1" },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

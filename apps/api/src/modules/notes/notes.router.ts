@@ -11,7 +11,7 @@ export const notesRouter = router({
   // Lectura: cualquier usuario autenticado ve sus propias notas.
   list: protectedProcedure.query(({ ctx }) => service.list(ctx.user.id)),
 
-  // Escrituras: gateadas por permiso del catálogo @repo/auth.
+  // Escrituras: gateadas por permiso del catálogo @repo/guards.
   create: guardedProcedure({ note: ['create'] })
     .input(createNoteSchema)
     .mutation(({ ctx, input }) => service.create(ctx.user.id, input)),

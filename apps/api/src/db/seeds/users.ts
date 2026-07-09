@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import type { Role } from '@repo/auth';
+import type { Role } from '@repo/guards';
 import { db } from '../index';
 import { user } from '../schema';
 import { auth } from '../../lib/auth';

@@ -1,5 +1,5 @@
 import { initTRPC, TRPCError } from '@trpc/server';
-import { hasPermission, type PermissionCheck } from '@repo/auth';
+import { hasPermission, type PermissionCheck } from '@repo/guards';
 import type { Context } from './context';
 import { AppError } from '../lib/errors';
 
@@ -24,7 +24,7 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 });
 
 /**
- * Procedure protegido + chequeo de permisos contra el catálogo de `@repo/auth`.
+ * Procedure protegido + chequeo de permisos contra el catálogo de `@repo/guards`.
  * Uso: `guardedProcedure({ note: ['create'] }).mutation(...)`.
  */
 export function guardedProcedure(permissions: PermissionCheck) {

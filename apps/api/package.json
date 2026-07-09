@@ -20,7 +20,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@repo/auth": "workspace:*",
+    "@repo/guards": "workspace:*",
     "@repo/schemas": "workspace:*",
     "@trpc/server": "^11",
     "better-auth": "^1",
