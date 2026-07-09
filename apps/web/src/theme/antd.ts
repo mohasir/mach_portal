@@ -104,11 +104,32 @@ export const machBarTheme: ThemeConfig = {
       headerBg: MB.ivory,
     },
     Menu: {
+      // Sidebar claro (estilo imagen): ítem activo como "pill" olivo relleno.
+      itemBg: 'transparent',
+      itemColor: MB.muted,
+      itemHoverBg: MB.oliveFaint,
+      itemHoverColor: MB.brown,
+      itemSelectedBg: MB.olive,
+      itemSelectedColor: '#ffffff',
+      itemActiveBg: MB.oliveFaint,
+      itemHeight: 44,
+      itemBorderRadius: 10,
+      itemMarginInline: 0,
+      itemMarginBlock: 4,
+      iconSize: 18,
+      groupTitleColor: MB.muted,
+      // Sidebar oscuro (legacy, sin uso en el admin claro).
       darkItemColor: 'rgba(232,223,200,0.6)',
       darkItemHoverColor: MB.mustard,
       darkItemSelectedColor: MB.mustard,
       darkItemBg: MB.brown,
       darkSubMenuItemBg: MB.brown,
+    },
+    Layout: {
+      siderBg: '#ffffff',
+      headerBg: 'transparent',
+      headerPadding: '0 24px',
+      bodyBg: MB.bg,
     },
     Tabs: {
       inkBarColor: MB.olive,

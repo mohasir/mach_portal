@@ -28,7 +28,7 @@ export function AuthPage() {
         return;
       }
       message.success(t(mode === 'signup' ? 'signupSuccess' : 'signinSuccess'));
-      router.replace('/notes');
+      router.replace('/admin');
     } catch (err) {
       const isNetwork = err instanceof TypeError && err.message.includes('fetch');
       message.error(isNetwork ? t('errors.network') : t('errors.unexpected'));

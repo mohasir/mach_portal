@@ -41,3 +41,11 @@
   font-size: 9px;
   color: var(--color-muted);
 }
+
+@layer components {
+  .ant-btn > .ant-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

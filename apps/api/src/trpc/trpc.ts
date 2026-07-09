@@ -23,10 +23,6 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   return next({ ctx: { ...ctx, user: ctx.session.user, session: ctx.session } });
 });
 
-/**
- * Procedure protegido + chequeo de permisos contra el catálogo de `@repo/guards`.
- * Uso: `guardedProcedure({ note: ['create'] }).mutation(...)`.
- */
 export function guardedProcedure(permissions: PermissionCheck) {
   return protectedProcedure.use(({ ctx, next }) => {
     const role = (ctx.user as { role?: string | null }).role;

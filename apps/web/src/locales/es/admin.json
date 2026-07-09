@@ -1,0 +1,39 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "orders": "Pedidos",
+    "clients": "Clientes",
+    "statistics": "Estadísticas",
+    "finance": "Finanzas",
+    "notes": "Notas",
+    "faq": "Preguntas frecuentes",
+    "support": "Soporte",
+    "groups": {
+      "help": "Ayuda"
+    }
+  },
+  "common": {
+    "logout": "Cerrar sesión"
+  },
+  "sidebar": {
+    "upgradeTitle": "Mejora tu plan",
+    "upgradeCta": "Actualizar"
+  },
+  "topbar": {
+    "search": "Buscar por fecha, nombre o ID...",
+    "notifications": "Notificaciones",
+    "noNotifications": "No hay notificaciones",
+    "toggleMenu": "Abrir/cerrar menú"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "stats": {
+      "new": "Pedidos nuevos",
+      "pending": "Pedidos pendientes",
+      "delivered": "Pedidos entregados"
+    }
+  },
+  "placeholder": {
+    "comingSoon": "Esta sección está en construcción."
+  }
+}

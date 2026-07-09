@@ -52,8 +52,9 @@ apps/web/src/
 │   ├── layout.tsx              # Root layout (fuentes, AntdRegistry, <Providers>)
 │   ├── providers.tsx           # Composición de providers (client)
 │   ├── (auth)/                 # Grupo de rutas públicas (login/registro)
-│   └── (app)/                  # Grupo protegido
-│       ├── layout.tsx          # Layout del panel (sidebar/topbar) + guard de sesión
+│   └── admin/                  # Panel protegido (segmento, no route group)
+│       ├── layout.tsx          # Guard de sesión + <AdminLayoutContainer>
+│       ├── page.tsx            # Dashboard
 │       └── <recurso>/page.tsx  # Página: renderiza el índice de la feature
 │
 ├── features/                   # DOMINIO. Un directorio por feature.
@@ -66,14 +67,16 @@ apps/web/src/
 ├── lib/                        # Infraestructura transversal (no dominio)
 │   ├── trpc/                   # client.ts (useTRPC), provider.tsx, types.ts (RouterInputs/Outputs)
 │   ├── auth/                   # client.ts (authClient, signIn/Out, useSession), guards, <Can>/useCan
+│   ├── navigation/             # Navegación data-driven: types, constants/{items,icons}, config, useNavigation
+│   ├── hooks/                  # Hooks transversales (useIsDesktop, ...)
 │   ├── i18n/                   # config.ts
 │   ├── error/                  # useApiError.ts (parser tRPC → i18n)
 │   ├── stores/                 # Zustand stores (locale, ui, ...)
 │   └── env.ts                  # Variables de entorno validadas
 │
 ├── components/                 # Componentes GLOBALES (no de una feature)
-│   ├── layout/                 # AppSidebar, AppTopbar, AppShell
-│   └── shared/                 # PageHeader, DataTable, ConfirmDelete, ...
+│   ├── Layouts/                # Contenedores de layout: AdminLayoutContainer (shell del panel)
+│   └── shared/                 # PageHeader, PlaceholderPage, Sidebar/, Topbar/, Logo, ...
 │
 ├── theme/                      # antd.ts (tokens MB + machBarTheme), globals.css
 └── locales/{es,en}/            # common.json, <feature>.json, api.json
@@ -301,14 +304,14 @@ export type { Note } from './types';
 
 - **Página** = adaptador de ruta. Solo renderiza el índice de la feature:
   ```tsx
-  // app/(app)/notes/page.tsx
+  // app/admin/notes/page.tsx
   import { NotesPage } from '@/features/notes';
   export default function Page() { return <NotesPage />; }
   ```
-- **Grupos de ruta**: `(auth)` para páginas públicas (login/registro), `(app)` para el panel protegido.
-- **Layouts** delegan en contenedores de `components/layout`:
+- **Rutas**: `(auth)` (route group) para páginas públicas (login/registro); `admin/` (segmento) para el panel protegido.
+- **Layouts** delegan en contenedores de `components/Layouts`:
   - `app/layout.tsx` → fuentes (Marcellus / Work Sans), `AntdRegistry layer`, `<Providers>`.
-  - `app/(app)/layout.tsx` → `AppShell` (sidebar + topbar) + **guard de sesión** (redirige a login si no hay sesión).
+  - `app/admin/layout.tsx` → **guard de sesión** (redirige a login si no hay sesión) + `<AdminLayoutContainer>` (sidebar + topbar).
 
 ### Composición de providers (`app/providers.tsx`)
 
@@ -328,7 +331,7 @@ ConfigProvider (AntD theme = machBarTheme)   # tokens de diseño
 ### Protección de rutas
 
 Dos capas complementarias:
-1. **Guard de layout** (cliente): `app/(app)/layout.tsx` usa `useSession()`; mientras resuelve muestra loader, si no hay sesión redirige a `/login`.
+1. **Guard de layout** (cliente): `app/admin/layout.tsx` usa `useSession()`; mientras resuelve muestra loader, si no hay sesión redirige a `/login`.
 2. **Middleware (recomendado):** `middleware.ts` lee la cookie de sesión de Better Auth (helper `getSessionCookie`) para redirigir en el borde sin renderizar el layout protegido. No confía en la cookie como autorización — solo como *hint* de redirección; la autorización real la hace la API.
 
 ---
@@ -473,7 +476,7 @@ export const { signIn, signUp, signOut, useSession } = authClient;
 
 Better Auth provee RBAC nativo con los plugins **`access`** + **`admin`**. Está **implementado** y es el equivalente del `@repo/guards` de la arquitectura original: el catálogo se define **una vez** en el paquete compartido **`@repo/guards`** y se consume en backend y frontend.
 
-**Catálogo compartido** (`packages/auth/src/index.ts`) — editá acá roles y permisos:
+**Catálogo compartido** (`packages/guards/src/`) — editá acá roles y permisos:
 
 ```ts
 import { createAccessControl } from 'better-auth/plugins/access';
@@ -513,7 +516,7 @@ export function guardedProcedure(permissions: PermissionCheck) {
     return next();
   });
 }
-// Uso en el router:  create: guardedProcedure({ note: ['create'] }).input(...).mutation(...)
+// Uso en el router:  create: guardedProcedure({ [RESOURCES.NOTE]: [ACTIONS.CREATE] }).input(...).mutation(...)
 ```
 
 El plugin `admin` requiere el campo **`role`** en la tabla `user` (soporta varios roles como CSV) — ya agregado en `db/schema/auth.ts`. Requiere `db:push` para aplicar.
@@ -535,12 +538,19 @@ export function useCan() {
 `<Can>` — renderiza children solo si hay acceso; si no, `fallback`:
 
 ```tsx
-<Can allowed={{ note: ['create'] }} fallback={null}>
+<Can allowed={{ [RESOURCES.NOTE]: [ACTIONS.CREATE] }} fallback={null}>
   <Button type="primary" onClick={openCreate}>{t('index.add')}</Button>
 </Can>
 ```
 
 > **Coherencia BE↔FE garantizada:** backend y frontend importan el **mismo** `ac`/`roles`/`hasPermission` de `@repo/guards`. Cambiar un permiso en el catálogo lo cambia en ambos lados a la vez — igual que el `@repo/guards` de la arquitectura original.
+
+> **Regla — nunca strings sueltos en un `PermissionCheck`.** Recursos y acciones tienen su
+> catálogo tipado en `@repo/guards` (`RESOURCES`, `ACTIONS`): usá esas constantes, no literales.
+> Correcto: `{ [RESOURCES.NOTE]: [ACTIONS.READ] }` — nunca `{ note: ['read'] }`. Aplica en **todos**
+> los lugares donde se arma un `PermissionCheck`: `guardedProcedure(...)` (BE),
+> `<Can allowed={...}>` / `useCan()(...)` (FE) y los `guard` de navegación (`lib/navigation`).
+> Si un recurso o acción se renombra, TS marca el error en compilación en vez de fallar en silencio.
 
 > **Asignar roles:** los nuevos usuarios reciben `DEFAULT_ROLE` (`member`). Para hacer admin a alguien: `UPDATE "user" SET role='admin' WHERE email=...` o el endpoint `authClient.admin.setRole`. Usuarios previos a la columna tienen `role` NULL → caen a `member`.
 
@@ -550,7 +560,7 @@ export function useCan() {
 
 ## 9. Internacionalización (i18n)
 
-- Config en `lib/i18n/config.ts`: `locales: ['es','en']`, `defaultLocale: 'es'`, namespaces `['common', '<feature>', 'api']`, `defaultNS: 'common'`.
+- Config en `lib/i18n/config.ts`: `locales: ['es','en']`, `defaultLocale: 'es'`, namespaces `['common', 'admin', '<feature>', 'api']`, `defaultNS: 'common'`. El namespace `admin` agrupa los textos del shell/navegación del panel (nav, topbar, sidebar).
 - Recursos en `locales/{es,en}/<namespace>.json`, importados y registrados en `resources`.
 - En cliente: `const { t } = useTranslation('<feature>')`. **Todo** texto visible usa `t('clave')`.
 - El idioma actual se guarda en `useLocaleStore`; cambiarlo llama `i18n.changeLanguage(locale)`.
@@ -567,7 +577,9 @@ export function useCan() {
 - El sistema de tokens (marca MB, `machBarTheme`), la relación AntD↔Tailwind, tipografía, layout, formularios y mensajes están definidos en **`styling-guide.md`** — es de lectura obligatoria y manda sobre cualquier decisión visual.
 - Reglas rápidas heredadas de esa guía: AntD para componentes y layout, Tailwind para overrides y lo que AntD no cubre; nada de CSS modules, inline styles, ni hex hardcodeados; mensajes vía `App.useApp()` (no métodos estáticos).
 - **Tablas: `Table` de AntD, siempre.** Es la convención única — ya integra sort/filter/paginación/selección/expandable/fixed/virtual con el tema (`machBarTheme`). No se usa `@tanstack/react-table` (headless): se pisa con AntD `Table` y no está instalada. Si algún día aparece un caso que AntD no cubre (resizing/pinning fino, faceted filtering, virtualización pesada), se resuelve **headless en un `components/shared/DataTable` aislado** con markup propio + tokens — nunca mezclando `flexRender` dentro del `<Table>` de AntD.
-- Componentes **globales de la app** (no primitivas): `PageHeader`, `AppShell`, etc. viven en `components/shared/` y `components/layout/`. Si un patrón se repite en 2+ features, se extrae a `components/shared/`.
+- Componentes **globales de la app** (no primitivas): los contenedores de layout (`AdminLayoutContainer`, el shell del panel) viven en `components/Layouts/`; el resto (`PageHeader`, `PlaceholderPage`, `Sidebar/`, `Topbar/`, `Logo`, ...) en `components/shared/`. Si un patrón se repite en 2+ features, se extrae a `components/shared/`.
+- **Navegación data-driven.** El menú NO se hardcodea en el sidebar: se define en `lib/navigation/` (`constants/items.ts` = catálogo `NAV_ITEMS` con `label`/`href`/`icon`/`guard`; `constants/icons.tsx` = `IconMap` string→icono AntD; `config.ts` = grupos `ADMIN_MENU`; `useNavigation()` = menú según sesión). `SidebarNav` lo renderiza con `Menu` de AntD y filtra por permisos con `useCan` (`guard` es un `PermissionCheck`).
+- **Shell responsive (mobile-first).** `AdminLayoutContainer` usa `useIsDesktop()` (breakpoint `lg`=992px): en desktop un `Layout.Sider` colapsable a rail de iconos (`collapsedWidth=80`, el `Menu` colapsa por contexto del `Sider`); en móvil un `Drawer` overlay con el mismo `SidebarContent`. El botón del `Topbar` colapsa el rail (desktop) o abre el `Drawer` (móvil). `SidebarNav` navega por `onClick`+`router.push` (no `<Link>`) para funcionar también colapsado.
 
 ---
 
@@ -598,9 +610,9 @@ Para un recurso nuevo `widgets`:
 4. **Data hooks** (`features/widgets/hooks/useWidgets.ts`): `useWidgetsList`, `useWidget(id)`, `useCreateWidget`/`useUpdateWidget`/`useDeleteWidget` con invalidación (`queryFilter`) en `onSuccess` y `onError: useApiError()`.
 5. **Components**: `WidgetsPage` (orquesta), `WidgetsTable` + `columns`, `CreateWidgetModal`, `EditWidgetModal`, `WidgetForm`. Textos con `useTranslation('widgets')`.
 6. **Barrel** (`index.ts`): exportar `WidgetsPage`, hooks públicos, tipos.
-7. **Página**: `app/(app)/widgets/page.tsx` → `import { WidgetsPage } from '@/features/widgets'`.
-8. **i18n**: añadir `locales/{es,en}/widgets.json` y registrarlo en `lib/i18n/config.ts`; agregar `errors.*` en `api.json` si el backend define nuevos códigos.
-9. **Navegación**: añadir el ítem de menú en `components/layout` (`AppSidebar`).
+7. **Página**: `app/admin/widgets/page.tsx` → `import { WidgetsPage } from '@/features/widgets'`.
+8. **i18n**: añadir `locales/{es,en}/widgets.json` y registrarlo en `lib/i18n/config.ts`; agregar `errors.*` en `api.json` si el backend define nuevos códigos. Los labels de nav van en el namespace `admin` (`nav.*`).
+9. **Navegación**: añadir el ítem en `lib/navigation/constants/items.ts` (`NAV_ITEMS`, con su `guard` `PermissionCheck` si aplica), sumarlo a un grupo de `lib/navigation/config.ts` (`ADMIN_MENU`) y mapear su icono en `constants/icons.tsx`. `SidebarNav` lo renderiza y filtra por permisos automáticamente — no se toca el sidebar.
 10. **Autorización (si RBAC activo)**: añadir el recurso `widget` a los `statements` del catálogo de access-control; envolver acciones con `<Can allowed={{ widget: ['create'] }}>` y proteger el router con `guardedProcedure`.
 
 Siguiendo estos pasos, la feature será indistinguible de las existentes.

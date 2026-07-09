@@ -1,0 +1,39 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "orders": "Orders",
+    "clients": "Clients",
+    "statistics": "Statistics",
+    "finance": "Finance",
+    "notes": "Notes",
+    "faq": "FAQ",
+    "support": "Support",
+    "groups": {
+      "help": "Help"
+    }
+  },
+  "common": {
+    "logout": "Log out"
+  },
+  "sidebar": {
+    "upgradeTitle": "Upgrade your plan",
+    "upgradeCta": "Upgrade"
+  },
+  "topbar": {
+    "search": "Search by date, name or ID...",
+    "notifications": "Notifications",
+    "noNotifications": "No notifications",
+    "toggleMenu": "Toggle menu"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "stats": {
+      "new": "New Orders",
+      "pending": "Pending Orders",
+      "delivered": "Delivered Orders"
+    }
+  },
+  "placeholder": {
+    "comingSoon": "This section is under construction."
+  }
+}
