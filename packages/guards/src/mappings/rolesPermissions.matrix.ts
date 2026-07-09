@@ -1,4 +1,11 @@
-import { ACTIONS, RESOURCES, ROLES, type ActionType, type ResourceType, type RoleType } from '../constants/index';
+import {
+  ACTIONS,
+  RESOURCES,
+  ROLES,
+  type ActionType,
+  type ResourceType,
+  type RoleType,
+} from '../constants/index';
 
 export type RolePermissions = Partial<Record<ResourceType, ActionType[]>>;
 
@@ -8,24 +15,35 @@ export type RolesPermissionsMatrixItem = {
 };
 
 const { CREATE, READ, UPDATE, DELETE } = ACTIONS;
+const CRUD: ActionType[] = [CREATE, READ, UPDATE, DELETE];
 
 export const rolesPermissionsMatrix = [
   {
     role: ROLES.SUPERADMIN,
     permissions: {
-      [RESOURCES.NOTE]: [CREATE, READ, UPDATE, DELETE]
+      [RESOURCES.DASHBOARD]: CRUD,
+      [RESOURCES.EVENT]: CRUD,
+      [RESOURCES.CLIENT]: CRUD,
+      [RESOURCES.QUOTE]: CRUD,
+      [RESOURCES.PIPELINE]: CRUD,
+      [RESOURCES.NOTE]: CRUD,
     },
   },
   {
     role: ROLES.ADMIN,
     permissions: {
-      [RESOURCES.NOTE]: [CREATE, READ, UPDATE, DELETE]
+      [RESOURCES.DASHBOARD]: CRUD,
+      [RESOURCES.EVENT]: CRUD,
+      [RESOURCES.CLIENT]: CRUD,
+      [RESOURCES.QUOTE]: CRUD,
+      [RESOURCES.PIPELINE]: CRUD,
+      [RESOURCES.NOTE]: CRUD,
     },
   },
   {
     role: ROLES.MEMBER,
     permissions: {
-      [RESOURCES.NOTE]: [READ, UPDATE, DELETE]
+      [RESOURCES.NOTE]: [READ, UPDATE, DELETE],
     },
   },
 ] satisfies readonly RolesPermissionsMatrixItem[];

@@ -2,41 +2,48 @@ import { ACTIONS, RESOURCES } from '@repo/guards';
 
 import type { NavItem } from '../types';
 
+const { READ } = ACTIONS;
+
 export const DASHBOARD_ITEM: NavItem = {
   label: 'nav.dashboard',
   href: '/admin',
   icon: 'dashboard',
+  guard: { [RESOURCES.DASHBOARD]: [READ] },
 };
 
-export const ORDERS_ITEM: NavItem = {
-  label: 'nav.orders',
-  href: '/admin/orders',
-  icon: 'orders',
+export const EVENTS_ITEM: NavItem = {
+  label: 'nav.events',
+  href: '/admin/events',
+  icon: 'events',
+  guard: { [RESOURCES.EVENT]: [READ] },
 };
 
 export const CLIENTS_ITEM: NavItem = {
   label: 'nav.clients',
   href: '/admin/clients',
   icon: 'clients',
+  guard: { [RESOURCES.CLIENT]: [READ] },
 };
 
-export const STATISTICS_ITEM: NavItem = {
-  label: 'nav.statistics',
-  href: '/admin/statistics',
-  icon: 'statistics',
+export const QUOTES_ITEM: NavItem = {
+  label: 'nav.quotes',
+  href: '/admin/quotes',
+  icon: 'quotes',
+  guard: { [RESOURCES.QUOTE]: [READ] },
 };
 
-export const FINANCE_ITEM: NavItem = {
-  label: 'nav.finance',
-  href: '/admin/finance',
-  icon: 'finance',
+export const PIPELINE_ITEM: NavItem = {
+  label: 'nav.pipeline',
+  href: '/admin/pipeline',
+  icon: 'pipeline',
+  guard: { [RESOURCES.PIPELINE]: [READ] },
 };
 
-export const NOTES_ITEM: NavItem = {
-  label: 'nav.notes',
-  href: '/admin/notes',
-  icon: 'notes',
-  guard: { [RESOURCES.NOTE]: [ACTIONS.READ] },
+export const USERS_ITEM: NavItem = {
+  label: 'nav.users',
+  href: '/admin/users',
+  icon: 'users',
+  guard: { user: ['list'] },
 };
 
 export const FAQ_ITEM: NavItem = {
@@ -53,11 +60,11 @@ export const SUPPORT_ITEM: NavItem = {
 
 export const NAV_ITEMS = {
   DASHBOARD: DASHBOARD_ITEM,
-  ORDERS: ORDERS_ITEM,
+  EVENTS: EVENTS_ITEM,
   CLIENTS: CLIENTS_ITEM,
-  STATISTICS: STATISTICS_ITEM,
-  FINANCE: FINANCE_ITEM,
-  NOTES: NOTES_ITEM,
+  QUOTES: QUOTES_ITEM,
+  PIPELINE: PIPELINE_ITEM,
+  USERS: USERS_ITEM,
   FAQ: FAQ_ITEM,
   SUPPORT: SUPPORT_ITEM,
 } as const;

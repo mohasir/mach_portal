@@ -5,12 +5,15 @@ export const ADMIN_MENU: NavGroup[] = [
   {
     items: [
       NAV_ITEMS.DASHBOARD,
-      NAV_ITEMS.ORDERS,
+      NAV_ITEMS.EVENTS,
       NAV_ITEMS.CLIENTS,
-      NAV_ITEMS.STATISTICS,
-      NAV_ITEMS.FINANCE,
-      NAV_ITEMS.NOTES,
+      NAV_ITEMS.QUOTES,
+      NAV_ITEMS.PIPELINE,
     ],
+  },
+  {
+    group: 'nav.groups.users',
+    items: [NAV_ITEMS.USERS],
   },
   {
     group: 'nav.groups.help',

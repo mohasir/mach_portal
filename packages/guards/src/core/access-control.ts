@@ -6,7 +6,9 @@ import { rolesPermissionsMatrix, type RolePermissions } from '../mappings/rolesP
 
 const domainStatements = Object.fromEntries(
   permissionsMatrix.map(({ resource, actions }) => [resource, [...actions]]),
-) as { [Item in (typeof permissionsMatrix)[number] as Item['resource']]: Item['actions'][number][] };
+) as {
+  [Item in (typeof permissionsMatrix)[number] as Item['resource']]: Item['actions'][number][];
+};
 
 export const statements = {
   ...defaultStatements,
@@ -22,26 +24,27 @@ const permissionsByRole = Object.fromEntries(
 export const roles = {
   [ROLES.SUPERADMIN]: ac.newRole(statements),
   [ROLES.ADMIN]: ac.newRole({
-    ...permissionsByRole[ROLES.ADMIN]
+    ...permissionsByRole[ROLES.ADMIN],
   }),
   [ROLES.MEMBER]: ac.newRole({
-    ...permissionsByRole[ROLES.MEMBER]
+    ...permissionsByRole[ROLES.MEMBER],
   }),
 } as const;
 
 export type Role = RoleType;
 
-
 export const SUPERADMIN_ROLE: Role = ROLES.SUPERADMIN;
 export const DEFAULT_ROLE: Role = ROLES.MEMBER;
 export const ADMIN_ROLES: Role[] = [ROLES.SUPERADMIN];
-
 
 export type PermissionCheck = {
   [Resource in keyof typeof statements]?: (typeof statements)[Resource][number][];
 };
 
-export function hasPermission(role: string | null | undefined, permissions: PermissionCheck): boolean {
+export function hasPermission(
+  role: string | null | undefined,
+  permissions: PermissionCheck,
+): boolean {
   const userRoles = (role ?? DEFAULT_ROLE).split(',') as Role[];
   // Superadmin: bypass total, no valida nada.
   if (userRoles.includes(SUPERADMIN_ROLE)) return true;

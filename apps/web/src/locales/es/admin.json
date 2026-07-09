@@ -1,14 +1,19 @@
 {
   "nav": {
-    "dashboard": "Panel",
+    "dashboard": "Dashboard",
+    "events": "Eventos",
     "orders": "Pedidos",
     "clients": "Clientes",
+    "quotes": "Cotizaciones",
+    "pipeline": "Pipeline",
     "statistics": "Estadísticas",
     "finance": "Finanzas",
     "notes": "Notas",
+    "users": "Usuarios",
     "faq": "Preguntas frecuentes",
     "support": "Soporte",
     "groups": {
+      "users": "Usuarios",
       "help": "Ayuda"
     }
   },
