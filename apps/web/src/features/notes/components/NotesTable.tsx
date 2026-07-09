@@ -1,6 +1,7 @@
 'use client';
 import { App, Button, Space, Table, type TableColumnsType } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { Can } from '@/lib/auth/Can';
 import { useDeleteNote, useNotesList } from '../hooks/useNotes';
 import type { Note } from '../types';
 
@@ -40,12 +41,16 @@ export function NotesTable({ onEdit }: NotesTableProps) {
       align: 'right',
       render: (_, note) => (
         <Space size="small">
-          <Button type="link" size="small" onClick={() => onEdit(note)}>
-            {tc('edit')}
-          </Button>
-          <Button type="link" size="small" danger onClick={() => confirmDelete(note)}>
-            {tc('delete')}
-          </Button>
+          <Can allowed={{ note: ['update'] }}>
+            <Button type="link" size="small" onClick={() => onEdit(note)}>
+              {tc('edit')}
+            </Button>
+          </Can>
+          <Can allowed={{ note: ['delete'] }}>
+            <Button type="link" size="small" danger onClick={() => confirmDelete(note)}>
+              {tc('delete')}
+            </Button>
+          </Can>
         </Space>
       ),
     },

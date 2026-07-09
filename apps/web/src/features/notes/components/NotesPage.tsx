@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { useCan } from '@/lib/auth/useCan';
 import { CreateNoteModal } from './CreateNoteModal';
 import { EditNoteModal } from './EditNoteModal';
 import { NotesTable } from './NotesTable';
@@ -9,12 +10,18 @@ import type { Note } from '../types';
 
 export function NotesPage() {
   const { t } = useTranslation('notes');
+  const can = useCan();
+  const canCreate = can({ note: ['create'] });
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Note | null>(null);
 
   return (
     <div>
-      <PageHeader title={t('title')} actionLabel={t('index.add')} onAction={() => setCreateOpen(true)} />
+      <PageHeader
+        title={t('title')}
+        actionLabel={canCreate ? t('index.add') : undefined}
+        onAction={canCreate ? () => setCreateOpen(true) : undefined}
+      />
       <NotesTable onEdit={setEditing} />
       <CreateNoteModal open={isCreateOpen} onClose={() => setCreateOpen(false)} />
       <EditNoteModal note={editing} open={!!editing} onClose={() => setEditing(null)} />

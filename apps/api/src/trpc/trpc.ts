@@ -1,4 +1,5 @@
 import { initTRPC, TRPCError } from '@trpc/server';
+import { hasPermission, type PermissionCheck } from '@repo/auth';
 import type { Context } from './context';
 import { AppError } from '../lib/errors';
 
@@ -21,3 +22,15 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.session) throw new TRPCError({ code: 'UNAUTHORIZED' });
   return next({ ctx: { ...ctx, user: ctx.session.user, session: ctx.session } });
 });
+
+/**
+ * Procedure protegido + chequeo de permisos contra el catálogo de `@repo/auth`.
+ * Uso: `guardedProcedure({ note: ['create'] }).mutation(...)`.
+ */
+export function guardedProcedure(permissions: PermissionCheck) {
+  return protectedProcedure.use(({ ctx, next }) => {
+    const role = (ctx.user as { role?: string | null }).role;
+    if (!hasPermission(role, permissions)) throw new TRPCError({ code: 'FORBIDDEN' });
+    return next();
+  });
+}

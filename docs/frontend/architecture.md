@@ -469,51 +469,66 @@ export const { signIn, signUp, signOut, useSession } = authClient;
 - **Logout**: `signOut()` → limpia cookie. Si hubiera stores de UI con datos por-usuario, resetearlos acá.
 - El backend valida la sesión en `createContext` (`auth.api.getSession`) y expone `ctx.session`; `protectedProcedure` rechaza con `UNAUTHORIZED` si no hay sesión.
 
-### 8.2 Autorización por roles/permisos (opt-in)
+### 8.2 Autorización por roles/permisos (configurado)
 
-Better Auth provee RBAC nativo con los plugins **`access`** + **`admin`**. Es el equivalente directo de un catálogo `@repo/guards` compartido: se define **una vez** y se usa en backend y frontend.
+Better Auth provee RBAC nativo con los plugins **`access`** + **`admin`**. Está **implementado** y es el equivalente del `@repo/guards` de la arquitectura original: el catálogo se define **una vez** en el paquete compartido **`@repo/auth`** y se consume en backend y frontend.
 
-**Catálogo compartido** (`packages/schemas/src/access.ts` o un `@repo/auth` dedicado):
+**Catálogo compartido** (`packages/auth/src/index.ts`) — editá acá roles y permisos:
 
 ```ts
 import { createAccessControl } from 'better-auth/plugins/access';
+import { adminAc, defaultStatements } from 'better-auth/plugins/admin/access';
 
-export const statements = {
-  note: ['create', 'read', 'update', 'delete'],
-} as const;
-
+export const statements = { ...defaultStatements, note: ['create', 'read', 'update', 'delete'] } as const;
 export const ac = createAccessControl(statements);
 export const roles = {
-  admin: ac.newRole({ note: ['create', 'read', 'update', 'delete'] }),
-  member: ac.newRole({ note: ['read'] }),
+  superadmin: ac.newRole(statements), // acceso total (todos los recursos)
+  admin:  ac.newRole({ ...adminAc.statements, note: ['create', 'read', 'update', 'delete'] }),
+  member: ac.newRole({ note: ['create', 'read', 'update', 'delete'] }),
 };
+export const DEFAULT_ROLE = 'member';
+export const SUPERADMIN_ROLE = 'superadmin';
+
+// hasPermission: evaluación isomórfica (mismo código en BE y FE). El rol `superadmin`
+// hace bypass total — pasa cualquier chequeo, incluso recursos fuera del catálogo.
+export function hasPermission(role, permissions) {
+  const userRoles = (role ?? DEFAULT_ROLE).split(',');
+  if (userRoles.includes(SUPERADMIN_ROLE)) return true;
+  return userRoles.some((r) => roles[r]?.authorize(permissions).success ?? false);
+}
 ```
 
-**Backend** (`apps/api/src/lib/auth.ts`):
+**Backend** (`apps/api/src/lib/auth.ts` + `trpc/trpc.ts`):
 
 ```ts
 import { admin } from 'better-auth/plugins';
-import { ac, roles } from '@repo/schemas/access';
-export const auth = betterAuth({ /* ... */, plugins: [admin({ ac, roles, defaultRole: 'member' })] });
-```
-El plugin `admin` agrega el campo `role` a la tabla `user` (soporta múltiples roles como CSV). Para proteger un procedure por permiso, un `guardedProcedure` que llama `auth.api.userHasPermission({ body: { userId, permissions } })` y lanza `FORBIDDEN` si no pasa.
+import { ac, roles, DEFAULT_ROLE, ADMIN_ROLES } from '@repo/auth';
+export const auth = betterAuth({ /* ... */, plugins: [admin({ ac, roles, defaultRole: DEFAULT_ROLE, adminRoles: ADMIN_ROLES })] });
 
-**Frontend** — cliente con el mismo `ac`/`roles`:
+// guardedProcedure: protege un procedure por permiso, evaluando el rol de la sesión
+// contra el catálogo (sin roundtrip a DB). Lanza FORBIDDEN si no pasa.
+export function guardedProcedure(permissions: PermissionCheck) {
+  return protectedProcedure.use(({ ctx, next }) => {
+    if (!hasPermission((ctx.user as { role?: string | null }).role, permissions)) throw new TRPCError({ code: 'FORBIDDEN' });
+    return next();
+  });
+}
+// Uso en el router:  create: guardedProcedure({ note: ['create'] }).input(...).mutation(...)
+```
+
+El plugin `admin` requiere el campo **`role`** en la tabla `user` (soporta varios roles como CSV) — ya agregado en `db/schema/auth.ts`. Requiere `db:push` para aplicar.
+
+**Frontend** — cliente con el mismo `ac`/`roles` (`lib/auth/client.ts`), y `useCan`/`<Can>` que evalúan con el catálogo compartido (síncrono, sin ir al server):
 
 ```ts
 import { adminClient } from 'better-auth/client/plugins';
 export const authClient = createAuthClient({ baseURL, plugins: [adminClient({ ac, roles })] });
-```
 
-`useCan` deriva el permiso del `role` de la sesión (evaluación **síncrona**, sin ir al servidor):
-
-```ts
 // lib/auth/useCan.ts
 export function useCan() {
   const { data } = useSession();
-  const role = data?.user?.role ?? 'member';
-  return (permissions: Parameters<typeof authClient.admin.checkRolePermission>[0]['permissions']) =>
-    authClient.admin.checkRolePermission({ role, permissions });
+  const role = (data?.user as { role?: string | null })?.role ?? DEFAULT_ROLE;
+  return (permissions: PermissionCheck) => hasPermission(role, permissions);
 }
 ```
 
@@ -525,7 +540,9 @@ export function useCan() {
 </Can>
 ```
 
-> **Coherencia BE↔FE garantizada:** backend y frontend importan el **mismo** `ac`/`roles`. Cambiar un permiso en el catálogo lo cambia en ambos lados a la vez — igual que el `@repo/guards` de la arquitectura original.
+> **Coherencia BE↔FE garantizada:** backend y frontend importan el **mismo** `ac`/`roles`/`hasPermission` de `@repo/auth`. Cambiar un permiso en el catálogo lo cambia en ambos lados a la vez — igual que el `@repo/guards` de la arquitectura original.
+
+> **Asignar roles:** los nuevos usuarios reciben `DEFAULT_ROLE` (`member`). Para hacer admin a alguien: `UPDATE "user" SET role='admin' WHERE email=...` o el endpoint `authClient.admin.setRole`. Usuarios previos a la columna tienen `role` NULL → caen a `member`.
 
 > **Multi-tenant:** si el proyecto lo requiere, se sustituye/combina con el plugin `organization` (roles por organización, invitaciones, `authClient.organization.checkRolePermission`). Fuera del alcance del boilerplate single-tenant base.
 
