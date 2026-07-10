@@ -1,27 +1,33 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Button, Flex, Result, Spin } from 'antd';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { signOut, useSession } from '@/lib/auth/client';
+import { useSession } from '@/lib/auth/client';
+import { DEFAULT_REDIRECT_LOGIN, isProtectedRoute } from '@/lib/auth/navigation';
 
-export function SessionGuard({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation('auth');
   const { data: session, isPending, error, refetch } = useSession();
+  const pathname = usePathname() ?? '';
   const router = useRouter();
+  const redirected = useRef(false);
 
+  const protectedRoute = isProtectedRoute(pathname);
   const isServerError = !!error && error.status !== 401;
 
   useEffect(() => {
-    if (isPending || isServerError || session) return;
-    let active = true;
-    void signOut().finally(() => {
-      if (active) router.replace('/login');
-    });
-    return () => {
-      active = false;
-    };
-  }, [isPending, isServerError, session, router]);
+    if (!protectedRoute || isPending || isServerError) return;
+    if (session) {
+      redirected.current = false;
+      return;
+    }
+    if (redirected.current) return;
+    redirected.current = true;
+    router.replace(DEFAULT_REDIRECT_LOGIN);
+  }, [protectedRoute, isPending, isServerError, session, router]);
+
+  if (!protectedRoute) return <>{children}</>;
 
   if (isServerError) {
     return (

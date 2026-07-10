@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Marcellus, Work_Sans } from 'next/font/google';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
-import { Providers } from './providers';
+import { AppProviders } from '@/components/providers';
 import '@/theme/globals.css';
 
 const marcellus = Marcellus({
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={`${marcellus.variable} ${workSans.variable}`}>
       <body>
         <AntdRegistry layer>
-          <Providers>{children}</Providers>
+          <AppProviders>{children}</AppProviders>
         </AntdRegistry>
       </body>
     </html>

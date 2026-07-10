@@ -38,6 +38,11 @@
       "delivered": "Delivered Orders"
     }
   },
+  "welcome": {
+    "title": "Welcome!",
+    "titleNamed": "Hi, {{name}}!",
+    "subtitle": "Your session is active. Use the side menu to explore the sections available to your account."
+  },
   "placeholder": {
     "comingSoon": "This section is under construction."
   }

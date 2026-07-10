@@ -11,7 +11,7 @@ interface SidebarContentProps {
 export function SidebarContent({ collapsed = false, onNavigate }: SidebarContentProps) {
   return (
     <div className="bg-surface flex h-full flex-col">
-      <SidebarLogo collapsed={collapsed} />
+      <SidebarLogo collapsed={collapsed} onNavigate={onNavigate} />
 
       <div className={`flex-1 overflow-y-auto py-2 px-3`}>
         <SidebarNav onNavigate={onNavigate} />

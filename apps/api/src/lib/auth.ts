@@ -11,12 +11,15 @@ export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: [env.WEB_ORIGIN],
+  session: {
+    cookieCache: { enabled: true, maxAge: 300 },
+  },
   plugins: [
     admin({
       ac,
       roles,
       defaultRole: DEFAULT_ROLE,
-      adminRoles: ADMIN_ROLES
-    })
+      adminRoles: ADMIN_ROLES,
+    }),
   ],
 });

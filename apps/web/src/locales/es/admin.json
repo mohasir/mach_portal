@@ -38,6 +38,11 @@
       "delivered": "Pedidos entregados"
     }
   },
+  "welcome": {
+    "title": "¡Te damos la bienvenida!",
+    "titleNamed": "¡Hola, {{name}}!",
+    "subtitle": "Tu sesión está activa. Usá el menú lateral para navegar por las secciones disponibles para tu cuenta."
+  },
   "placeholder": {
     "comingSoon": "Esta sección está en construcción."
   }

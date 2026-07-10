@@ -6,5 +6,10 @@
   "cancel": "Cancelar",
   "delete": "Eliminar",
   "edit": "Editar",
-  "logout": "Salir"
+  "logout": "Salir",
+  "notFound": {
+    "title": "Página no encontrada",
+    "subtitle": "La página que buscás no existe o fue movida.",
+    "home": "Ir al inicio"
+  }
 }

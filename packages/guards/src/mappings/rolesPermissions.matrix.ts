@@ -42,8 +42,6 @@ export const rolesPermissionsMatrix = [
   },
   {
     role: ROLES.MEMBER,
-    permissions: {
-      [RESOURCES.NOTE]: [READ, UPDATE, DELETE],
-    },
+    permissions: {},
   },
 ] satisfies readonly RolesPermissionsMatrixItem[];
