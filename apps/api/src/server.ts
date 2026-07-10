@@ -11,6 +11,11 @@ const app = express();
 
 app.use(cors({ origin: env.WEB_ORIGIN, credentials: true }));
 
+app.use(['/api/auth', '/trpc'], (_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  next();
+});
+
 // 1) Better Auth BEFORE express.json() — it parses its own body
 app.all('/api/auth/*path', toNodeHandler(auth));
 
