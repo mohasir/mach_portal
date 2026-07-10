@@ -1,0 +1,44 @@
+{
+  "title": "Usuarios",
+  "index": {
+    "add": "Nuevo usuario"
+  },
+  "columns": {
+    "name": "Nombre",
+    "email": "Email",
+    "role": "Rol",
+    "createdAt": "Creado"
+  },
+  "form": {
+    "name": "Nombre",
+    "namePlaceholder": "Nombre completo",
+    "email": "Email",
+    "emailPlaceholder": "correo@ejemplo.com",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Mínimo 8 caracteres",
+    "role": "Rol",
+    "rolePlaceholder": "Seleccioná un rol",
+    "save": "Guardar"
+  },
+  "roles": {
+    "superadmin": "Superadmin",
+    "admin": "Admin",
+    "member": "Miembro"
+  },
+  "create": {
+    "title": "Nuevo usuario"
+  },
+  "edit": {
+    "title": "Editar usuario"
+  },
+  "delete": {
+    "confirmTitle": "¿Eliminar usuario?"
+  },
+  "empty": "No hay usuarios",
+  "validation": {
+    "nameRequired": "Nombre requerido",
+    "emailInvalid": "Email inválido",
+    "passwordMin": "Mínimo 8 caracteres",
+    "roleRequired": "Rol requerido"
+  }
+}

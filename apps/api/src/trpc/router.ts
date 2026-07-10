@@ -1,8 +1,8 @@
 import { router } from './trpc';
-import { notesRouter } from '../modules/notes/notes.router';
+import { usersRouter } from '../modules/users/users.router';
 
 export const appRouter = router({
-  notes: notesRouter,
+  users: usersRouter,
 });
 
 export type AppRouter = typeof appRouter;

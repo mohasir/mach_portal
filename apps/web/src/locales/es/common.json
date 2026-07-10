@@ -6,7 +6,13 @@
   "cancel": "Cancelar",
   "delete": "Eliminar",
   "edit": "Editar",
+  "detail": "Detalle",
   "logout": "Salir",
+  "table": {
+    "actions": "Acciones",
+    "copyId": "Copiar ID",
+    "copied": "ID copiado"
+  },
   "notFound": {
     "title": "Página no encontrada",
     "subtitle": "La página que buscás no existe o fue movida.",

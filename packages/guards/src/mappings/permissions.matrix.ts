@@ -14,5 +14,4 @@ export const permissionsMatrix = [
   { resource: RESOURCES.CLIENT, actions: CRUD },
   { resource: RESOURCES.QUOTE, actions: CRUD },
   { resource: RESOURCES.PIPELINE, actions: CRUD },
-  { resource: RESOURCES.NOTE, actions: CRUD },
 ] as const satisfies readonly PermissionsMatrixItem[];

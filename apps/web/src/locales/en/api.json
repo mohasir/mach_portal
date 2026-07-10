@@ -1,7 +1,11 @@
 {
   "errors": {
     "generic": "An unexpected error occurred",
-    "NOTE_NOT_FOUND": "The note does not exist or is not yours",
+    "USER_NOT_FOUND": "The user does not exist",
+    "USER_ALREADY_EXISTS": "A user with that email already exists",
+    "USER_CANNOT_DELETE_SELF": "You can't delete your own account",
+    "USER_CANNOT_EDIT_OWN_ROLE": "You can't change your own role",
+    "CONFLICT": "The resource already exists",
     "UNAUTHORIZED": "Your session expired, please sign in again",
     "FORBIDDEN": "You don't have permission for this action",
     "NOT_FOUND": "Resource not found",

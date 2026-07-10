@@ -5,7 +5,7 @@
 >
 > No es un README de "cómo correr el proyecto". Es el contrato de cómo se escribe el código.
 >
-> Stack real: **Next.js 15 + AntD v6 + tRPC v11 + Better Auth + Drizzle**, monorepo Turborepo/pnpm. Cualquier ejemplo concreto (`notes`) es ilustrativo; el patrón es lo que importa. El frontend consume la API tRPC descrita por `apps/api`, y **comparte con ella los schemas Zod de `@repo/schemas` y la inferencia de tipos del router**.
+> Stack real: **Next.js 15 + AntD v6 + tRPC v11 + Better Auth + Drizzle**, monorepo Turborepo/pnpm. Cualquier ejemplo concreto (`users`) es ilustrativo; el patrón es lo que importa. El frontend consume la API tRPC descrita por `apps/api`, y **comparte con ella los schemas Zod de `@repo/schemas` y la inferencia de tipos del router**.
 >
 > Este documento acompaña a `styling-guide.md` (sistema de tokens AntD ↔ Tailwind). Para todo lo visual, esa guía manda.
 
@@ -114,18 +114,24 @@ Con tRPC, la feature se **aplana** a dos capas: `hooks` (datos) y `components` (
 Los mensajes de validación son **claves i18n** (no texto). El schema es idéntico al que consume el router.
 
 ```ts
-// packages/schemas/src/notes.ts
+// packages/schemas/src/users.ts
 import { z } from 'zod';
 
-export const createNoteSchema = z.object({
-  title: z.string().min(1, 'notes.validation.titleRequired').max(120),
-  content: z.string().max(5000).optional(),
+export const createUserSchema = z.object({
+  name: z.string().min(1, 'users.validation.nameRequired').max(120),
+  email: z.email('users.validation.emailInvalid'),
+  password: z.string().min(8, 'users.validation.passwordMin').max(128),
+  role: z.enum(['superadmin', 'admin', 'member']),
 });
 
-export const updateNoteSchema = createNoteSchema.partial();
+// La edición no expone email/password: es su propio objeto, no `createUserSchema.partial()`.
+export const updateUserSchema = z.object({
+  name: z.string().min(1, 'users.validation.nameRequired').max(120),
+  role: z.enum(['superadmin', 'admin', 'member']),
+});
 
-export type CreateNoteInput = z.infer<typeof createNoteSchema>;
-export type UpdateNoteInput = z.infer<typeof updateNoteSchema>;
+export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 ```
 
 ### 3.2 Types inferidos (`types.ts`)
@@ -142,9 +148,9 @@ export type RouterOutputs = inferRouterOutputs<AppRouter>;
 ```
 
 ```ts
-// features/notes/types.ts
+// features/users/types.ts
 import type { RouterOutputs } from '@/lib/trpc/types';
-export type Note = RouterOutputs['notes']['list'][number];
+export type User = RouterOutputs['users']['list'][number];
 ```
 
 ### 3.3 Data hooks (`hooks/useX.ts`)
@@ -152,46 +158,46 @@ export type Note = RouterOutputs['notes']['list'][number];
 Toda interacción con tRPC pasa por acá. tRPC genera las query keys; la invalidación se hace con `queryFilter()`.
 
 ```ts
-// features/notes/hooks/useNotes.ts
+// features/users/hooks/useUsers.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateNoteInput, UpdateNoteInput } from '@repo/schemas';
+import type { CreateUserInput, UpdateUserInput } from '@repo/schemas';
 import { useTRPC } from '@/lib/trpc/client';
 import { useApiError } from '@/lib/error/useApiError';
 
-export function useNotesList() {
+export function useUsersList() {
   const trpc = useTRPC();
-  return useQuery(trpc.notes.list.queryOptions());
+  return useQuery(trpc.users.list.queryOptions());
 }
 
-export function useCreateNote() {
+export function useCreateUser() {
   const trpc = useTRPC();
   const qc = useQueryClient();
   const onError = useApiError();
 
   const mutation = useMutation(
-    trpc.notes.create.mutationOptions({
-      onSuccess: () => qc.invalidateQueries(trpc.notes.list.queryFilter()),
+    trpc.users.create.mutationOptions({
+      onSuccess: () => qc.invalidateQueries(trpc.users.list.queryFilter()),
       onError,
     }),
   );
 
-  return { createNote: (data: CreateNoteInput) => mutation.mutateAsync(data), isPending: mutation.isPending };
+  return { createUser: (data: CreateUserInput) => mutation.mutateAsync(data), isPending: mutation.isPending };
 }
 
-export function useUpdateNote() {
+export function useUpdateUser() {
   const trpc = useTRPC();
   const qc = useQueryClient();
   const onError = useApiError();
 
   const mutation = useMutation(
-    trpc.notes.update.mutationOptions({
-      onSuccess: () => qc.invalidateQueries(trpc.notes.list.queryFilter()),
+    trpc.users.update.mutationOptions({
+      onSuccess: () => qc.invalidateQueries(trpc.users.list.queryFilter()),
       onError,
     }),
   );
 
   return {
-    updateNote: (id: string, data: UpdateNoteInput) => mutation.mutateAsync({ id, data }),
+    updateUser: (id: string, data: UpdateUserInput) => mutation.mutateAsync({ id, data }),
     isPending: mutation.isPending,
   };
 }
@@ -206,34 +212,48 @@ Convenciones de los data hooks:
 
 ### 3.4 Formulario (AntD `Form` + `@repo/schemas` como contrato)
 
-El formulario usa `Form` nativo de AntD. La validación de UX se declara con `rules`; el input que sale del form **debe** satisfacer el schema de `@repo/schemas` (lo garantiza el tipo `CreateNoteInput` en `Form.useForm<...>()` y, en última instancia, el backend).
+El formulario usa `Form` nativo de AntD. La validación de UX se declara con `rules`; el input que sale del form **debe** satisfacer el schema de `@repo/schemas` (lo garantiza el tipo `CreateUserInput` en `Form.useForm<...>()` y, en última instancia, el backend). Un mismo `Form` puede servir create/edit con un prop `mode` que muestra u oculta campos (ej. email/password solo al crear).
 
 ```tsx
-// features/notes/components/NoteForm.tsx
+// features/users/components/UserForm.tsx
 'use client';
-import { Form, Input, Button } from 'antd';
+import { Form, Input, Select, Button } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { CreateNoteInput } from '@repo/schemas';
+import { ROLES } from '@repo/guards';
+import type { CreateUserInput } from '@repo/schemas';
 
-export function NoteForm({ onSubmit, isPending }: {
-  onSubmit: (values: CreateNoteInput) => Promise<void> | void;
+export function UserForm({ mode, onSubmit, isPending }: {
+  mode: 'create' | 'edit';
+  onSubmit: (values: CreateUserInput) => Promise<void> | void;
   isPending: boolean;
 }) {
-  const { t } = useTranslation('notes');
-  const [form] = Form.useForm<CreateNoteInput>();
+  const { t } = useTranslation('users');
+  const [form] = Form.useForm<CreateUserInput>();
+  const roleOptions = Object.values(ROLES).map((role) => ({ value: role, label: t(`roles.${role}`) }));
 
   return (
     <Form form={form} layout="vertical" onFinish={onSubmit} requiredMark={false}>
       <Form.Item
-        name="title"
-        label={t('form.title')}
-        rules={[{ required: true, message: t('validation.titleRequired') }, { max: 120 }]}
+        name="name"
+        label={t('form.name')}
+        rules={[{ required: true, message: t('validation.nameRequired') }, { max: 120 }]}
       >
-        <Input placeholder={t('form.titlePlaceholder')} />
+        <Input placeholder={t('form.namePlaceholder')} />
       </Form.Item>
 
-      <Form.Item name="content" label={t('form.content')} rules={[{ max: 5000 }]}>
-        <Input.TextArea rows={3} placeholder={t('form.contentPlaceholder')} />
+      {mode === 'create' && (
+        <>
+          <Form.Item name="email" label={t('form.email')} rules={[{ type: 'email', message: t('validation.emailInvalid') }]}>
+            <Input placeholder={t('form.emailPlaceholder')} />
+          </Form.Item>
+          <Form.Item name="password" label={t('form.password')} rules={[{ min: 8, message: t('validation.passwordMin') }]}>
+            <Input.Password placeholder={t('form.passwordPlaceholder')} />
+          </Form.Item>
+        </>
+      )}
+
+      <Form.Item name="role" label={t('form.role')} rules={[{ required: true, message: t('validation.roleRequired') }]}>
+        <Select options={roleOptions} placeholder={t('form.rolePlaceholder')} />
       </Form.Item>
 
       <Form.Item className="mb-0">
@@ -247,7 +267,7 @@ export function NoteForm({ onSubmit, isPending }: {
 ```
 
 Reglas del formulario:
-- El tipo genérico de `Form.useForm<T>()` es el **input inferido de `@repo/schemas`** (`CreateNoteInput`), no un tipo ad-hoc.
+- El tipo genérico de `Form.useForm<T>()` es el **input inferido de `@repo/schemas`** (`CreateUserInput`), no un tipo ad-hoc.
 - Las `rules` reflejan las restricciones del schema (required, max, type). Son de **UX**; la validación autoritativa la hace el backend con el mismo Zod.
 - Los mensajes de las `rules` son claves i18n (`t('validation.xxx')`).
 - El componente `Form` **no** conoce las mutations: recibe `onSubmit`/`isPending` desde arriba (la Page los conecta al hook).
@@ -258,31 +278,39 @@ Reglas del formulario:
 Jerarquía típica de una feature CRUD:
 
 - **`XPage` / `XPageIndex`** (`'use client'`): orquesta. Renderiza `PageHeader`, la tabla y los modales; conecta hooks con componentes; maneja estado local de "qué modal está abierto" y "qué fila se edita".
-- **`XTable` + `columns.tsx`**: `Table` de AntD; consume `useXList`.
+- **`XTable` + `columns.tsx`**: `XTable` consume `useXList` y arma el `<Table>`; las columnas viven **aparte** en `columns.tsx`, como un hook `useXColumns({ onEdit, onDelete })` que devuelve `TableColumnsType<X>` (es hook porque necesita `t`/formatters de fecha). La tabla queda fina.
 - **`CreateXModal` / `EditXModal`**: `Modal` de AntD que envuelve `XForm`.
 - **`XForm`**: campos AntD; recibe `onSubmit`/`isPending`.
 
 ```tsx
-// features/notes/components/NotesPage.tsx
+// features/users/components/UsersPage.tsx
 'use client';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { NotesTable } from './NotesTable';
-import { CreateNoteModal } from './CreateNoteModal';
-import type { Note } from '../types';
+import { useCan } from '@/lib/auth/useCan';
+import { UsersTable } from './UsersTable';
+import { CreateUserModal } from './CreateUserModal';
+import { EditUserModal } from './EditUserModal';
+import type { User } from '../types';
 
-export function NotesPage() {
-  const { t } = useTranslation('notes');
+export function UsersPage() {
+  const { t } = useTranslation('users');
+  const can = useCan();
+  const canCreate = can({ user: ['create'] });
   const [isCreateOpen, setCreateOpen] = useState(false);
-  const [editing, setEditing] = useState<Note | null>(null);
+  const [editing, setEditing] = useState<User | null>(null);
 
   return (
     <div>
-      <PageHeader title={t('index.title')} actionLabel={t('index.add')} onAction={() => setCreateOpen(true)} />
-      <NotesTable onEdit={setEditing} />
-      <CreateNoteModal open={isCreateOpen} onClose={() => setCreateOpen(false)} />
-      {/* EditNoteModal note={editing} ... */}
+      <PageHeader
+        title={t('title')}
+        actionLabel={canCreate ? t('index.add') : undefined}
+        onAction={canCreate ? () => setCreateOpen(true) : undefined}
+      />
+      <UsersTable onEdit={setEditing} />
+      <CreateUserModal open={isCreateOpen} onClose={() => setCreateOpen(false)} />
+      <EditUserModal user={editing} open={!!editing} onClose={() => setEditing(null)} />
     </div>
   );
 }
@@ -293,9 +321,9 @@ export function NotesPage() {
 La única superficie pública de la feature. Las páginas y otras features importan **de aquí**, no de rutas internas.
 
 ```ts
-export { NotesPage } from './components/NotesPage';
-export { useNotesList, useCreateNote, useUpdateNote } from './hooks/useNotes';
-export type { Note } from './types';
+export { UsersPage } from './components/UsersPage';
+export { useUsersList, useCreateUser, useUpdateUser, useDeleteUser } from './hooks/useUsers';
+export type { User } from './types';
 ```
 
 ---
@@ -304,9 +332,9 @@ export type { Note } from './types';
 
 - **Página** = adaptador de ruta. Solo renderiza el índice de la feature:
   ```tsx
-  // app/admin/notes/page.tsx
-  import { NotesPage } from '@/features/notes';
-  export default function Page() { return <NotesPage />; }
+  // app/admin/users/page.tsx
+  import { UsersPage } from '@/features/users';
+  export default function Page() { return <UsersPage />; }
   ```
 - **Rutas**: `(auth)` (route group) para páginas públicas (login/registro); `admin/` (segmento) para el panel protegido.
 - **Layouts** delegan en contenedores de `components/Layouts`:
@@ -427,7 +455,7 @@ export const zodField = (schema: ZodTypeAny): Rule => ({
 });
 ```
 
-Se usa por campo (`rules={[zodField(createNoteSchema.shape.title)]}`). Es una **opción**, no el default; el default es `rules` explícitas.
+Se usa por campo (`rules={[zodField(createUserSchema.shape.name)]}`). Es una **opción**, no el default; el default es `rules` explícitas.
 
 ---
 
@@ -480,14 +508,15 @@ Better Auth provee RBAC nativo con los plugins **`access`** + **`admin`**. Está
 
 ```ts
 import { createAccessControl } from 'better-auth/plugins/access';
-import { adminAc, defaultStatements } from 'better-auth/plugins/admin/access';
+import { defaultStatements } from 'better-auth/plugins/admin/access';
 
-export const statements = { ...defaultStatements, note: ['create', 'read', 'update', 'delete'] } as const;
+// Recursos de dominio (event, client, quote, ...) se suman a los statements de Better Auth (user, session).
+export const statements = { ...defaultStatements, event: ['create', 'read', 'update', 'delete'] } as const;
 export const ac = createAccessControl(statements);
 export const roles = {
-  superadmin: ac.newRole(statements), // acceso total (todos los recursos)
-  admin:  ac.newRole({ ...adminAc.statements, note: ['create', 'read', 'update', 'delete'] }),
-  member: ac.newRole({ note: ['create', 'read', 'update', 'delete'] }),
+  superadmin: ac.newRole(statements),                                    // acceso total (incluye el statement `user`)
+  admin:  ac.newRole({ event: ['create', 'read', 'update', 'delete'] }), // solo recursos de dominio → NO gestiona usuarios
+  member: ac.newRole({}),                                                // sin permisos
 };
 export const DEFAULT_ROLE = 'member';
 export const SUPERADMIN_ROLE = 'superadmin';
@@ -547,10 +576,14 @@ export function useCan() {
 
 > **Regla — nunca strings sueltos en un `PermissionCheck`.** Recursos y acciones tienen su
 > catálogo tipado en `@repo/guards` (`RESOURCES`, `ACTIONS`): usá esas constantes, no literales.
-> Correcto: `{ [RESOURCES.NOTE]: [ACTIONS.READ] }` — nunca `{ note: ['read'] }`. Aplica en **todos**
+> Correcto: `{ [RESOURCES.EVENT]: [ACTIONS.READ] }` — nunca `{ event: ['read'] }`. Aplica en **todos**
 > los lugares donde se arma un `PermissionCheck`: `guardedProcedure(...)` (BE),
 > `<Can allowed={...}>` / `useCan()(...)` (FE) y los `guard` de navegación (`lib/navigation`).
 > Si un recurso o acción se renombra, TS marca el error en compilación en vez de fallar en silencio.
+>
+> **Excepción:** los statements propios de Better Auth (`user`, `session`) no tienen constante en
+> `RESOURCES` — se referencian por su literal. Por eso la feature `users` gatea con `{ user: ['list'] }`,
+> `{ user: ['create'] }`, etc. Solo los recursos **de dominio** pasan por `RESOURCES`/`ACTIONS`.
 
 > **Asignar roles:** los nuevos usuarios reciben `DEFAULT_ROLE` (`member`). Para hacer admin a alguien: `UPDATE "user" SET role='admin' WHERE email=...` o el endpoint `authClient.admin.setRole`. Usuarios previos a la columna tienen `role` NULL → caen a `member`.
 
@@ -567,7 +600,7 @@ export function useCan() {
 - **Convenciones de claves:**
   - Validaciones de formulario/schema: `<feature>.validation.<regla>` (referenciadas desde los schemas Zod de `@repo/schemas` y/o las `rules`).
   - Errores de API: `errors.<CODE>` en el namespace `api` (mapeo directo con los `errorCode`/`code` de tRPC).
-  - UI de una feature: `<feature>.<seccion>.<clave>` (ej. `notes.index.title`).
+  - UI de una feature: `<feature>.<seccion>.<clave>` (ej. `users.index.title`).
 
 ---
 
@@ -587,15 +620,15 @@ export function useCan() {
 
 | Elemento | Convención | Ejemplo |
 | --- | --- | --- |
-| Feature dir | plural del dominio | `features/notes/` |
-| Schema | `<accion>XSchema` (en `@repo/schemas`) | `createNoteSchema` |
-| Input type | `CreateXInput` / `UpdateXInput` (`z.infer`) | `CreateNoteInput` |
-| Entity type | `X` (inferido de `RouterOutputs`) | `Note` |
-| Query hook | `useXList` / `useX` | `useNotesList` |
-| Mutation hook | `useCreateX` / `useUpdateX` / `useDeleteX` | `useCreateNote` |
-| Actions hook | `useXActions` | `useNotesActions` |
-| Componente Page | `XPage` / `XPageIndex` | `NotesPage` |
-| Modal | `CreateXModal` / `EditXModal` | `CreateNoteModal` |
+| Feature dir | plural del dominio | `features/users/` |
+| Schema | `<accion>XSchema` (en `@repo/schemas`) | `createUserSchema` |
+| Input type | `CreateXInput` / `UpdateXInput` (`z.infer`) | `CreateUserInput` |
+| Entity type | `X` (inferido de `RouterOutputs`) | `User` |
+| Query hook | `useXList` / `useX` | `useUsersList` |
+| Mutation hook | `useCreateX` / `useUpdateX` / `useDeleteX` | `useCreateUser` |
+| Actions hook | `useXActions` | `useUsersActions` |
+| Componente Page | `XPage` / `XPageIndex` | `UsersPage` |
+| Modal | `CreateXModal` / `EditXModal` | `CreateUserModal` |
 | Store | `useXStore` | `useLocaleStore` |
 
 ---

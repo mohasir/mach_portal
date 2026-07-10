@@ -6,7 +6,13 @@
   "cancel": "Cancel",
   "delete": "Delete",
   "edit": "Edit",
+  "detail": "Details",
   "logout": "Logout",
+  "table": {
+    "actions": "Actions",
+    "copyId": "Copy ID",
+    "copied": "ID copied"
+  },
   "notFound": {
     "title": "Page not found",
     "subtitle": "The page you're looking for doesn't exist or was moved.",
