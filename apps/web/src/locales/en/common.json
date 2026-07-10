@@ -13,6 +13,10 @@
     "copyId": "Copy ID",
     "copied": "ID copied"
   },
+  "confirm": {
+    "title": "Warning",
+    "irreversible": "This action cannot be undone"
+  },
   "notFound": {
     "title": "Page not found",
     "subtitle": "The page you're looking for doesn't exist or was moved.",

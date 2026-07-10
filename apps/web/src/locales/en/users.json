@@ -32,7 +32,8 @@
     "title": "Edit user"
   },
   "delete": {
-    "confirmTitle": "Delete user?"
+    "confirmTitle": "Delete user?",
+    "confirmContent": "Are you sure you want to delete {{name}}?"
   },
   "empty": "No users",
   "validation": {

@@ -1,22 +1,21 @@
 'use client';
 import { App, Tag, type TableColumnsType } from 'antd';
+import { type RoleType } from '@repo/guards';
 import { useTranslation } from 'react-i18next';
 import { DataTableRowActions, type RowActionItem } from '@/components/shared/DataTable';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
+import { ROLE_COLORS } from '../helpers';
 import type { User } from '../types';
-
-const ROLE_COLORS: Record<string, string> = {
-  superadmin: 'magenta',
-  admin: 'geekblue',
-  member: 'default',
-};
 
 interface UseUsersColumnsParams {
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
 }
 
-export function useUsersColumns({ onEdit, onDelete }: UseUsersColumnsParams): TableColumnsType<User> {
+export function useUsersColumns({
+  onEdit,
+  onDelete,
+}: UseUsersColumnsParams): TableColumnsType<User> {
   const { t } = useTranslation('users');
   const { t: tc } = useTranslation('common');
   const { date } = useDateFormatter();
@@ -41,10 +40,7 @@ export function useUsersColumns({ onEdit, onDelete }: UseUsersColumnsParams): Ta
       guard: { user: ['delete'] },
       onClick: () => onDelete(user),
       confirm: {
-        title: t('delete.confirmTitle'),
-        content: user.name || user.email,
-        okText: tc('delete'),
-        cancelText: tc('cancel'),
+        content: t('delete.confirmContent', { name: user.name || user.email }),
       },
     },
   ];
@@ -57,7 +53,11 @@ export function useUsersColumns({ onEdit, onDelete }: UseUsersColumnsParams): Ta
       dataIndex: 'role',
       key: 'role',
       render: (role: string | null) =>
-        role ? <Tag color={ROLE_COLORS[role] ?? 'default'}>{t(`roles.${role}`, role)}</Tag> : '—',
+        role ? (
+          <Tag color={ROLE_COLORS[role as RoleType] ?? 'default'}>{t(`roles.${role}`, role)}</Tag>
+        ) : (
+          '—'
+        ),
     },
     {
       title: t('columns.createdAt'),
@@ -71,7 +71,9 @@ export function useUsersColumns({ onEdit, onDelete }: UseUsersColumnsParams): Ta
       key: 'actions',
       width: 56,
       align: 'right',
-      render: (_, user) => <DataTableRowActions actions={rowActions(user)} label={tc('table.actions')} />,
+      render: (_, user) => (
+        <DataTableRowActions actions={rowActions(user)} label={tc('table.actions')} />
+      ),
     },
   ];
 }

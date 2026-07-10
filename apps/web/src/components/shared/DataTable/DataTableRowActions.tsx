@@ -1,31 +1,14 @@
 'use client';
-import { App, Button, Dropdown, type MenuProps } from 'antd';
+import { App, Button, Dropdown, Typography, type MenuProps } from 'antd';
 import { MoreHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCan } from '@/lib/auth/useCan';
-import { ACTION_PRESETS, type ActionPreset } from './helpers';
-import type { RowAction, RowActionItem, RowActionKey } from './types';
+import { ACTION_PRESETS, isDivider, stripDividers } from './helpers';
+import type { ActionPreset, RowAction, RowActionItem, RowActionKey } from './types';
 
 interface DataTableRowActionsProps {
   actions: RowActionItem[];
   label?: string;
-}
-
-const isDivider = (item: RowActionItem): item is { type: 'divider' } => 'type' in item;
-
-/** Drops leading, trailing and consecutive dividers left behind after guard filtering. */
-function stripDividers(items: RowActionItem[]): RowActionItem[] {
-  const out: RowActionItem[] = [];
-  for (const item of items) {
-    if (isDivider(item)) {
-      const prev = out[out.length - 1];
-      if (prev && !isDivider(prev)) out.push(item);
-    } else {
-      out.push(item);
-    }
-  }
-  while (out.length && isDivider(out[out.length - 1]!)) out.pop();
-  return out;
 }
 
 export function DataTableRowActions({ actions, label }: DataTableRowActionsProps) {
@@ -33,13 +16,33 @@ export function DataTableRowActions({ actions, label }: DataTableRowActionsProps
   const { t: tc } = useTranslation('common');
   const can = useCan();
 
-  const run = (action: RowAction, danger?: boolean) => {
-    if (!action.confirm) return action.onClick();
+  const run = (
+    action: RowAction,
+    preset: ActionPreset | undefined,
+    okLabel: string,
+    danger?: boolean,
+  ) => {
+    const c = action.confirm;
+    const pc = preset?.confirm;
+    if (!c && !pc) return action.onClick();
+
+    const caption = c?.caption ?? (pc?.captionKey ? tc(pc.captionKey) : undefined);
+    const body = c?.content;
     modal.confirm({
-      title: action.confirm.title,
-      content: action.confirm.content,
-      okText: action.confirm.okText,
-      cancelText: action.confirm.cancelText,
+      title: c?.title ?? (pc?.titleKey ? tc(pc.titleKey) : undefined),
+      content:
+        body || caption ? (
+          <div className="flex flex-col gap-1">
+            {body ? <span>{body}</span> : null}
+            {caption ? (
+              <Typography.Text type="secondary" className="text-xs mt-2">
+                {caption}
+              </Typography.Text>
+            ) : null}
+          </div>
+        ) : undefined,
+      okText: c?.okText ?? okLabel,
+      cancelText: c?.cancelText ?? tc('cancel'),
       okButtonProps: danger ? { danger: true } : undefined,
       onOk: action.onClick,
     });
@@ -53,12 +56,13 @@ export function DataTableRowActions({ actions, label }: DataTableRowActionsProps
     const preset = ACTION_PRESETS[action.key as RowActionKey] as ActionPreset | undefined;
     const Icon = preset?.Icon;
     const danger = action.danger ?? preset?.danger;
+    const label = action.label ?? (preset ? tc(preset.labelKey) : action.key);
     return {
       key: action.key,
-      label: action.label ?? (preset ? tc(preset.labelKey) : action.key),
+      label,
       icon: action.icon ?? (Icon ? <Icon size={16} /> : undefined),
       danger,
-      onClick: () => run(action, danger),
+      onClick: () => run(action, preset, label, danger),
     };
   });
 

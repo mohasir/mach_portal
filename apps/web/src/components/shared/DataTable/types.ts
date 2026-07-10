@@ -1,9 +1,24 @@
 import type { ReactNode } from 'react';
 import type { PermissionCheck } from '@repo/guards';
+import { LucideIcon } from 'lucide-react';
+
+/** i18n keys (common namespace) for the confirm defaults a preset injects when a caller omits them. */
+export interface ActionPresetConfirm {
+  titleKey?: string;
+  captionKey?: string;
+}
+
+export interface ActionPreset {
+  labelKey: string;
+  Icon: LucideIcon;
+  danger?: boolean;
+  confirm?: ActionPresetConfirm;
+}
 
 interface RowActionConfirm {
-  title: string;
+  title?: string;
   content?: string;
+  caption?: string;
   okText?: string;
   cancelText?: string;
 }
