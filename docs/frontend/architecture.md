@@ -1,13 +1,15 @@
 # Especificación de Arquitectura — Frontend (Web)
 
 > **Propósito de este documento**
-> Es una *especificación de arquitectura orientada a IA* (Spec-Driven Development). Describe **cómo está construido** el frontend de `mach-portal` y, sobre todo, **las reglas que un agente de IA debe seguir** para añadir o modificar código de forma consistente.
+> Es una *especificación de arquitectura orientada a IA* (Spec-Driven Development). Describe **cómo se construye** el frontend de `mach-portal` y **las reglas estrictas que un agente de IA debe seguir** para añadir o modificar una feature de forma consistente.
 >
-> No es un README de "cómo correr el proyecto". Es el contrato de cómo se escribe el código.
+> Es el **patrón único** para toda feature. Los ejemplos usan un recurso genérico de placeholder: **`X`** para la entidad y los componentes (`XPage`, `XTable`, …), **`<feature>`** para el directorio/namespace/clave de router. Sustituir por el recurso real.
 >
-> Stack real: **Next.js 15 + AntD v6 + tRPC v11 + Better Auth + Drizzle**, monorepo Turborepo/pnpm. Cualquier ejemplo concreto (`users`) es ilustrativo; el patrón es lo que importa. El frontend consume la API tRPC descrita por `apps/api`, y **comparte con ella los schemas Zod de `@repo/schemas` y la inferencia de tipos del router**.
+> Documentos hermanos:
+> - `styling-guide.md` — tokens AntD ↔ Tailwind, tipografía, iconos, fechas, overrides. **Para todo lo visual, esa guía manda.**
+> - `docs/backend/architecture.md` — la API (tRPC/Drizzle/módulos). Este doc es **solo front**; asume que los endpoints tRPC ya existen.
 >
-> Este documento acompaña a `styling-guide.md` (sistema de tokens AntD ↔ Tailwind). Para todo lo visual, esa guía manda.
+> El contrato FE↔BE son los schemas Zod de **`@repo/schemas`** y la inferencia de tipos del router (`AppRouter`).
 
 ---
 
@@ -25,22 +27,23 @@
 | Validación / contrato | **Zod 4** compartido vía **`@repo/schemas`** |
 | Componentes | **Ant Design v6** |
 | Estilos | **Tailwind CSS v4** sobre tokens AntD (ver `styling-guide.md`) |
+| Iconos | **`lucide-react`** (prohibido `@ant-design/icons`) |
+| Fechas | **`date-fns`** vía `lib/date` (`useDateFormatter`) |
 | i18n | **i18next** + **react-i18next** (namespaces) |
-| Iconos | `@ant-design/icons` |
 | Monorepo | **Turborepo** + **pnpm workspaces** |
 
 ### Principios no negociables
 
 1. **Feature-Sliced.** El código de dominio vive en `src/features/<feature>/`. Cada feature es autónoma y expone su API pública por un barrel `index.ts`. Las páginas del App Router son *thin*: solo importan y renderizan el componente índice de la feature.
-2. **Separación estricta de capas dentro de la feature:** `hooks` (wrappers tRPC + acciones) → `components` (UI). Un componente **nunca** llama a `useTRPC()` directamente ni arma `queryOptions()`/`queryFilter()` inline: pasa siempre por un hook de la feature.
-3. **Estado de servidor ≠ estado de cliente.** Datos que vienen de la API → **tRPC + TanStack Query**. Estado de UI/preferencias/config global → **Zustand**. No se mezclan (no se cachea data de servidor en Zustand).
-4. **El contrato es Zod (`@repo/schemas`).** Todo input de una mutation/query tRPC se valida con un schema Zod compartido; ese schema es la **fuente de verdad de la validación** y del tipo del input. La validación en el `<Form>` de AntD (`rules`) es de **UX** (feedback inmediato); el backend es el límite real de validación.
-5. **Tipos inferidos, no escritos a mano.** Los tipos de request salen de `@repo/schemas` (`z.infer`) y los de response de `inferRouterOutputs<AppRouter>`. No se declaran DTOs manuales que dupliquen el contrato.
-6. **Errores de API centralizados.** Todo error de tRPC se normaliza y se traduce a mensaje i18n mediante su `errorCode`/`code` (`useApiError`). No se leen `error.message` crudos sueltos por la UI.
-7. **Autorización declarativa (opt-in).** Cuando el proyecto usa RBAC, la visibilidad por permisos/roles se expresa con `<Can>` y `useCan`, sobre el catálogo de access-control compartido de Better Auth. Nunca condicionales ad-hoc con strings de rol.
-8. **Todo texto visible pasa por i18n.** Nada de strings hardcodeados en la UI; se usan claves de namespace (`useTranslation('<feature>')`).
-
-> **Qué desaparece respecto de una arquitectura basada en Axios/REST:** no hay `services/` con llamadas HTTP, no hay instancias axios ni interceptores, no hay cola de refresh de tokens, no hay factory manual de query keys, no hay DTOs escritos a mano. tRPC + Better Auth cubren todo eso.
+2. **Separación estricta de capas dentro de la feature:** `hooks` (datos + acciones) → `components` (UI). Un componente **nunca** llama a `useTRPC()` directamente ni arma `queryOptions()`/`queryFilter()` inline: pasa siempre por un hook de la feature.
+3. **Estado de servidor ≠ estado de cliente.** Datos de la API → **tRPC + TanStack Query**. Estado de UI/preferencias → **Zustand**. No se cachea data de servidor en Zustand.
+4. **El contrato es Zod (`@repo/schemas`).** El input de toda query/mutation se tipa/valida con un schema Zod compartido. La validación en el `<Form>` de AntD (`rules`) es solo **UX**; el backend es el límite real.
+5. **Tipos inferidos, no escritos a mano.** Request desde `@repo/schemas` (`z.infer`); response desde `inferRouterOutputs<AppRouter>`. Sin DTOs manuales.
+6. **Errores de API centralizados.** Todo error de tRPC se traduce a i18n por su `errorCode`/`code` con `useApiError`. Nunca `error.message` crudo.
+7. **Autorización declarativa.** La visibilidad por permisos se expresa con `<Can>` / `useCan` sobre `@repo/guards`. Nunca condicionales ad-hoc con strings de rol.
+8. **Todo texto visible pasa por i18n** (`useTranslation('<feature>')`). Cero strings hardcodeados.
+9. **Tablas server-driven vía `DataTable`.** Toda lista usa el componente compartido `DataTable` + `useDataTable` (paginación/orden/búsqueda en server) — nunca un `<Table>` de AntD armado a mano (§4).
+10. **Mobile-first.** Se construye desde el móvil hacia arriba (ver `CLAUDE.md` / `styling-guide.md`). Las tablas rinden **card** en móvil.
 
 ---
 
@@ -49,324 +52,380 @@
 ```
 apps/web/src/
 ├── app/                        # App Router. Páginas THIN + layouts.
-│   ├── layout.tsx              # Root layout (fuentes, AntdRegistry, <Providers>)
-│   ├── providers.tsx           # Composición de providers (client)
-│   ├── (auth)/                 # Grupo de rutas públicas (login/registro)
-│   └── admin/                  # Panel protegido (segmento, no route group)
-│       ├── layout.tsx          # Guard de sesión + <AdminLayoutContainer>
+│   ├── layout.tsx              # Root layout (fuentes, AntdRegistry, <AppProviders>)
+│   ├── (auth)/                 # Grupo de rutas públicas (login)
+│   └── admin/                  # Panel protegido (segmento)
+│       ├── layout.tsx          # <AdminLayoutContainer> (shell). El guard de sesión es global (AuthProvider)
 │       ├── page.tsx            # Dashboard
-│       └── <recurso>/page.tsx  # Página: renderiza el índice de la feature
+│       └── <feature>/page.tsx  # Página THIN: renderiza el índice de la feature
 │
 ├── features/                   # DOMINIO. Un directorio por feature.
 │   └── <feature>/
-│       ├── components/         # UI AntD (Page, Table, Form, Modal, columns)
-│       ├── hooks/              # useXList/useXCreate... (wrappers tRPC) + useXActions
-│       ├── types.ts            # (opcional) re-export de tipos INFERIDOS del router
+│       ├── components/         # XPage, XTable, columns.tsx, XCard, Create/EditXModal, XForm
+│       ├── hooks/              # useX.ts (data hooks) + useXRowActions.ts (acciones de fila)
+│       ├── helpers.ts          # Constantes/utilidades UI de la feature (ej. mapa de colores por estado)
+│       ├── types.ts            # Entidad INFERIDA del router (RouterOutputs[...])
 │       └── index.ts            # BARREL: API pública de la feature
 │
 ├── lib/                        # Infraestructura transversal (no dominio)
 │   ├── trpc/                   # client.ts (useTRPC), provider.tsx, types.ts (RouterInputs/Outputs)
-│   ├── auth/                   # client.ts (authClient, signIn/Out, useSession), guards, <Can>/useCan
-│   ├── navigation/             # Navegación data-driven: types, constants/{items,icons}, config, useNavigation
-│   ├── hooks/                  # Hooks transversales (useIsDesktop, ...)
+│   ├── auth/                   # client.ts, useCan, <Can>, navigation.ts + route-access.ts (RBAC por ruta)
+│   ├── navigation/             # Navegación data-driven (items, icons, config, useNavigation)
+│   ├── hooks/                  # useIsDesktop, useDateFormatter, ...
+│   ├── date/                   # helpers date-fns (formatDate/…)
 │   ├── i18n/                   # config.ts
 │   ├── error/                  # useApiError.ts (parser tRPC → i18n)
-│   ├── stores/                 # Zustand stores (locale, ui, ...)
-│   └── env.ts                  # Variables de entorno validadas
+│   └── stores/                 # Zustand stores (locale, ui, ...)
 │
 ├── components/                 # Componentes GLOBALES (no de una feature)
-│   ├── Layouts/                # Contenedores de layout: AdminLayoutContainer (shell del panel)
-│   └── shared/                 # PageHeader, PlaceholderPage, Sidebar/, Topbar/, Logo, ...
+│   ├── providers/              # AppProviders (composición) + AuthProvider (guard de sesión global)
+│   ├── Layouts/                # AdminLayoutContainer (shell del panel)
+│   ├── NotificationMenu/       # campana (pieza del Topbar)
+│   ├── UserProfile/            # menú de usuario (pieza del Topbar)
+│   └── shared/                 # DataTable/, PageHeader, PlaceholderPage, Sidebar/, Topbar/, Logo, ...
 │
 ├── theme/                      # antd.ts (tokens MB + machBarTheme), globals.css
-└── locales/{es,en}/            # common.json, <feature>.json, api.json
+├── locales/{es,en}/            # common.json, admin.json, auth.json, <feature>.json, api.json
+├── middleware.ts               # redirect en el borde + RBAC por ruta best-effort (cookieCache)
+└── env.ts                      # variables de entorno validadas
 ```
 
-Los schemas Zod **no** viven en la feature del web: viven en **`packages/schemas/src/<feature>.ts`** y se importan por `@repo/schemas`. Así el mismo schema valida el input en el router tRPC (backend) y provee el tipo/validación en el front.
+Los schemas Zod viven en **`packages/schemas/src/<feature>.ts`** (`@repo/schemas`), no en la feature del web.
 
 ### Path aliases (tsconfig)
-
-Hoy el proyecto usa un único alias raíz:
 
 ```
 @/*   → src/*
 ```
 
-Se importa entonces `@/features/...`, `@/lib/...`, `@/components/...`, `@/theme/...`. Paquetes del monorepo por nombre: **`api`** (tipo `AppRouter`), **`@repo/schemas`** (Zod + tipos de input).
+Se importa `@/features/...`, `@/lib/...`, `@/components/...`, `@/theme/...`. Paquetes del monorepo por nombre: **`api`** (`AppRouter`), **`@repo/schemas`** (Zod + tipos de input), **`@repo/guards`** (RBAC).
 
 ---
 
-## 3. Anatomía de una feature (el patrón canónico)
-
-Con tRPC, la feature se **aplana** a dos capas: `hooks` (datos) y `components` (UI). El "service" y el "factory de query keys" del patrón REST clásico los provee tRPC.
+## 3. Anatomía de una feature
 
 | Capa | Archivo(s) | Responsabilidad | Qué NO hace |
 | --- | --- | --- | --- |
-| **Schema (compartido)** | `@repo/schemas/src/<x>.ts` | Schemas Zod de input (`createXSchema`, `updateXSchema`) + tipos (`z.infer`). Fuente de verdad del contrato. | Nada de React ni de HTTP. |
-| **Types** | `types.ts` *(opcional)* | Re-export de tipos **inferidos** del router (`RouterOutputs['x']['list'][number]`). | Declarar formas a mano. |
-| **Data hooks** | `hooks/useX.ts` | Envuelven `useTRPC()` con `useQuery`/`useMutation`. Centralizan la invalidación de cache. Manejo de error con `useApiError`. | Renderizar UI, validar formularios de UX. |
-| **Action hook** | `hooks/useXActions.ts` *(opcional)* | Handlers de acciones de tabla (editar, borrar con confirm, copiar id...). | Llamar a `useTRPC()` a mano. |
-| **Components** | `components/*.tsx` | UI AntD. Consumen los hooks. `Page` orquesta; `Table`/`columns`, `Modal`, `Form`. | `useTRPC()` directo, `queryOptions()` inline. |
-| **Barrel** | `index.ts` | Exporta la API pública (componente índice, hooks, tipos). | — |
+| **Contrato (compartido)** | `@repo/schemas/src/<feature>.ts` | Tipos de input (`CreateXInput`, `UpdateXInput`) y de la query de lista (`XListQuery`). Fuente de verdad del contrato. | React, HTTP. |
+| **Types** | `types.ts` | Entidad **inferida** del router (`RouterOutputs['<feature>']['list']['items'][number]`). | Declarar formas a mano. |
+| **Data hooks** | `hooks/useX.ts` | `useXList(query)`, `useCreateX/useUpdateX/useDeleteX`. Envuelven tRPC + invalidan cache + `useApiError`. | Renderizar UI. |
+| **Row actions** | `hooks/useXRowActions.ts` | Devuelve `(row) => RowActionItem[]` (copyId/edit/delete + guards + confirm). Compartido por columnas y card. | Llamar `useTRPC()`. |
+| **Helpers** | `helpers.ts` | Constantes UI de la feature (ej. mapa de colores por estado). | Lógica de datos. |
+| **Components** | `components/*.tsx` | `XPage` orquesta; `XTable` (usa `DataTable`); `columns.tsx` (`useXColumns`); `XCard` (móvil); `Create/EditXModal`; `XForm`. | `useTRPC()` directo. |
+| **Barrel** | `index.ts` | API pública (Page, hooks, tipos). | — |
 
-### 3.1 Schema (`@repo/schemas/src/<x>.ts`)
+### 3.1 Contrato (`@repo/schemas`) — lo que el front consume
 
-Los mensajes de validación son **claves i18n** (no texto). El schema es idéntico al que consume el router.
+El front importa de `@repo/schemas` los **tipos de input** y la **query de lista**. La creación de estos schemas es responsabilidad del backend (ver `docs/backend/architecture.md`); acá solo se consumen. Los mensajes de validación son claves i18n.
 
 ```ts
-// packages/schemas/src/users.ts
-import { z } from 'zod';
-
-export const createUserSchema = z.object({
-  name: z.string().min(1, 'users.validation.nameRequired').max(120),
-  email: z.email('users.validation.emailInvalid'),
-  password: z.string().min(8, 'users.validation.passwordMin').max(128),
-  role: z.enum(['superadmin', 'admin', 'member']),
-});
-
-// La edición no expone email/password: es su propio objeto, no `createUserSchema.partial()`.
-export const updateUserSchema = z.object({
-  name: z.string().min(1, 'users.validation.nameRequired').max(120),
-  role: z.enum(['superadmin', 'admin', 'member']),
-});
-
-export type CreateUserInput = z.infer<typeof createUserSchema>;
-export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+import type { CreateXInput, UpdateXInput, XListQuery } from '@repo/schemas';
 ```
 
 ### 3.2 Types inferidos (`types.ts`)
 
-Nunca se escribe la entidad a mano: se infiere del router. Helper global en `lib/trpc/types.ts`:
+La entidad se **infiere** del router; nunca se escribe a mano. La lista devuelve `Paginated<T>`, por eso se navega hasta `items[number]`.
 
 ```ts
 // lib/trpc/types.ts
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from 'api';
-
 export type RouterInputs = inferRouterInputs<AppRouter>;
 export type RouterOutputs = inferRouterOutputs<AppRouter>;
 ```
 
 ```ts
-// features/users/types.ts
+// features/<feature>/types.ts
 import type { RouterOutputs } from '@/lib/trpc/types';
-export type User = RouterOutputs['users']['list'][number];
+export type X = RouterOutputs['<feature>']['list']['items'][number];
 ```
 
 ### 3.3 Data hooks (`hooks/useX.ts`)
 
-Toda interacción con tRPC pasa por acá. tRPC genera las query keys; la invalidación se hace con `queryFilter()`.
+Toda interacción con tRPC pasa por acá. **La query de lista recibe el `query` paginado** (lo produce `useDataTable`, §4). Invalidación con `queryFilter()` en `onSuccess`.
 
 ```ts
-// features/users/hooks/useUsers.ts
+// features/<feature>/hooks/useX.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateUserInput, UpdateUserInput } from '@repo/schemas';
+import type { CreateXInput, UpdateXInput, XListQuery } from '@repo/schemas';
 import { useTRPC } from '@/lib/trpc/client';
 import { useApiError } from '@/lib/error/useApiError';
 
-export function useUsersList() {
+export function useXList(query: XListQuery) {
   const trpc = useTRPC();
-  return useQuery(trpc.users.list.queryOptions());
+  return useQuery(trpc.<feature>.list.queryOptions(query));
 }
 
-export function useCreateUser() {
+export function useCreateX() {
   const trpc = useTRPC();
   const qc = useQueryClient();
   const onError = useApiError();
-
   const mutation = useMutation(
-    trpc.users.create.mutationOptions({
-      onSuccess: () => qc.invalidateQueries(trpc.users.list.queryFilter()),
+    trpc.<feature>.create.mutationOptions({
+      onSuccess: () => qc.invalidateQueries(trpc.<feature>.list.queryFilter()),
       onError,
     }),
   );
-
-  return { createUser: (data: CreateUserInput) => mutation.mutateAsync(data), isPending: mutation.isPending };
+  return { createX: (data: CreateXInput) => mutation.mutateAsync(data), isPending: mutation.isPending };
 }
 
-export function useUpdateUser() {
-  const trpc = useTRPC();
-  const qc = useQueryClient();
-  const onError = useApiError();
-
-  const mutation = useMutation(
-    trpc.users.update.mutationOptions({
-      onSuccess: () => qc.invalidateQueries(trpc.users.list.queryFilter()),
-      onError,
-    }),
-  );
-
-  return {
-    updateUser: (id: string, data: UpdateUserInput) => mutation.mutateAsync({ id, data }),
-    isPending: mutation.isPending,
-  };
+export function useUpdateX() {
+  /* ...igual; updateX: (id, data: UpdateXInput) => mutateAsync({ id, data }) */
+}
+export function useDeleteX() {
+  /* ...igual; deleteX: (id) => mutateAsync({ id }) */
 }
 ```
 
-Convenciones de los data hooks:
-- Nombres: `useXList` / `useX(id)` (lecturas), `useCreateX` / `useUpdateX` / `useDeleteX` (escrituras).
-- Query keys y su invalidación **siempre** vía el proxy tRPC (`trpc.x.y.queryOptions()`, `trpc.x.y.queryFilter()`). Nunca arrays a mano.
-- Tras mutar, **invalidar** las queries afectadas en `onSuccess`.
-- El manejo de error de la mutation se delega a `useApiError` (§5). Un `try/catch` local solo cuando se necesita lógica extra (ej. cerrar un modal).
-- Queries dependientes de un id → opción `enabled: !!id` dentro de `queryOptions({ enabled })`.
+Convenciones:
+- Nombres: `useXList(query)` (lectura de lista), `useCreateX` / `useUpdateX` / `useDeleteX` (escrituras).
+- Query keys e invalidación **siempre** vía el proxy tRPC (`queryOptions`, `queryFilter`). Nunca arrays a mano.
+- Error de mutation → `useApiError` en `onError`. `try/catch` local solo para lógica extra (ej. cerrar modal).
 
-### 3.4 Formulario (AntD `Form` + `@repo/schemas` como contrato)
+### 3.4 Row actions (`hooks/useXRowActions.ts`)
 
-El formulario usa `Form` nativo de AntD. La validación de UX se declara con `rules`; el input que sale del form **debe** satisfacer el schema de `@repo/schemas` (lo garantiza el tipo `CreateUserInput` en `Form.useForm<...>()` y, en última instancia, el backend). Un mismo `Form` puede servir create/edit con un prop `mode` que muestra u oculta campos (ej. email/password solo al crear).
+Las acciones de fila se definen **una vez** en un hook y se reusan en las columnas (desktop) y en la card (móvil). Usan los presets de `DataTable` (`copyId`/`edit`/`delete`) con sus `guard` y `confirm`.
+
+```ts
+// features/<feature>/hooks/useXRowActions.ts
+'use client';
+import { App } from 'antd';
+import { useTranslation } from 'react-i18next';
+import { RESOURCES, ACTIONS } from '@repo/guards';
+import type { RowActionItem } from '@/components/shared/DataTable';
+import type { X } from '../types';
+
+export function useXRowActions({ onEdit, onDelete }: {
+  onEdit: (row: X) => void;
+  onDelete: (row: X) => void;
+}) {
+  const { t } = useTranslation('<feature>');
+  const { t: tc } = useTranslation('common');
+  const { message } = App.useApp();
+
+  return (row: X): RowActionItem[] => [
+    { key: 'copyId', onClick: () => { void navigator.clipboard.writeText(row.id); message.success(tc('table.copied')); } },
+    { type: 'divider' },
+    { key: 'edit', guard: { [RESOURCES.X]: [ACTIONS.UPDATE] }, onClick: () => onEdit(row) },
+    {
+      key: 'delete',
+      guard: { [RESOURCES.X]: [ACTIONS.DELETE] },
+      onClick: () => onDelete(row),
+      confirm: { content: t('delete.confirmContent', { name: row.name }) },
+    },
+  ];
+}
+```
+
+### 3.5 Formulario (`XForm`)
+
+`Form` nativo de AntD. El tipo genérico es el **input inferido** de `@repo/schemas`. Un mismo form sirve create/edit con un prop `mode` que muestra/oculta campos (los que solo aplican al crear). Las `rules` son **UX** y espejan el schema; sus mensajes son claves i18n.
 
 ```tsx
-// features/users/components/UserForm.tsx
+// features/<feature>/components/XForm.tsx
 'use client';
-import { Form, Input, Select, Button } from 'antd';
+import { Button, Form, Input, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { ROLES } from '@repo/guards';
-import type { CreateUserInput } from '@repo/schemas';
+import type { CreateXInput } from '@repo/schemas';
 
-export function UserForm({ mode, onSubmit, isPending }: {
+export function XForm({ mode, initialValues, onSubmit, isPending }: {
   mode: 'create' | 'edit';
-  onSubmit: (values: CreateUserInput) => Promise<void> | void;
+  initialValues?: Partial<CreateXInput>;
+  onSubmit: (values: CreateXInput) => Promise<void> | void;
   isPending: boolean;
 }) {
-  const { t } = useTranslation('users');
-  const [form] = Form.useForm<CreateUserInput>();
-  const roleOptions = Object.values(ROLES).map((role) => ({ value: role, label: t(`roles.${role}`) }));
+  const { t } = useTranslation('<feature>');
+  const [form] = Form.useForm<CreateXInput>();
 
   return (
-    <Form form={form} layout="vertical" onFinish={onSubmit} requiredMark={false}>
-      <Form.Item
-        name="name"
-        label={t('form.name')}
-        rules={[{ required: true, message: t('validation.nameRequired') }, { max: 120 }]}
-      >
+    <Form form={form} layout="vertical" initialValues={initialValues} onFinish={onSubmit} requiredMark={false}>
+      <Form.Item name="name" label={t('form.name')} rules={[{ required: true, message: t('validation.nameRequired') }, { max: 120 }]}>
         <Input placeholder={t('form.namePlaceholder')} />
       </Form.Item>
 
       {mode === 'create' && (
-        <>
-          <Form.Item name="email" label={t('form.email')} rules={[{ type: 'email', message: t('validation.emailInvalid') }]}>
-            <Input placeholder={t('form.emailPlaceholder')} />
-          </Form.Item>
-          <Form.Item name="password" label={t('form.password')} rules={[{ min: 8, message: t('validation.passwordMin') }]}>
-            <Input.Password placeholder={t('form.passwordPlaceholder')} />
-          </Form.Item>
-        </>
+        <Form.Item name="code" label={t('form.code')} rules={[{ required: true, message: t('validation.codeRequired') }]}>
+          <Input placeholder={t('form.codePlaceholder')} />
+        </Form.Item>
       )}
 
-      <Form.Item name="role" label={t('form.role')} rules={[{ required: true, message: t('validation.roleRequired') }]}>
-        <Select options={roleOptions} placeholder={t('form.rolePlaceholder')} />
+      <Form.Item name="status" label={t('form.status')} rules={[{ required: true, message: t('validation.statusRequired') }]}>
+        <Select options={/* opciones i18n */ []} placeholder={t('form.statusPlaceholder')} />
       </Form.Item>
 
       <Form.Item className="mb-0">
-        <Button type="primary" htmlType="submit" loading={isPending} block>
-          {t('form.save')}
-        </Button>
+        <Button type="primary" htmlType="submit" loading={isPending} block>{t('form.save')}</Button>
       </Form.Item>
     </Form>
   );
 }
 ```
 
-Reglas del formulario:
-- El tipo genérico de `Form.useForm<T>()` es el **input inferido de `@repo/schemas`** (`CreateUserInput`), no un tipo ad-hoc.
-- Las `rules` reflejan las restricciones del schema (required, max, type). Son de **UX**; la validación autoritativa la hace el backend con el mismo Zod.
-- Los mensajes de las `rules` son claves i18n (`t('validation.xxx')`).
-- El componente `Form` **no** conoce las mutations: recibe `onSubmit`/`isPending` desde arriba (la Page los conecta al hook).
-- **Opcional (formularios complejos):** un bridge Zod→rules para no duplicar restricciones. Ver §5.3.
+Reglas del form:
+- Genérico = input inferido de `@repo/schemas` (`CreateXInput`); es "create-shaped". El edit reusa el mismo form y en su `onSubmit` hace `Pick` de los campos editables hacia `UpdateXInput`.
+- El `Form` **no** conoce las mutations: recibe `onSubmit`/`isPending`. La Page/Modal los conecta al hook.
+- Los `Modal` (`CreateXModal`/`EditXModal`) envuelven el form, montándolo solo cuando `open` (`{open && <XForm/>}`) y con `key={row.id}` en edit para resetear estado por fila.
 
-### 3.5 Components
+### 3.6 Page + barrel
 
-Jerarquía típica de una feature CRUD:
-
-- **`XPage` / `XPageIndex`** (`'use client'`): orquesta. Renderiza `PageHeader`, la tabla y los modales; conecta hooks con componentes; maneja estado local de "qué modal está abierto" y "qué fila se edita".
-- **`XTable` + `columns.tsx`**: `XTable` consume `useXList` y arma el `<Table>`; las columnas viven **aparte** en `columns.tsx`, como un hook `useXColumns({ onEdit, onDelete })` que devuelve `TableColumnsType<X>` (es hook porque necesita `t`/formatters de fecha). La tabla queda fina.
-- **`CreateXModal` / `EditXModal`**: `Modal` de AntD que envuelve `XForm`.
-- **`XForm`**: campos AntD; recibe `onSubmit`/`isPending`.
+`XPage` (`'use client'`) orquesta: `PageHeader` (con acción gateada por `useCan`), `XTable`, y los modales de create/edit con su estado local.
 
 ```tsx
-// features/users/components/UsersPage.tsx
-'use client';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { useCan } from '@/lib/auth/useCan';
-import { UsersTable } from './UsersTable';
-import { CreateUserModal } from './CreateUserModal';
-import { EditUserModal } from './EditUserModal';
-import type { User } from '../types';
-
-export function UsersPage() {
-  const { t } = useTranslation('users');
+// features/<feature>/components/XPage.tsx
+export function XPage() {
+  const { t } = useTranslation('<feature>');
   const can = useCan();
-  const canCreate = can({ user: ['create'] });
+  const canCreate = can({ [RESOURCES.X]: [ACTIONS.CREATE] });
   const [isCreateOpen, setCreateOpen] = useState(false);
-  const [editing, setEditing] = useState<User | null>(null);
+  const [editing, setEditing] = useState<X | null>(null);
 
   return (
     <div>
-      <PageHeader
-        title={t('title')}
-        actionLabel={canCreate ? t('index.add') : undefined}
-        onAction={canCreate ? () => setCreateOpen(true) : undefined}
-      />
-      <UsersTable onEdit={setEditing} />
-      <CreateUserModal open={isCreateOpen} onClose={() => setCreateOpen(false)} />
-      <EditUserModal user={editing} open={!!editing} onClose={() => setEditing(null)} />
+      <PageHeader title={t('title')} actionLabel={canCreate ? t('index.add') : undefined} onAction={canCreate ? () => setCreateOpen(true) : undefined} />
+      <XTable onEdit={setEditing} />
+      <CreateXModal open={isCreateOpen} onClose={() => setCreateOpen(false)} />
+      <EditXModal row={editing} open={!!editing} onClose={() => setEditing(null)} />
     </div>
   );
 }
 ```
 
-### 3.6 Barrel (`index.ts`)
-
-La única superficie pública de la feature. Las páginas y otras features importan **de aquí**, no de rutas internas.
-
 ```ts
-export { UsersPage } from './components/UsersPage';
-export { useUsersList, useCreateUser, useUpdateUser, useDeleteUser } from './hooks/useUsers';
-export type { User } from './types';
+// features/<feature>/index.ts
+export { XPage } from './components/XPage';
+export { useXList, useCreateX, useUpdateX, useDeleteX } from './hooks/useX';
+export type { X } from './types';
 ```
 
 ---
 
-## 4. App Router: páginas thin + layouts + providers
+## 4. Tablas: `DataTable` + `useDataTable` (obligatorio)
+
+Toda tabla se construye con el componente compartido **`components/shared/DataTable`**. Nunca un `<Table>` de AntD suelto. `DataTable` envuelve el `Table` de AntD y añade: paginación/orden/búsqueda server-side, empty state, y **render card en móvil**.
+
+**`useDataTable`** — maneja el estado de la query (page/pageSize/search/sortBy/sortDir) y expone `query` (para el data hook) y `tableProps` (para el `DataTable`). El `sortBy` por defecto se tipa con el enum del módulo:
+
+```ts
+const table = useDataTable<XListQuery['sortBy']>({ defaultSortBy: 'createdAt' });
+const { data, isLoading } = useXList(table.query);
+```
+
+**`columns.tsx`** — las columnas son un **hook** `useXColumns({ onEdit, onDelete })` (necesita `t`, formatters de fecha, `useXRowActions`). Cada columna decide su visibilidad con `responsive` (ej. `responsive: ['lg']`). La última columna son las acciones (`DataTableRowActions`):
+
+```tsx
+// features/<feature>/components/columns.tsx
+export function useXColumns({ onEdit, onDelete }): TableColumnsType<X> {
+  const { t } = useTranslation('<feature>');
+  const { t: tc } = useTranslation('common');
+  const { date } = useDateFormatter();
+  const rowActions = useXRowActions({ onEdit, onDelete });
+
+  return [
+    { title: t('columns.name'), dataIndex: 'name', key: 'name' },
+    { title: t('columns.status'), dataIndex: 'status', key: 'status', render: (s) => <Tag color={STATUS_COLORS[s] ?? 'default'}>{t(`status.${s}`, s)}</Tag> },
+    { title: t('columns.createdAt'), dataIndex: 'createdAt', key: 'createdAt', responsive: ['md'], render: (v) => date(v) },
+    { title: '', key: 'actions', width: 56, align: 'right', render: (_, row) => <DataTableRowActions actions={rowActions(row)} label={tc('table.actions')} /> },
+  ];
+}
+```
+
+**`XCard`** — la vista de cada fila en móvil. Reusa `useXRowActions`. Se pasa a `DataTable` con `mobileRenderType="card"` + `renderCard`:
+
+```tsx
+// features/<feature>/components/XCard.tsx  (resumen)
+export function XCard({ row, onEdit, onDelete }) {
+  const rowActions = useXRowActions({ onEdit, onDelete });
+  return (
+    <Card size="small">
+      {/* header: título de la fila + <DataTableRowActions actions={rowActions(row)} /> */}
+      {/* tags: campos secundarios (estado, etc.) */}
+      {/* fecha: useDateFormatter().date(row.createdAt) */}
+    </Card>
+  );
+}
+```
+
+**`XTable`** — junta todo. Fina: solo hooks + `<DataTable>`:
+
+```tsx
+// features/<feature>/components/XTable.tsx
+export function XTable({ onEdit }: { onEdit: (row: X) => void }) {
+  const { t } = useTranslation('<feature>');
+  const { t: tc } = useTranslation('common');
+  const table = useDataTable<XListQuery['sortBy']>({ defaultSortBy: 'createdAt' });
+  const { data, isLoading } = useXList(table.query);
+  const { deleteX } = useDeleteX();
+
+  const onDelete = (row: X) => deleteX(row.id);
+  const columns = useXColumns({ onEdit, onDelete });
+
+  return (
+    <DataTable<X>
+      {...table.tableProps}
+      rowKey="id"
+      columns={columns}
+      mobileRenderType="card"
+      renderCard={(row) => <XCard row={row} onEdit={onEdit} onDelete={onDelete} />}
+      dataSource={data?.items}
+      loading={isLoading}
+      total={data?.pagination.total}
+      searchPlaceholder={tc('table.search')}
+      emptyText={t('empty')}
+    />
+  );
+}
+```
+
+Notas:
+- **Server mode se activa** al pasar `total` (viene de `data.pagination.total`). `page`/`pageSize`/`sortBy`/`sortDir`/`onTableChange`/`onSearch` salen de `table.tableProps`.
+- **`renderCard` es el estándar** para una card a medida. Si se omite (con `mobileRenderType="card"`), `DataTable` cae a `AutoRowCard` (deriva label/valor de las columnas) — aceptable solo para tablas triviales.
+- `DataTableRowActions` recibe `RowActionItem[]`; filtra por `guard` con `useCan` y aplica `confirm` con `modal.confirm`. Presets (`copyId`/`edit`/`delete`) traen icono (lucide), label i18n y confirm por defecto.
+
+---
+
+## 5. App Router: páginas thin + layouts + providers
 
 - **Página** = adaptador de ruta. Solo renderiza el índice de la feature:
   ```tsx
-  // app/admin/users/page.tsx
-  import { UsersPage } from '@/features/users';
-  export default function Page() { return <UsersPage />; }
+  // app/admin/<feature>/page.tsx
+  import { XPage } from '@/features/<feature>';
+  export default function Page() { return <XPage />; }
   ```
-- **Rutas**: `(auth)` (route group) para páginas públicas (login/registro); `admin/` (segmento) para el panel protegido.
-- **Layouts** delegan en contenedores de `components/Layouts`:
-  - `app/layout.tsx` → fuentes (Marcellus / Work Sans), `AntdRegistry layer`, `<Providers>`.
-  - `app/admin/layout.tsx` → **guard de sesión** (redirige a login si no hay sesión) + `<AdminLayoutContainer>` (sidebar + topbar).
+- **Rutas**: `(auth)` (route group) para páginas públicas (login); `admin/` (segmento) para el panel protegido.
+- **Layouts**: `app/layout.tsx` → fuentes + `AntdRegistry layer` + `<AppProviders>`. `app/admin/layout.tsx` → solo `<AdminLayoutContainer>` (shell responsive: Sider colapsable / Drawer móvil, en `components/Layouts` + `lib/navigation`). El guard de sesión **no** vive en este layout: es global (`AuthProvider`, ver abajo).
 
-### Composición de providers (`app/providers.tsx`)
+### Providers (`components/providers/AppProviders.tsx`)
 
-Orden **exacto** (de fuera hacia dentro). Con Better Auth **no** hace falta un `AuthProvider` que hidrate tokens: la sesión vive en la cookie y `useSession()` la resuelve.
+Orden **exacto** (de fuera hacia dentro):
 
 ```
-ConfigProvider (AntD theme = machBarTheme)   # tokens de diseño
-└── App (AntD)                               # contexto para message/notification/modal
-    └── I18nextProvider                       # i18n disponible para todo
-        └── TRPCReactProvider                 # QueryClient + tRPC client (credentials: 'include')
-            └── {children}
+ConfigProvider (AntD theme = machBarTheme)
+└── App (AntD)                       # contexto para message/notification/modal (App.useApp)
+    └── I18nextProvider
+        └── TRPCReactProvider         # QueryClient + tRPC client (credentials: 'include')
+            └── AuthProvider           # guard de sesión global (client), en components/providers
+                └── {children}
 ```
 
-- El `App` de AntD debe envolver todo lo que use `App.useApp()` (mensajes/errores). Por eso va por fuera de tRPC.
-- El `httpBatchLink` de tRPC usa `fetch(..., { credentials: 'include' })` para que Better Auth reciba la cookie de sesión en cada request.
+- El `App` de AntD envuelve todo lo que use `App.useApp()` (mensajes/errores). Por eso va por fuera de tRPC.
+- El `httpBatchLink` de tRPC usa `fetch(..., { credentials: 'include' })` para mandar la cookie de sesión.
+- El `AuthProvider` va por dentro de tRPC/i18n (usa `useSession()` y traduce). **No hidrata tokens** — solo guarda rutas.
 
 ### Protección de rutas
 
-Dos capas complementarias:
-1. **Guard de layout** (cliente): `app/admin/layout.tsx` usa `useSession()`; mientras resuelve muestra loader, si no hay sesión redirige a `/login`.
-2. **Middleware (recomendado):** `middleware.ts` lee la cookie de sesión de Better Auth (helper `getSessionCookie`) para redirigir en el borde sin renderizar el layout protegido. No confía en la cookie como autorización — solo como *hint* de redirección; la autorización real la hace la API.
+Tres capas complementarias; la autorización **real** siempre la hace la API:
+
+1. **Middleware** (`middleware.ts`, borde): sin sesión + ruta protegida → redirige a `/login` (con `callbackUrl`); con sesión en ruta de auth → redirige a home. Además hace **RBAC por ruta best-effort**: resuelve el permiso requerido con `resolveRouteAccess` (`lib/auth/route-access.ts`) y, si el rol cacheado (`getCookieCache`) no lo cumple, reescribe a bienvenida/denegado. Con caché fría, cae a la API.
+2. **`AuthProvider`** (`components/providers/`, cliente): en rutas protegidas (`isProtectedRoute`) usa `useSession()`; muestra loader mientras resuelve, un estado de error si el server falla, y redirige a `/login` si no hay sesión.
+3. **API** (backend): `protectedProcedure` / `guardedProcedure` — el único límite de autorización confiable.
+
+Rutas y permisos viven en `lib/auth/navigation.ts` (`PROTECTED_ROUTES`/`AUTH_ROUTES`/redirects) y `lib/auth/route-access.ts` (`ROUTE_ACCESS`: prefijo → `PermissionCheck`).
 
 ---
 
-## 5. Capa de datos y errores (tRPC)
+## 6. Datos y errores (tRPC en el front)
 
-### 5.1 Cliente tRPC (`lib/trpc/`)
+### 6.1 Cliente (`lib/trpc/`)
 
 ```ts
 // lib/trpc/client.ts
@@ -376,54 +435,18 @@ import type { AppRouter } from 'api';
 export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
 ```
 
-```tsx
-// lib/trpc/provider.tsx  (extracto)
-const [trpcClient] = useState(() =>
-  createTRPCClient<AppRouter>({
-    links: [httpBatchLink({
-      url: `${env.NEXT_PUBLIC_API_URL}/trpc`,
-      fetch: (url, opts) => fetch(url, { ...opts, credentials: 'include' }),
-    })],
-  }),
-);
-```
+El `httpBatchLink` usa `fetch(..., { credentials: 'include' })` para mandar la cookie de sesión. `QueryClient` con `staleTime: 60_000`, `retry: 1`.
 
-`QueryClient` con defaults: `staleTime: 60_000`, `retry: 1`.
+### 6.2 Errores centralizados (`lib/error/useApiError.ts`)
 
-### 5.2 Errores centralizados (`lib/error/useApiError.ts`)
-
-El backend expone un `errorCode` estable en el `errorFormatter` de tRPC; el front lo traduce contra el namespace `api`.
-
-**Backend** (`apps/api/src/trpc/trpc.ts`): el `errorFormatter` adjunta el código propio (leído del `cause` de un error de dominio) junto al `code` estándar de tRPC.
-
-```ts
-const t = initTRPC.context<Context>().create({
-  errorFormatter({ shape, error }) {
-    return {
-      ...shape,
-      data: {
-        ...shape.data,
-        errorCode: error.cause instanceof AppError ? error.cause.code : undefined,
-      },
-    };
-  },
-});
-```
-
-**Frontend**: hook que devuelve un `onError` reutilizable. Traduce por `errorCode` (dominio) y cae al `code` de tRPC (`UNAUTHORIZED`, `NOT_FOUND`, ...) y a un genérico.
+El backend expone un `errorCode` estable (ver `docs/backend/architecture.md`); el front lo traduce contra el namespace `api`.
 
 ```ts
 // lib/error/useApiError.ts
 'use client';
-import { App } from 'antd';
-import { useTranslation } from 'react-i18next';
-import { TRPCClientError } from '@trpc/client';
-import type { AppRouter } from 'api';
-
 export function useApiError() {
   const { message } = App.useApp();
   const { t } = useTranslation('api');
-
   return (error: unknown) => {
     let key = 'errors.generic';
     if (error instanceof TRPCClientError) {
@@ -435,127 +458,55 @@ export function useApiError() {
 }
 ```
 
-> **Contrato clave con el backend:** cada `errorCode` que el backend define debe existir como clave en `locales/*/api.json` bajo `errors.<CODE>`. Los `code` estándar de tRPC (`UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `BAD_REQUEST`, `INTERNAL_SERVER_ERROR`) también deben tener su clave. Así todo error del servidor se muestra traducido sin lógica ad-hoc.
+> **Contrato:** cada `errorCode` del backend debe existir como clave en `locales/*/api.json` bajo `errors.<CODE>`; los `code` estándar de tRPC (`UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `BAD_REQUEST`, `CONFLICT`, `INTERNAL_SERVER_ERROR`) también.
 
-### 5.3 (Opcional) Bridge Zod → rules de AntD
+### 6.3 (Opcional) Bridge Zod → rules de AntD
 
-Para formularios complejos donde duplicar restricciones en `rules` sea frágil, un `validator` que corre el schema de `@repo/schemas`:
-
-```ts
-// lib/form/zodRule.ts
-import type { Rule } from 'antd/es/form';
-import type { ZodTypeAny } from 'zod';
-import i18n from '@/lib/i18n/config';
-
-export const zodField = (schema: ZodTypeAny): Rule => ({
-  async validator(_, value) {
-    const res = schema.safeParse(value);
-    if (!res.success) throw new Error(i18n.t(res.error.issues[0]?.message ?? 'api:errors.generic'));
-  },
-});
-```
-
-Se usa por campo (`rules={[zodField(createUserSchema.shape.name)]}`). Es una **opción**, no el default; el default es `rules` explícitas.
+Para formularios complejos, un `validator` que corre el schema de `@repo/schemas` por campo (`lib/form/zodRule.ts`). Es opción, no default; el default es `rules` explícitas.
 
 ---
 
-## 6. Estado de servidor (TanStack Query + tRPC)
+## 7. Estado de servidor (TanStack Query)
 
-- El `QueryClient` se crea en `TRPCReactProvider` con `staleTime: 60s`, `retry: 1`.
-- **Regla:** ninguna data de servidor se guarda en Zustand. El caché es TanStack Query, poblado por tRPC.
-- Query keys y su jerarquía las genera tRPC. Invalidación explícita en `onSuccess` de las mutations con `trpc.x.y.queryFilter()`.
-- Prefetch en servidor (opcional, RSC): con el helper de servidor de `@trpc/tanstack-react-query` + `HydrationBoundary`. Solo cuando aporte a LCP; por defecto el fetching es en cliente.
+- `QueryClient` en `TRPCReactProvider` (`staleTime: 60s`, `retry: 1`).
+- **Ninguna** data de servidor en Zustand. El caché es TanStack Query, poblado por tRPC.
+- Query keys y su jerarquía las genera tRPC. Invalidación explícita en `onSuccess` con `trpc.x.y.queryFilter()`.
 
 ---
 
-## 7. Estado de cliente (Zustand)
+## 8. Estado de cliente (Zustand)
 
-Stores en `lib/stores/`. Patrón: `create(persist((set) => ({...}), { name, storage, partialize }))` cuando se necesita persistencia.
+Stores en `lib/stores/`. `create(persist((set) => ({...}), { name }))` cuando se persiste.
 
 | Store | Contenido | Persistencia |
 | --- | --- | --- |
-| `useLocaleStore` (`lib/stores/locale.store`) | idioma actual + `setLocale`. | `localStorage` |
-| `useUiStore` *(ej.)* | estado de UI global (sidebar colapsado, etc.). | opcional |
+| `useLocaleStore` | idioma actual + `setLocale`. | `localStorage` |
+| `useUiStore` *(ej.)* | UI global (sidebar colapsado, etc.). | opcional |
 
-- **La sesión NO va en Zustand.** La maneja Better Auth (`useSession`). No se duplica el usuario/token en un store.
-- Fuera de componentes React, se accede con `useXStore.getState()`.
+- **La sesión NO va en Zustand** — la maneja Better Auth (`useSession`).
 
 ---
 
-## 8. Autenticación y autorización (Better Auth)
+## 9. Autenticación y autorización (front)
 
-### 8.1 Sesión
-
-Cliente en `lib/auth/client.ts`:
+### 9.1 Sesión (`lib/auth/client.ts`)
 
 ```ts
 import { createAuthClient } from 'better-auth/react';
-import { env } from '@/env';
-export const authClient = createAuthClient({ baseURL: env.NEXT_PUBLIC_API_URL });
+import { adminClient } from 'better-auth/client/plugins';
+import { ac, roles } from '@repo/guards';
+export const authClient = createAuthClient({ baseURL, plugins: [adminClient({ ac, roles })] });
 export const { signIn, signUp, signOut, useSession } = authClient;
 ```
 
-- **`useSession()`** expone `{ data: session, isPending }`. La sesión vive en cookie httpOnly; no hay token en JS ni refresh manual.
-- **Login/registro**: `signIn.email({ email, password })` / `signUp.email({ name, email, password })`. Manejo de error con `res.error` + `message.error` (AntD).
-- **Logout**: `signOut()` → limpia cookie. Si hubiera stores de UI con datos por-usuario, resetearlos acá.
-- El backend valida la sesión en `createContext` (`auth.api.getSession`) y expone `ctx.session`; `protectedProcedure` rechaza con `UNAUTHORIZED` si no hay sesión.
+- `useSession()` → `{ data, isPending }`. Sesión en cookie httpOnly; sin token en JS.
+- Login: `signIn.email(...)`; logout: `signOut()`.
 
-### 8.2 Autorización por roles/permisos (configurado)
+### 9.2 Autorización (`useCan` / `<Can>`)
 
-Better Auth provee RBAC nativo con los plugins **`access`** + **`admin`**. Está **implementado** y es el equivalente del `@repo/guards` de la arquitectura original: el catálogo se define **una vez** en el paquete compartido **`@repo/guards`** y se consume en backend y frontend.
-
-**Catálogo compartido** (`packages/guards/src/`) — editá acá roles y permisos:
+El catálogo de roles/permisos es único en **`@repo/guards`** y se comparte con el backend (que lo aplica con `guardedProcedure` — ver `docs/backend/architecture.md`). En el front se evalúa **síncrono** (sin ir al server):
 
 ```ts
-import { createAccessControl } from 'better-auth/plugins/access';
-import { defaultStatements } from 'better-auth/plugins/admin/access';
-
-// Recursos de dominio (event, client, quote, ...) se suman a los statements de Better Auth (user, session).
-export const statements = { ...defaultStatements, event: ['create', 'read', 'update', 'delete'] } as const;
-export const ac = createAccessControl(statements);
-export const roles = {
-  superadmin: ac.newRole(statements),                                    // acceso total (incluye el statement `user`)
-  admin:  ac.newRole({ event: ['create', 'read', 'update', 'delete'] }), // solo recursos de dominio → NO gestiona usuarios
-  member: ac.newRole({}),                                                // sin permisos
-};
-export const DEFAULT_ROLE = 'member';
-export const SUPERADMIN_ROLE = 'superadmin';
-
-// hasPermission: evaluación isomórfica (mismo código en BE y FE). El rol `superadmin`
-// hace bypass total — pasa cualquier chequeo, incluso recursos fuera del catálogo.
-export function hasPermission(role, permissions) {
-  const userRoles = (role ?? DEFAULT_ROLE).split(',');
-  if (userRoles.includes(SUPERADMIN_ROLE)) return true;
-  return userRoles.some((r) => roles[r]?.authorize(permissions).success ?? false);
-}
-```
-
-**Backend** (`apps/api/src/lib/auth.ts` + `trpc/trpc.ts`):
-
-```ts
-import { admin } from 'better-auth/plugins';
-import { ac, roles, DEFAULT_ROLE, ADMIN_ROLES } from '@repo/guards';
-export const auth = betterAuth({ /* ... */, plugins: [admin({ ac, roles, defaultRole: DEFAULT_ROLE, adminRoles: ADMIN_ROLES })] });
-
-// guardedProcedure: protege un procedure por permiso, evaluando el rol de la sesión
-// contra el catálogo (sin roundtrip a DB). Lanza FORBIDDEN si no pasa.
-export function guardedProcedure(permissions: PermissionCheck) {
-  return protectedProcedure.use(({ ctx, next }) => {
-    if (!hasPermission((ctx.user as { role?: string | null }).role, permissions)) throw new TRPCError({ code: 'FORBIDDEN' });
-    return next();
-  });
-}
-// Uso en el router:  create: guardedProcedure({ [RESOURCES.NOTE]: [ACTIONS.CREATE] }).input(...).mutation(...)
-```
-
-El plugin `admin` requiere el campo **`role`** en la tabla `user` (soporta varios roles como CSV) — ya agregado en `db/schema/auth.ts`. Requiere `db:push` para aplicar.
-
-**Frontend** — cliente con el mismo `ac`/`roles` (`lib/auth/client.ts`), y `useCan`/`<Can>` que evalúan con el catálogo compartido (síncrono, sin ir al server):
-
-```ts
-import { adminClient } from 'better-auth/client/plugins';
-export const authClient = createAuthClient({ baseURL, plugins: [adminClient({ ac, roles })] });
-
 // lib/auth/useCan.ts
 export function useCan() {
   const { data } = useSession();
@@ -564,106 +515,101 @@ export function useCan() {
 }
 ```
 
-`<Can>` — renderiza children solo si hay acceso; si no, `fallback`:
-
 ```tsx
-<Can allowed={{ [RESOURCES.NOTE]: [ACTIONS.CREATE] }} fallback={null}>
+<Can allowed={{ [RESOURCES.X]: [ACTIONS.CREATE] }} fallback={null}>
   <Button type="primary" onClick={openCreate}>{t('index.add')}</Button>
 </Can>
 ```
 
-> **Coherencia BE↔FE garantizada:** backend y frontend importan el **mismo** `ac`/`roles`/`hasPermission` de `@repo/guards`. Cambiar un permiso en el catálogo lo cambia en ambos lados a la vez — igual que el `@repo/guards` de la arquitectura original.
-
-> **Regla — nunca strings sueltos en un `PermissionCheck`.** Recursos y acciones tienen su
-> catálogo tipado en `@repo/guards` (`RESOURCES`, `ACTIONS`): usá esas constantes, no literales.
-> Correcto: `{ [RESOURCES.EVENT]: [ACTIONS.READ] }` — nunca `{ event: ['read'] }`. Aplica en **todos**
-> los lugares donde se arma un `PermissionCheck`: `guardedProcedure(...)` (BE),
-> `<Can allowed={...}>` / `useCan()(...)` (FE) y los `guard` de navegación (`lib/navigation`).
-> Si un recurso o acción se renombra, TS marca el error en compilación en vez de fallar en silencio.
+> **Regla — nunca strings sueltos en un `PermissionCheck`.** Recursos y acciones de **dominio** usan las constantes tipadas de `@repo/guards` (`RESOURCES`, `ACTIONS`): `{ [RESOURCES.X]: [ACTIONS.READ] }`, nunca `{ x: ['read'] }`. Aplica en `<Can>`, `useCan()(...)` y los `guard` de navegación.
 >
-> **Excepción:** los statements propios de Better Auth (`user`, `session`) no tienen constante en
-> `RESOURCES` — se referencian por su literal. Por eso la feature `users` gatea con `{ user: ['list'] }`,
-> `{ user: ['create'] }`, etc. Solo los recursos **de dominio** pasan por `RESOURCES`/`ACTIONS`.
-
-> **Asignar roles:** los nuevos usuarios reciben `DEFAULT_ROLE` (`member`). Para hacer admin a alguien: `UPDATE "user" SET role='admin' WHERE email=...` o el endpoint `authClient.admin.setRole`. Usuarios previos a la columna tienen `role` NULL → caen a `member`.
-
-> **Multi-tenant:** si el proyecto lo requiere, se sustituye/combina con el plugin `organization` (roles por organización, invitaciones, `authClient.organization.checkRolePermission`). Fuera del alcance del boilerplate single-tenant base.
+> **Excepción:** los statements nativos de Better Auth (los que no son recursos de dominio) no tienen constante en `RESOURCES` — se referencian por su literal. Solo los recursos de dominio pasan por `RESOURCES`/`ACTIONS`.
 
 ---
 
-## 9. Internacionalización (i18n)
+## 10. Internacionalización (i18n)
 
-- Config en `lib/i18n/config.ts`: `locales: ['es','en']`, `defaultLocale: 'es'`, namespaces `['common', 'admin', '<feature>', 'api']`, `defaultNS: 'common'`. El namespace `admin` agrupa los textos del shell/navegación del panel (nav, topbar, sidebar).
-- Recursos en `locales/{es,en}/<namespace>.json`, importados y registrados en `resources`.
-- En cliente: `const { t } = useTranslation('<feature>')`. **Todo** texto visible usa `t('clave')`.
-- El idioma actual se guarda en `useLocaleStore`; cambiarlo llama `i18n.changeLanguage(locale)`.
-- **Convenciones de claves:**
-  - Validaciones de formulario/schema: `<feature>.validation.<regla>` (referenciadas desde los schemas Zod de `@repo/schemas` y/o las `rules`).
-  - Errores de API: `errors.<CODE>` en el namespace `api` (mapeo directo con los `errorCode`/`code` de tRPC).
-  - UI de una feature: `<feature>.<seccion>.<clave>` (ej. `users.index.title`).
+- Config en `lib/i18n/config.ts`: `locales: ['es','en']`, `defaultLocale: 'es'`, namespaces `['common', 'admin', 'auth', '<feature>', 'api']`, `defaultNS: 'common'`. Registrar el nuevo `<feature>` acá.
+- Recursos en `locales/{es,en}/<namespace>.json`.
+- **Todo** texto visible usa `t('clave')` con `useTranslation('<feature>')`.
+- Namespaces transversales: **`common`** (acciones y tabla: `save`, `cancel`, `edit`, `delete`, `yes`/`no`, `table.actions/copyId/copied/search/total`, `confirm.*`); **`admin`** (shell/navegación); **`auth`** (login + estados de sesión del `AuthProvider`); **`api`** (errores).
+- Fechas: **nunca** `toLocaleDateString`; usar `useDateFormatter()` (date-fns, locale-aware).
+- **Convenciones de claves:** validación `<feature>.validation.<regla>`; UI `<feature>.<seccion>.<clave>` (ej. `<feature>.columns.name`, `<feature>.index.add`); errores `errors.<CODE>` en `api`.
 
 ---
 
-## 10. UI (Ant Design + Tailwind)
+## 11. UI (Ant Design + Tailwind)
 
-- Los componentes vienen de **`antd`** (Button, Input, Form, Table, Modal, Select, Card, Flex, Typography, ...) y se importan por nombre. No hay paquete `@repo/ui`.
-- El sistema de tokens (marca MB, `machBarTheme`), la relación AntD↔Tailwind, tipografía, layout, formularios y mensajes están definidos en **`styling-guide.md`** — es de lectura obligatoria y manda sobre cualquier decisión visual.
-- Reglas rápidas heredadas de esa guía: AntD para componentes y layout, Tailwind para overrides y lo que AntD no cubre; nada de CSS modules, inline styles, ni hex hardcodeados; mensajes vía `App.useApp()` (no métodos estáticos).
-- **Tablas: `Table` de AntD, siempre.** Es la convención única — ya integra sort/filter/paginación/selección/expandable/fixed/virtual con el tema (`machBarTheme`). No se usa `@tanstack/react-table` (headless): se pisa con AntD `Table` y no está instalada. Si algún día aparece un caso que AntD no cubre (resizing/pinning fino, faceted filtering, virtualización pesada), se resuelve **headless en un `components/shared/DataTable` aislado** con markup propio + tokens — nunca mezclando `flexRender` dentro del `<Table>` de AntD.
-- Componentes **globales de la app** (no primitivas): los contenedores de layout (`AdminLayoutContainer`, el shell del panel) viven en `components/Layouts/`; el resto (`PageHeader`, `PlaceholderPage`, `Sidebar/`, `Topbar/`, `Logo`, ...) en `components/shared/`. Si un patrón se repite en 2+ features, se extrae a `components/shared/`.
-- **Navegación data-driven.** El menú NO se hardcodea en el sidebar: se define en `lib/navigation/` (`constants/items.ts` = catálogo `NAV_ITEMS` con `label`/`href`/`icon`/`guard`; `constants/icons.tsx` = `IconMap` string→icono AntD; `config.ts` = grupos `ADMIN_MENU`; `useNavigation()` = menú según sesión). `SidebarNav` lo renderiza con `Menu` de AntD y filtra por permisos con `useCan` (`guard` es un `PermissionCheck`).
-- **Shell responsive (mobile-first).** `AdminLayoutContainer` usa `useIsDesktop()` (breakpoint `lg`=992px): en desktop un `Layout.Sider` colapsable a rail de iconos (`collapsedWidth=80`, el `Menu` colapsa por contexto del `Sider`); en móvil un `Drawer` overlay con el mismo `SidebarContent`. El botón del `Topbar` colapsa el rail (desktop) o abre el `Drawer` (móvil). `SidebarNav` navega por `onClick`+`router.push` (no `<Link>`) para funcionar también colapsado.
-
----
-
-## 11. Convenciones de nombres
-
-| Elemento | Convención | Ejemplo |
-| --- | --- | --- |
-| Feature dir | plural del dominio | `features/users/` |
-| Schema | `<accion>XSchema` (en `@repo/schemas`) | `createUserSchema` |
-| Input type | `CreateXInput` / `UpdateXInput` (`z.infer`) | `CreateUserInput` |
-| Entity type | `X` (inferido de `RouterOutputs`) | `User` |
-| Query hook | `useXList` / `useX` | `useUsersList` |
-| Mutation hook | `useCreateX` / `useUpdateX` / `useDeleteX` | `useCreateUser` |
-| Actions hook | `useXActions` | `useUsersActions` |
-| Componente Page | `XPage` / `XPageIndex` | `UsersPage` |
-| Modal | `CreateXModal` / `EditXModal` | `CreateUserModal` |
-| Store | `useXStore` | `useLocaleStore` |
+- Componentes desde **`antd`**, importados por nombre. No hay `@repo/ui`.
+- Tokens (marca MB, `machBarTheme`), AntD↔Tailwind, tipografía, **iconos (`lucide-react`)**, **fechas (`date-fns`)** y la **escala de overrides** están en **`styling-guide.md`** — lectura obligatoria y manda sobre cualquier decisión visual.
+- Reglas rápidas: AntD para componentes/layout, Tailwind para overrides; nada de CSS modules, inline styles, ni hex hardcodeados; mensajes vía `App.useApp()` (no métodos estáticos); `!` de Tailwind como **sufijo** (`m-0!`).
+- **Tablas → siempre `DataTable`** (§4). Prohibido `<Table>` de AntD armado a mano en una feature y prohibido `@tanstack/react-table`.
+- **Componentes globales:** el shell (`AdminLayoutContainer`) en `components/Layouts/`; los providers en `components/providers/`; piezas propias del shell con carpeta propia (`NotificationMenu/`, `UserProfile/`); primitivas y reutilizables (`DataTable/`, `PageHeader`, `PlaceholderPage`, `Sidebar/`, `Topbar/`, `Logo`, …) en `components/shared/`. Un patrón repetido en 2+ features → se extrae a `components/shared/`.
+- **Navegación data-driven** (`lib/navigation/`): `constants/items.ts` (`NAV_ITEMS` con `label`/`href`/`icon`/`guard`), `constants/icons.tsx` (`IconMap` string→icono lucide), `config.ts` (`ADMIN_MENU`), `useNavigation()`. `SidebarNav` la renderiza y filtra por permisos.
+- **Shell responsive (mobile-first):** `AdminLayoutContainer` usa `useIsDesktop()` (lg=992px): desktop = `Sider` colapsable a rail de iconos; móvil = `Drawer` overlay con el mismo `SidebarContent`.
 
 ---
 
-## 12. Receta — Cómo añadir una feature nueva (checklist para IA)
+## 12. Convenciones de nombres
 
-Para un recurso nuevo `widgets`:
+`X` = nombre del recurso en singular PascalCase; `<feature>` = plural kebab/camel para dir y namespace.
 
-1. **Schema compartido**: crear `packages/schemas/src/widgets.ts` con `createWidgetSchema` / `updateWidgetSchema` (mensajes = claves i18n) y exportar `CreateWidgetInput`/`UpdateWidgetInput`. Reexportar en el `index.ts` de `@repo/schemas`.
-2. **Backend (módulo)**: `apps/api/src/modules/widgets/` con `widgets.repository.ts` → `widgets.service.ts` → `widgets.router.ts` (usa `protectedProcedure` y los schemas). Registrar el router en `apps/api/src/trpc/router.ts`. Añadir tabla Drizzle en `db/schema/` si aplica.
-3. **Types** (`features/widgets/types.ts`): `export type Widget = RouterOutputs['widgets']['list'][number];`
-4. **Data hooks** (`features/widgets/hooks/useWidgets.ts`): `useWidgetsList`, `useWidget(id)`, `useCreateWidget`/`useUpdateWidget`/`useDeleteWidget` con invalidación (`queryFilter`) en `onSuccess` y `onError: useApiError()`.
-5. **Components**: `WidgetsPage` (orquesta), `WidgetsTable` + `columns`, `CreateWidgetModal`, `EditWidgetModal`, `WidgetForm`. Textos con `useTranslation('widgets')`.
-6. **Barrel** (`index.ts`): exportar `WidgetsPage`, hooks públicos, tipos.
-7. **Página**: `app/admin/widgets/page.tsx` → `import { WidgetsPage } from '@/features/widgets'`.
-8. **i18n**: añadir `locales/{es,en}/widgets.json` y registrarlo en `lib/i18n/config.ts`; agregar `errors.*` en `api.json` si el backend define nuevos códigos. Los labels de nav van en el namespace `admin` (`nav.*`).
-9. **Navegación**: añadir el ítem en `lib/navigation/constants/items.ts` (`NAV_ITEMS`, con su `guard` `PermissionCheck` si aplica), sumarlo a un grupo de `lib/navigation/config.ts` (`ADMIN_MENU`) y mapear su icono en `constants/icons.tsx`. `SidebarNav` lo renderiza y filtra por permisos automáticamente — no se toca el sidebar.
-10. **Autorización (si RBAC activo)**: añadir el recurso `widget` a los `statements` del catálogo de access-control; envolver acciones con `<Can allowed={{ widget: ['create'] }}>` y proteger el router con `guardedProcedure`.
-
-Siguiendo estos pasos, la feature será indistinguible de las existentes.
+| Elemento | Patrón |
+| --- | --- |
+| Feature dir | `features/<feature>/` (plural del dominio) |
+| Input type (de `@repo/schemas`) | `CreateXInput` / `UpdateXInput` |
+| Query de lista | `XListQuery` |
+| Entity type (de `RouterOutputs`) | `X` |
+| Query hook | `useXList(query)` |
+| Mutation hooks | `useCreateX` / `useUpdateX` / `useDeleteX` |
+| Row actions hook | `useXRowActions` |
+| Columns hook | `useXColumns` |
+| Componente Page | `XPage` |
+| Tabla / Card | `XTable` / `XCard` |
+| Modales | `CreateXModal` / `EditXModal` |
+| Store | `useXStore` |
 
 ---
 
-## 13. Anti-patrones (qué NO hacer)
+## 13. Receta — Añadir una feature nueva (checklist estricto)
 
-- ❌ Llamar a `useTRPC()` o armar `queryOptions()`/`queryFilter()` **dentro de un componente** (siempre a través de un hook de la feature).
-- ❌ Escribir DTOs/entidades a mano en vez de inferirlos (`z.infer` para input, `RouterOutputs` para output).
-- ❌ Guardar data de servidor —o la sesión/usuario— en Zustand. La data es TanStack Query; la sesión es Better Auth.
-- ❌ Leer `error.message` crudo en la UI en vez de `useApiError` (que traduce por `errorCode`/`code`).
-- ❌ Duplicar la validación del contrato: la fuente de verdad es el schema de `@repo/schemas` (backend); las `rules` de AntD son solo UX.
-- ❌ Hardcodear texto visible en vez de `t('clave')`.
+> **Precondición:** los endpoints tRPC ya existen — `<feature>.list` (paginado, devuelve `{ items, pagination }`), `<feature>.create`, `<feature>.update`, `<feature>.delete` — y el schema `@repo/schemas/src/<feature>.ts` (`createXSchema`/`updateXSchema`/`xListQuerySchema`) está publicado. Si no, ver `docs/backend/architecture.md`.
+
+1. **Types** (`features/<feature>/types.ts`): `export type X = RouterOutputs['<feature>']['list']['items'][number];`
+2. **Data hooks** (`hooks/useX.ts`): `useXList(query)`, `useCreateX`/`useUpdateX`/`useDeleteX` con `queryFilter()` en `onSuccess` y `onError: useApiError()`.
+3. **Row actions** (`hooks/useXRowActions.ts`): `(row) => RowActionItem[]` con `copyId`/`edit`(guard update)/`delete`(guard delete + confirm).
+4. **Helpers** (`helpers.ts`): constantes UI si aplica (ej. colores de estado).
+5. **Columnas** (`components/columns.tsx`): `useXColumns({ onEdit, onDelete })` → `TableColumnsType<X>`; fechas con `useDateFormatter`; columna de acciones con `DataTableRowActions`; `responsive` por columna.
+6. **Card** (`components/XCard.tsx`): card móvil que reusa `useXRowActions`.
+7. **Tabla** (`components/XTable.tsx`): `useDataTable` + `useXList(query)` + `<DataTable mobileRenderType="card" renderCard={...} total={data?.pagination.total} .../>`.
+8. **Form + Modales** (`XForm`, `CreateXModal`, `EditXModal`): form con `mode`, modales que lo montan bajo `open`.
+9. **Page** (`XPage`): `PageHeader` (acción gateada con `useCan`) + tabla + modales.
+10. **Barrel** (`index.ts`): exportar `XPage`, hooks públicos, `X`.
+11. **Página** (`app/admin/<feature>/page.tsx`): `import { XPage } from '@/features/<feature>'`.
+12. **i18n**: `locales/{es,en}/<feature>.json` (title, index.add, columns.*, form.*, validation.*, delete.*, empty) + registrar el namespace en `lib/i18n/config.ts`. Nav labels en `admin` (`nav.*`).
+13. **Navegación**: ítem en `lib/navigation/constants/items.ts` (+ `guard` con `RESOURCES`/`ACTIONS`), grupo en `config.ts`, icono lucide en `constants/icons.tsx`.
+14. **Acceso a la ruta**: registrar el permiso en `lib/auth/route-access.ts` (`ROUTE_ACCESS`: `/admin/<feature>` → `{ [RESOURCES.X]: [ACTIONS.READ] }`, o `null` si es pública para logueados). Habilita el RBAC por ruta del middleware.
+15. **Autorización de acciones**: envolver create/edit/delete con `<Can>` / gatear con `useCan` usando `RESOURCES`/`ACTIONS`.
+
+Siguiendo estos pasos, la feature será **consistente con el patrón** y con el resto del panel.
+
+---
+
+## 14. Anti-patrones (qué NO hacer)
+
+- ❌ Armar un `<Table>` de AntD a mano en una feature: la convención única es `DataTable` (§4). Prohibido `@tanstack/react-table`.
+- ❌ Renderizar la tabla sin card en móvil (falta `mobileRenderType="card"` + `renderCard`).
+- ❌ Duplicar las row actions en columnas y card: extraer `useXRowActions` y reusarlo.
+- ❌ Llamar a `useTRPC()` o armar `queryOptions()`/`queryFilter()` dentro de un componente (siempre vía hook de la feature).
+- ❌ Escribir DTOs/entidades a mano en vez de inferirlos (`z.infer` input, `RouterOutputs` output). Recordar que la lista es `['list']['items'][number]`.
+- ❌ Guardar data de servidor —o la sesión/usuario— en Zustand.
+- ❌ Leer `error.message` crudo en la UI en vez de `useApiError`.
+- ❌ Duplicar la validación del contrato: la fuente de verdad es `@repo/schemas`; las `rules` de AntD son solo UX.
+- ❌ Hardcodear texto visible en vez de `t('clave')`, o formatear fechas sin `useDateFormatter`.
 - ❌ Meter lógica pesada (queries/mutations) en la página del App Router; debe ser thin.
 - ❌ Importar desde rutas internas de otra feature en vez de su barrel `index.ts`.
-- ❌ Chequear permisos con condicionales ad-hoc sobre strings de rol en vez de `<Can>`/`useCan` + el catálogo de access-control.
-- ❌ Usar métodos estáticos de AntD (`message.xxx`) o hex hardcodeados / CSS modules / inline styles — ver `styling-guide.md`.
-- ❌ Usar `@tanstack/react-table` u otra librería de tablas: la convención única es `Table` de AntD. Solo se recurre a un core headless en un `DataTable` aislado ante un requerimiento puntual que AntD no cubra.
-- ❌ Crear un `AuthProvider` que hidrate tokens manualmente: Better Auth maneja la sesión por cookie.
+- ❌ Chequear permisos con condicionales ad-hoc sobre strings de rol en vez de `<Can>`/`useCan` + `@repo/guards` (con `RESOURCES`/`ACTIONS`).
+- ❌ Usar `@ant-design/icons` (la librería es `lucide-react`), métodos estáticos de AntD (`message.xxx`), hex hardcodeados, CSS modules o inline styles — ver `styling-guide.md`.
+- ❌ Hidratar o duplicar la sesión/token en estado propio: Better Auth la maneja por cookie (`useSession`). El `AuthProvider` del proyecto solo **guarda rutas** con `useSession`; no hidrata nada.
+- ❌ Volver a poner el guard de sesión en `app/admin/layout.tsx`: el guard es global (`AuthProvider`) y el acceso por ruta lo maneja el middleware + `route-access.ts`.
 ```

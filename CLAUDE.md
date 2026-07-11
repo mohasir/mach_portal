@@ -48,8 +48,19 @@ Monorepo Turborepo + pnpm.
   `useDateFormatter` en componentes). Prohibido `toLocaleDateString`, `Intl.DateTimeFormat`
   y formatos a mano. Locale-aware (es/en). Detalle en `docs/frontend/styling-guide.md` (sección Fechas).
 
-- **Arquitectura de features → seguir `docs/frontend/architecture.md`.** Feature-sliced;
-  el slice de referencia es `apps/web/src/features/notes`.
+- **Arquitectura de features → `docs/frontend/architecture.md` es la spec estricta.**
+  **Leerla antes** de crear o modificar cualquier feature/UI de la web app, y seguir su patrón
+  (feature-sliced, `DataTable` + card en móvil, hooks tRPC, `<Can>`/`useCan`, i18n). Es genérica
+  (usa placeholders `X`/`<feature>`); no asumir el patrón de memoria.
+
+---
+
+## Backend / API (`apps/api`) — REGLAS OBLIGATORIAS
+
+- **Arquitectura de módulos → `docs/backend/architecture.md` es la spec estricta.**
+  **Leerla antes** de crear o modificar un módulo de la API, y seguir su patrón
+  (`resource → repository → service → router`, `guardedProcedure` + `@repo/guards`, errores con
+  `AppError`/`ErrorCodes`, listas paginadas `Paginated`). Es genérica (usa placeholders `X`/`<module>`).
 
 ---
 
