@@ -1,11 +1,12 @@
 'use client';
-import { App, Tag, type TableColumnsType } from 'antd';
+import { Tag, type TableColumnsType } from 'antd';
 import { type RoleType } from '@repo/guards';
 import { BadgeCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { DataTableRowActions, type RowActionItem } from '@/components/shared/DataTable';
+import { DataTableRowActions } from '@/components/shared/DataTable';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { ROLE_COLORS } from '../helpers';
+import { useUserRowActions } from '../hooks/useUserRowActions';
 import type { User } from '../types';
 
 interface UseUsersColumnsParams {
@@ -20,31 +21,7 @@ export function useUsersColumns({
   const { t } = useTranslation('users');
   const { t: tc } = useTranslation('common');
   const { date } = useDateFormatter();
-  const { message } = App.useApp();
-
-  const rowActions = (user: User): RowActionItem[] => [
-    {
-      key: 'copyId',
-      onClick: () => {
-        void navigator.clipboard.writeText(user.id);
-        message.success(tc('table.copied'));
-      },
-    },
-    { type: 'divider' },
-    {
-      key: 'edit',
-      guard: { user: ['update'] },
-      onClick: () => onEdit(user),
-    },
-    {
-      key: 'delete',
-      guard: { user: ['delete'] },
-      onClick: () => onDelete(user),
-      confirm: {
-        content: t('delete.confirmContent', { name: user.name || user.email }),
-      },
-    },
-  ];
+  const rowActions = useUserRowActions({ onEdit, onDelete });
 
   return [
     { title: t('columns.name'), dataIndex: 'name', key: 'name' },

@@ -4,6 +4,7 @@ import type { UsersListQuery } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { useDeleteUser, useUsersList } from '../hooks/useUsers';
 import { useUsersColumns } from './columns';
+import { UserCard } from './UserCard';
 import type { User } from '../types';
 
 interface UsersTableProps {
@@ -17,7 +18,8 @@ export function UsersTable({ onEdit }: UsersTableProps) {
   const { data, isLoading } = useUsersList(table.query);
   const { deleteUser } = useDeleteUser();
 
-  const columns = useUsersColumns({ onEdit, onDelete: (user) => deleteUser(user.id) });
+  const onDelete = (user: User) => deleteUser(user.id);
+  const columns = useUsersColumns({ onEdit, onDelete });
 
   return (
     <DataTable<User>
@@ -25,6 +27,7 @@ export function UsersTable({ onEdit }: UsersTableProps) {
       rowKey="id"
       columns={columns}
       mobileRenderType="card"
+      renderCard={(user) => <UserCard user={user} onEdit={onEdit} onDelete={onDelete} />}
       dataSource={data?.items}
       loading={isLoading}
       total={data?.pagination.total}
