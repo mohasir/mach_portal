@@ -1,14 +1,19 @@
 import { TRPCError } from '@trpc/server';
-import type { CreateUserInput, UpdateUserInput } from '@repo/schemas';
+import { paginationMeta, type CreateUserInput, type UpdateUserInput, type UsersListQuery } from '@repo/schemas';
 import { auth } from '../../lib/auth';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import { UsersRepository } from './users.repository';
+import { userCollectionResource, userResource } from './users.resource';
 
 export class UsersService {
   constructor(private repo: UsersRepository) {}
 
-  list() {
-    return this.repo.findAll();
+  async list(query: UsersListQuery) {
+    const { items, total } = await this.repo.findPaginated(query);
+    return {
+      items: userCollectionResource(items),
+      pagination: paginationMeta(total, query.page, query.pageSize),
+    };
   }
 
   async create(input: CreateUserInput) {
@@ -22,13 +27,13 @@ export class UsersService {
     });
     const created = await this.repo.updateById(user.id, { role: input.role });
     if (!created) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.user.NOT_FOUND) });
-    return created;
+    return userResource(created);
   }
 
   async update(id: string, input: UpdateUserInput) {
     const updated = await this.repo.updateById(id, { name: input.name, role: input.role });
     if (!updated) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.user.NOT_FOUND) });
-    return updated;
+    return userResource(updated);
   }
 
   async remove(id: string) {

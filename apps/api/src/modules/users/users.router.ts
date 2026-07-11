@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createUserSchema, updateUserSchema } from '@repo/schemas';
+import { createUserSchema, updateUserSchema, usersListQuerySchema } from '@repo/schemas';
 import { router, guardedProcedure } from '../../trpc/trpc';
 import { db } from '../../db';
 import { AppError, ErrorCodes } from '../../lib/errors';
@@ -12,7 +12,9 @@ const service = new UsersService(new UsersRepository(db));
 const currentRole = (ctx: { user: { role?: string | null } }) => ctx.user.role ?? null;
 
 export const usersRouter = router({
-  list: guardedProcedure({ user: ['list'] }).query(() => service.list()),
+  list: guardedProcedure({ user: ['list'] })
+    .input(usersListQuerySchema)
+    .query(({ input }) => service.list(input)),
 
   create: guardedProcedure({ user: ['create'] })
     .input(createUserSchema)

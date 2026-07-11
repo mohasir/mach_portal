@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { PermissionCheck } from '@repo/guards';
-import { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { SortDir } from '@repo/schemas';
 
 /** i18n keys (common namespace) for the confirm defaults a preset injects when a caller omits them. */
 export interface ActionPresetConfirm {
@@ -36,3 +37,16 @@ export interface RowAction {
 }
 
 export type RowActionItem = RowAction | { type: 'divider' };
+
+export interface DataTableChange {
+  page: number;
+  pageSize: number;
+  sortBy?: string;
+  sortDir?: SortDir;
+}
+
+export interface UseDataTableOptions<TSort extends string> {
+  defaultSortBy: TSort;
+  defaultSortDir?: SortDir;
+  defaultPageSize?: number;
+}

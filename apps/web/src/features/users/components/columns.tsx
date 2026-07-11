@@ -1,6 +1,7 @@
 'use client';
 import { App, Tag, type TableColumnsType } from 'antd';
 import { type RoleType } from '@repo/guards';
+import { BadgeCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DataTableRowActions, type RowActionItem } from '@/components/shared/DataTable';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
@@ -49,6 +50,20 @@ export function useUsersColumns({
     { title: t('columns.name'), dataIndex: 'name', key: 'name' },
     { title: t('columns.email'), dataIndex: 'email', key: 'email' },
     {
+      title: t('columns.emailVerified'),
+      dataIndex: 'emailVerified',
+      key: 'emailVerified',
+      responsive: ['lg'],
+      render: (verified: boolean) =>
+        verified ? (
+          <Tag color="green" icon={<BadgeCheck size={14} />}>
+            {tc('yes')}
+          </Tag>
+        ) : (
+          <Tag>{tc('no')}</Tag>
+        ),
+    },
+    {
       title: t('columns.role'),
       dataIndex: 'role',
       key: 'role',
@@ -58,6 +73,14 @@ export function useUsersColumns({
         ) : (
           '—'
         ),
+    },
+    {
+      title: t('columns.sessions'),
+      dataIndex: 'sessionsCount',
+      key: 'sessionsCount',
+      align: 'center',
+      responsive: ['lg'],
+      render: (n: number) => <Tag color={n > 0 ? 'blue' : 'default'}>{n}</Tag>,
     },
     {
       title: t('columns.createdAt'),

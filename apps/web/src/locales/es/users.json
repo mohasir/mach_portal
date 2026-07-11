@@ -6,7 +6,9 @@
   "columns": {
     "name": "Nombre",
     "email": "Email",
+    "emailVerified": "Verificado",
     "role": "Rol",
+    "sessions": "Sesiones",
     "createdAt": "Creado"
   },
   "form": {

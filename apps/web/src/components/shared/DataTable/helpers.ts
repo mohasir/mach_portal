@@ -1,4 +1,6 @@
-import { Copy, Eye, Pencil, Trash2, type LucideIcon } from 'lucide-react';
+import { Copy, Eye, Pencil, Trash2 } from 'lucide-react';
+import type { TableColumnsType } from 'antd';
+import type { SortDir } from '@repo/schemas';
 import type { ActionPreset, RowActionItem, RowActionKey } from './types';
 
 export const ACTION_PRESETS: Record<RowActionKey, ActionPreset> = {
@@ -28,4 +30,19 @@ export function stripDividers(items: RowActionItem[]): RowActionItem[] {
   }
   while (out.length && isDivider(out[out.length - 1]!)) out.pop();
   return out;
+}
+
+export function withSortOrder<TData>(
+  columns: TableColumnsType<TData> | undefined,
+  sortBy: string | undefined,
+  sortDir: SortDir | undefined,
+): TableColumnsType<TData> | undefined {
+  if (!columns || !sortBy) return columns;
+  const order = sortDir === 'asc' ? 'ascend' : 'descend';
+  return columns.map((col) => {
+    if (!('sorter' in col) || !col.sorter) return col;
+    const field =
+      'dataIndex' in col && col.dataIndex != null ? String(col.dataIndex) : String(col.key);
+    return { ...col, sortOrder: field === sortBy ? order : null };
+  }) as TableColumnsType<TData>;
 }

@@ -1,6 +1,7 @@
 'use client';
-import { Table } from 'antd';
 import { useTranslation } from 'react-i18next';
+import type { UsersListQuery } from '@repo/schemas';
+import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { useDeleteUser, useUsersList } from '../hooks/useUsers';
 import { useUsersColumns } from './columns';
 import type { User } from '../types';
@@ -11,20 +12,23 @@ interface UsersTableProps {
 
 export function UsersTable({ onEdit }: UsersTableProps) {
   const { t } = useTranslation('users');
-  const { data: users, isLoading } = useUsersList();
+  const { t: tc } = useTranslation('common');
+  const table = useDataTable<UsersListQuery['sortBy']>({ defaultSortBy: 'createdAt' });
+  const { data, isLoading } = useUsersList(table.query);
   const { deleteUser } = useDeleteUser();
 
   const columns = useUsersColumns({ onEdit, onDelete: (user) => deleteUser(user.id) });
 
   return (
-    <Table<User>
+    <DataTable<User>
+      {...table.tableProps}
       rowKey="id"
       columns={columns}
-      dataSource={users}
+      dataSource={data?.items}
       loading={isLoading}
-      scroll={{ x: 'max-content' }}
-      pagination={{ pageSize: 10, hideOnSinglePage: true }}
-      locale={{ emptyText: t('empty') }}
+      total={data?.pagination.total}
+      searchPlaceholder={tc('table.search')}
+      emptyText={t('empty')}
     />
   );
 }

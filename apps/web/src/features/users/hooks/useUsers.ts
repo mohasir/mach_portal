@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateUserInput, UpdateUserInput } from '@repo/schemas';
+import type { CreateUserInput, UpdateUserInput, UsersListQuery } from '@repo/schemas';
 import { useTRPC } from '@/lib/trpc/client';
 import { useApiError } from '@/lib/error/useApiError';
 
-export function useUsersList() {
+export function useUsersList(query: UsersListQuery) {
   const trpc = useTRPC();
-  return useQuery(trpc.users.list.queryOptions());
+  return useQuery(trpc.users.list.queryOptions(query));
 }
 
 export function useCreateUser() {

@@ -8,10 +8,14 @@
   "edit": "Edit",
   "detail": "Details",
   "logout": "Logout",
+  "yes": "Yes",
+  "no": "No",
   "table": {
     "actions": "Actions",
     "copyId": "Copy ID",
-    "copied": "ID copied"
+    "copied": "ID copied",
+    "search": "Search",
+    "total": "{{total}} records"
   },
   "confirm": {
     "title": "Warning",
