@@ -1,10 +1,30 @@
 'use client';
-import { Input, Table } from 'antd';
-import type { TableProps } from 'antd';
+import { Card, Input, Table, Typography } from 'antd';
+import type { TableColumnsType, TableColumnType, TableProps } from 'antd';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SortDir } from '@repo/schemas';
 import { withSortOrder } from './helpers';
 import type { DataTableChange } from './types';
+import { AutoRowCard } from './AutoRowCard';
+
+const DESKTOP_ONLY = ['sm', 'md', 'lg', 'xl', 'xxl'] as const;
+const MOBILE_ONLY = ['xs'] as const;
+
+function withMobileCard<TData>(
+  columns: TableColumnsType<TData> | undefined,
+  card: (record: TData, index: number) => ReactNode,
+): TableColumnsType<TData> {
+  const desktop = (columns ?? []).map((col) =>
+    'responsive' in col && col.responsive ? col : { ...col, responsive: [...DESKTOP_ONLY] },
+  );
+  const mobileCard: TableColumnType<TData> = {
+    key: '__mobileCard__',
+    responsive: [...MOBILE_ONLY],
+    render: (_, record, index) => card(record, index),
+  };
+  return [...desktop, mobileCard];
+}
 
 interface DataTableProps<TData> extends Omit<
   TableProps<TData>,
@@ -20,6 +40,8 @@ interface DataTableProps<TData> extends Omit<
   searchPlaceholder?: string;
   searchDefaultValue?: string;
   emptyText?: string;
+  mobileRenderType?: 'card' | 'list';
+  renderCard?: (record: TData, index: number) => ReactNode;
 }
 
 export function DataTable<TData extends object>({
@@ -34,6 +56,8 @@ export function DataTable<TData extends object>({
   searchPlaceholder,
   searchDefaultValue,
   emptyText,
+  renderCard,
+  mobileRenderType = 'list',
   locale,
   ...rest
 }: DataTableProps<TData>) {
@@ -50,8 +74,18 @@ export function DataTable<TData extends object>({
     });
   };
 
+  const card =
+    renderCard ??
+    ((record: TData, index: number) => (
+      <AutoRowCard record={record} index={index} columns={columns} />
+    ));
+
+  const columnsWithSortOrder = withSortOrder(columns, sortBy, sortDir);
+  const responsiveColumns =
+    mobileRenderType === 'card' ? withMobileCard(columnsWithSortOrder, card) : columnsWithSortOrder;
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mach-datatable flex flex-col gap-4">
       {onSearch && (
         <Input.Search
           allowClear
@@ -63,7 +97,7 @@ export function DataTable<TData extends object>({
       )}
       <Table<TData>
         {...rest}
-        columns={withSortOrder(columns, sortBy, sortDir)}
+        columns={responsiveColumns}
         onChange={server ? handleChange : undefined}
         scroll={{ x: 'max-content' }}
         locale={{ emptyText, ...locale }}
@@ -74,9 +108,10 @@ export function DataTable<TData extends object>({
                 pageSize,
                 total,
                 showSizeChanger: true,
+                responsive: true,
                 showTotal: (n) => t('table.total', { total: n }),
               }
-            : { pageSize, hideOnSinglePage: true }
+            : { pageSize, hideOnSinglePage: true, responsive: true }
         }
       />
     </div>

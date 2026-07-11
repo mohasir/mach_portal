@@ -48,4 +48,11 @@
     align-items: center;
     justify-content: center;
   }
+
+  /* Phones collapse the DataTable to a single card column; drop the now-empty header row. */
+  @media (max-width: 575px) {
+    .mach-datatable .ant-table-thead {
+      display: none;
+    }
+  }
 }

@@ -24,6 +24,7 @@ export function UsersTable({ onEdit }: UsersTableProps) {
       {...table.tableProps}
       rowKey="id"
       columns={columns}
+      mobileRenderType="card"
       dataSource={data?.items}
       loading={isLoading}
       total={data?.pagination.total}
