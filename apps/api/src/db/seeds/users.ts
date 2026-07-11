@@ -4,7 +4,6 @@ import { db } from '../index';
 import { user } from '../schema';
 import { auth } from '../../lib/auth';
 
-
 const SEED_PASSWORD = process.env['SEED_PASSWORD'] ?? 'admin123*';
 
 interface SeedUser {
@@ -14,9 +13,24 @@ interface SeedUser {
 }
 
 const SEED_USERS: SeedUser[] = [
-  { name: 'Samuel', email: 'samuel@mach.local', role: 'superadmin' },
-  { name: 'Lucia', email: 'lucia@mach.local', role: 'admin' },
-  { name: 'Demo', email: 'demo@mach.local', role: 'member' },
+  { name: 'Samuel', email: 'samuel@admin.com', role: 'superadmin' },
+  { name: 'Lucia', email: 'lucia@admin.com', role: 'admin' },
+
+  { name: 'Carlos', email: 'carlos@demo.com', role: 'member' },
+  { name: 'Ana', email: 'ana@demo.com', role: 'member' },
+  { name: 'Luis', email: 'luis@demo.com', role: 'member' },
+  { name: 'María', email: 'maria@demo.com', role: 'member' },
+  { name: 'José', email: 'jose@demo.com', role: 'member' },
+  { name: 'Sofía', email: 'sofia@demo.com', role: 'member' },
+  { name: 'Miguel', email: 'miguel@demo.com', role: 'member' },
+  { name: 'Valeria', email: 'valeria@demo.com', role: 'member' },
+  { name: 'Daniel', email: 'daniel@demo.com', role: 'member' },
+  { name: 'Elena', email: 'elena@demo.com', role: 'member' },
+  { name: 'Javier', email: 'javier@demo.com', role: 'member' },
+  { name: 'Camila', email: 'camila@demo.com', role: 'member' },
+  { name: 'Andrés', email: 'andres@demo.com', role: 'member' },
+  { name: 'Paula', email: 'paula@demo.com', role: 'member' },
+  { name: 'Fernando', email: 'fernando@demo.com', role: 'member' },
 ];
 
 export async function seedUsers() {
