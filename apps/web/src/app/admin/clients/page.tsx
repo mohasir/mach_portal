@@ -1,5 +1,5 @@
-import { PlaceholderPage } from '@/components/shared/PlaceholderPage';
+import { ClientsPage } from '@/features/clients';
 
 export default function Page() {
-  return <PlaceholderPage titleKey="nav.clients" />;
+  return <ClientsPage />;
 }

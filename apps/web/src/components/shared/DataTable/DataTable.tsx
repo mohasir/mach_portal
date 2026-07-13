@@ -1,5 +1,5 @@
 'use client';
-import { Input, Table } from 'antd';
+import { Grid, Input, Table } from 'antd';
 import type { TableProps } from 'antd';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -47,7 +47,11 @@ export function DataTable<TData extends object>({
   ...rest
 }: DataTableProps<TData>) {
   const { t } = useTranslation('common');
+  const screens = Grid.useBreakpoint();
   const server = total !== undefined;
+  const cardMode = mobileRenderType === 'card';
+
+  const mobileCardActive = cardMode && !!screens.xs;
 
   const handleChange: TableProps<TData>['onChange'] = (pagination, _filters, sorter) => {
     const s = Array.isArray(sorter) ? sorter[0] : sorter;
@@ -72,7 +76,9 @@ export function DataTable<TData extends object>({
   const firstLoad = !!loading && !dataSource?.length;
 
   return (
-    <div className="mach-datatable flex flex-col gap-4">
+    <div
+      className={`mach-datatable flex flex-col gap-4${cardMode ? ' mach-datatable--mobile-card' : ''}`}
+    >
       {onSearch && (
         <Input.Search
           allowClear
@@ -96,7 +102,7 @@ export function DataTable<TData extends object>({
           loading={loading}
           columns={responsiveColumns}
           onChange={server ? handleChange : undefined}
-          scroll={{ x: 'max-content' }}
+          scroll={mobileCardActive ? undefined : { x: 'max-content' }}
           locale={{ emptyText, ...locale }}
           pagination={
             server
