@@ -1,0 +1,228 @@
+// Mach Bar — Modelo de datos (refinado)
+// Pegar en https://dbdiagram.io para visualizar el ER.
+//
+// Reglas del modelo:
+// - Dinero SIEMPRE en centavos (integer). Las tasas (tax/deposit/discount%) van numeric.
+// - Un solo eje de estado del negocio: quotes.stage. events NO tiene status propio.
+// - clients.status (lead|active) es DERIVADO, no columna.
+// - El catálogo (products/option_groups/options) y los lookups (event_types) usan soft-delete
+//   (is_active); nunca DELETE, porque quotes/events los referencian por FK viva.
+// - Montos, tax_rate y deposit_rate se CONGELAN (snapshot) en la quote al calcular.
+// - El evento NO copia su composición: lee sus líneas (products) y opciones de la quote
+//   (event.quote_id). La quote es read-only tras 'confirmed'. Por eso no hay event_lines.
+// - Nombres GENÉRICOS para reuso en otros negocios del giro. Mach Bar los muestra vía i18n:
+//   product -> 'Estación', option_group -> 'Sección', option -> 'Ítem'.
+
+Enum state {
+  NY
+  NJ
+  CT
+}
+
+Enum quote_stage {
+  new       // borrador, sin enviar
+  quoted    // enviada, esperando respuesta
+  confirmed // aceptada + depósito -> crea event
+  completed // el evento ya ocurrió
+  cancelled // se cayó (en cualquier punto)
+}
+
+Enum discount_type {
+  fixed   // discount_value en centavos
+  percent // discount_value como porcentaje (ej. 10 = 10%)
+}
+
+Enum payment_method {
+  zelle
+  cash
+  card
+  check
+}
+
+// ─────────────────────────────────────────────
+// COMERCIAL
+// ─────────────────────────────────────────────
+
+Table clients {
+  id uuid [pk]
+  name varchar(255) [not null]
+  phone varchar(30)
+  email varchar(255)
+  city varchar(100)
+  state state
+  address text
+  notes text
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  Note: 'status (lead|active) es derivado del stage de sus quotes, no es columna'
+}
+
+Table quotes {
+  id uuid [pk]
+  seq integer [not null, unique, note: 'consecutivo global; arranca en app_settings.quote_seq_start']
+  number varchar(20) [not null, unique, note: 'quoYYYYMMDD-NNNNNN']
+  client_id uuid [not null, ref: > clients.id]
+  event_type_id uuid [ref: > event_types.id]
+  event_date date
+  event_time time
+  state state
+  address text
+  subtotal integer [not null, default: 0, note: 'cents = Σ(quote_lines.subtotal)']
+  discount_type discount_type
+  discount_value "numeric(10,2)" [note: '% o centavos según discount_type']
+  discount_amount integer [not null, default: 0, note: 'cents, resuelto']
+  tax_rate "numeric(6,5)" [not null, default: 0, note: 'snapshot de state_settings.tax_rate']
+  tax_amount integer [not null, default: 0, note: 'cents']
+  total integer [not null, default: 0, note: 'cents']
+  deposit_rate "numeric(4,3)" [not null, default: 0.5, note: 'snapshot de app_settings.deposit_rate']
+  deposit_amount integer [not null, default: 0, note: 'cents']
+  notes text
+  stage quote_stage [not null, default: 'new']
+  valid_until date [note: 'created_at + app_settings.quote_validity_months; expired = derivado']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+
+  indexes {
+    stage
+    event_date
+    client_id
+  }
+  Note: 'balance = total - deposit_amount (derivado, no se guarda)'
+}
+
+Table quote_lines {
+  id uuid [pk]
+  quote_id uuid [not null, ref: > quotes.id, note: 'onDelete cascade']
+  product_id uuid [not null, ref: > products.id]
+  num_persons integer [not null, note: 'min app_settings.min_persons_per_line']
+  price_per_person integer [not null, note: 'cents, snapshot del catálogo']
+  subtotal integer [not null, note: 'cents = num_persons * price_per_person']
+  sort_order integer [default: 0]
+
+  indexes {
+    quote_id
+  }
+}
+
+Table quote_line_options {
+  id uuid [pk]
+  quote_line_id uuid [not null, ref: > quote_lines.id, note: 'onDelete cascade']
+  option_id uuid [not null, ref: > options.id]
+  option_group_id uuid [not null, ref: > option_groups.id]
+
+  indexes {
+    quote_line_id
+  }
+}
+
+// ─────────────────────────────────────────────
+// OPERACIÓN (evento nace SIEMPRE de una quote confirmada)
+// ─────────────────────────────────────────────
+
+Table events {
+  id uuid [pk]
+  quote_id uuid [not null, unique, ref: - quotes.id, note: '1 evento por quote']
+  client_id uuid [not null, ref: > clients.id]
+  event_type_id uuid [ref: > event_types.id]
+  event_date date [not null]
+  event_time time
+  state state [not null]
+  address text [not null]
+  total_amount integer [not null, note: 'cents, snapshot de quote.total']
+  deposit_paid boolean [not null, default: false]
+  balance_paid boolean [not null, default: false]
+  payment_method payment_method
+  notes text
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+
+  indexes {
+    event_date
+    state
+  }
+  Note: 'lee líneas (products) y opciones de la quote (quote_id). status y month son DERIVADOS (quote.stage / event_date)'
+}
+
+Table event_staff {
+  id uuid [pk]
+  event_id uuid [not null, ref: > events.id, note: 'onDelete cascade']
+  staff_id uuid [not null, ref: > staff.id]
+  role varchar(100)
+  assigned_at timestamp [not null, default: `now()`]
+
+  indexes {
+    (event_id, staff_id) [unique, note: 'evita doble asignación']
+  }
+}
+
+Table staff {
+  id uuid [pk]
+  name varchar(255) [not null]
+  phone varchar(30)
+  email varchar(255)
+  is_active boolean [not null, default: true]
+  created_at timestamp [not null, default: `now()`]
+}
+
+// ─────────────────────────────────────────────
+// CATÁLOGO MAESTRO (soft-delete via is_active)
+// product -> 'Estación' · option_group -> 'Sección' · option -> 'Ítem'  (labels i18n)
+// ─────────────────────────────────────────────
+
+Table products {
+  id uuid [pk]
+  name varchar(100) [not null, unique]
+  description text
+  base_price integer [not null, note: 'cents, precio/persona (prefill del builder)']
+  is_premium boolean [not null, default: false]
+  is_active boolean [not null, default: true]
+  sort_order integer [default: 0]
+}
+
+Table option_groups {
+  id uuid [pk]
+  product_id uuid [not null, ref: > products.id, note: 'onDelete cascade']
+  label varchar(100) [not null, note: "ej. 'Toppings', 'Frutas'"]
+  max_select integer [note: 'null = sin límite']
+  is_active boolean [not null, default: true]
+  sort_order integer [default: 0]
+}
+
+Table options {
+  id uuid [pk]
+  option_group_id uuid [not null, ref: > option_groups.id, note: 'onDelete cascade']
+  name varchar(100) [not null]
+  is_active boolean [not null, default: true, note: 'soft-delete: lo referencian quote_line_options']
+  sort_order integer [default: 0]
+}
+
+// ─────────────────────────────────────────────
+// REFERENCIA / LOOKUPS (soft-delete)
+// ─────────────────────────────────────────────
+
+Table event_types {
+  id uuid [pk]
+  name varchar(100) [not null, unique, note: "ej. 'Boda', 'Cumpleaños', 'Corporativo'"]
+  is_active boolean [not null, default: true, note: 'soft-delete: lo referencian quotes/events']
+  sort_order integer [default: 0]
+}
+
+// ─────────────────────────────────────────────
+// CONFIGURACIÓN
+// ─────────────────────────────────────────────
+
+Table state_settings {
+  state state [pk]
+  tax_rate "numeric(6,5)" [not null, default: 0, note: 'ej. 0.08875']
+  updated_at timestamp [not null, default: `now()`]
+  Note: 'futuro: travel_fee por estado entra acá'
+}
+
+Table app_settings {
+  id integer [pk, default: 1, note: 'fila única (check id = 1)']
+  deposit_rate "numeric(4,3)" [not null, default: 0.5]
+  quote_validity_months integer [not null, default: 3]
+  min_persons_per_line integer [not null, default: 30]
+  quote_seq_start integer [not null, default: 1, note: 'no puede ser < último seq usado']
+  updated_at timestamp [not null, default: `now()`]
+}
