@@ -8,6 +8,9 @@ export const ErrorCodes = {
   client: {
     NOT_FOUND: 'CLIENT_NOT_FOUND',
   },
+  staff: {
+    NOT_FOUND: 'STAFF_NOT_FOUND',
+  },
 } as const;
 
 type ValuesOf<T> = T[keyof T];

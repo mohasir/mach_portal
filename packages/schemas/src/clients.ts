@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { listQuerySchema } from './pagination';
 import { stateSchema } from './enums';
+import { optionalEmail, optionalText } from './fields';
 
 // Derived on read (not a column): `active` if the client has a confirmed/completed
 // quote, else `lead`. See docs/mach-bar-domain.md D3.
@@ -12,17 +13,10 @@ export const clientsListQuerySchema = listQuerySchema.extend({
 });
 export type ClientsListQuery = z.infer<typeof clientsListQuerySchema>;
 
-// Optional free-text field: a blank string means "not provided" (stored null).
-const blankToUndefined = (v: unknown) =>
-  typeof v === 'string' ? (v.trim() === '' ? undefined : v.trim()) : v;
-
-const optionalText = (max: number) =>
-  z.preprocess(blankToUndefined, z.string().max(max).optional());
-
 const clientMutationFields = {
   name: z.string().trim().min(1, 'clients.validation.nameRequired').max(120),
   phone: optionalText(40),
-  email: z.preprocess(blankToUndefined, z.email('clients.validation.emailInvalid').optional()),
+  email: optionalEmail('clients.validation.emailInvalid'),
   city: optionalText(120),
   state: z.preprocess((v) => (v === '' || v === null ? undefined : v), stateSchema.optional()),
   address: optionalText(240),
