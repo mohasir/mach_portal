@@ -6,7 +6,8 @@
 >
 > Convenciones que aplican a TODA superficie (custom incluida): mobile-first, AntD v6 + Tailwind,
 > iconos `lucide-react`, fechas con `useDateFormatter`, i18n en todo texto, `useCan`/`<Can>` para
-> permisos. El límite de autorización real es la API.
+> permisos, **estados de carga con `Skeleton`/`Spin` según el caso** (`docs/frontend/architecture.md §11`).
+> El límite de autorización real es la API.
 
 ---
 

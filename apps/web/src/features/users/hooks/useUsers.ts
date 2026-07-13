@@ -1,11 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CreateUserInput, UpdateUserInput, UsersListQuery } from '@repo/schemas';
 import { useTRPC } from '@/lib/trpc/client';
 import { useApiError } from '@/lib/error/useApiError';
 
 export function useUsersList(query: UsersListQuery) {
   const trpc = useTRPC();
-  return useQuery(trpc.users.list.queryOptions(query));
+  return useQuery({ ...trpc.users.list.queryOptions(query), placeholderData: keepPreviousData });
 }
 
 export function useCreateUser() {
@@ -20,7 +20,10 @@ export function useCreateUser() {
     }),
   );
 
-  return { createUser: (data: CreateUserInput) => mutation.mutateAsync(data), isPending: mutation.isPending };
+  return {
+    createUser: (data: CreateUserInput) => mutation.mutateAsync(data),
+    isPending: mutation.isPending,
+  };
 }
 
 export function useUpdateUser() {
@@ -53,5 +56,8 @@ export function useDeleteUser() {
     }),
   );
 
-  return { deleteUser: (id: string) => mutation.mutateAsync({ id }), isPending: mutation.isPending };
+  return {
+    deleteUser: (id: string) => mutation.mutateAsync({ id }),
+    isPending: mutation.isPending,
+  };
 }

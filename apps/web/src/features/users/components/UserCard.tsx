@@ -4,6 +4,7 @@ import { BadgeCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { type RoleType } from '@repo/guards';
 import { DataTableRowActions } from '@/components/shared/DataTable';
+import { AvatarUser } from '@/components/shared/AvatarUser';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { ROLE_COLORS } from '../helpers';
 import { useUserRowActions } from '../hooks/useUserRowActions';
@@ -24,16 +25,7 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
   return (
     <Card size="small">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="min-w-0">
-            <Typography.Text strong className="text-brown block truncate">
-              {user.name || '—'}
-            </Typography.Text>
-            <Typography.Text type="secondary" className="block truncate text-xs">
-              {user.email}
-            </Typography.Text>
-          </div>
-        </div>
+        <AvatarUser name={user.name} email={user.email} />
         <DataTableRowActions actions={rowActions(user)} label={tc('table.actions')} />
       </div>
 

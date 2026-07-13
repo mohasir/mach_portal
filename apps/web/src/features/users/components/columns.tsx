@@ -4,6 +4,7 @@ import { type RoleType } from '@repo/guards';
 import { BadgeCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DataTableRowActions } from '@/components/shared/DataTable';
+import { AvatarUser } from '@/components/shared/AvatarUser';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { ROLE_COLORS } from '../helpers';
 import { useUserRowActions } from '../hooks/useUserRowActions';
@@ -24,8 +25,11 @@ export function useUsersColumns({
   const rowActions = useUserRowActions({ onEdit, onDelete });
 
   return [
-    { title: t('columns.name'), dataIndex: 'name', key: 'name' },
-    { title: t('columns.email'), dataIndex: 'email', key: 'email' },
+    {
+      title: t('columns.name'),
+      key: 'name',
+      render: (_, user) => <AvatarUser name={user.name} email={user.email} />,
+    },
     {
       title: t('columns.emailVerified'),
       dataIndex: 'emailVerified',

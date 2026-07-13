@@ -1,7 +1,26 @@
 import { Copy, Eye, Pencil, Trash2 } from 'lucide-react';
-import type { TableColumnsType } from 'antd';
+import type { ReactNode } from 'react';
+import type { TableColumnsType, TableColumnType } from 'antd';
 import type { SortDir } from '@repo/schemas';
 import type { ActionPreset, RowActionItem, RowActionKey } from './types';
+
+const DESKTOP_ONLY = ['sm', 'md', 'lg', 'xl', 'xxl'] as const;
+const MOBILE_ONLY = ['xs'] as const;
+
+export function withMobileCard<TData>(
+  columns: TableColumnsType<TData> | undefined,
+  card: (record: TData, index: number) => ReactNode,
+): TableColumnsType<TData> {
+  const desktop = (columns ?? []).map((col) =>
+    'responsive' in col && col.responsive ? col : { ...col, responsive: [...DESKTOP_ONLY] },
+  );
+  const mobileCard: TableColumnType<TData> = {
+    key: '__mobileCard__',
+    responsive: [...MOBILE_ONLY],
+    render: (_, record, index) => card(record, index),
+  };
+  return [...desktop, mobileCard];
+}
 
 export const ACTION_PRESETS: Record<RowActionKey, ActionPreset> = {
   copyId: { labelKey: 'table.copyId', Icon: Copy },

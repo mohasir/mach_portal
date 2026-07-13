@@ -100,6 +100,7 @@ están en los arch docs; acá va el orden.
 - [ ] `types.ts` (inferido de `RouterOutputs`).
 - [ ] `hooks/useX.ts` (`useXList`/`useCreateX`/`useUpdateX`/`useDeleteX`) + `useXRowActions`.
 - [ ] `columns.tsx` · `XCard` · `XTable` · `XForm` · `Create/EditXModal` · `XPage` + barrel.
+- [ ] **Estados de carga**: `Skeleton` en primera carga (página/tabla/detalle/form), `Spin` en acciones/refetch (`docs/frontend/architecture.md §11`).
 - [ ] Página thin `app/admin/<x>/page.tsx`.
 - [ ] i18n `locales/{es,en}/<x>.json` + registrar namespace; nav labels en `admin`.
 - [ ] Nav item en `lib/navigation` (item + icono lucide + grupo) + `route-access.ts`.
