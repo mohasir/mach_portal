@@ -7,12 +7,14 @@
     "quotes": "Quotes",
     "pipeline": "Pipeline",
     "staff": "Staff",
+    "catalogProducts": "Products",
     "statistics": "Statistics",
     "finance": "Finance",
     "users": "Users",
     "faq": "FAQ",
     "support": "Support",
     "groups": {
+      "catalog": "Catalog",
       "users": "Users",
       "help": "Help"
     }

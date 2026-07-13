@@ -27,6 +27,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.QUOTE]: CRUD,
       [RESOURCES.PIPELINE]: CRUD,
       [RESOURCES.STAFF]: CRUD,
+      [RESOURCES.PRODUCT]: CRUD,
     },
   },
   {
@@ -38,6 +39,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.QUOTE]: CRUD,
       [RESOURCES.PIPELINE]: CRUD,
       [RESOURCES.STAFF]: CRUD,
+      [RESOURCES.PRODUCT]: CRUD,
     },
   },
   {

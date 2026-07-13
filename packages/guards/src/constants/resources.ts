@@ -5,6 +5,7 @@ export const RESOURCES = {
   QUOTE: 'quote',
   PIPELINE: 'pipeline',
   STAFF: 'staff',
+  PRODUCT: 'product',
 } as const;
 
 export type ResourceType = (typeof RESOURCES)[keyof typeof RESOURCES];

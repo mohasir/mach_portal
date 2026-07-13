@@ -11,6 +11,16 @@ export const ErrorCodes = {
   staff: {
     NOT_FOUND: 'STAFF_NOT_FOUND',
   },
+  product: {
+    NOT_FOUND: 'PRODUCT_NOT_FOUND',
+    ALREADY_EXISTS: 'PRODUCT_ALREADY_EXISTS',
+  },
+  optionGroup: {
+    NOT_FOUND: 'OPTION_GROUP_NOT_FOUND',
+  },
+  option: {
+    NOT_FOUND: 'OPTION_NOT_FOUND',
+  },
 } as const;
 
 type ValuesOf<T> = T[keyof T];

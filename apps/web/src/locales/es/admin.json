@@ -7,12 +7,14 @@
     "quotes": "Cotizaciones",
     "pipeline": "Pipeline",
     "staff": "Staff",
+    "catalogProducts": "Productos",
     "statistics": "Estadísticas",
     "finance": "Finanzas",
     "users": "Usuarios",
     "faq": "Preguntas frecuentes",
     "support": "Soporte",
     "groups": {
+      "catalog": "Catálogo",
       "users": "Usuarios",
       "help": "Ayuda"
     }

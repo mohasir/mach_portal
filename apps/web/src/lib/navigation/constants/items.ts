@@ -46,6 +46,13 @@ export const STAFF_ITEM: NavItem = {
   guard: { [RESOURCES.STAFF]: [READ] },
 };
 
+export const CATALOG_PRODUCTS_ITEM: NavItem = {
+  label: 'nav.catalogProducts',
+  href: '/admin/catalog',
+  icon: 'catalog',
+  guard: { [RESOURCES.PRODUCT]: [READ] },
+};
+
 export const USERS_ITEM: NavItem = {
   label: 'nav.users',
   href: '/admin/users',
@@ -72,6 +79,7 @@ export const NAV_ITEMS = {
   QUOTES: QUOTES_ITEM,
   PIPELINE: PIPELINE_ITEM,
   STAFF: STAFF_ITEM,
+  CATALOG_PRODUCTS: CATALOG_PRODUCTS_ITEM,
   USERS: USERS_ITEM,
   FAQ: FAQ_ITEM,
   SUPPORT: SUPPORT_ITEM,
