@@ -1,0 +1,55 @@
+{
+  "title": "Catalog",
+  "empty": "No stations",
+  "status": {
+    "inactive": "Inactive"
+  },
+  "actions": {
+    "activate": "Activate",
+    "deactivate": "Deactivate"
+  },
+  "form": {
+    "save": "Save"
+  },
+  "product": {
+    "add": "New station",
+    "premium": "Premium",
+    "perPerson": "{{price}}/person",
+    "create": { "title": "New station" },
+    "edit": { "title": "Edit station" },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Station name",
+      "description": "Description",
+      "descriptionPlaceholder": "Short description (optional)",
+      "basePrice": "Price per person",
+      "isPremium": "Premium"
+    }
+  },
+  "optionGroup": {
+    "add": "New section",
+    "maxSelectShort": "max {{count}}",
+    "create": { "title": "New section" },
+    "edit": { "title": "Edit section" },
+    "form": {
+      "label": "Name",
+      "labelPlaceholder": "Section name",
+      "maxSelect": "Max selection",
+      "maxSelectPlaceholder": "No limit"
+    }
+  },
+  "option": {
+    "add": "New item",
+    "create": { "title": "New item" },
+    "edit": { "title": "Edit item" },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Item name"
+    }
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "labelRequired": "Name is required",
+    "basePriceInvalid": "Invalid price"
+  }
+}

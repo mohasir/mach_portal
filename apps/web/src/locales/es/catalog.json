@@ -1,0 +1,55 @@
+{
+  "title": "Catálogo",
+  "empty": "No hay estaciones",
+  "status": {
+    "inactive": "Inactivo"
+  },
+  "actions": {
+    "activate": "Activar",
+    "deactivate": "Desactivar"
+  },
+  "form": {
+    "save": "Guardar"
+  },
+  "product": {
+    "add": "Nueva estación",
+    "premium": "Premium",
+    "perPerson": "{{price}}/pers",
+    "create": { "title": "Nueva estación" },
+    "edit": { "title": "Editar estación" },
+    "form": {
+      "name": "Nombre",
+      "namePlaceholder": "Nombre de la estación",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Descripción breve (opcional)",
+      "basePrice": "Precio por persona",
+      "isPremium": "Premium"
+    }
+  },
+  "optionGroup": {
+    "add": "Nueva sección",
+    "maxSelectShort": "máx {{count}}",
+    "create": { "title": "Nueva sección" },
+    "edit": { "title": "Editar sección" },
+    "form": {
+      "label": "Nombre",
+      "labelPlaceholder": "Nombre de la sección",
+      "maxSelect": "Selección máxima",
+      "maxSelectPlaceholder": "Sin límite"
+    }
+  },
+  "option": {
+    "add": "Nuevo ítem",
+    "create": { "title": "Nuevo ítem" },
+    "edit": { "title": "Editar ítem" },
+    "form": {
+      "name": "Nombre",
+      "namePlaceholder": "Nombre del ítem"
+    }
+  },
+  "validation": {
+    "nameRequired": "Nombre requerido",
+    "labelRequired": "Nombre requerido",
+    "basePriceInvalid": "Precio inválido"
+  }
+}

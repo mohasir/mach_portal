@@ -13,6 +13,10 @@ export const ADMIN_MENU: NavGroup[] = [
     ],
   },
   {
+    group: 'nav.groups.catalog',
+    items: [NAV_ITEMS.CATALOG_PRODUCTS],
+  },
+  {
     group: 'nav.groups.users',
     items: [NAV_ITEMS.USERS],
   },
