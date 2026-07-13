@@ -2,3 +2,4 @@ export * from './auth';
 export * from './enums';
 export * from './clients';
 export * from './staff';
+export * from './catalog';

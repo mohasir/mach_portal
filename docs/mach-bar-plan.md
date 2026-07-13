@@ -31,7 +31,7 @@
 > **Próximo paso**; (3) continuá desde ahí. **Actualizá esta sección** al cerrar cada tarea: marcá ✅,
 > movés el "Próximo paso" y agregás una línea a la bitácora.
 
-**Última actualización:** 2026-07-13 · **Fase actual:** Fase 1 ✅ completa → arrancando Fase 2 · **Próximo paso:** Fase 2 → Catálogo (BE).
+**Última actualización:** 2026-07-13 · **Fase actual:** Fase 2 (Catálogo + Tipos de evento) · **Próximo paso:** Fase 2 → Catálogo (FE).
 
 Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 
@@ -39,16 +39,17 @@ Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 |---|---|:--:|:--:|:--:|:--:|
 | 1 | Clientes | ✅ | ✅ | ✅ | ✅ |
 | 1 | Staff | ✅ | ✅ | ✅ | ✅ |
-| 2 | Catálogo | ☐ | ☐ | ☐ | ☐ |
+| 2 | Catálogo | ✅ | ☐ | ✅ | ☐ |
 | 2 | Tipos de evento | ☐ | ☐ | ☐ | ☐ |
 | 3 | Configuración | ☐ | ☐ | ☐ | ☐ |
 | 4 | Cotizaciones | ☐ | ☐ | ☐ | ☐ |
 | 5 | Eventos | ☐ | ☐ | ☐ | ☐ |
 | 6 | Dashboard | ☐ | ☐ | ☐ | ☐ |
 
-**Fundaciones** (transversales): guards nuevos 🔨 (`STAFF` ✅; falta `PRODUCT`/`EVENT_TYPE`/`CONFIG`) · enum `state` compartido ✅ · cents + `formatMoney` ☐ · `%` helper ☐ · dnd-kit ☐ · `computeQuoteTotals` ☐
+**Fundaciones** (transversales): guards nuevos 🔨 (`STAFF`✅ `PRODUCT`✅; falta `EVENT_TYPE`/`CONFIG`) · enum `state` compartido ✅ · cents (BE) ✅ / `formatMoney` (FE) ☐ · `%` helper ☐ · dnd-kit ☐ (entra en el FE de catálogo) · `computeQuoteTotals` ☐
 
 **Bitácora de sesión** (lo último arriba):
+- **2026-07-13** — Catálogo **BE** hecho (primer módulo jerárquico, 3 tablas bajo un solo módulo `products`): **guard `PRODUCT` nuevo**; schema `products/option_groups/options` con FKs cascade, **sin timestamps** (fiel al domain §5.3); contrato Zod por nivel (`create/updateProductSchema`, `...OptionGroupSchema`, `...OptionSchema`) + `catalogReorderSchema`/`catalogToggleActiveSchema` compartidos. Módulo `products`: `resource.ts` shapea flat **y** arma el árbol (`buildProductTree`, in-memory desde 3 selects — catálogo chico, evita joins con columnas repetidas); `repository.ts` con queries planas + `reorder*` transaccional (`sortOrder = index` por hermano); `router.ts` con **sub-routers `products.groups.*` / `products.options.*`** (mapea a los 3 grupos de mutation-hooks del FE), todo gateado bajo el **recurso único `product`** (`mach-bar-flows.md §4.2`). `products.list` = solo activos (builder) vs `products.catalog` = incluye inactivos (editor) — mismo árbol, distinto filtro. Errores `PRODUCT_NOT_FOUND/ALREADY_EXISTS`, `OPTION_GROUP_NOT_FOUND`, `OPTION_NOT_FOUND` + i18n. `seedCatalog`: las 9 estaciones reales (Crepaletas, Crepes, Mini Pancakes, Nachos, Fruit Station, Esquites, Snack Station, Popsicles, Craft Bar★premium) con 12 secciones y 52 ítems. **Nota de diseño**: catálogo es **soft-delete puro** — no hay mutación `delete`, solo `toggleActive` (D6: options las referencian `quote_line_options`). Verificado: `check-types` monorepo + `db:push`/`db:seed` + **en vivo**: árbol anidado completo, `list` vs `catalog` filtran `isActive` correctamente, `reorder` transaccional, `groups.create`/`options.create` anidan bien.
 - **2026-07-13** — Staff **FE** hecho + **Fase 1 completa**: feature `staff` (espejo de `clients`; `StaffForm` con `Switch` para `isActive`, reusa `AvatarUser`), **`STAFF_ITEM` de nav nuevo** (item + icono lucide `ChefHat` + grupo principal + `route-access /admin/staff`), página thin `/admin/staff`, i18n `staff.json` (es/en) + namespace. Verificado: `check-types` web + `/admin/staff` renderiza (HTTP 200) + CRUD ya validado por API en el paso BE. Visual desktop/móvil → revisión humana. **Además**: en el `DataTable` compartido, en móvil+card se desactivó el scroll horizontal y el `padding-inline` del `.ant-table-cell` (a pedido).
 - **2026-07-13** — Staff **BE** hecho (módulo estándar): **guard `STAFF` nuevo** (`RESOURCES.STAFF` + ambas matrices, superadmin/admin CRUD), schema `staff` (`id/name/phone/email/isActive/createdAt`, **sin `updatedAt`** per domain §5.2), contrato Zod (`isActive` default true en create), módulo `staff` (resource/repo/service/router), error `STAFF_NOT_FOUND` + i18n, router registrado, `seedStaff` (7: 5 activos + 2 inactivos). Extraje helpers `optionalText`/`optionalEmail` a `@repo/schemas/fields` (reusados por clients+staff). Verificado: `check-types` monorepo + **CRUD end-to-end en vivo** (list/create/update-toggle/delete; default `isActive` y blanco→null OK). Delete es hard-delete (aún no hay FKs); `isActive` es el alta/baja operativo.
 - **2026-07-13** — Clientes **FE** hecho (espejo de `users`): feature `clients` (types inferidos, hooks tRPC, `useClientRowActions`, `columns`/`ClientCard`/`ClientsTable`/`ClientForm`/modales/`ClientsPage` + barrel), página thin `/admin/clients` (reemplaza `PlaceholderPage`), i18n `clients.json` (es/en) + namespace registrado. Nav `CLIENTS_ITEM` y `route-access` ya existían. Verificado: `check-types` web + **CRUD end-to-end en vivo** (login superadmin → `list`/`create`/`update`/`delete` por tRPC; `status` derivado y normalización blanco→null OK). Visual desktop/móvil (card) → revisión humana en browser.

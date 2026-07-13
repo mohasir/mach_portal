@@ -4,3 +4,4 @@ export * from './enums';
 export * from './users';
 export * from './clients';
 export * from './staff';
+export * from './catalog';
