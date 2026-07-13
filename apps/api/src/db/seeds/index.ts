@@ -1,11 +1,13 @@
 import { queryClient } from '../index';
 import { seedUsers } from './users';
+import { seedClients } from './clients';
 
 async function main() {
   console.log('🌱 Iniciando seeding...');
 
   try {
     await seedUsers();
+    await seedClients();
     console.log('✅ Seeding completado.');
   } catch (error) {
     console.error('❌ Seeding falló:', error);
