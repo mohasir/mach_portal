@@ -11,6 +11,8 @@
     "PRODUCT_ALREADY_EXISTS": "Ya existe una estación con ese nombre",
     "OPTION_GROUP_NOT_FOUND": "La sección no existe",
     "OPTION_NOT_FOUND": "El ítem no existe",
+    "EVENT_TYPE_NOT_FOUND": "El tipo de evento no existe",
+    "EVENT_TYPE_ALREADY_EXISTS": "Ya existe un tipo de evento con ese nombre",
     "CONFLICT": "El recurso ya existe",
     "UNAUTHORIZED": "Tu sesión expiró, iniciá sesión de nuevo",
     "FORBIDDEN": "No tenés permiso para esta acción",

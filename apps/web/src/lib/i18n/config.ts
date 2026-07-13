@@ -9,6 +9,7 @@ import esUsers from '../../locales/es/users.json';
 import esClients from '../../locales/es/clients.json';
 import esStaff from '../../locales/es/staff.json';
 import esCatalog from '../../locales/es/catalog.json';
+import esEventTypes from '../../locales/es/eventTypes.json';
 import enCommon from '../../locales/en/common.json';
 import enApi from '../../locales/en/api.json';
 import enAuth from '../../locales/en/auth.json';
@@ -17,6 +18,7 @@ import enUsers from '../../locales/en/users.json';
 import enClients from '../../locales/en/clients.json';
 import enStaff from '../../locales/en/staff.json';
 import enCatalog from '../../locales/en/catalog.json';
+import enEventTypes from '../../locales/en/eventTypes.json';
 
 export const locales = ['es', 'en'] as const;
 export type Locale = (typeof locales)[number];
@@ -33,6 +35,7 @@ i18n.use(initReactI18next).init({
       clients: esClients,
       staff: esStaff,
       catalog: esCatalog,
+      eventTypes: esEventTypes,
     },
     en: {
       common: enCommon,
@@ -43,11 +46,12 @@ i18n.use(initReactI18next).init({
       clients: enClients,
       staff: enStaff,
       catalog: enCatalog,
+      eventTypes: enEventTypes,
     },
   },
   lng: defaultLocale,
   fallbackLng: defaultLocale,
-  ns: ['common', 'api', 'auth', 'admin', 'users', 'clients', 'staff', 'catalog'],
+  ns: ['common', 'api', 'auth', 'admin', 'users', 'clients', 'staff', 'catalog', 'eventTypes'],
   defaultNS: 'common',
   interpolation: { escapeValue: false },
 });
