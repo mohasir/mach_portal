@@ -1,0 +1,41 @@
+{
+  "title": "Staff",
+  "index": {
+    "add": "New member"
+  },
+  "columns": {
+    "name": "Name",
+    "phone": "Phone",
+    "status": "Status",
+    "createdAt": "Created"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "Full name",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "phone": "Phone",
+    "phonePlaceholder": "(212) 555-0100",
+    "isActive": "Active",
+    "save": "Save"
+  },
+  "create": {
+    "title": "New member"
+  },
+  "edit": {
+    "title": "Edit member"
+  },
+  "delete": {
+    "confirmTitle": "Delete member?",
+    "confirmContent": "Are you sure you want to delete {{name}}?"
+  },
+  "empty": "No staff",
+  "validation": {
+    "nameRequired": "Name is required",
+    "emailInvalid": "Invalid email"
+  }
+}

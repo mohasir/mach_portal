@@ -39,6 +39,13 @@ export const PIPELINE_ITEM: NavItem = {
   guard: { [RESOURCES.PIPELINE]: [READ] },
 };
 
+export const STAFF_ITEM: NavItem = {
+  label: 'nav.staff',
+  href: '/admin/staff',
+  icon: 'staff',
+  guard: { [RESOURCES.STAFF]: [READ] },
+};
+
 export const USERS_ITEM: NavItem = {
   label: 'nav.users',
   href: '/admin/users',
@@ -64,6 +71,7 @@ export const NAV_ITEMS = {
   CLIENTS: CLIENTS_ITEM,
   QUOTES: QUOTES_ITEM,
   PIPELINE: PIPELINE_ITEM,
+  STAFF: STAFF_ITEM,
   USERS: USERS_ITEM,
   FAQ: FAQ_ITEM,
   SUPPORT: SUPPORT_ITEM,

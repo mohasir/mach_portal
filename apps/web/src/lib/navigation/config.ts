@@ -9,6 +9,7 @@ export const ADMIN_MENU: NavGroup[] = [
       NAV_ITEMS.CLIENTS,
       NAV_ITEMS.QUOTES,
       NAV_ITEMS.PIPELINE,
+      NAV_ITEMS.STAFF,
     ],
   },
   {
