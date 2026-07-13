@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import {
   CalendarDays,
+  ChefHat,
   CircleHelp,
   Headset,
   LayoutDashboard,
@@ -17,6 +18,7 @@ export const IconMap: Record<string, ReactNode> = {
   clients: <Users size={18} />,
   quotes: <ReceiptText size={18} />,
   pipeline: <Workflow size={18} />,
+  staff: <ChefHat size={18} />,
   users: <UserCog size={18} />,
   faq: <CircleHelp size={18} />,
   support: <Headset size={18} />,

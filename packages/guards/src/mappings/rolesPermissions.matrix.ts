@@ -26,6 +26,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.CLIENT]: CRUD,
       [RESOURCES.QUOTE]: CRUD,
       [RESOURCES.PIPELINE]: CRUD,
+      [RESOURCES.STAFF]: CRUD,
     },
   },
   {
@@ -36,6 +37,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.CLIENT]: CRUD,
       [RESOURCES.QUOTE]: CRUD,
       [RESOURCES.PIPELINE]: CRUD,
+      [RESOURCES.STAFF]: CRUD,
     },
   },
   {

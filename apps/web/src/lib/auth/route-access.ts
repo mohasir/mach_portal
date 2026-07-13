@@ -13,6 +13,7 @@ const ROUTE_ACCESS: RouteAccess[] = [
   { prefix: '/admin/clients', permission: { [RESOURCES.CLIENT]: [READ] } },
   { prefix: '/admin/quotes', permission: { [RESOURCES.QUOTE]: [READ] } },
   { prefix: '/admin/pipeline', permission: { [RESOURCES.PIPELINE]: [READ] } },
+  { prefix: '/admin/staff', permission: { [RESOURCES.STAFF]: [READ] } },
   { prefix: '/admin/users', permission: { user: ['list'] } },
   { prefix: '/admin/faq', permission: null },
   { prefix: '/admin/support', permission: null },

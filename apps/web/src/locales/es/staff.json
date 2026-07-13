@@ -1,0 +1,41 @@
+{
+  "title": "Staff",
+  "index": {
+    "add": "Nuevo miembro"
+  },
+  "columns": {
+    "name": "Nombre",
+    "phone": "Teléfono",
+    "status": "Estado",
+    "createdAt": "Creado"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "form": {
+    "name": "Nombre",
+    "namePlaceholder": "Nombre y apellido",
+    "email": "Email",
+    "emailPlaceholder": "correo@ejemplo.com",
+    "phone": "Teléfono",
+    "phonePlaceholder": "(212) 555-0100",
+    "isActive": "Activo",
+    "save": "Guardar"
+  },
+  "create": {
+    "title": "Nuevo miembro"
+  },
+  "edit": {
+    "title": "Editar miembro"
+  },
+  "delete": {
+    "confirmTitle": "¿Eliminar miembro?",
+    "confirmContent": "¿Estás seguro que deseas eliminar a {{name}}?"
+  },
+  "empty": "No hay staff",
+  "validation": {
+    "nameRequired": "Nombre requerido",
+    "emailInvalid": "Email inválido"
+  }
+}

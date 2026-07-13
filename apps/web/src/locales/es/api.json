@@ -6,6 +6,7 @@
     "USER_CANNOT_DELETE_SELF": "No podés eliminar tu propia cuenta",
     "USER_CANNOT_EDIT_OWN_ROLE": "No podés cambiar tu propio rol",
     "CLIENT_NOT_FOUND": "El cliente no existe",
+    "STAFF_NOT_FOUND": "El miembro del staff no existe",
     "CONFLICT": "El recurso ya existe",
     "UNAUTHORIZED": "Tu sesión expiró, iniciá sesión de nuevo",
     "FORBIDDEN": "No tenés permiso para esta acción",
