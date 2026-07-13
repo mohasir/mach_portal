@@ -11,6 +11,8 @@
     "PRODUCT_ALREADY_EXISTS": "A station with that name already exists",
     "OPTION_GROUP_NOT_FOUND": "The section does not exist",
     "OPTION_NOT_FOUND": "The item does not exist",
+    "EVENT_TYPE_NOT_FOUND": "The event type does not exist",
+    "EVENT_TYPE_ALREADY_EXISTS": "An event type with that name already exists",
     "CONFLICT": "The resource already exists",
     "UNAUTHORIZED": "Your session expired, please sign in again",
     "FORBIDDEN": "You don't have permission for this action",

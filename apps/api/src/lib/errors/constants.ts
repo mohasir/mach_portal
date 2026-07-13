@@ -21,6 +21,10 @@ export const ErrorCodes = {
   option: {
     NOT_FOUND: 'OPTION_NOT_FOUND',
   },
+  eventType: {
+    NOT_FOUND: 'EVENT_TYPE_NOT_FOUND',
+    ALREADY_EXISTS: 'EVENT_TYPE_ALREADY_EXISTS',
+  },
 } as const;
 
 type ValuesOf<T> = T[keyof T];

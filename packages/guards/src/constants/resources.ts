@@ -6,6 +6,7 @@ export const RESOURCES = {
   PIPELINE: 'pipeline',
   STAFF: 'staff',
   PRODUCT: 'product',
+  EVENT_TYPE: 'event_type',
 } as const;
 
 export type ResourceType = (typeof RESOURCES)[keyof typeof RESOURCES];

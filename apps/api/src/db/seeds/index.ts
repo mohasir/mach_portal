@@ -3,6 +3,7 @@ import { seedUsers } from './users';
 import { seedClients } from './clients';
 import { seedStaff } from './staff';
 import { seedCatalog } from './catalog';
+import { seedEventTypes } from './eventTypes';
 
 async function main() {
   console.log('🌱 Iniciando seeding...');
@@ -12,6 +13,7 @@ async function main() {
     await seedClients();
     await seedStaff();
     await seedCatalog();
+    await seedEventTypes();
     console.log('✅ Seeding completado.');
   } catch (error) {
     console.error('❌ Seeding falló:', error);

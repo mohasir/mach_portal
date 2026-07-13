@@ -15,6 +15,7 @@ const ROUTE_ACCESS: RouteAccess[] = [
   { prefix: '/admin/pipeline', permission: { [RESOURCES.PIPELINE]: [READ] } },
   { prefix: '/admin/staff', permission: { [RESOURCES.STAFF]: [READ] } },
   { prefix: '/admin/catalog', permission: { [RESOURCES.PRODUCT]: [READ] } },
+  { prefix: '/admin/event-types', permission: { [RESOURCES.EVENT_TYPE]: [READ] } },
   { prefix: '/admin/users', permission: { user: ['list'] } },
   { prefix: '/admin/faq', permission: null },
   { prefix: '/admin/support', permission: null },

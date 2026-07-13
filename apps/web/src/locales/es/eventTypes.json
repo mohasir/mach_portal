@@ -1,0 +1,33 @@
+{
+  "title": "Tipos de evento",
+  "index": {
+    "add": "Nuevo tipo"
+  },
+  "columns": {
+    "name": "Nombre",
+    "status": "Estado"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "actions": {
+    "activate": "Activar",
+    "deactivate": "Desactivar"
+  },
+  "form": {
+    "name": "Nombre",
+    "namePlaceholder": "Ej. Boda, Cumpleaños, Corporativo",
+    "save": "Guardar"
+  },
+  "create": {
+    "title": "Nuevo tipo de evento"
+  },
+  "edit": {
+    "title": "Editar tipo de evento"
+  },
+  "empty": "No hay tipos de evento",
+  "validation": {
+    "nameRequired": "Nombre requerido"
+  }
+}
