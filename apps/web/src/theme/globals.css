@@ -54,5 +54,11 @@
     .mach-datatable .ant-table-thead {
       display: none;
     }
+
+    /* In card mode that single cell should fill the row: AntD's default
+       .ant-table-cell inline padding would inset the card. */
+    .mach-datatable--mobile-card .ant-table-cell {
+      padding-inline: 0;
+    }
   }
 }

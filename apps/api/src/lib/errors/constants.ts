@@ -5,6 +5,9 @@ export const ErrorCodes = {
     CANNOT_DELETE_SELF: 'USER_CANNOT_DELETE_SELF',
     CANNOT_EDIT_OWN_ROLE: 'USER_CANNOT_EDIT_OWN_ROLE',
   },
+  client: {
+    NOT_FOUND: 'CLIENT_NOT_FOUND',
+  },
 } as const;
 
 type ValuesOf<T> = T[keyof T];

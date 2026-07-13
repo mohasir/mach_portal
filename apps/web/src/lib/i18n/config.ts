@@ -6,11 +6,13 @@ import esApi from '../../locales/es/api.json';
 import esAuth from '../../locales/es/auth.json';
 import esAdmin from '../../locales/es/admin.json';
 import esUsers from '../../locales/es/users.json';
+import esClients from '../../locales/es/clients.json';
 import enCommon from '../../locales/en/common.json';
 import enApi from '../../locales/en/api.json';
 import enAuth from '../../locales/en/auth.json';
 import enAdmin from '../../locales/en/admin.json';
 import enUsers from '../../locales/en/users.json';
+import enClients from '../../locales/en/clients.json';
 
 export const locales = ['es', 'en'] as const;
 export type Locale = (typeof locales)[number];
@@ -23,19 +25,21 @@ i18n.use(initReactI18next).init({
       api: esApi,
       auth: esAuth,
       admin: esAdmin,
-      users: esUsers
+      users: esUsers,
+      clients: esClients
     },
     en: {
       common: enCommon,
       api: enApi,
       auth: enAuth,
       admin: enAdmin,
-      users: enUsers
+      users: enUsers,
+      clients: enClients
     },
   },
   lng: defaultLocale,
   fallbackLng: defaultLocale,
-  ns: ['common', 'api', 'auth', 'admin', 'users'],
+  ns: ['common', 'api', 'auth', 'admin', 'users', 'clients'],
   defaultNS: 'common',
   interpolation: { escapeValue: false },
 });
