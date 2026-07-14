@@ -17,9 +17,9 @@ export function SidebarContent({ collapsed = false, onNavigate }: SidebarContent
         <SidebarNav onNavigate={onNavigate} />
       </div>
 
-      <div className="p-3">
+      {/* <div className="p-3">
         <LogoutButton collapsed={collapsed} />
-      </div>
+      </div> */}
     </div>
   );
 }

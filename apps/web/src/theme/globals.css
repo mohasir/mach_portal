@@ -61,4 +61,14 @@
       padding-inline: 0;
     }
   }
+
+  /* Main sidebar's active nav item: light tint "pill" (matches the settings
+     page's custom sub-menu) instead of AntD's default solid-fill selected
+     item. Scoped to .mach-sidebar-menu only — the Menu theme tokens
+     (theme/antd.ts) stay untouched for any other Menu instance. */
+  .mach-sidebar-menu .ant-menu-item-selected {
+    background-color: var(--color-olive-faint);
+    color: var(--ant-color-primary);
+    font-weight: 600;
+  }
 }

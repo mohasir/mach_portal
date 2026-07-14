@@ -13,6 +13,8 @@
     "OPTION_NOT_FOUND": "The item does not exist",
     "EVENT_TYPE_NOT_FOUND": "The event type does not exist",
     "EVENT_TYPE_ALREADY_EXISTS": "An event type with that name already exists",
+    "CONFIG_NOT_FOUND": "Configuration has not been initialized",
+    "CONFIG_SEQUENCE_BELOW_LAST": "The sequence start can't be lower than the last one used",
     "CONFLICT": "The resource already exists",
     "UNAUTHORIZED": "Your session expired, please sign in again",
     "FORBIDDEN": "You don't have permission for this action",

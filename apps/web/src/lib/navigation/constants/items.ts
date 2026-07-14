@@ -60,6 +60,13 @@ export const EVENT_TYPES_ITEM: NavItem = {
   guard: { [RESOURCES.EVENT_TYPE]: [READ] },
 };
 
+export const SETTINGS_ITEM: NavItem = {
+  label: 'nav.settings',
+  href: '/admin/settings',
+  icon: 'settings',
+  guard: { [RESOURCES.CONFIG]: [READ] },
+};
+
 export const USERS_ITEM: NavItem = {
   label: 'nav.users',
   href: '/admin/users',
@@ -88,6 +95,7 @@ export const NAV_ITEMS = {
   STAFF: STAFF_ITEM,
   CATALOG_PRODUCTS: CATALOG_PRODUCTS_ITEM,
   EVENT_TYPES: EVENT_TYPES_ITEM,
+  SETTINGS: SETTINGS_ITEM,
   USERS: USERS_ITEM,
   FAQ: FAQ_ITEM,
   SUPPORT: SUPPORT_ITEM,

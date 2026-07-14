@@ -1,0 +1,34 @@
+{
+  "title": "Configuración",
+  "snapshotHint": "Los cambios afectan solo a las cotizaciones nuevas; las existentes conservan su snapshot.",
+  "save": "Guardar",
+  "general": {
+    "title": "General"
+  },
+  "taxRates": {
+    "title": "Impuestos por estado"
+  },
+  "quoteDefaults": {
+    "title": "Cotizaciones",
+    "depositRate": "Depósito por defecto",
+    "depositRateCaption": "Porcentaje del total que se pide como depósito al confirmar una cotización.",
+    "quoteValidityMonths": "Validez",
+    "quoteValidityMonthsCaption": "Cantidad de meses que una cotización queda vigente antes de expirar.",
+    "months": "meses",
+    "minPersonsPerLine": "Mínimo personas/línea",
+    "minPersonsPerLineCaption": "Cantidad mínima de personas requerida por cada estación en una cotización.",
+    "quoteSeqStart": "Inicio de consecutivo",
+    "quoteSeqStartCaption": "Número desde el que arrancará el próximo consecutivo de cotización.",
+    "lastUsedSeqHint": "Último usado: {{seq}}",
+    "currency": "Moneda",
+    "currencyCaption": "Moneda en la que se muestran los montos de las cotizaciones."
+  },
+  "validation": {
+    "taxRateInvalid": "Tasa inválida",
+    "depositRateInvalid": "Depósito inválido",
+    "quoteValidityInvalid": "Validez inválida",
+    "minPersonsInvalid": "Mínimo inválido",
+    "quoteSeqStartInvalid": "Inicio de consecutivo inválido",
+    "currencyInvalid": "Moneda inválida"
+  }
+}

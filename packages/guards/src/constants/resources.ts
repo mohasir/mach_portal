@@ -7,6 +7,7 @@ export const RESOURCES = {
   STAFF: 'staff',
   PRODUCT: 'product',
   EVENT_TYPE: 'event_type',
+  CONFIG: 'config',
 } as const;
 
 export type ResourceType = (typeof RESOURCES)[keyof typeof RESOURCES];
