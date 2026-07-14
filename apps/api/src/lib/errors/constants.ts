@@ -25,6 +25,10 @@ export const ErrorCodes = {
     NOT_FOUND: 'EVENT_TYPE_NOT_FOUND',
     ALREADY_EXISTS: 'EVENT_TYPE_ALREADY_EXISTS',
   },
+  config: {
+    NOT_FOUND: 'CONFIG_NOT_FOUND',
+    SEQUENCE_BELOW_LAST: 'CONFIG_SEQUENCE_BELOW_LAST',
+  },
 } as const;
 
 type ValuesOf<T> = T[keyof T];

@@ -4,3 +4,4 @@ export * from './clients';
 export * from './staff';
 export * from './catalog';
 export * from './eventTypes';
+export * from './config';

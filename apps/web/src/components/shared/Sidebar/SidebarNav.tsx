@@ -36,7 +36,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         if (key.startsWith('/')) router.push(key);
         onNavigate?.();
       }}
-      className="border-none! bg-transparent!"
+      className="mach-sidebar-menu border-none! bg-transparent!"
     />
   );
 }

@@ -1,0 +1,34 @@
+{
+  "title": "Settings",
+  "snapshotHint": "Changes only affect new quotes; existing ones keep their snapshot.",
+  "save": "Save",
+  "general": {
+    "title": "General"
+  },
+  "taxRates": {
+    "title": "Tax rates by state"
+  },
+  "quoteDefaults": {
+    "title": "Quotes",
+    "depositRate": "Default deposit",
+    "depositRateCaption": "Percentage of the total charged as a deposit when a quote is confirmed.",
+    "quoteValidityMonths": "Validity",
+    "quoteValidityMonthsCaption": "How many months a quote stays valid before it expires.",
+    "months": "months",
+    "minPersonsPerLine": "Min persons/line",
+    "minPersonsPerLineCaption": "Minimum number of people required per station on a quote.",
+    "quoteSeqStart": "Sequence start",
+    "quoteSeqStartCaption": "Number the next quote sequence will start from.",
+    "lastUsedSeqHint": "Last used: {{seq}}",
+    "currency": "Currency",
+    "currencyCaption": "Currency used to display quote amounts."
+  },
+  "validation": {
+    "taxRateInvalid": "Invalid rate",
+    "depositRateInvalid": "Invalid deposit",
+    "quoteValidityInvalid": "Invalid validity",
+    "minPersonsInvalid": "Invalid minimum",
+    "quoteSeqStartInvalid": "Invalid sequence start",
+    "currencyInvalid": "Invalid currency"
+  }
+}

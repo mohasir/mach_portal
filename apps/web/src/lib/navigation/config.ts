@@ -3,8 +3,11 @@ import type { NavGroup } from './types';
 
 export const ADMIN_MENU: NavGroup[] = [
   {
+    items: [NAV_ITEMS.DASHBOARD],
+  },
+  {
+    group: 'nav.groups.commerce',
     items: [
-      NAV_ITEMS.DASHBOARD,
       NAV_ITEMS.EVENTS,
       NAV_ITEMS.CLIENTS,
       NAV_ITEMS.QUOTES,
@@ -21,7 +24,11 @@ export const ADMIN_MENU: NavGroup[] = [
     items: [NAV_ITEMS.USERS],
   },
   {
+    group: 'nav.groups.others',
+    items: [NAV_ITEMS.SETTINGS],
+  },
+  /* {
     group: 'nav.groups.help',
     items: [NAV_ITEMS.FAQ, NAV_ITEMS.SUPPORT],
-  },
+  }, */
 ];

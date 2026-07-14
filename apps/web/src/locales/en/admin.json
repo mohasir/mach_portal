@@ -9,14 +9,17 @@
     "staff": "Staff",
     "catalogProducts": "Products",
     "eventTypes": "Event types",
+    "settings": "Settings",
     "statistics": "Statistics",
     "finance": "Finance",
     "users": "Users",
     "faq": "FAQ",
     "support": "Support",
     "groups": {
+      "commerce": "Commerce",
       "catalog": "Catalog",
       "users": "Users",
+      "others": "Others",
       "help": "Help"
     }
   },

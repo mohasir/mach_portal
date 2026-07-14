@@ -13,6 +13,8 @@
     "OPTION_NOT_FOUND": "El ítem no existe",
     "EVENT_TYPE_NOT_FOUND": "El tipo de evento no existe",
     "EVENT_TYPE_ALREADY_EXISTS": "Ya existe un tipo de evento con ese nombre",
+    "CONFIG_NOT_FOUND": "La configuración no está inicializada",
+    "CONFIG_SEQUENCE_BELOW_LAST": "El inicio de consecutivo no puede ser menor al último usado",
     "CONFLICT": "El recurso ya existe",
     "UNAUTHORIZED": "Tu sesión expiró, iniciá sesión de nuevo",
     "FORBIDDEN": "No tenés permiso para esta acción",
