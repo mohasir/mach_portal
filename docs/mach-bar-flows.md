@@ -57,9 +57,9 @@ interface QuoteBuilderState {
 
 interface LineDraft {                    // una línea de la quote (UI Mach Bar: una "Estación")
   productId: string;
-  numPersons: number;                   // min = config.minPersonsPerLine
-  pricePerPerson: number;               // cents, precargado de basePrice, editable
-  selections: Record<string, string[]>; // optionGroupId → optionId[]
+  numPersons: number;                   // tramo elegido (existe en product_price_tiers) — D16
+  price: number;                        // cents, total de la línea; pre-carga del tramo, editable — D16
+  selections: Record<string, string[]>; // optionGroupId → optionId[] (solo grupos 'select')
 }
 ```
 
@@ -128,18 +128,21 @@ sin salir del builder.
 
 ### 2.7 Interacciones clave
 
-- **Agregar línea** → `ProductPicker` toma un product del catálogo; nace un `LineDraft` con
-  `pricePerPerson = basePrice` y `numPersons = minPersons`.
-- **Chips por grupo** (`OptionGroupChips`): al llegar a `maxSelect`, los chips no elegidos se
-  **deshabilitan** (límite UX en vivo; el server revalida). `maxSelect = null` → sin tope.
-- **Editar personas/precio** → recalcula el subtotal de la línea y el total global al instante.
+- **Agregar línea** → `ProductPicker` toma un product del catálogo; nace un `LineDraft`. Se **elige un
+  tramo** (`numPersons`) de los `product_price_tiers` del producto (dropdown); `price` = precio del
+  tramo, **editable**.
+- **Chips por grupo** (`OptionGroupChips`): solo para grupos `selection_type = 'select'`; al llegar a
+  `maxSelect`, los chips no elegidos se **deshabilitan** (límite UX en vivo; el server revalida).
+  `maxSelect = null` → sin tope. Los grupos `'included'` se muestran **read-only** (informativos, sin chips).
+- **Editar tramo/precio** → cambiar el tramo re-carga `price`; el `price` es editable y recalcula el
+  total global al instante.
 - **Cambiar `state`** → recarga el `taxRate` de config y recomputa el impuesto en vivo.
 
 ### 2.8 Validación (`isValid`)
 
-Habilita "Enviar": ≥1 línea, cada `numPersons ≥ minPersons`, `clientId` + `state` + `address`
-presentes. Espeja `createQuoteSchema` de `@repo/schemas`; las `rules` de AntD son solo UX, el backend
-es el límite real. "Guardar borrador" es más laxo (permite incompletos).
+Habilita "Enviar": ≥1 línea, cada línea con un `numPersons` que **existe en los tramos del producto**,
+`clientId` + `state` + `address` presentes. Espeja `createQuoteSchema` de `@repo/schemas`; las `rules`
+de AntD son solo UX, el backend es el límite real. "Guardar borrador" es más laxo (permite incompletos).
 
 ### 2.9 Guardar
 
@@ -280,24 +283,28 @@ Todo en una columna que colapsa (no hay pantallas separadas de "grupos" u "opcio
 ```
 Catálogo                                          [+ Producto]
 
-▾ 🍦 Crepaletas         $12.00/pers  ★Premium  ● activo    ⋮
-    ▾ Toppings (máx 7)                          ● activo   ⋮   [+ opción]
+▾ 🍦 Crepaletas         30→$485 · 40→$530 · …  ★Premium  ● activo    ⋮
+    ▾ Toppings · elige hasta 7                  ● activo   ⋮   [+ opción]
          ⠿ Chispas          ● activo   ⋮
          ⠿ Oreo             ● activo   ⋮
-    ▾ Frutas (máx 2)                            ● activo   ⋮   [+ opción]
-         ⠿ Fresa            ● activo   ⋮
+    ▾ Premium Syrups · incluido                 ● activo   ⋮   [+ opción]
+         ⠿ Nutella          ● activo   ⋮
     [+ grupo]
 
-▸ 🥞 Mini Pancakes      $10.00/pers            ● activo    ▸ 🧀 Nachos  ○ inactivo
+▸ 🥞 Mini Pancakes      30→$610 · … · 400→$2095   ● activo    ▸ 🧀 Nachos  ○ inactivo
 ```
 
 `▾/▸` expandir · `⠿` handle de arrastre · `⋮` menú (editar / desactivar / reordenar) · `●/○` activo/inactivo.
+Los **tramos de precio** (`product_price_tiers`) se editan dentro del modal del producto (tabla
+`cantidad → precio`). Un grupo muestra `elige hasta N` (`select`) o `incluido` (`included`).
 
 ### 4.2 Operaciones por nivel
 
-- **Producto**: crear, editar (nombre, descripción, `basePrice`, `isPremium`), activar/desactivar, reordenar.
-- **Grupo** (`option_group`): crear (bajo un producto), editar (`label`, `maxSelect`), activar/desactivar, reordenar.
-- **Opción** (`option`): crear (bajo un grupo), editar (nombre), activar/desactivar, reordenar.
+- **Producto**: crear, editar (nombre, descripción, `isPremium` + **tabla de tramos de precio**
+  `product_price_tiers`: filas `numPersons → price`), activar/desactivar, reordenar.
+- **Grupo** (`option_group`): crear (bajo un producto), editar (`label`, `selectionType` `select`/`included`,
+  `maxSelect` — solo si `select`), activar/desactivar, reordenar.
+- **Opción** (`option`): crear (bajo un grupo), editar (nombre, **`description`** opcional), activar/desactivar, reordenar.
 
 Cada uno con su modal (`AntD Form`), gateado con `useCan` (recurso `product`).
 

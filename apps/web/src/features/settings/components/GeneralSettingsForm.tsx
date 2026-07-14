@@ -1,6 +1,7 @@
 'use client';
 import { Button, Form, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
 import { useConfig } from '../hooks/useConfig';
 import { useUpdateConfig } from '../hooks/useUpdateConfig';
 import { toFormValues, toUpdateInput, type SettingsFormValues } from '../helpers';
@@ -12,6 +13,7 @@ export function GeneralSettingsForm() {
   const { data, isLoading } = useConfig();
   const { updateConfig, isPending } = useUpdateConfig();
   const [form] = Form.useForm<SettingsFormValues>();
+  const unchanged = useIsFormUnchanged(form, data ? toFormValues(data) : undefined);
 
   if (isLoading || !data) {
     return <Skeleton active paragraph={{ rows: 8 }} />;
@@ -44,7 +46,13 @@ export function GeneralSettingsForm() {
         <TaxRatesCard states={data.stateSettings} />
       </div>
 
-      <Button type="primary" htmlType="submit" loading={isPending} className="mt-6">
+      <Button
+        type="primary"
+        htmlType="submit"
+        loading={isPending}
+        disabled={unchanged}
+        className="mt-6"
+      >
         {t('save')}
       </Button>
     </Form>

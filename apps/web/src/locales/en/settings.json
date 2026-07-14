@@ -2,8 +2,17 @@
   "title": "Settings",
   "snapshotHint": "Changes only affect new quotes; existing ones keep their snapshot.",
   "save": "Save",
+  "saveSuccess": "Settings saved",
   "general": {
     "title": "General"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "catalog": {
+      "title": "Catalog",
+      "sortable": "Sortable catalog",
+      "sortableCaption": "Allows reordering stations, sections and items by dragging. When off, the order stays fixed."
+    }
   },
   "taxRates": {
     "title": "Tax rates by state"

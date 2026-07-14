@@ -4,7 +4,6 @@ import { Button } from 'antd';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useOptionGroupMutations } from '../hooks/useOptionGroupMutations';
-import { moveItem } from '../helpers';
 import { SortableList } from './SortableList';
 import { OptionGroupPanel } from './OptionGroupPanel';
 import { OptionGroupFormModal } from './OptionGroupFormModal';
@@ -26,20 +25,18 @@ export function OptionGroupList({ productId, groups }: OptionGroupListProps) {
   return (
     <div className="pl-6">
       <SortableList ids={ids} onReorder={reorderOptionGroups}>
-        {groups.map((group, index) => (
-          <OptionGroupPanel
-            key={group.id}
-            group={group}
-            onEdit={setEditing}
-            onMoveUp={() => reorderOptionGroups(moveItem(ids, group.id, 'up'))}
-            onMoveDown={() => reorderOptionGroups(moveItem(ids, group.id, 'down'))}
-            disableUp={index === 0}
-            disableDown={index === groups.length - 1}
-          />
+        {groups.map((group) => (
+          <OptionGroupPanel key={group.id} group={group} onEdit={setEditing} />
         ))}
       </SortableList>
 
-      <Button type="dashed" size="small" icon={<Plus size={14} />} className="mt-2" onClick={() => setCreateOpen(true)}>
+      <Button
+        type="dashed"
+        size="small"
+        icon={<Plus size={14} />}
+        className="mt-2"
+        onClick={() => setCreateOpen(true)}
+      >
         {t('optionGroup.add')}
       </Button>
 

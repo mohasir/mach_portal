@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTRPC } from '@/lib/trpc/client';
 
-/** config.get — shared with the quote builder (docs/mach-bar-flows.md §5.1). */
-export function useConfig() {
+export function useConfig(enabled = true) {
   const trpc = useTRPC();
-  return useQuery(trpc.config.get.queryOptions());
+  return useQuery({ ...trpc.config.get.queryOptions(), staleTime: Infinity, enabled });
 }

@@ -4,6 +4,7 @@ import {
   CalendarCog,
   ChefHat,
   CircleHelp,
+  DollarSign,
   Headset,
   LayoutDashboard,
   LogOut,
@@ -15,18 +16,21 @@ import {
   Workflow,
 } from 'lucide-react';
 
+const iconSize = 18;
+
 export const IconMap: Record<string, ReactNode> = {
-  dashboard: <LayoutDashboard size={18} />,
-  events: <CalendarDays size={18} />,
-  clients: <Users size={18} />,
-  quotes: <ReceiptText size={18} />,
-  pipeline: <Workflow size={18} />,
-  staff: <ChefHat size={18} />,
-  catalog: <Package size={18} />,
-  eventTypes: <CalendarCog size={18} />,
-  settings: <Settings size={18} />,
-  users: <UserCog size={18} />,
-  faq: <CircleHelp size={18} />,
-  support: <Headset size={18} />,
-  logout: <LogOut size={18} />,
+  dashboard: <LayoutDashboard size={iconSize} />,
+  events: <CalendarDays size={iconSize} />,
+  clients: <Users size={iconSize} />,
+  quotes: <ReceiptText size={iconSize} />,
+  pipeline: <Workflow size={iconSize} />,
+  staff: <ChefHat size={iconSize} />,
+  catalog: <Package size={iconSize} />,
+  prices: <DollarSign size={iconSize} />,
+  eventTypes: <CalendarCog size={iconSize} />,
+  settings: <Settings size={iconSize} />,
+  users: <UserCog size={iconSize} />,
+  faq: <CircleHelp size={iconSize} />,
+  support: <Headset size={iconSize} />,
+  logout: <LogOut size={iconSize} />,
 };

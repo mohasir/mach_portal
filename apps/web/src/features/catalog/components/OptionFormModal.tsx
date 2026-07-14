@@ -28,11 +28,18 @@ export function OptionFormModal({ optionGroupId, option, open, onClose }: Option
   };
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} title={t(option ? 'option.edit.title' : 'option.create.title')}>
+    <Modal
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      title={t(option ? 'option.edit.title' : 'option.create.title')}
+    >
       {open && (
         <OptionForm
           key={option?.id ?? 'create'}
-          initialValues={option ? { name: option.name } : undefined}
+          initialValues={
+            option ? { name: option.name, description: option.description ?? undefined } : undefined
+          }
           onSubmit={onSubmit}
           isPending={isPending}
         />

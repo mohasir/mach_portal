@@ -1,5 +1,5 @@
 {
-  "title": "Catalog",
+  "title": "Stations",
   "empty": "No stations",
   "status": {
     "inactive": "Inactive"
@@ -14,7 +14,8 @@
   "product": {
     "add": "New station",
     "premium": "Premium",
-    "perPerson": "{{price}}/person",
+    "tiersSummary": "{{count}} packages · from {{from}}",
+    "noTiers": "No packages",
     "create": { "title": "New station" },
     "edit": { "title": "Edit station" },
     "form": {
@@ -22,20 +23,33 @@
       "namePlaceholder": "Station name",
       "description": "Description",
       "descriptionPlaceholder": "Short description (optional)",
-      "basePrice": "Price per person",
       "isPremium": "Premium"
     }
   },
+  "prices": {
+    "title": "Prices",
+    "numPersonsShort": "People",
+    "addTier": "Add package",
+    "removeTier": "Remove package"
+  },
   "optionGroup": {
     "add": "New section",
-    "maxSelectShort": "max {{count}}",
+    "maxSelectShort": "choose up to {{count}}",
+    "noLimitShort": "no limit",
+    "includedShort": "included",
     "create": { "title": "New section" },
     "edit": { "title": "Edit section" },
+    "selectionType": {
+      "select": "Selectable",
+      "included": "Included"
+    },
     "form": {
       "label": "Name",
       "labelPlaceholder": "Section name",
+      "selectionType": "Type",
       "maxSelect": "Max selection",
-      "maxSelectPlaceholder": "No limit"
+      "maxSelectPlaceholder": "No limit",
+      "maxSelectHelp": "Max items the client can choose"
     }
   },
   "option": {
@@ -44,12 +58,17 @@
     "edit": { "title": "Edit item" },
     "form": {
       "name": "Name",
-      "namePlaceholder": "Item name"
+      "namePlaceholder": "Item name",
+      "description": "Description",
+      "descriptionPlaceholder": "Detail or ingredients (optional)"
     }
   },
   "validation": {
     "nameRequired": "Name is required",
     "labelRequired": "Name is required",
-    "basePriceInvalid": "Invalid price"
+    "numPersonsInvalid": "Invalid quantity",
+    "priceInvalid": "Invalid price",
+    "tiersDuplicate": "Some packages have the same number of people",
+    "maxSelectInvalid": "Invalid max selection"
   }
 }

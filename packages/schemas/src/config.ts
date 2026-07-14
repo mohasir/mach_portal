@@ -18,6 +18,7 @@ export const appSettingsSchema = z.object({
   minPersonsPerLine: z.number().int().min(1, 'config.validation.minPersonsInvalid'),
   quoteSeqStart: z.number().int().min(1, 'config.validation.quoteSeqStartInvalid'),
   currency: currencyCodeSchema,
+  catalogSortable: z.boolean(),
 });
 export type AppSettingsInput = z.infer<typeof appSettingsSchema>;
 

@@ -12,6 +12,7 @@ export const publicAppSettingsColumns = {
   minPersonsPerLine: appSettings.minPersonsPerLine,
   quoteSeqStart: appSettings.quoteSeqStart,
   currency: appSettings.currency,
+  catalogSortable: appSettings.catalogSortable,
   updatedAt: appSettings.updatedAt,
 } as const;
 
@@ -36,6 +37,7 @@ export const appSettingsResource = (row: PublicAppSettings) => ({
   minPersonsPerLine: row.minPersonsPerLine,
   quoteSeqStart: row.quoteSeqStart,
   currency: row.currency,
+  catalogSortable: row.catalogSortable,
   updatedAt: row.updatedAt,
 });
 

@@ -31,7 +31,7 @@
 > **Próximo paso**; (3) continuá desde ahí. **Actualizá esta sección** al cerrar cada tarea: marcá ✅,
 > movés el "Próximo paso" y agregás una línea a la bitácora.
 
-**Última actualización:** 2026-07-13 · **Fase actual:** Fase 3 ✅ completa → arrancando Fase 4 · **Próximo paso:** Fase 4 → Cotizaciones (BE: `computeQuoteTotals` compartido primero).
+**Última actualización:** 2026-07-13 · **Fase actual:** Refinamiento de catálogo (D16/D17) — **rework de Fase 2** antes de Fase 4 · **Próximo paso:** refactor de catálogo (schema + `@repo/schemas` + módulo `products` + forms FE) por el modelo nuevo, luego **re-seed con datos reales** (el usuario pasa las tablas de precio por estación).
 
 Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 
@@ -39,16 +39,23 @@ Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 |---|---|:--:|:--:|:--:|:--:|
 | 1 | Clientes | ✅ | ✅ | ✅ | ✅ |
 | 1 | Staff | ✅ | ✅ | ✅ | ✅ |
-| 2 | Catálogo | ✅ | ✅ | ✅ | ✅ |
+| 2 | Catálogo | 🔨 | 🔨 | 🔨 | ⚠️ |
 | 2 | Tipos de evento | ✅ | ✅ | ✅ | ✅ |
 | 3 | Configuración | ✅ | ✅ | ✅ | ✅ |
 | 4 | Cotizaciones | ☐ | ☐ | ☐ | ☐ |
 | 5 | Eventos | ☐ | ☐ | ☐ | ☐ |
 | 6 | Dashboard | ☐ | ☐ | ☐ | ☐ |
 
+> ⚠️ **Catálogo en rework (D16/D17):** se construyó sobre el modelo viejo (precio/persona, grupos sin
+> tipo). Se refina a **precio por tramo** (`product_price_tiers`) + **`option_groups.selection_type`
+> (`select`/`included`)** + **`options.description`**. Docs canónicos ya actualizados; falta el código
+> (schema/`@repo/schemas`/módulo `products`/forms FE) y el **re-seed con datos reales** (pendiente que
+> el usuario pase las tablas de precio por estación, incl. Craft Bar). Debe cerrar **antes** de Fase 4.
+
 **Fundaciones** (transversales): guards nuevos ✅ (`STAFF`/`PRODUCT`/`EVENT_TYPE`/`CONFIG` — todos los de Fase 1-3) · enum `state` compartido ✅ · cents (BE) ✅ + `formatMoney`/`useMoneyFormatter` (FE, **currency configurable** vía `config.get`) ✅ · `%` helper ✅ (`lib/percent`) · dnd-kit ✅ (`SortableList`/`useSortableRow`/`ReorderControl` en `features/catalog`) · `computeQuoteTotals` ☐ (entra en Fase 4)
 
 **Bitácora de sesión** (lo último arriba):
+- **2026-07-13** — **Refinamiento del catálogo (D16/D17)** tras revisar el Excel real del negocio. **Precio por tramo** (D16): se elimina `products.base_price` y `quote_lines.price_per_person`; nueva tabla **`product_price_tiers` (`numPersons → price`, price = total del tramo)**; en la quote se elige un tramo existente (dropdown, **solo tramos definidos**) y `price` pre-carga pero es **editable por línea**. **Tipos de grupo** (D17): **`option_groups.selection_type` (`select` | `included`)** — `select` = elige **hasta `max_select`** (sin mínimo, decisión del usuario); `included` = informativo, no se selecciona (ej. "Premium Syrups Included"). **`options.description`** opcional (ingredientes del cóctel del Craft Bar). "Special Dietary Requests" (idéntico en todas las estaciones) → **nota global**, no se duplica por producto. **Craft Bar** se modela como estación con `product_price_tiers` (a confirmar si es fija/horaria al cargar precios). **Docs canónicos actualizados**: `domain` (§2 D16/D17, §4 enum `option_group_type`, §5.1 `quote_lines`, §5.3 catálogo, §6 ER, §7 cascada), `model.dbml`, `flows` (§2 builder, §4 editor). **Pendiente (rework Fase 2)**: código de catálogo (schema Drizzle, `@repo/schemas/catalog`, módulo `products` resource/repo/router, forms FE `ProductForm`/`OptionGroupForm`/`OptionForm`) + **re-seed con datos reales** (el usuario pasa las tablas de precio por estación). Debe cerrar antes de Fase 4.
 - **2026-07-13** — Configuración **BE+FE** hecho (**cierra Fase 3**), + re-verificado en vivo Fase 2 tras reinicio del dev server (`/admin/event-types` y `/admin/catalog` → HTTP 200 limpio, confirma que el 500 anterior era 100% caché de Next, no bug). **Guard `CONFIG` nuevo** (solo superadmin/admin, mismo patrón que ya tenían todos los recursos — `member` sigue sin permisos en ningún resource). Schema `state_settings` (PK `state`) + `app_settings` (singleton `id=1`) usando **`numeric(..., { mode: 'number' })` de Drizzle** (evita casteos string↔number manuales en resource/repo — primera vez que se usa `numeric` en el proyecto). Contrato Zod con tasas como decimal 0-1. Módulo `config`: `get`/`update` transaccional (upsert de ambos buckets), valida `quoteSeqStart` con `SEQUENCE_BELOW_LAST`; `getLastUsedSeq()` es un **placeholder que devuelve 0** (mismo patrón que `clients.status` en Fase 1 — se completa en Fase 4 cuando exista `quotes`). `configResource` expone `lastUsedSeq` como hint de solo lectura para el form. `seedConfig`: NY 8.875%/NJ 6.625%/CT 6.35% (tasas reales) + app_settings default (deposit 50%, validez 3 meses, min 30 personas, seq desde 1, USD). FE: fundación **`lib/percent`** (helper ×100/÷100) + **`lib/money`/`useMoneyFormatter` ahora con currency configurable** (pedido del usuario): `formatMoney` acepta `currency` como parámetro explícito, y `useMoneyFormatter` lo resuelve leyendo `config.get` en background (fallback silencioso a USD si no hay permiso o aún no cargó — vía comportamiento default de TanStack Query, sin código extra). Feature `settings` a medida (`mach-bar-flows.md §5`): `SettingsPage` con **2 cards en un solo `Form`** (`TaxRatesCard` + `QuoteDefaultsCard`, esta última con el **Select de moneda** nuevo), remonta por `key={updatedAt}` para refrescar `initialValues` tras guardar (gotcha de AntD Form). Nav: **`SETTINGS_ITEM` nuevo**, ítem propio (no en el grupo Catálogo, según spec), icono `Settings`, en la lista principal del sidebar. Verificado: `check-types` monorepo + `db:push`/`db:seed` + en vivo por tRPC (`get` con `lastUsedSeq:0`, `update` cambia tasas+currency y persiste, validación Zod de `quoteSeqStart` rechaza `<1`) + rutas HTTP 200 (`/admin/settings`, `/admin/catalog` con el nuevo `useMoneyFormatter` dependiente de config).
 - **2026-07-13** — Tipos de evento **BE+FE** hecho (**cierra Fase 2** en código): **guard `EVENT_TYPE` nuevo**; schema `event_types` (`id/name/isActive/sortOrder`, sin timestamps); contrato Zod (sin `delete`); módulo estándar `eventTypes` (resource/repo/service/router) **sin mutación `delete`** (solo `toggleActive` — soft-delete puro, D14, igual que catálogo); error `EVENT_TYPE_ALREADY_EXISTS`/`NOT_FOUND` + i18n; `seedEventTypes` (Boda/Cumpleaños/Corporativo/Baby Shower/Aniversario/Graduación/Otro). FE: feature `event-types` (espejo de `staff` pero reemplazando la row-action `delete` por `toggleActive` dinámica activar/desactivar); se sumó al **grupo "Catálogo" ya existente** del nav (icono `CalendarHeart`); `route-access`; i18n `eventTypes.json` es/en. **Bug propio + fix**: la row-actions hook usa JSX (`icon: <PowerOff/>`) pero se creó como `.ts` en vez de `.tsx` → rompía el parser; renombrado. El create→delete rápido del archivo dejó la caché de webpack del dev server corrompida (`Module build failed`, no relacionado al código — `check-types` monorepo limpio); pendiente reiniciar `pnpm dev` para re-verificar `/admin/event-types` y `/admin/catalog` en vivo (el usuario lo hace).
 - **2026-07-13** — Catálogo **FE** hecho (editor acordeón a medida, `mach-bar-flows.md §4`, **no** sigue la receta `DataTable`): **fundaciones nuevas** `formatMoney`/`useMoneyFormatter` (`apps/web/src/lib/money`, `Intl.NumberFormat` locale-aware es/en) y **dnd-kit** (`@dnd-kit/core|sortable|utilities`). Feature `catalog`: `useCatalog` (`products.catalog`), 3 grupos de mutation-hooks (`useProductMutations`/`useOptionGroupMutations`/`useOptionMutations`, invalidan con `trpc.products.pathFilter()`); árbol de 3 niveles `ProductPanel→OptionGroupPanel→OptionRow` (acordeón local, expand por componente) cada uno envuelto en `SortableList` (dnd-kit) + `ReorderControl` (**drag en desktop, ↑/↓ en móvil** vía `useIsDesktop`, per §4.4/§4.8); `moveItem` helper para el reorder por flechas. Reusa `DataTableRowActions` (no es DataTable, pero el dropdown ⋮ + confirm es genérico) para editar/activar-desactivar en cada nivel. `ProductForm` captura precio en **USD** y convierte a cents **solo al submit** (`Math.round(valor*100)`, frontera FE per domain §3). Nav: **grupo "Catálogo" nuevo** (icono `Package`) con ítem "Productos"; `route-access` `/admin/catalog`; i18n `catalog.json` es/en. Verificado: `check-types` monorepo + `/admin/catalog` renderiza (HTTP 200); mutaciones (create/reorder/toggleActive anidado) ya probadas en vivo por API en el paso BE. Visual (drag real, acordeón) → revisión humana en browser.
@@ -156,15 +163,20 @@ Sin dependencias. Son features **estándar** (espejo de `users`); su objetivo es
 
 Sin dependencias. Introduce **cents** (`formatMoney`) y **dnd-kit**.
 
-### 2a. Catálogo (`products → option_groups → options`)
-- **BE**: schema de las 3 tablas + `@repo/schemas/catalog` (product/group/option create/update). Módulo `products`:
-  read anidado `products.catalog` (`includeInactive`) para el editor, `products.list` (solo activos) para el
-  builder, y mutaciones create/update/**toggleActive**/**reorder** por nivel. `basePrice` en **cents**.
-  **Guard `PRODUCT` nuevo**.
+### 2a. Catálogo (`products → { product_price_tiers, option_groups → options }`) — modelo D16/D17
+- **BE**: schema (products **sin `base_price`** + **`product_price_tiers`** `numPersons→price` cents +
+  `option_groups` con **`selection_type`** `select`/`included` + `options` con **`description`**) +
+  `@repo/schemas/catalog`. Módulo `products`: read anidado `products.catalog` (`includeInactive`, incluye
+  tramos) para el editor, `products.list` (solo activos) para el builder, y mutaciones
+  create/update/**toggleActive**/**reorder** por nivel + **CRUD de tramos** (`products.tiers.*`).
+  **Guard `PRODUCT`** (ya existe).
 - **FE**: feature `catalog` **a medida** (acordeón, `mach-bar-flows.md §4`): soft-delete (activar/desactivar),
-  **reorder por drag** (dnd-kit) desktop / ↑↓ móvil. Nav grupo **Catálogo → Productos** (`/admin/catalog`).
-  Introducir `formatMoney`.
-- **Seeder**: `seedCatalog` — las 9 estaciones reales con sus secciones (maxSelect) e ítems.
+  **reorder por drag** (dnd-kit) desktop / ↑↓ móvil. `ProductForm` con **tabla de tramos**;
+  `OptionGroupForm` con toggle `select`/`included` (+ `maxSelect` solo en `select`); `OptionForm` con
+  `description`. Nav grupo **Catálogo → Productos** (`/admin/catalog`). `formatMoney`.
+- **Seeder**: `seedCatalog` — las estaciones reales con sus **tablas de tramos** (Excel), grupos
+  (`select`/`included`) e ítems. Craft Bar con sus cócteles (`description`). **Datos pendientes** de que
+  el usuario pase las tablas de precio por estación.
 
 ### 2b. Tipos de evento
 - **BE**: schema `event_types` + schemas + módulo estándar. **Guard `EVENT_TYPE` nuevo**.
@@ -198,6 +210,7 @@ leen tax/deposit/validez/seq de acá).
 Deps: **clientes, catálogo, config, event_types**. La fase más grande.
 
 - **Shared**: `computeQuoteTotals(input, config)` en paquete compartido (usa cents; lo consumen preview, BE y PDF).
+  Con D16, cada línea aporta su `price` (total del tramo, editable) → `subtotal = Σ line.price` (sin `× numPersons`).
 - **BE**: schema `quotes` + `quote_lines` + `quote_line_options` + `@repo/schemas/quotes` (create con líneas/opciones).
   Módulo `quotes`: create/update (calcula cascada en cents, **snapshot** de tasas/validUntil, asigna `seq`/`number`),
   `list` (filtros month/status/state/clientId), **`board`** (agrupado por stage), `updateStage`/`approve`/`cancel`

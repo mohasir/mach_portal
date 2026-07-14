@@ -3,15 +3,19 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { GeneralSettingsForm } from './GeneralSettingsForm';
+import { PreferencesSettingsForm } from './PreferencesSettingsForm';
 import { SettingsMenu, type SettingsMenuItem } from './SettingsMenu';
 
-type SettingsSection = 'general';
+type SettingsSection = 'general' | 'preferences';
 
 export function SettingsPage() {
   const { t } = useTranslation('settings');
   const [section, setSection] = useState<SettingsSection>('general');
 
-  const menuItems: SettingsMenuItem[] = [{ key: 'general', label: t('general.title') }];
+  const menuItems: SettingsMenuItem[] = [
+    { key: 'general', label: t('general.title') },
+    { key: 'preferences', label: t('preferences.title') },
+  ];
 
   return (
     <div>
@@ -24,7 +28,10 @@ export function SettingsPage() {
           onSelect={(key) => setSection(key as SettingsSection)}
         />
 
-        <div className="min-w-0 flex-1">{section === 'general' && <GeneralSettingsForm />}</div>
+        <div className="min-w-0 flex-1">
+          {section === 'general' && <GeneralSettingsForm />}
+          {section === 'preferences' && <PreferencesSettingsForm />}
+        </div>
       </div>
     </div>
   );

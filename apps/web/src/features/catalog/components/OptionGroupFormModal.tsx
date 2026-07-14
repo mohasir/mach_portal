@@ -13,7 +13,12 @@ interface OptionGroupFormModalProps {
   onClose: () => void;
 }
 
-export function OptionGroupFormModal({ productId, group, open, onClose }: OptionGroupFormModalProps) {
+export function OptionGroupFormModal({
+  productId,
+  group,
+  open,
+  onClose,
+}: OptionGroupFormModalProps) {
   const { t } = useTranslation('catalog');
   const { createOptionGroup, updateOptionGroup, isPending } = useOptionGroupMutations();
 
@@ -37,7 +42,15 @@ export function OptionGroupFormModal({ productId, group, open, onClose }: Option
       {open && (
         <OptionGroupForm
           key={group?.id ?? 'create'}
-          initialValues={group ? { label: group.label, maxSelect: group.maxSelect ?? undefined } : undefined}
+          initialValues={
+            group
+              ? {
+                  label: group.label,
+                  selectionType: group.selectionType,
+                  maxSelect: group.maxSelect ?? undefined,
+                }
+              : undefined
+          }
           onSubmit={onSubmit}
           isPending={isPending}
         />

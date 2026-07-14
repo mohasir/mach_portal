@@ -1,5 +1,5 @@
 {
-  "title": "Catálogo",
+  "title": "Estaciones",
   "empty": "No hay estaciones",
   "status": {
     "inactive": "Inactivo"
@@ -14,7 +14,8 @@
   "product": {
     "add": "Nueva estación",
     "premium": "Premium",
-    "perPerson": "{{price}}/pers",
+    "tiersSummary": "{{count}} paquetes · desde {{from}}",
+    "noTiers": "Sin paquetes",
     "create": { "title": "Nueva estación" },
     "edit": { "title": "Editar estación" },
     "form": {
@@ -22,20 +23,33 @@
       "namePlaceholder": "Nombre de la estación",
       "description": "Descripción",
       "descriptionPlaceholder": "Descripción breve (opcional)",
-      "basePrice": "Precio por persona",
       "isPremium": "Premium"
     }
   },
+  "prices": {
+    "title": "Precios",
+    "numPersonsShort": "Personas",
+    "addTier": "Agregar paquete",
+    "removeTier": "Quitar paquete"
+  },
   "optionGroup": {
     "add": "Nueva sección",
-    "maxSelectShort": "máx {{count}}",
+    "maxSelectShort": "elige hasta {{count}}",
+    "noLimitShort": "sin límite",
+    "includedShort": "incluido",
     "create": { "title": "Nueva sección" },
     "edit": { "title": "Editar sección" },
+    "selectionType": {
+      "select": "Seleccionable",
+      "included": "Incluido"
+    },
     "form": {
       "label": "Nombre",
       "labelPlaceholder": "Nombre de la sección",
+      "selectionType": "Tipo",
       "maxSelect": "Selección máxima",
-      "maxSelectPlaceholder": "Sin límite"
+      "maxSelectPlaceholder": "Sin límite",
+      "maxSelectHelp": "Máximo de ítems que el cliente puede elegir"
     }
   },
   "option": {
@@ -44,12 +58,17 @@
     "edit": { "title": "Editar ítem" },
     "form": {
       "name": "Nombre",
-      "namePlaceholder": "Nombre del ítem"
+      "namePlaceholder": "Nombre del ítem",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Detalle o ingredientes (opcional)"
     }
   },
   "validation": {
     "nameRequired": "Nombre requerido",
     "labelRequired": "Nombre requerido",
-    "basePriceInvalid": "Precio inválido"
+    "numPersonsInvalid": "Cantidad inválida",
+    "priceInvalid": "Precio inválido",
+    "tiersDuplicate": "Hay paquetes con la misma cantidad de personas",
+    "maxSelectInvalid": "Selección máxima inválida"
   }
 }

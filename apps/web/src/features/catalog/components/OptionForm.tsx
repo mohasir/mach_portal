@@ -23,6 +23,13 @@ export function OptionForm({ initialValues, onSubmit, isPending }: OptionFormPro
         <Input placeholder={t('option.form.namePlaceholder')} />
       </Form.Item>
 
+      <Form.Item name="description" label={t('option.form.description')} rules={[{ max: 300 }]}>
+        <Input.TextArea
+          placeholder={t('option.form.descriptionPlaceholder')}
+          autoSize={{ minRows: 1, maxRows: 3 }}
+        />
+      </Form.Item>
+
       <Form.Item className="mb-0">
         <Button type="primary" htmlType="submit" loading={isPending} block>
           {t('form.save')}

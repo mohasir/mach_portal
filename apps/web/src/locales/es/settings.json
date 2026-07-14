@@ -2,8 +2,17 @@
   "title": "Configuración",
   "snapshotHint": "Los cambios afectan solo a las cotizaciones nuevas; las existentes conservan su snapshot.",
   "save": "Guardar",
+  "saveSuccess": "Configuración guardada",
   "general": {
     "title": "General"
+  },
+  "preferences": {
+    "title": "Preferencias",
+    "catalog": {
+      "title": "Catálogo",
+      "sortable": "Catálogo ordenable",
+      "sortableCaption": "Permite reordenar estaciones, secciones e ítems arrastrando. Si se desactiva, el orden queda fijo."
+    }
   },
   "taxRates": {
     "title": "Impuestos por estado"

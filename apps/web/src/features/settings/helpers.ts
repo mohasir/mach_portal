@@ -34,6 +34,7 @@ export function toUpdateInput(values: SettingsFormValues, config: Config): Updat
       minPersonsPerLine: values.minPersonsPerLine,
       quoteSeqStart: values.quoteSeqStart,
       currency: values.currency,
+      catalogSortable: config.appSettings.catalogSortable,
     },
   };
 }

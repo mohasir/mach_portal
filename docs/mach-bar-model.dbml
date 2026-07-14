@@ -39,6 +39,11 @@ Enum payment_method {
   check
 }
 
+Enum option_group_type {
+  select   // el cliente elige hasta max_select ítems (sin mínimo)
+  included // viene incluido, no se selecciona (informativo; se muestra en quote/PDF)
+}
+
 // ─────────────────────────────────────────────
 // COMERCIAL
 // ─────────────────────────────────────────────
@@ -94,9 +99,8 @@ Table quote_lines {
   id uuid [pk]
   quote_id uuid [not null, ref: > quotes.id, note: 'onDelete cascade']
   product_id uuid [not null, ref: > products.id]
-  num_persons integer [not null, note: 'min app_settings.min_persons_per_line']
-  price_per_person integer [not null, note: 'cents, snapshot del catálogo']
-  subtotal integer [not null, note: 'cents = num_persons * price_per_person']
+  num_persons integer [not null, note: 'tramo elegido; existe en product_price_tiers (D16)']
+  subtotal integer [not null, note: 'cents, total de la línea; pre-carga del tramo, EDITABLE (D16)']
   sort_order integer [default: 0]
 
   indexes {
@@ -173,17 +177,31 @@ Table products {
   id uuid [pk]
   name varchar(100) [not null, unique]
   description text
-  base_price integer [not null, note: 'cents, precio/persona (prefill del builder)']
   is_premium boolean [not null, default: false]
   is_active boolean [not null, default: true]
   sort_order integer [default: 0]
+  Note: 'sin precio: vive en product_price_tiers (D16)'
+}
+
+// Precio por tramo (bracket) — D16. price es el TOTAL para esa cantidad, no por persona.
+Table product_price_tiers {
+  id uuid [pk]
+  product_id uuid [not null, ref: > products.id, note: 'onDelete cascade']
+  num_persons integer [not null, note: '30, 40, 50, ...']
+  price integer [not null, note: 'cents, total para esa cantidad']
+  sort_order integer [default: 0]
+
+  indexes {
+    (product_id, num_persons) [unique]
+  }
 }
 
 Table option_groups {
   id uuid [pk]
   product_id uuid [not null, ref: > products.id, note: 'onDelete cascade']
   label varchar(100) [not null, note: "ej. 'Toppings', 'Frutas'"]
-  max_select integer [note: 'null = sin límite']
+  selection_type option_group_type [not null, note: 'select | included (D17)']
+  max_select integer [note: 'solo select; null = sin límite']
   is_active boolean [not null, default: true]
   sort_order integer [default: 0]
 }
@@ -192,6 +210,7 @@ Table options {
   id uuid [pk]
   option_group_id uuid [not null, ref: > option_groups.id, note: 'onDelete cascade']
   name varchar(100) [not null]
+  description text [note: 'opcional: detalle / ingredientes del cóctel (D17)']
   is_active boolean [not null, default: true, note: 'soft-delete: lo referencian quote_line_options']
   sort_order integer [default: 0]
 }

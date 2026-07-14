@@ -1,24 +1,22 @@
 'use client';
-import { Button, Form, Input, InputNumber, Switch } from 'antd';
+import { Button, Form, Input, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { UpdateProductInput } from '@repo/schemas';
+import type { PriceTierInput, UpdateProductInput } from '@repo/schemas';
 
-// Local form shape: price is captured in USD and converted to cents only here, at
-// the form boundary (docs/mach-bar-domain.md §3) — the rest of the app deals in cents.
 interface ProductFormValues {
   name: string;
   description?: string;
-  basePriceUsd: number;
   isPremium: boolean;
 }
 
 interface ProductFormProps {
   initialValues?: Partial<ProductFormValues>;
+  tiers?: PriceTierInput[];
   onSubmit: (values: UpdateProductInput) => Promise<void> | void;
   isPending: boolean;
 }
 
-export function ProductForm({ initialValues, onSubmit, isPending }: ProductFormProps) {
+export function ProductForm({ initialValues, tiers = [], onSubmit, isPending }: ProductFormProps) {
   const { t } = useTranslation('catalog');
   const [form] = Form.useForm<ProductFormValues>();
 
@@ -26,8 +24,8 @@ export function ProductForm({ initialValues, onSubmit, isPending }: ProductFormP
     onSubmit({
       name: values.name,
       description: values.description,
-      basePrice: Math.round(values.basePriceUsd * 100),
       isPremium: values.isPremium ?? false,
+      tiers,
     });
 
   return (
@@ -51,14 +49,6 @@ export function ProductForm({ initialValues, onSubmit, isPending }: ProductFormP
           placeholder={t('product.form.descriptionPlaceholder')}
           autoSize={{ minRows: 2, maxRows: 4 }}
         />
-      </Form.Item>
-
-      <Form.Item
-        name="basePriceUsd"
-        label={t('product.form.basePrice')}
-        rules={[{ required: true, message: t('validation.basePriceInvalid') }]}
-      >
-        <InputNumber min={0} step={0.5} precision={2} prefix="$" className="w-full" placeholder="0.00" />
       </Form.Item>
 
       <Form.Item name="isPremium" label={t('product.form.isPremium')} valuePropName="checked">

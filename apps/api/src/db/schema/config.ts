@@ -1,4 +1,4 @@
-import { pgTable, integer, numeric, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, pgTable, integer, numeric, text, timestamp } from 'drizzle-orm/pg-core';
 import { stateEnum } from './enums';
 
 export const stateSettings = pgTable('state_settings', {
@@ -20,6 +20,7 @@ export const appSettings = pgTable('app_settings', {
   minPersonsPerLine: integer('min_persons_per_line').notNull().default(30),
   quoteSeqStart: integer('quote_seq_start').notNull().default(1),
   currency: text('currency').notNull().default('USD'), // ISO 4217 currency code
+  catalogSortable: boolean('catalog_sortable').notNull().default(true),
   updatedAt: timestamp('updated_at')
     .defaultNow()
     .$onUpdate(() => new Date())

@@ -41,11 +41,14 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
               ? {
                   name: product.name,
                   description: product.description ?? undefined,
-                  basePriceUsd: product.basePrice / 100,
                   isPremium: product.isPremium,
                 }
               : undefined
           }
+          tiers={product?.priceTiers.map((tier) => ({
+            numPersons: tier.numPersons,
+            price: tier.price,
+          }))}
           onSubmit={onSubmit}
           isPending={isPending}
         />

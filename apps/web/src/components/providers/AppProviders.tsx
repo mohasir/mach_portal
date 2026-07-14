@@ -5,6 +5,7 @@ import i18n from '@/lib/i18n/config';
 import { TRPCReactProvider } from '@/lib/trpc/provider';
 import { machBarTheme } from '@/theme/antd';
 import { AuthProvider } from './AuthProvider';
+import { SettingsProvider } from './SettingsProvider';
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -12,7 +13,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       <App>
         <I18nextProvider i18n={i18n}>
           <TRPCReactProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <SettingsProvider>
+              <AuthProvider>{children}</AuthProvider>
+            </SettingsProvider>
           </TRPCReactProvider>
         </I18nextProvider>
       </App>

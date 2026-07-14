@@ -7,6 +7,7 @@ import { ACTIONS, RESOURCES } from '@repo/guards';
 import { DataTableRowActions, type RowActionItem } from '@/components/shared/DataTable';
 import { useOptionGroupMutations } from '../hooks/useOptionGroupMutations';
 import { useSortableRow } from '../hooks/useSortableRow';
+import { useCatalogSortable } from '../hooks/useCatalogSortable';
 import { ReorderControl } from './ReorderControl';
 import { OptionList } from './OptionList';
 import type { OptionGroup } from '../types';
@@ -14,25 +15,22 @@ import type { OptionGroup } from '../types';
 interface OptionGroupPanelProps {
   group: OptionGroup;
   onEdit: (group: OptionGroup) => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  disableUp: boolean;
-  disableDown: boolean;
 }
 
-export function OptionGroupPanel({
-  group,
-  onEdit,
-  onMoveUp,
-  onMoveDown,
-  disableUp,
-  disableDown,
-}: OptionGroupPanelProps) {
+export function OptionGroupPanel({ group, onEdit }: OptionGroupPanelProps) {
   const { t } = useTranslation('catalog');
   const { t: tc } = useTranslation('common');
   const { toggleOptionGroupActive } = useOptionGroupMutations();
-  const { setNodeRef, style, isDragging, dragHandleProps } = useSortableRow(group.id, true);
+  const sortable = useCatalogSortable();
+  const { setNodeRef, style, isDragging, dragHandleProps } = useSortableRow(group.id, sortable);
   const [expanded, setExpanded] = useState(true);
+
+  const typeLabel =
+    group.selectionType === 'included'
+      ? t('optionGroup.includedShort')
+      : group.maxSelect != null
+        ? t('optionGroup.maxSelectShort', { count: group.maxSelect })
+        : t('optionGroup.noLimitShort');
 
   const actions: RowActionItem[] = [
     { key: 'edit', guard: { [RESOURCES.PRODUCT]: [ACTIONS.UPDATE] }, onClick: () => onEdit(group) },
@@ -46,15 +44,13 @@ export function OptionGroupPanel({
   ];
 
   return (
-    <div ref={setNodeRef} style={style} className={`border-line border-t py-2 ${isDragging ? 'opacity-50' : ''}`}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`border-line border-t py-2 ${isDragging ? 'opacity-50' : ''}`}
+    >
       <div className="flex items-center gap-2">
-        <ReorderControl
-          dragHandleProps={dragHandleProps}
-          onMoveUp={onMoveUp}
-          onMoveDown={onMoveDown}
-          disableUp={disableUp}
-          disableDown={disableDown}
-        />
+        <ReorderControl dragHandleProps={dragHandleProps} />
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
@@ -64,11 +60,7 @@ export function OptionGroupPanel({
           <span className={`truncate text-sm font-medium ${group.isActive ? '' : 'text-muted'}`}>
             {group.label}
           </span>
-          {group.maxSelect != null && (
-            <span className="text-muted text-xs whitespace-nowrap">
-              ({t('optionGroup.maxSelectShort', { count: group.maxSelect })})
-            </span>
-          )}
+          <span className="text-muted text-xs whitespace-nowrap">({typeLabel})</span>
         </button>
         {!group.isActive && <Tag>{t('status.inactive')}</Tag>}
         <DataTableRowActions actions={actions} label={tc('table.actions')} />

@@ -3,25 +3,44 @@ import type {
   CreateOptionGroupInput,
   CreateOptionInput,
   CreateProductInput,
+  PriceTierInput,
   UpdateOptionGroupInput,
   UpdateOptionInput,
   UpdateProductInput,
 } from '@repo/schemas';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import { ProductsRepository } from './products.repository';
-import { buildProductTree, optionGroupResource, optionResource, productResource } from './products.resource';
+import {
+  buildPricesList,
+  buildProductTree,
+  optionGroupResource,
+  optionResource,
+  productResource,
+  productWithTiersResource,
+} from './products.resource';
 
 export class ProductsService {
   constructor(private repo: ProductsRepository) {}
 
   async list() {
-    const { productRows, groupRows, optionRows } = await this.repo.findTree(false);
-    return buildProductTree(productRows, groupRows, optionRows);
+    const { productRows, tierRows, groupRows, optionRows } = await this.repo.findTree(false);
+    return buildProductTree(productRows, tierRows, groupRows, optionRows);
   }
 
   async catalog(includeInactive: boolean) {
-    const { productRows, groupRows, optionRows } = await this.repo.findTree(includeInactive);
-    return buildProductTree(productRows, groupRows, optionRows);
+    const { productRows, tierRows, groupRows, optionRows } = await this.repo.findTree(includeInactive);
+    return buildProductTree(productRows, tierRows, groupRows, optionRows);
+  }
+
+  async pricesList() {
+    const { productRows, tierRows } = await this.repo.findPricesTree();
+    return buildPricesList(productRows, tierRows);
+  }
+
+  async updateProductTiers(id: string, tiers: PriceTierInput[]) {
+    const result = await this.repo.updateTiers(id, tiers);
+    if (!result) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
+    return productWithTiersResource(result.product, result.tierRows);
   }
 
   // ── product ──
