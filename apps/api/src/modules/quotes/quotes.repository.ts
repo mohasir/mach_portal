@@ -1,17 +1,25 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, count, desc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
-import type { QuoteLineInput, QuoteStage, QuotesBoardQuery, QuotesListQuery } from '@repo/schemas';
+import {
+  QUOTE_STAGE,
+  type QuoteLineInput,
+  type QuoteStageId,
+  type QuotesBoardQuery,
+  type QuotesListQuery,
+} from '@repo/schemas';
 import type { Database } from '../../db';
 import {
   quotes,
   quoteLines,
   quoteLineOptions,
+  quoteStageHistory,
   clients,
   eventTypes,
   products,
   productPriceTiers,
   optionGroups,
   options,
+  user,
 } from '../../db/schema';
 import {
   publicQuoteColumns,
@@ -25,25 +33,26 @@ const sortColumns = {
   number: quotes.number,
   eventDate: quotes.eventDate,
   total: quotes.total,
-  stage: quotes.stage,
+  stage: quotes.stageId,
   createdAt: quotes.createdAt,
 } as const;
 
-const OPEN_STAGES = ['new', 'quoted', 'confirmed'] as const;
-const TERMINAL_STAGES = ['completed', 'cancelled'] as const;
+const OPEN_STAGES = [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED, QUOTE_STAGE.CONFIRMED] as const;
+const TERMINAL_STAGES = [QUOTE_STAGE.CANCELLED] as const;
 
 export class QuotesRepository {
   constructor(private db: Database) {}
 
   async findPaginated(query: QuotesListQuery) {
-    const { page, pageSize, search, sortBy, sortDir, month, year, stage, state, clientId } = query;
+    const { page, pageSize, search, sortBy, sortDir, month, year, stageId, state, clientId } =
+      query;
     const where = and(
       search
         ? or(ilike(quotes.number, `%${search}%`), ilike(clients.name, `%${search}%`))
         : undefined,
       month ? sql`extract(month from ${quotes.eventDate}) = ${month}` : undefined,
       year ? sql`extract(year from ${quotes.eventDate}) = ${year}` : undefined,
-      stage ? eq(quotes.stage, stage) : undefined,
+      stageId ? eq(quotes.stageId, stageId) : undefined,
       state ? eq(quotes.state, state) : undefined,
       clientId ? eq(quotes.clientId, clientId) : undefined,
     );
@@ -74,10 +83,16 @@ export class QuotesRepository {
 
   async findById(id: string) {
     const [quoteRow] = await this.db
-      .select({ ...publicQuoteColumns, clientName: clients.name, eventTypeName: eventTypes.name })
+      .select({
+        ...publicQuoteColumns,
+        clientName: clients.name,
+        eventTypeName: eventTypes.name,
+        createdByName: user.name,
+      })
       .from(quotes)
       .innerJoin(clients, eq(quotes.clientId, clients.id))
       .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
+      .leftJoin(user, eq(quotes.createdById, user.id))
       .where(eq(quotes.id, id))
       .limit(1);
     if (!quoteRow) return undefined;
@@ -95,7 +110,23 @@ export class QuotesRepository {
           .where(inArray(quoteLineOptions.quoteLineId, lineIds))
       : [];
 
-    return { quoteRow, lineRows, optionRows };
+    const historyRows = await this.findStageHistory(id);
+
+    return { quoteRow, lineRows, optionRows, historyRows };
+  }
+
+  findStageHistory(quoteId: string) {
+    return this.db
+      .select({
+        fromStageId: quoteStageHistory.fromStageId,
+        toStageId: quoteStageHistory.toStageId,
+        changedByName: user.name,
+        changedAt: quoteStageHistory.changedAt,
+      })
+      .from(quoteStageHistory)
+      .leftJoin(user, eq(quoteStageHistory.changedById, user.id))
+      .where(eq(quoteStageHistory.quoteId, quoteId))
+      .orderBy(asc(quoteStageHistory.changedAt));
   }
 
   findQuoteRow(id: string) {
@@ -128,11 +159,11 @@ export class QuotesRepository {
         .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id));
 
     const [openRows, terminalRows] = await Promise.all([
-      baseSelect().where(inArray(quotes.stage, OPEN_STAGES)).orderBy(asc(quotes.eventDate)),
+      baseSelect().where(inArray(quotes.stageId, OPEN_STAGES)).orderBy(asc(quotes.eventDate)),
       baseSelect()
         .where(
           and(
-            inArray(quotes.stage, TERMINAL_STAGES),
+            inArray(quotes.stageId, TERMINAL_STAGES),
             sql`extract(month from ${quotes.updatedAt}) = ${month}`,
             sql`extract(year from ${quotes.updatedAt}) = ${year}`,
           ),
@@ -239,6 +270,12 @@ export class QuotesRepository {
   async insertFull(quoteData: typeof quotes.$inferInsert, lines: QuoteLineInput[]) {
     return this.db.transaction(async (tx) => {
       const [quote] = await tx.insert(quotes).values(quoteData).returning(publicQuoteColumns);
+      await tx.insert(quoteStageHistory).values({
+        quoteId: quote!.id,
+        fromStageId: null,
+        toStageId: quote!.stageId,
+        changedById: quoteData.createdById ?? null,
+      });
       await this.insertLines(tx, quote!.id, lines);
       return quote!;
     });
@@ -262,12 +299,18 @@ export class QuotesRepository {
     });
   }
 
-  updateStage(id: string, stage: QuoteStage) {
-    return this.db
-      .update(quotes)
-      .set({ stage })
-      .where(eq(quotes.id, id))
-      .returning(publicQuoteColumns)
-      .then((r) => r[0]);
+  updateStage(id: string, fromStageId: QuoteStageId, toStageId: QuoteStageId, userId: string) {
+    return this.db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(quotes)
+        .set({ stageId: toStageId })
+        .where(eq(quotes.id, id))
+        .returning(publicQuoteColumns);
+      if (!updated) return undefined;
+      await tx
+        .insert(quoteStageHistory)
+        .values({ quoteId: id, fromStageId, toStageId, changedById: userId });
+      return updated;
+    });
   }
 }

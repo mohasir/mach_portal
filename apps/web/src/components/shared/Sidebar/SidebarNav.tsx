@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useCan } from '@/lib/auth/useCan';
 import { useNavigation } from '@/lib/navigation';
 import { buildMenuItems, findActiveKey } from './helpers';
+import { NewQuoteButton } from './NewQuoteButton';
 
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation('admin');
@@ -23,20 +24,26 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     );
   }
 
-  const items = buildMenuItems(menu, can, t);
+  const items = buildMenuItems(menu, can, t) ?? [];
   const activeKey = findActiveKey(menu, pathname ?? '');
 
+  const onClick = ({ key }: { key: string }) => {
+    if (key.startsWith('/')) router.push(key);
+    onNavigate?.();
+  };
+  const menuProps = {
+    mode: 'inline' as const,
+    theme: 'light' as const,
+    selectedKeys: activeKey ? [activeKey] : [],
+    onClick,
+    className: 'mach-sidebar-menu border-none! bg-transparent!',
+  };
+
   return (
-    <Menu
-      mode="inline"
-      theme="light"
-      items={items}
-      selectedKeys={activeKey ? [activeKey] : []}
-      onClick={({ key }) => {
-        if (key.startsWith('/')) router.push(key);
-        onNavigate?.();
-      }}
-      className="mach-sidebar-menu border-none! bg-transparent!"
-    />
+    <>
+      <Menu {...menuProps} items={items.slice(0, 1)} />
+      <NewQuoteButton onNavigate={onNavigate} />
+      <Menu {...menuProps} items={items.slice(1)} />
+    </>
   );
 }

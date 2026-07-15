@@ -132,9 +132,11 @@ export const machBarTheme: ThemeConfig = {
       bodyBg: MB.bg,
     },
     Tabs: {
-      inkBarColor: MB.olive,
-      itemActiveColor: MB.mustard,
-      itemSelectedColor: MB.mustard,
+      inkBarColor: MB.brown,
+      itemColor: MB.muted,
+      itemActiveColor: MB.brown,
+      itemSelectedColor: MB.brown,
+      itemHoverColor: MB.brown,
     },
   },
 };

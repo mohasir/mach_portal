@@ -27,17 +27,17 @@ export const quotesRouter = router({
 
   create: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] })
     .input(createQuoteSchema)
-    .mutation(({ input }) => service.create(input)),
+    .mutation(({ input, ctx }) => service.create(input, ctx.user.id)),
   update: update
     .input(z.object({ id: z.uuid(), data: updateQuoteSchema }))
     .mutation(({ input }) => service.update(input.id, input.data)),
   updateStage: update
     .input(updateQuoteStageSchema)
-    .mutation(({ input }) => service.updateStage(input.id, input.stage)),
+    .mutation(({ input, ctx }) => service.updateStage(input.id, input.stageId, ctx.user.id)),
   approve: update
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input }) => service.approve(input.id)),
+    .mutation(({ input, ctx }) => service.approve(input.id, ctx.user.id)),
   cancel: update
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input }) => service.cancel(input.id)),
+    .mutation(({ input, ctx }) => service.cancel(input.id, ctx.user.id)),
 });

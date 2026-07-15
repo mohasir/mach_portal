@@ -1,14 +1,6 @@
-import type { CreateQuoteInput, QuoteLineInput, QuoteStage } from '@repo/schemas';
+import type { CreateQuoteInput, QuoteLineInput } from '@repo/schemas';
 import type { LineDraft, QuoteBuilderState } from './hooks/useQuoteBuilder';
 import type { QuoteDetail } from './types';
-
-export const QUOTE_STAGE_COLORS: Record<QuoteStage, string> = {
-  new: 'default',
-  quoted: 'gold',
-  confirmed: 'green',
-  completed: 'cyan',
-  cancelled: 'red',
-};
 
 export const nextLineKey = (): string => crypto.randomUUID();
 
@@ -62,7 +54,7 @@ export function toBuilderState(detail: QuoteDetail): QuoteBuilderState {
   };
 }
 
-/** Enables "Enviar" (mach-bar-flows.md §2.8) — "Guardar borrador" only needs a client. */
+/** Enables "Enviar" — "Guardar borrador" only needs a client. */
 export function isQuoteReadyToSend(state: QuoteBuilderState): boolean {
   return (
     !!state.clientId && !!state.state && state.address.trim().length > 0 && state.lines.length > 0

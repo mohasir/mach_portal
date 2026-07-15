@@ -15,13 +15,6 @@
     "stage": "Estado de la cotización",
     "state": "Estado (US)"
   },
-  "stage": {
-    "new": "Borrador",
-    "quoted": "Enviada",
-    "confirmed": "Confirmada",
-    "completed": "Realizada",
-    "cancelled": "Cancelada"
-  },
   "validation": {
     "clientRequired": "El cliente es obligatorio"
   },
@@ -100,7 +93,7 @@
     "confirm": {
       "confirmed": {
         "title": "¿Aprobar cotización?",
-        "content": "La cotización pasa a Confirmada.",
+        "content": "La cotización pasa a Aprobada.",
         "ok": "Aprobar"
       },
       "cancelled": {
@@ -109,5 +102,11 @@
         "ok": "Cancelar cotización"
       }
     }
+  },
+  "history": {
+    "title": "Historial",
+    "createdBy": "Creada por {{name}} el {{date}}",
+    "transition": "De {{from}} a {{to}} — {{name}}, {{date}}",
+    "unknownUser": "un usuario"
   }
 }

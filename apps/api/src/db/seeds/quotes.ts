@@ -1,11 +1,17 @@
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { computeQuoteTotals, type DiscountType, type QuoteStage } from '@repo/schemas';
+import {
+  computeQuoteTotals,
+  QUOTE_STAGE,
+  type DiscountType,
+  type QuoteStageId,
+} from '@repo/schemas';
 import { db } from '../index';
 import {
   quotes,
   quoteLines,
   quoteLineOptions,
+  quoteStageHistory,
   clients,
   eventTypes,
   products,
@@ -14,7 +20,10 @@ import {
   options,
   stateSettings,
   appSettings,
+  user,
 } from '../schema';
+
+const SEED_CREATOR_EMAIL = 'samuel@admin.com';
 
 interface SeedSelection {
   groupLabel: string;
@@ -34,7 +43,7 @@ interface SeedQuote {
   eventTime?: string;
   address?: string;
   notes?: string;
-  stage: QuoteStage;
+  stageId: QuoteStageId;
   discountType?: DiscountType;
   discountValue?: number;
   lines: SeedLine[];
@@ -47,7 +56,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventDate: '2026-09-12',
     eventTime: '18:00',
     address: '145 W 57th St, Apt 12B',
-    stage: 'new',
+    stageId: QUOTE_STAGE.PENDING,
     lines: [
       {
         productName: 'Crepes',
@@ -78,7 +87,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventDate: '2026-08-02',
     eventTime: '15:00',
     address: '88 Morgan St',
-    stage: 'quoted',
+    stageId: QUOTE_STAGE.QUOTED,
     discountType: 'percent',
     discountValue: 0.1,
     lines: [
@@ -101,7 +110,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventDate: '2026-07-28',
     eventTime: '12:00',
     address: '1 Landmark Sq, Stamford',
-    stage: 'confirmed',
+    stageId: QUOTE_STAGE.CONFIRMED,
     lines: [
       {
         productName: 'Esquites',
@@ -124,7 +133,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventTypeName: 'Graduación',
     eventDate: '2026-06-20',
     address: '210 Bedford Ave',
-    stage: 'cancelled',
+    stageId: QUOTE_STAGE.CANCELLED,
     lines: [
       {
         productName: 'Crepaletas',
@@ -141,7 +150,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventDate: '2026-09-05',
     eventTime: '11:00',
     address: '1 Palmer Sq, Princeton',
-    stage: 'quoted',
+    stageId: QUOTE_STAGE.QUOTED,
     discountType: 'fixed',
     discountValue: 5000,
     lines: [
@@ -166,7 +175,7 @@ const SEED_QUOTES: SeedQuote[] = [
   {
     clientEmail: 'sofia.ramirez@example.com',
     eventTypeName: 'Aniversario',
-    stage: 'new',
+    stageId: QUOTE_STAGE.PENDING,
     lines: [], // borrador vacío — cubre el caso de 0 líneas (D16/createQuoteSchema)
   },
   {
@@ -175,7 +184,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventDate: '2026-10-17',
     eventTime: '17:30',
     address: '35-30 Vernon Blvd, Queens',
-    stage: 'confirmed',
+    stageId: QUOTE_STAGE.CONFIRMED,
     lines: [
       {
         productName: 'Crepes',
@@ -209,7 +218,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventTypeName: 'Aniversario',
     eventDate: '2026-05-30',
     address: '400 Washington St',
-    stage: 'cancelled',
+    stageId: QUOTE_STAGE.CANCELLED,
     lines: [
       {
         productName: 'Nachos',
@@ -230,6 +239,7 @@ async function loadContext() {
     optionRows,
     stateRows,
     appRow,
+    creator,
   ] = await Promise.all([
     db.select({ id: clients.id, email: clients.email, state: clients.state }).from(clients),
     db.select({ id: eventTypes.id, name: eventTypes.name }).from(eventTypes),
@@ -258,6 +268,12 @@ async function loadContext() {
       .where(eq(appSettings.id, 1))
       .limit(1)
       .then((r) => r[0]),
+    db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.email, SEED_CREATOR_EMAIL))
+      .limit(1)
+      .then((r) => r[0]),
   ]);
 
   return {
@@ -269,6 +285,7 @@ async function loadContext() {
     optionRows,
     stateRows,
     appRow,
+    creator,
   };
 }
 
@@ -311,7 +328,12 @@ export async function seedQuotes() {
     console.log('  ⏭️  app_settings no está seedeado, salteando cotizaciones');
     return;
   }
+  if (!ctx.creator) {
+    console.log(`  ⏭️  usuario "${SEED_CREATOR_EMAIL}" no existe, salteando cotizaciones`);
+    return;
+  }
   const appRow = ctx.appRow;
+  const creatorId = ctx.creator.id;
 
   for (const [index, seed] of SEED_QUOTES.entries()) {
     const client = ctx.clientRows.find((c) => c.email === seed.clientEmail);
@@ -322,7 +344,7 @@ export async function seedQuotes() {
 
     const now = new Date();
     const seq = appRow.quoteSeqStart + index;
-    const number = `quo${now.toISOString().slice(0, 10).replace(/-/g, '')}-${String(seq).padStart(6, '0')}`;
+    const number = `QUO${now.toISOString().slice(0, 10).replace(/-/g, '')}-${String(seq).padStart(6, '0')}`;
 
     const [existing] = await db
       .select({ id: quotes.id })
@@ -367,10 +389,31 @@ export async function seedQuotes() {
         discountType: seed.discountType ?? null,
         discountValue: seed.discountValue ?? null,
         validUntil: validUntil.toISOString().slice(0, 10),
-        stage: seed.stage,
+        stageId: seed.stageId,
+        createdById: creatorId,
         ...totals,
       })
       .returning({ id: quotes.id });
+
+    // Simplified history: creation + (if applicable) one jump straight to the seeded stage —
+    // doesn't replay every intermediate transition, just enough to populate "Historial" in the demo.
+    const historyRows: (typeof quoteStageHistory.$inferInsert)[] = [
+      {
+        quoteId: quote!.id,
+        fromStageId: null,
+        toStageId: QUOTE_STAGE.PENDING,
+        changedById: creatorId,
+      },
+    ];
+    if (seed.stageId !== QUOTE_STAGE.PENDING) {
+      historyRows.push({
+        quoteId: quote!.id,
+        fromStageId: QUOTE_STAGE.PENDING,
+        toStageId: seed.stageId,
+        changedById: creatorId,
+      });
+    }
+    await db.insert(quoteStageHistory).values(historyRows);
 
     if (lines.length > 0) {
       const lineRows = lines.map((line, i) => ({
@@ -395,6 +438,8 @@ export async function seedQuotes() {
       if (optionRows.length > 0) await db.insert(quoteLineOptions).values(optionRows);
     }
 
-    console.log(`  ✅ ${number} — ${seed.clientEmail} (${seed.stage}, ${lines.length} líneas)`);
+    console.log(
+      `  ✅ ${number} — ${seed.clientEmail} (stage ${seed.stageId}, ${lines.length} líneas)`,
+    );
   }
 }

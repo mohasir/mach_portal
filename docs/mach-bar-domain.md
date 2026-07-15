@@ -32,25 +32,26 @@ Tres clusters de datos: **comercial** (`clients → quotes → …`), **operaci�
 
 | # | Decisión | Motivo |
 |---|---|---|
-| D1 | **Un solo eje de estado**: `quotes.stage` (`new/quoted/confirmed/completed/cancelled`). Se elimina el `status` del spec. | El spec tenía doble máquina de estados (`status` + `pipelineStage`) solapada y desincronizable. |
+| D1 | **Un solo eje de estado**: `quotes.stageId` — 4 stages (Pendiente/Enviada/Aprobada/Cancelada, D18). Se elimina el `status` del spec. | El spec tenía doble máquina de estados (`status` + `pipelineStage`) solapada y desincronizable. Se sacó "Realizada" del eje de la quote: eso ahora es un campo propio de `events` (Fase 5), no un stage de la cotización. |
 | D2 | **La cotización ES la oportunidad** del pipeline (una card del kanban = una quote). | Un cliente puede pedir varios eventos → varias quotes = varias cards. |
-| D3 | **`clients.status` (lead/active) es derivado**, no columna. | *active* = tiene ≥1 quote confirmed/completed; si no, *lead*. Menos campos que mantener. |
+| D3 | **`clients.status` (lead/active) es derivado**, no columna. | *active* = tiene ≥1 quote Aprobada; si no, *lead*. Menos campos que mantener. |
 | D4 | **El evento nace SIEMPRE de una quote confirmada.** No hay creación manual. | Permite eliminar `events.status` (lo lleva `quote.stage`). |
-| D5 | **`events.status` y `events.month` se eliminan** (derivados de `quote.stage` y `event_date`). | `month` en español era frágil (locale, sin año, redundante). |
+| D5 | **`events.month` se elimina** (derivado de `event_date`). **`events.status`** ya no es 100% derivado de `quote.stage` (D18: la quote solo llega hasta Aprobada) — el "realizado" pasa a ser un campo propio del evento; `upcoming`/`cancelled` sí siguen derivados. A definir en detalle en Fase 5. | `month` en español era frágil (locale, sin año, redundante). El recorte de D18 mueve "realizado" fuera del eje de la quote. |
 | D6 | **Ingredientes solo viven en la quote** (no se copian al evento). El catálogo usa **soft-delete** (`is_active`). | La operación consulta la quote/PDF vía `event.quote_id`; el soft-delete evita romper quotes históricas. |
 | D7 | **Dinero en centavos (`integer`)**; tasas en `numeric`. | Float rompe decimales (`0.1+0.2≠0.3`); enteros son exactos. Ver §3. |
 | D8 | **Precio**: subtotal − descuento (fijo o %) → +impuesto → total → depósito. Descuento **antes** de impuesto. | Cascada estándar de factura. Ver §7. |
 | D9 | **Tasas configurables** en un módulo de config; **snapshot** en la quote al calcular. | Cambiar una tasa no debe recalcular quotes históricas. |
 | D10 | **Sin `travel_fee`** por ahora (columna futura en `state_settings`). | El negocio no lo usa aún. |
-| D11 | **Número de quote** `quoYYYYMMDD-NNNNNN` con consecutivo global; inicio configurable con validación `≥ último usado`. | — |
+| D11 | **Número de quote** `QUOYYYYMMDD-NNNNNN` (prefijo en mayúscula) con consecutivo global; inicio configurable con validación `≥ último usado`. | — |
 | D12 | **PDF**: la API arma un **payload denormalizado** y lo POSTea al micro Go, que devuelve URL. | Micro stateless, PDF idéntico al preview, sin acoplar a la DB. |
-| D13 | **El evento NO copia su composición**: lee sus líneas y opciones de la quote (`event.quote_id`). Se **elimina la copia** (`event_lines`). | El evento se ejecuta exacto a lo cotizado; la quote es read-only tras `confirmed` → una sola fuente de verdad (coherente con D6). |
+| D13 | **El evento NO copia su composición**: lee sus líneas y opciones de la quote (`event.quote_id`). Se **elimina la copia** (`event_lines`). | El evento se ejecuta exacto a lo cotizado; la quote es read-only tras Aprobada → una sola fuente de verdad (coherente con D6). |
 | D14 | **`event_type` es una tabla** (`event_types`), no un varchar. `quotes`/`events` la referencian por FK (`event_type_id`), con soft-delete. | Tipos de evento consistentes y administrables (evita texto libre duplicado). |
 | D15 | **Nombres genéricos** del catálogo: `stations→products`, `station_sections→option_groups`, `station_items→options`, `quote_stations→quote_lines`, `quote_station_selections→quote_line_options`. Etiquetas Mach Bar por i18n. | Reuso en otros negocios del giro sin atar el schema a su jerga (patrón Producto→Grupo de opciones→Opción, **no** *variants*). Multi-tenant queda como futuro aditivo (sin `tenant_id` aún). |
 | D16 | **Precio por tramo (bracket), no por persona.** Cada `product` tiene una tabla `product_price_tiers` `(numPersons → price)` donde `price` es el **total** para esa cantidad. En la quote se **elige un tramo existente** (dropdown, sin cantidades libres); el precio **pre-carga** del tramo pero es **editable por línea**. Se elimina `products.base_price` y `quote_lines.price_per_person`. | El negocio cobra por cantidad fija (Excel: 40 personas → $450 total), no lineal por persona. Distintos productos tienen distintos tramos y topes (Esquites hasta 200, Mini Pancakes hasta 400). |
 | D17 | **`option_groups` tienen `selection_type` (`select` \| `included`).** `select` = el cliente elige **hasta `max_select`** ítems (sin mínimo). `included` = viene incluido, **no se selecciona** (informativo; se muestra en quote/PDF). `options.description` opcional para el detalle del ítem. | Muchas "secciones" del menú son fijas ("Premium Syrups Included", "Warm Cheese Sauce Included"); otras son elegibles ("Choose Any 7"). El Craft Bar lista cócteles con sus ingredientes en `description`. |
 | — | **Craft Bar**: se modela como una estación más con su propia `product_price_tiers`. Si al cargar los precios resulta ser tarifa fija u horaria, se ajusta (una fila única en tiers ya cubre "fija"). **A confirmar** con los datos de precio. | — |
 | — | **Templates de textos del PDF**: PAUSADO. | Se retoma más adelante. |
+| D18 | **`quote_stages` es una tabla** (`id` entero **hardcodeado** 1-4, `label`, `color`, `sortOrder`) en vez de un `pgEnum` — conjunto **fijo** (sin alta/baja), label/color editables desde Configuración. `quotes.stageId` referencia esa tabla por FK. Se registra **quién creó** la quote (`quotes.createdById → user.id`) y un **historial de cambios de stage** (`quote_stage_history`: `quoteId, fromStageId, toStageId, changedById, changedAt` — una fila por transición, más una inicial en la creación con `fromStageId=null`). | El negocio quería customizar nombre/color de cada stage sin releases, y trazabilidad de quién movió una quote. Los ids se hardcodean (no autogenerados) porque la lógica de dominio (matriz de transiciones, `EDITABLE_STAGES`) necesita identidades estables — la tabla es solo la capa de presentación sobre esos ids fijos. |
 
 ---
 
@@ -73,14 +74,16 @@ dato; es solo forma de mostrar.
 
 ```ts
 export const stateEnum         = pgEnum('state', ['NY', 'NJ', 'CT']);
-export const quoteStageEnum    = pgEnum('quote_stage', ['new', 'quoted', 'confirmed', 'completed', 'cancelled']);
 export const discountTypeEnum  = pgEnum('discount_type', ['fixed', 'percent']);
 export const paymentMethodEnum = pgEnum('payment_method', ['zelle', 'cash', 'card', 'check']);
 export const optionGroupTypeEnum = pgEnum('option_group_type', ['select', 'included']); // D17
 ```
 
+> **`quote_stage` ya NO es un `pgEnum`** — es la tabla `quote_stages` (D18), ids hardcodeados
+> 1-4 (`QUOTE_STAGE.PENDING/QUOTED/CONFIRMED/CANCELLED` en `@repo/schemas`).
+
 Eliminados del spec: `client_status` (derivado), `quote_status` (fusionado en `quote_stage`),
-`pipeline_stage` (es `quote_stage`), `event_status` (derivado).
+`pipeline_stage` (es `quote_stage`), `event_status` (derivado, con la salvedad de D5).
 
 ---
 
@@ -101,7 +104,7 @@ clients {
 quotes {
   id,
   seq*         integer unique,        // consecutivo global (arranca en app_settings.quoteSeqStart)
-  number*      varchar unique,        // 'quoYYYYMMDD-NNNNNN'
+  number*      varchar unique,        // 'QUOYYYYMMDD-NNNNNN'
   clientId*    -> clients.id,
   eventTypeId  -> event_types.id, eventDate, eventTime, state, address,
   // precio (todo cents salvo *_rate):
@@ -115,11 +118,29 @@ quotes {
   depositRate*     numeric default 0.5,
   depositAmount*   integer,
   notes,
-  stage*       quote_stage default 'new',
+  stageId*     integer -> quote_stages.id default 1,   // D18 — 1=Pendiente
   validUntil   date,                  // createdAt + config.quoteValidityMonths
+  createdById  -> user.id,            // quién armó la cotización — D18
   createdAt, updatedAt
 }
 // balance = total - depositAmount (derivado)
+
+// quote_stages — catálogo fijo (D18): 4 filas con id hardcodeado, sin alta/baja.
+// Solo label/color son editables (Configuración → Estados de cotización).
+quote_stages {
+  id* PK,          // 1 Pendiente · 2 Enviada · 3 Aprobada · 4 Cancelada
+  label*, color*,  // color = preset de AntD Tag/Badge, no hex
+  sortOrder*
+}
+
+// quote_stage_history — auditoría de cambios de stage (D18).
+quote_stage_history {
+  id, quoteId* -> quotes (cascade),
+  fromStageId  -> quote_stages.id,    // null = fila de alta (creación)
+  toStageId*   -> quote_stages.id,
+  changedById  -> user.id,
+  changedAt*
+}
 
 quote_lines {
   id, quoteId* -> quotes (cascade), productId* -> products,
@@ -224,6 +245,9 @@ erDiagram
   quotes ||--o| events : "confirma (1:1)"
   quotes ||--o{ quote_lines : ""
   quote_lines ||--o{ quote_line_options : ""
+  quotes ||--o{ quote_stage_history : ""
+  quote_stages ||--o{ quotes : ""
+  quote_stages ||--o{ quote_stage_history : "from/to"
   events ||--o{ event_staff : ""
   staff ||--o{ event_staff : ""
   products ||--o{ product_price_tiers : ""
@@ -250,8 +274,23 @@ erDiagram
     int subtotal "cents"
     int total "cents"
     int deposit_amount "cents"
-    quote_stage stage
+    int stage_id FK "1 Pendiente · 2 Enviada · 3 Aprobada · 4 Cancelada"
     date valid_until
+    text created_by_id FK
+  }
+  quote_stages {
+    int id PK "hardcoded 1-4"
+    varchar label
+    varchar color
+    int sort_order
+  }
+  quote_stage_history {
+    uuid id PK
+    uuid quote_id FK
+    int from_stage_id FK "null = alta"
+    int to_stage_id FK
+    text changed_by_id FK
+    timestamp changed_at
   }
   quote_lines {
     uuid id PK
@@ -364,39 +403,45 @@ Una quote en `new` recalcula al editar; desde `quoted` en adelante queda fija.
 
 ## 8. Numeración de cotizaciones
 
-- Formato `number` = `quo` + `YYYYMMDD` (fecha de creación) + `-` + `NNNNNN` (consecutivo global, 6 díg).
+- Formato `number` = `QUO` (mayúscula) + `YYYYMMDD` (fecha de creación) + `-` + `NNNNNN` (consecutivo
+  global, 6 díg).
 - `seq` = el consecutivo global (entero único). `number` se arma con `seq` + la fecha.
 - El inicio del consecutivo es **configurable** (`app_settings.quoteSeqStart`). Validación en el
   service: no se puede setear por **debajo del último `seq` usado** (`AppError SEQUENCE_BELOW_LAST`).
-- Se asigna al crear la quote (stage `new`).
+- Se asigna al crear la quote (stage Pendiente).
 
 ---
 
 ## 9. Estados y ciclo de vida (pipeline)
 
+4 stages (D18) — el `id` es fijo en código (`QUOTE_STAGE.*` en `@repo/schemas`); label y color son
+datos editables en `quote_stages`, mostrados acá con su label **por defecto** (seed):
+
 ```
-  new ──enviar──▶ quoted ──aprobar──▶ confirmed ──realizar──▶ completed
-   │                │                    │
-   └────────────────┴────────────────────┴──▶ cancelled
+  Pendiente ──enviar──▶ Enviada ──aprobar──▶ Aprobada
+      │                    │                    │
+      └────────────────────┴────────────────────┴──▶ Cancelada
 ```
 
-| stage | significado | transición |
-|---|---|---|
-| `new` | borrador, sin enviar | crear quote |
-| `quoted` | enviada, esperando | acción "enviar" |
-| `confirmed` | aceptó + depósito → **crea event** | acción "aprobar" |
-| `completed` | evento realizado | marcar evento realizado |
-| `cancelled` | se cayó | acción "cancelar" (desde new/quoted/confirmed) |
+| id | label (default) | significado | transición |
+|---|---|---|---|
+| 1 | Pendiente | borrador, sin enviar | crear quote |
+| 2 | Enviada | enviada, esperando | acción "enviar" |
+| 3 | Aprobada | aceptó + depósito → **crea event** | acción "aprobar" |
+| 4 | Cancelada | se cayó | acción "cancelar" (desde Pendiente/Enviada/Aprobada) |
 
-> **Reglas de transición**: el avance es **lineal** `new → quoted → confirmed → completed` (para
-> aprobar, la quote debe estar en `quoted`). **Des-confirmar = cancelar** (cancela también el evento
-> derivado). **Reabrir** solo `cancelled → quoted`. Matriz completa + efectos: `mach-bar-flows.md §3.2`.
+> **Aprobada es terminal para la quote** — no hay transición hacia adelante (ver D1/D5): "el evento
+> se realizó" es un campo propio de `events` (Fase 5), no un stage más de la cotización.
+>
+> **Reglas de transición**: el avance es **lineal** `Pendiente → Enviada → Aprobada` (para aprobar,
+> la quote debe estar en Enviada). **Des-aprobar = cancelar** (cancela también el evento derivado).
+> **Reabrir** solo `Cancelada → Enviada`. Matriz completa + efectos: `mach-bar-flows.md §3.2`.
 
 **Derivados (no se almacenan):**
-- **`expired`** = badge sobre una card `quoted` con `validUntil < hoy`. No es columna; si el cliente
-  responde tarde, igual puede pasar a `confirmed`.
-- **`clients.status`**: `active` si tiene ≥1 quote en `confirmed`/`completed`; si no, `lead`.
-- **`events.status`**: `confirmed`→upcoming, `completed`→completed, `cancelled`→cancelled (desde `quote.stage`).
+- **`expired`** = badge sobre una card en Enviada con `validUntil < hoy`. No es columna; si el
+  cliente responde tarde, igual puede pasar a Aprobada.
+- **`clients.status`**: `active` si tiene ≥1 quote Aprobada; si no, `lead`.
+- **`events.status`**: ver D5 — ya no 100% derivado de `quote.stageId` (Fase 5 lo completa).
 
 ---
 
@@ -427,7 +472,7 @@ Necesitan diseño propio; se apartan de la receta genérica:
 |---|---|---|
 | `/admin/quotes/new` | **Constructor de cotización + preview en vivo** | Form multi-entidad (cliente + N líneas/productos + opciones con `maxSelect` + totales derivados). Estado local efímero (`useReducer`/Zustand sin persist), NO TanStack Query. El catálogo (`products.list`) sí es server-state cacheado. El preview debe producir el **mismo modelo** que el PDF. |
 | `/admin/quotes/[id]` | Detalle / edición de quote | Reusa el constructor en modo edición; solo editable en `new`/`quoted`. |
-| `/admin/pipeline` | **Kanban** de 5 columnas | AntD no trae kanban → dnd-kit. Drag entre columnas → `quotes.updateStage`. En `confirmed`: botón asignar staff. |
+| `/admin/pipeline` | **Kanban** de 4 columnas | AntD no trae kanban → dnd-kit. Drag entre columnas → `quotes.updateStage`. En Aprobada: botón asignar staff. |
 | `/admin/events/[id]` | Detalle de evento | Datos + líneas (de la quote) + `event_staff` (asignación) + pagos (deposit/balance) + link a la quote/PDF. |
 | `/admin/clients/[id]` | Ficha de cliente | Historial de quotes y eventos. |
 | `/admin/catalog` | **Editor del catálogo** | Jerárquico (`product → option_groups → options`) con soft-delete + reordenar (drag); grupo **Catálogo** del sidebar. |
@@ -448,14 +493,15 @@ Constructor (estado local) → preview en vivo (sin API)
 
 **Aprobar → crear evento** (transacción, idempotente por `events.quote_id UNIQUE`)
 ```
-Pipeline: card a "Confirmado"  →  quotes.approve({ id })
-  → UPDATE quotes SET stage='confirmed'   // la quote queda read-only
+Pipeline: card a "Aprobada"  →  quotes.approve({ id })
+  → UPDATE quotes SET stage_id=3 (Aprobada)   // la quote queda read-only
+  → INSERT quote_stage_history (from, to=3, changedBy)
   → INSERT events (snapshot de la quote; total_amount = quote.total)
   → navega a /admin/events/[id] para asignar staff
 ```
 
 El evento NO copia su composición: la lee de `quote_lines` /
-`quote_line_options` vía `event.quote_id` (la quote es inmutable desde `confirmed`).
+`quote_line_options` vía `event.quote_id` (la quote es inmutable desde Aprobada).
 
 **Asignar staff**
 ```

@@ -1,9 +1,10 @@
-import { and, asc, count, desc, eq, exists, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
-import type {
-  ClientsListQuery,
-  ClientStatus,
-  CreateClientInput,
-  UpdateClientInput,
+import { and, asc, count, desc, eq, exists, ilike, or, sql, type SQL } from 'drizzle-orm';
+import {
+  QUOTE_STAGE,
+  type ClientsListQuery,
+  type ClientStatus,
+  type CreateClientInput,
+  type UpdateClientInput,
 } from '@repo/schemas';
 import type { Database } from '../../db';
 import { clients, quotes } from '../../db/schema';
@@ -19,7 +20,7 @@ const sortColumns = {
 export class ClientsRepository {
   constructor(private db: Database) {}
 
-  // Derived status (D3): 'active' if the client has a confirmed/completed quote, else 'lead'.
+  // Derived status (D3): 'active' if the client has a confirmed (Aprobada) quote, else 'lead'.
   // Built as a proper correlated subquery (not a raw string template) so `clients.id` is
   // qualified correctly — `quotes` also has an `id` column, which a raw-interpolated
   // `where quotes.client_id = clients.id` silently resolves against the wrong table.
@@ -27,7 +28,7 @@ export class ClientsRepository {
     const activeQuotes = this.db
       .select({ one: sql`1` })
       .from(quotes)
-      .where(and(eq(quotes.clientId, clients.id), inArray(quotes.stage, ['confirmed', 'completed'])));
+      .where(and(eq(quotes.clientId, clients.id), eq(quotes.stageId, QUOTE_STAGE.CONFIRMED)));
     const status = sql<ClientStatus>`(case when ${exists(activeQuotes)} then 'active' else 'lead' end)`;
     return { ...publicClientColumns, status };
   }

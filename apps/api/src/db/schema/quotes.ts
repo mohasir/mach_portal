@@ -12,15 +12,17 @@ import { stateEnum } from './enums';
 import { clients } from './clients';
 import { eventTypes } from './eventTypes';
 import { products, optionGroups, options } from './catalog';
+import { user } from './auth';
 
-export const quoteStageEnum = pgEnum('quote_stage', [
-  'new',
-  'quoted',
-  'confirmed',
-  'completed',
-  'cancelled',
-]);
 export const discountTypeEnum = pgEnum('discount_type', ['fixed', 'percent']);
+
+export const quoteStages = pgTable('quote_stages', {
+  id: integer('id').primaryKey(),
+  label: text('label').notNull(),
+  color: text('color').notNull(), // hex, e.g. '#faad14' — picked via ColorPicker
+  description: text('description'),
+  sortOrder: integer('sort_order').notNull(),
+});
 
 export const quotes = pgTable('quotes', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -46,8 +48,12 @@ export const quotes = pgTable('quotes', {
     .notNull()
     .default(0.5),
   depositAmount: integer('deposit_amount').notNull().default(0),
-  stage: quoteStageEnum('stage').notNull().default('new'),
+  stageId: integer('stage_id')
+    .notNull()
+    .default(1) // QUOTE_STAGE.PENDING
+    .references(() => quoteStages.id),
   validUntil: date('valid_until', { mode: 'string' }),
+  createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
     .defaultNow()
@@ -79,4 +85,17 @@ export const quoteLineOptions = pgTable('quote_line_options', {
   optionGroupId: uuid('option_group_id')
     .notNull()
     .references(() => optionGroups.id),
+});
+
+export const quoteStageHistory = pgTable('quote_stage_history', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  quoteId: uuid('quote_id')
+    .notNull()
+    .references(() => quotes.id, { onDelete: 'cascade' }),
+  fromStageId: integer('from_stage_id').references(() => quoteStages.id),
+  toStageId: integer('to_stage_id')
+    .notNull()
+    .references(() => quoteStages.id),
+  changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
+  changedAt: timestamp('changed_at').defaultNow().notNull(),
 });

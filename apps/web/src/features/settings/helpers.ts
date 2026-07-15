@@ -1,4 +1,4 @@
-import type { UpdateConfigInput } from '@repo/schemas';
+import type { QuoteStageColor, QuoteStageId, UpdateConfigInput } from '@repo/schemas';
 import { fromPercent, toPercent } from '@/lib/utils/percent';
 import type { Config } from './types';
 
@@ -9,6 +9,7 @@ export interface SettingsFormValues {
   minPersonsPerLine: number;
   quoteSeqStart: number;
   currency: string;
+  quoteStages: { id: QuoteStageId; label: string; color: QuoteStageColor; description?: string }[];
 }
 
 export function toFormValues(config: Config): SettingsFormValues {
@@ -19,6 +20,12 @@ export function toFormValues(config: Config): SettingsFormValues {
     minPersonsPerLine: config.appSettings.minPersonsPerLine,
     quoteSeqStart: config.appSettings.quoteSeqStart,
     currency: config.appSettings.currency,
+    quoteStages: config.quoteStages.map((s) => ({
+      id: s.id as QuoteStageId,
+      label: s.label,
+      color: s.color as QuoteStageColor,
+      description: s.description ?? undefined,
+    })),
   };
 }
 
@@ -36,5 +43,11 @@ export function toUpdateInput(values: SettingsFormValues, config: Config): Updat
       currency: values.currency,
       catalogSortable: config.appSettings.catalogSortable,
     },
+    quoteStages: values.quoteStages.map((s) => ({
+      id: s.id,
+      label: s.label,
+      color: s.color,
+      description: s.description,
+    })),
   };
 }

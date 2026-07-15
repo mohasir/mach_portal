@@ -25,7 +25,6 @@
     "antd": "^6.5.0",
     "api": "workspace:*",
     "better-auth": "^1",
-    "date-fns": "^4.4.0",
     "dayjs": "^1.11.21",
     "i18next": "^24",
     "lucide-react": "^1.24.0",
@@ -33,6 +32,7 @@
     "react": "^19",
     "react-dom": "^19",
     "react-i18next": "^15",
+    "react-icons": "^5.7.0",
     "tailwindcss": "^4",
     "zod": "^4",
     "zustand": "^5"

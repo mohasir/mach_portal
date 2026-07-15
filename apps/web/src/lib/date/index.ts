@@ -1,25 +1,37 @@
-import { format, formatDistanceToNow, parseISO } from 'date-fns';
-import { enUS, es } from 'date-fns/locale';
+import dayjs from 'dayjs';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/es';
+import 'dayjs/locale/en';
 import type { Locale as AppLocale } from '@/lib/i18n/config';
+
+dayjs.extend(localizedFormat);
+dayjs.extend(relativeTime);
 
 export type DateInput = Date | string | number;
 
-const DATE_FNS_LOCALES: Record<AppLocale, typeof es> = { es, en: enUS };
+// dayjs' localizedFormat plugin has no abbreviated-month preset (only L/LL/LLL/LLLL) —
+// spell out the medium formats per locale, day/month order matching each locale's convention.
+const MEDIUM_DATE_FORMAT: Record<AppLocale, string> = {
+  es: 'D MMM YYYY',
+  en: 'MMM D, YYYY',
+};
 
-const resolveLocale = (locale: AppLocale) => DATE_FNS_LOCALES[locale] ?? es;
+const MEDIUM_DATE_TIME_FORMAT: Record<AppLocale, string> = {
+  es: 'D MMM YYYY, HH:mm',
+  en: 'MMM D, YYYY, HH:mm',
+};
 
-
-const toDate = (value: DateInput): Date =>
-  value instanceof Date ? value : typeof value === 'number' ? new Date(value) : parseISO(value);
+const toDayjs = (value: DateInput, locale: AppLocale) => dayjs(value).locale(locale);
 
 export const formatDate = (value: DateInput, locale: AppLocale) =>
-  format(toDate(value), 'PP', { locale: resolveLocale(locale) });
+  toDayjs(value, locale).format(MEDIUM_DATE_FORMAT[locale]);
 
 export const formatDateLong = (value: DateInput, locale: AppLocale) =>
-  format(toDate(value), 'PPP', { locale: resolveLocale(locale) });
+  toDayjs(value, locale).format('LL');
 
 export const formatDateTime = (value: DateInput, locale: AppLocale) =>
-  format(toDate(value), 'PPp', { locale: resolveLocale(locale) });
+  toDayjs(value, locale).format(MEDIUM_DATE_TIME_FORMAT[locale]);
 
 export const formatRelative = (value: DateInput, locale: AppLocale) =>
-  formatDistanceToNow(toDate(value), { locale: resolveLocale(locale), addSuffix: true });
+  toDayjs(value, locale).fromNow();

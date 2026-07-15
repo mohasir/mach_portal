@@ -7,6 +7,7 @@ import { useUpdateConfig } from '../hooks/useUpdateConfig';
 import { toFormValues, toUpdateInput, type SettingsFormValues } from '../helpers';
 import { TaxRatesCard } from './TaxRatesCard';
 import { QuoteDefaultsCard } from './QuoteDefaultsCard';
+import { QuoteStagesCard } from './QuoteStagesCard';
 
 export function GeneralSettingsForm() {
   const { t } = useTranslation('settings');
@@ -41,9 +42,10 @@ export function GeneralSettingsForm() {
         )
       }
     >
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-6">
         <QuoteDefaultsCard lastUsedSeq={data.lastUsedSeq} />
         <TaxRatesCard states={data.stateSettings} />
+        <QuoteStagesCard stages={data.quoteStages} />
       </div>
 
       <Button

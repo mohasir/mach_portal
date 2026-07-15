@@ -6,6 +6,7 @@ export interface NavItem {
   icon?: string;
   guard?: PermissionCheck;
   children?: NavItem[];
+  layout?: 'bare';
 }
 
 export interface NavGroup {

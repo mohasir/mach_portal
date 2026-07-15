@@ -15,13 +15,6 @@
     "stage": "Quote stage",
     "state": "State (US)"
   },
-  "stage": {
-    "new": "Draft",
-    "quoted": "Sent",
-    "confirmed": "Confirmed",
-    "completed": "Completed",
-    "cancelled": "Cancelled"
-  },
   "validation": {
     "clientRequired": "Client is required"
   },
@@ -100,7 +93,7 @@
     "confirm": {
       "confirmed": {
         "title": "Approve quote?",
-        "content": "The quote moves to Confirmed.",
+        "content": "The quote moves to Approved.",
         "ok": "Approve"
       },
       "cancelled": {
@@ -109,5 +102,11 @@
         "ok": "Cancel quote"
       }
     }
+  },
+  "history": {
+    "title": "History",
+    "createdBy": "Created by {{name}} on {{date}}",
+    "transition": "From {{from}} to {{to}} — {{name}}, {{date}}",
+    "unknownUser": "a user"
   }
 }

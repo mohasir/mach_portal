@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import { Select } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { QUOTE_STAGES, stateSchema, type QuotesListQuery } from '@repo/schemas';
+import { stateSchema, type QuotesListQuery } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
+import { useQuoteStages } from '@/features/settings';
 import { useQuotesList } from '../../hooks/useQuotes';
 import { useQuotesColumns } from './columns';
 import { QuoteRowCard } from './QuoteRowCard';
@@ -17,10 +18,11 @@ export function QuotesTable({ onRowClick }: QuotesTableProps) {
   const { t } = useTranslation('quotes');
   const { t: tc } = useTranslation('common');
   const table = useDataTable<QuotesListQuery['sortBy']>({ defaultSortBy: 'createdAt' });
-  const [stage, setStage] = useState<QuotesListQuery['stage']>();
+  const [stageId, setStageId] = useState<QuotesListQuery['stageId']>();
   const [state, setState] = useState<QuotesListQuery['state']>();
+  const { orderedIds, stageMap } = useQuoteStages();
 
-  const { data, isLoading } = useQuotesList({ ...table.query, stage, state });
+  const { data, isLoading } = useQuotesList({ ...table.query, stageId, state });
   const columns = useQuotesColumns();
 
   return (
@@ -30,9 +32,9 @@ export function QuotesTable({ onRowClick }: QuotesTableProps) {
           allowClear
           placeholder={t('filters.stage')}
           className="w-full sm:w-52"
-          value={stage}
-          onChange={setStage}
-          options={QUOTE_STAGES.map((s) => ({ value: s, label: t(`stage.${s}`) }))}
+          value={stageId}
+          onChange={setStageId}
+          options={orderedIds.map((id) => ({ value: id, label: stageMap.get(id)?.label }))}
         />
         <Select
           allowClear

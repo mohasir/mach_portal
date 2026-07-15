@@ -3,9 +3,10 @@ import {
   canTransition,
   computeQuoteTotals,
   paginationMeta,
+  QUOTE_STAGE,
   type CreateQuoteInput,
   type QuoteLineInput,
-  type QuoteStage,
+  type QuoteStageId,
   type QuotesBoardQuery,
   type QuotesListQuery,
   type UpdateQuoteInput,
@@ -21,7 +22,7 @@ import {
   type PublicQuote,
 } from './quotes.resource';
 
-const EDITABLE_STAGES: QuoteStage[] = ['new', 'quoted'];
+const EDITABLE_STAGES: QuoteStageId[] = [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED];
 
 type CatalogContext = Awaited<ReturnType<QuotesRepository['loadCatalogContext']>>;
 
@@ -52,23 +53,27 @@ export class QuotesService {
   async getById(id: string) {
     const result = await this.repo.findById(id);
     if (!result) throw notFound();
-    return buildQuoteDetail(result.quoteRow, result.lineRows, result.optionRows);
+    return buildQuoteDetail(
+      result.quoteRow,
+      result.lineRows,
+      result.optionRows,
+      result.historyRows,
+    );
   }
 
   async board(query: QuotesBoardQuery) {
     const rows = await this.repo.findBoard(query);
-    const grouped: Record<QuoteStage, ReturnType<typeof quoteCardResource>[]> = {
-      new: [],
-      quoted: [],
-      confirmed: [],
-      completed: [],
-      cancelled: [],
+    const grouped: Record<QuoteStageId, ReturnType<typeof quoteCardResource>[]> = {
+      [QUOTE_STAGE.PENDING]: [],
+      [QUOTE_STAGE.QUOTED]: [],
+      [QUOTE_STAGE.CONFIRMED]: [],
+      [QUOTE_STAGE.CANCELLED]: [],
     };
-    for (const row of rows) grouped[row.stage].push(quoteCardResource(row));
+    for (const row of rows) grouped[row.stageId as QuoteStageId].push(quoteCardResource(row));
     return grouped;
   }
 
-  async create(input: CreateQuoteInput) {
+  async create(input: CreateQuoteInput, userId: string) {
     await this.validateLines(input.lines);
 
     const [stateRows, appRow, maxSeq] = await Promise.all([
@@ -108,6 +113,7 @@ export class QuotesService {
         discountType: input.discountType ?? null,
         discountValue: input.discountValue ?? null,
         validUntil,
+        createdById: userId,
         ...totals,
       },
       input.lines,
@@ -118,7 +124,7 @@ export class QuotesService {
   async update(id: string, input: UpdateQuoteInput) {
     const current = await this.repo.findQuoteRow(id);
     if (!current) throw notFound();
-    if (!EDITABLE_STAGES.includes(current.stage)) {
+    if (!EDITABLE_STAGES.includes(current.stageId as QuoteStageId)) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         cause: new AppError(ErrorCodes.quote.NOT_EDITABLE),
@@ -153,7 +159,7 @@ export class QuotesService {
   // (mach-bar-domain.md §7, "queda fija").
   private async resolveTotals(current: PublicQuote, input: UpdateQuoteInput) {
     const lines = { lines: input.lines.map((l) => ({ subtotal: l.subtotal })) };
-    if (current.stage === 'quoted') {
+    if (current.stageId === QUOTE_STAGE.QUOTED) {
       return computeQuoteTotals({
         ...lines,
         discountType: input.discountType,
@@ -181,38 +187,41 @@ export class QuotesService {
     });
   }
 
-  async updateStage(id: string, stage: QuoteStage) {
+  async updateStage(id: string, stageId: QuoteStageId, userId: string) {
     const current = await this.repo.findQuoteRow(id);
     if (!current) throw notFound();
-    this.assertTransition(current.stage, stage);
-    if (stage === 'quoted') await this.assertReadyToSend(current, id);
+    const fromStageId = current.stageId as QuoteStageId;
+    this.assertTransition(fromStageId, stageId);
+    if (stageId === QUOTE_STAGE.QUOTED) await this.assertReadyToSend(current, id);
 
-    const updated = await this.repo.updateStage(id, stage);
+    const updated = await this.repo.updateStage(id, fromStageId, stageId, userId);
     if (!updated) throw notFound();
     return quoteResource(updated);
   }
 
-  async approve(id: string) {
+  async approve(id: string, userId: string) {
     const current = await this.repo.findQuoteRow(id);
     if (!current) throw notFound();
-    this.assertTransition(current.stage, 'confirmed');
+    const fromStageId = current.stageId as QuoteStageId;
+    this.assertTransition(fromStageId, QUOTE_STAGE.CONFIRMED);
     // Fase 4 scope: only flips the stage. Creating the derived event is Fase 5
     // (mach-bar-domain.md §11 "approve NO crea el evento todavía").
-    const updated = await this.repo.updateStage(id, 'confirmed');
+    const updated = await this.repo.updateStage(id, fromStageId, QUOTE_STAGE.CONFIRMED, userId);
     if (!updated) throw notFound();
     return quoteResource(updated);
   }
 
-  async cancel(id: string) {
+  async cancel(id: string, userId: string) {
     const current = await this.repo.findQuoteRow(id);
     if (!current) throw notFound();
-    this.assertTransition(current.stage, 'cancelled');
-    const updated = await this.repo.updateStage(id, 'cancelled');
+    const fromStageId = current.stageId as QuoteStageId;
+    this.assertTransition(fromStageId, QUOTE_STAGE.CANCELLED);
+    const updated = await this.repo.updateStage(id, fromStageId, QUOTE_STAGE.CANCELLED, userId);
     if (!updated) throw notFound();
     return quoteResource(updated);
   }
 
-  private assertTransition(from: QuoteStage, to: QuoteStage) {
+  private assertTransition(from: QuoteStageId, to: QuoteStageId) {
     if (!canTransition(from, to)) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
@@ -271,7 +280,7 @@ export class QuotesService {
 
 function buildQuoteNumber(date: Date, seq: number): string {
   const yyyymmdd = date.toISOString().slice(0, 10).replace(/-/g, '');
-  return `quo${yyyymmdd}-${String(seq).padStart(6, '0')}`;
+  return `QUO${yyyymmdd}-${String(seq).padStart(6, '0')}`;
 }
 
 function addMonths(date: Date, months: number): string {

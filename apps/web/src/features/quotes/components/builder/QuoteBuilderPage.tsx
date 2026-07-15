@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { App, Button, Drawer, Skeleton, Space, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { computeQuoteTotals, type QuoteStage } from '@repo/schemas';
+import { computeQuoteTotals, QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import { useProductCatalog, type Product } from '@/features/catalog';
 import { useEventTypesList, type EventType } from '@/features/event-types';
 import { useConfig } from '@/features/settings';
@@ -21,10 +21,12 @@ import {
   useUpdateQuote,
   useUpdateQuoteStage,
 } from '../../hooks/useQuotes';
+import type { QuoteDetail } from '../../types';
 import { ClientSection } from './ClientSection';
 import { EventSection } from './EventSection';
 import { LineBuilder } from './LineBuilder';
 import { PricingPanel } from './PricingPanel';
+import { QuoteHistoryCard } from './QuoteHistoryCard';
 import { QuotePreview } from './QuotePreview';
 
 interface QuoteBuilderPageProps {
@@ -57,7 +59,8 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
     <QuoteBuilderProvider key={detail?.id ?? 'new'} initialState={initialState}>
       <QuoteBuilderContent
         quoteId={quoteId}
-        stage={detail?.stage}
+        stageId={detail?.stageId as QuoteStageId | undefined}
+        detail={detail}
         catalog={catalog}
         eventTypes={eventTypesData.items}
       />
@@ -67,12 +70,19 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
 
 interface QuoteBuilderContentProps {
   quoteId?: string;
-  stage?: QuoteStage;
+  stageId?: QuoteStageId;
+  detail?: QuoteDetail;
   catalog: Product[];
   eventTypes: EventType[];
 }
 
-function QuoteBuilderContent({ quoteId, stage, catalog, eventTypes }: QuoteBuilderContentProps) {
+function QuoteBuilderContent({
+  quoteId,
+  stageId,
+  detail,
+  catalog,
+  eventTypes,
+}: QuoteBuilderContentProps) {
   const { t } = useTranslation('quotes');
   const { message } = App.useApp();
   const router = useRouter();
@@ -86,9 +96,10 @@ function QuoteBuilderContent({ quoteId, stage, catalog, eventTypes }: QuoteBuild
   const { updateQuote, isPending: isUpdating } = useUpdateQuote();
   const { updateStage, isPending: isSending } = useUpdateQuoteStage();
 
-  const readOnly = !!stage && stage !== 'new' && stage !== 'quoted';
-  const showSendButton = !readOnly && (!stage || stage === 'new');
-  const saveLabel = stage === 'quoted' ? t('builder.saveChanges') : t('builder.saveDraft');
+  const readOnly = !!stageId && stageId !== QUOTE_STAGE.PENDING && stageId !== QUOTE_STAGE.QUOTED;
+  const showSendButton = !readOnly && (!stageId || stageId === QUOTE_STAGE.PENDING);
+  const saveLabel =
+    stageId === QUOTE_STAGE.QUOTED ? t('builder.saveChanges') : t('builder.saveDraft');
   const isPending = isCreating || isUpdating || isSending;
 
   const taxRate = config?.stateSettings.find((s) => s.state === state.state)?.taxRate ?? 0;
@@ -128,7 +139,7 @@ function QuoteBuilderContent({ quoteId, stage, catalog, eventTypes }: QuoteBuild
       const created = await createQuote(input);
       id = created.id;
     }
-    await updateStage(id, 'quoted');
+    await updateStage(id, QUOTE_STAGE.QUOTED);
     message.success(t('builder.sent'));
     router.push(`/admin/quotes/${id}`);
   };
@@ -145,6 +156,13 @@ function QuoteBuilderContent({ quoteId, stage, catalog, eventTypes }: QuoteBuild
     <div className="flex flex-col gap-6">
       {!readOnly && <PricingPanel totals={totals} />}
       <QuotePreview catalog={catalog} eventTypes={eventTypes} totals={totals} />
+      {detail && (
+        <QuoteHistoryCard
+          createdByName={detail.createdByName}
+          createdAt={detail.createdAt}
+          stageHistory={detail.stageHistory}
+        />
+      )}
     </div>
   );
 

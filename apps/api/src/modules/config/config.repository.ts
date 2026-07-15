@@ -1,8 +1,12 @@
 import { asc, eq, sql } from 'drizzle-orm';
-import type { AppSettingsInput, StateSettingInput } from '@repo/schemas';
+import type { AppSettingsInput, QuoteStageCatalogItem, StateSettingInput } from '@repo/schemas';
 import type { Database } from '../../db';
-import { appSettings, stateSettings, quotes } from '../../db/schema';
-import { publicAppSettingsColumns, publicStateSettingColumns } from './config.resource';
+import { appSettings, stateSettings, quotes, quoteStages } from '../../db/schema';
+import {
+  publicAppSettingsColumns,
+  publicQuoteStageColumns,
+  publicStateSettingColumns,
+} from './config.resource';
 
 const APP_SETTINGS_ID = 1;
 
@@ -14,6 +18,13 @@ export class ConfigRepository {
       .select(publicStateSettingColumns)
       .from(stateSettings)
       .orderBy(asc(stateSettings.state));
+  }
+
+  findQuoteStages() {
+    return this.db
+      .select(publicQuoteStageColumns)
+      .from(quoteStages)
+      .orderBy(asc(quoteStages.sortOrder));
   }
 
   findAppSettings() {
@@ -51,6 +62,29 @@ export class ConfigRepository {
       })
       .returning(publicAppSettingsColumns)
       .then((r) => r[0]!);
+  }
+
+  // Fixed set of rows (ids hardcoded, see db/schema/quotes.ts) — only label/color/description are editable.
+  async upsertQuoteStages(rows: QuoteStageCatalogItem[]) {
+    await this.db.transaction(async (tx) => {
+      await Promise.all(
+        rows.map((row) =>
+          tx
+            .insert(quoteStages)
+            .values({
+              id: row.id,
+              label: row.label,
+              color: row.color,
+              description: row.description ?? null,
+              sortOrder: row.id,
+            })
+            .onConflictDoUpdate({
+              target: quoteStages.id,
+              set: { label: row.label, color: row.color, description: row.description ?? null },
+            }),
+        ),
+      );
+    });
   }
 
   async getLastUsedSeq(): Promise<number> {

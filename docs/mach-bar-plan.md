@@ -31,7 +31,10 @@
 > **Próximo paso**; (3) continuá desde ahí. **Actualizá esta sección** al cerrar cada tarea: marcá ✅,
 > movés el "Próximo paso" y agregás una línea a la bitácora.
 
-**Última actualización:** 2026-07-14 · **Fase actual:** Cotizaciones (Fase 4) — **cerrada, BE+FE verificados en vivo (desktop+mobile)** · **Próximo paso:** arrancar **Fase 5 (Eventos)** — deps: cotizaciones (✅) + staff (✅). En paralelo sigue pendiente, sin bloquear: terminar el re-seed de catálogo con datos reales (7 de 10 estaciones + decisión de precio de Craft Bar).
+**Última actualización:** 2026-07-15 · **Fase actual:** Cotizaciones (Fase 4) — **cerrada**, más un
+rework post-cierre (stages por id + createdBy + historial, ver bitácora) · **Próximo paso:** arrancar
+**Fase 5 (Eventos)** — deps: cotizaciones (✅) + staff (✅). En paralelo sigue pendiente, sin bloquear:
+terminar el re-seed de catálogo con datos reales (7 de 10 estaciones + decisión de precio de Craft Bar).
 
 Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 
@@ -59,6 +62,32 @@ Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 
 **Bitácora de sesión** (lo último arriba):
 
+- **2026-07-15** — **Rework post-cierre de Cotizaciones: stages por id + createdBy + historial
+  (D18).** A pedido del usuario, con el dominio todavía joven, se corrigió el modelo de
+  `quotes.stage` antes de construir Fase 5 encima: (1) **`quote_stage` deja de ser `pgEnum`** — pasa
+  a la tabla **`quote_stages`** (`id` **entero hardcodeado** 1-4, `label`, `color` preset de
+  AntD, `sortOrder`), conjunto **fijo** (sin alta/baja), editable en label/color desde una tarjeta
+  nueva "Estados de cotización" en Configuración (mismo patrón que `state_settings`: filas fijas,
+  `config.update` con un tercer bucket `quoteStages`). Los ids se hardcodean en `@repo/schemas`
+  (`QUOTE_STAGE.PENDING/QUOTED/CONFIRMED/CANCELLED`) — la lógica de dominio (matriz de transiciones,
+  `EDITABLE_STAGES`) sigue esos ids fijos, nunca strings ni el label. (2) **Se elimina el stage
+  "Realizada"** — quedan solo 4: Pendiente (ex "Borrador"), Enviada, Aprobada (ex "Confirmada"),
+  Cancelada. Aprobada es ahora **terminal** para la quote (sin transición saliente salvo cancelar);
+  "marcar el evento como realizado" deja de ser un stage de `quotes` y pasa a ser un **campo propio
+  de `events`** (Fase 5, todavía sin construir — cero migración necesaria, solo ajustar el plan).
+  Actualizado también `mach-bar-domain.md` (D1/D5/D11, nueva D18) y `mach-bar-flows.md` (§3.2 matriz
+  4×4, §2.12 nuevo, §5.2/§6.2/§6.3/§8.1). (3) **`quotes.number`** en mayúscula (`QUO...` en vez de
+  `quo...`). (4) **`quotes.createdById`** (FK a `user.id`, `onDelete: set null`) + tabla
+  **`quote_stage_history`** (`quoteId, fromStageId, toStageId, changedById, changedAt` — una fila por
+  transición, más la inicial en creación con `fromStageId=null`); `insertFull`/`updateStage` del
+  repo ahora son transaccionales (mutación + insert de historial en la misma tx). Nueva sección
+  **"Historial"** (`QuoteHistoryCard`) en el detalle/builder de la quote, siempre visible: quién la
+  creó + timeline de cambios de stage con nombre y fecha. Seeder: nuevo `seedQuoteStages` (corre
+  antes que `seedQuotes`); `seedQuotes` atribuye `createdById` al superadmin sembrado
+  (`samuel@admin.com`) y arma un historial simplificado (creación + salto directo al stage final,
+  sin re-simular cada paso intermedio). `check-types` monorepo limpio. **Pendiente**: verificar en
+  vivo con `db:fresh` (login real, pipeline de 4 columnas, editor de stages en Settings, historial en
+  el detalle).
 - **2026-07-14** — **Cotizaciones (Fase 4) — FE completo, cierra la fase.** Feature `quotes`
   (`apps/web/src/features/quotes`): **lista** estándar `/admin/quotes` (`QuotesPage`/`QuotesTable`,
   filtros stage/state, click en fila navega al detalle, sin row actions destructivas — el pipeline es

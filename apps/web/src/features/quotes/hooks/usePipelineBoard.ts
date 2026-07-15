@@ -1,27 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { QuoteStage, QuotesBoardQuery } from '@repo/schemas';
+import { QUOTE_STAGE, QUOTE_STAGE_IDS, type QuoteStageId, type QuotesBoardQuery } from '@repo/schemas';
 import { useTRPC } from '@/lib/trpc/client';
 import { useApiError } from '@/lib/error/useApiError';
 import type { QuoteBoard } from '../types';
 
-const STAGES: QuoteStage[] = ['new', 'quoted', 'confirmed', 'completed', 'cancelled'];
-
-function moveCard(board: QuoteBoard, id: string, toStage: QuoteStage): QuoteBoard {
+function moveCard(board: QuoteBoard, id: string, toStage: QuoteStageId): QuoteBoard {
   const next: QuoteBoard = {
-    new: [...board.new],
-    quoted: [...board.quoted],
-    confirmed: [...board.confirmed],
-    completed: [...board.completed],
-    cancelled: [...board.cancelled],
+    [QUOTE_STAGE.PENDING]: [...board[QUOTE_STAGE.PENDING]],
+    [QUOTE_STAGE.QUOTED]: [...board[QUOTE_STAGE.QUOTED]],
+    [QUOTE_STAGE.CONFIRMED]: [...board[QUOTE_STAGE.CONFIRMED]],
+    [QUOTE_STAGE.CANCELLED]: [...board[QUOTE_STAGE.CANCELLED]],
   };
 
-  for (const stage of STAGES) {
-    const index = next[stage].findIndex((card) => card.id === id);
+  for (const stageId of QUOTE_STAGE_IDS) {
+    const index = next[stageId].findIndex((card) => card.id === id);
     if (index === -1) continue;
-    const card = next[stage][index];
+    const card = next[stageId][index];
     if (!card) break;
-    next[stage].splice(index, 1);
-    next[toStage] = [{ ...card, stage: toStage }, ...next[toStage]];
+    next[stageId].splice(index, 1);
+    next[toStage] = [{ ...card, stageId: toStage }, ...next[toStage]];
     break;
   }
   return next;
@@ -43,7 +40,7 @@ export function usePipelineTransitions(boardQuery: QuotesBoardQuery) {
   // tanstack-query `mutationOptions()` helper doesn't thread a custom TContext through onMutate.
   let previousSnapshot: QuoteBoard | undefined;
 
-  const applyOptimistic = async (id: string, toStage: QuoteStage) => {
+  const applyOptimistic = async (id: string, toStage: QuoteStageId) => {
     await qc.cancelQueries({ queryKey });
     previousSnapshot = qc.getQueryData<QuoteBoard>(queryKey);
     if (previousSnapshot) qc.setQueryData(queryKey, moveCard(previousSnapshot, id, toStage));
@@ -58,7 +55,7 @@ export function usePipelineTransitions(boardQuery: QuotesBoardQuery) {
 
   const updateStage = useMutation(
     trpc.quotes.updateStage.mutationOptions({
-      onMutate: ({ id, stage }) => applyOptimistic(id, stage),
+      onMutate: ({ id, stageId }) => applyOptimistic(id, stageId),
       onError: rollback,
       onSettled: settle,
     }),
@@ -66,7 +63,7 @@ export function usePipelineTransitions(boardQuery: QuotesBoardQuery) {
 
   const approve = useMutation(
     trpc.quotes.approve.mutationOptions({
-      onMutate: ({ id }) => applyOptimistic(id, 'confirmed'),
+      onMutate: ({ id }) => applyOptimistic(id, QUOTE_STAGE.CONFIRMED),
       onError: rollback,
       onSettled: settle,
     }),
@@ -74,14 +71,14 @@ export function usePipelineTransitions(boardQuery: QuotesBoardQuery) {
 
   const cancel = useMutation(
     trpc.quotes.cancel.mutationOptions({
-      onMutate: ({ id }) => applyOptimistic(id, 'cancelled'),
+      onMutate: ({ id }) => applyOptimistic(id, QUOTE_STAGE.CANCELLED),
       onError: rollback,
       onSettled: settle,
     }),
   );
 
   return {
-    moveStage: (id: string, stage: QuoteStage) => updateStage.mutateAsync({ id, stage }),
+    moveStage: (id: string, stageId: QuoteStageId) => updateStage.mutateAsync({ id, stageId }),
     approve: (id: string) => approve.mutateAsync({ id }),
     cancel: (id: string) => cancel.mutateAsync({ id }),
   };

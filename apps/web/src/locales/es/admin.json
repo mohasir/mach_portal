@@ -1,7 +1,9 @@
 {
   "nav": {
     "dashboard": "Dashboard",
+    "newQuote": "Nueva cotización",
     "events": "Eventos",
+    "calendarTab": "Calendario",
     "orders": "Pedidos",
     "clients": "Clientes",
     "quotes": "Cotizaciones",

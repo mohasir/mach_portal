@@ -1,15 +1,17 @@
 'use client';
 import { Tag, type TableColumnsType } from 'antd';
 import { useTranslation } from 'react-i18next';
+import type { QuoteStageId } from '@repo/schemas';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
-import { QUOTE_STAGE_COLORS } from '../../helpers';
+import { useQuoteStages } from '@/features/settings';
 import type { Quote } from '../../types';
 
 export function useQuotesColumns(): TableColumnsType<Quote> {
   const { t } = useTranslation('quotes');
   const { date } = useDateFormatter();
   const { money } = useMoneyFormatter();
+  const { stageMap } = useQuoteStages();
 
   return [
     { title: t('columns.number'), dataIndex: 'number', key: 'number' },
@@ -23,11 +25,12 @@ export function useQuotesColumns(): TableColumnsType<Quote> {
     },
     {
       title: t('columns.stage'),
-      dataIndex: 'stage',
-      key: 'stage',
-      render: (stage: Quote['stage']) => (
-        <Tag color={QUOTE_STAGE_COLORS[stage]}>{t(`stage.${stage}`)}</Tag>
-      ),
+      dataIndex: 'stageId',
+      key: 'stageId',
+      render: (stageId: Quote['stageId']) => {
+        const stage = stageMap.get(stageId as QuoteStageId);
+        return <Tag color={stage?.color}>{stage?.label}</Tag>;
+      },
     },
     {
       title: t('columns.total'),

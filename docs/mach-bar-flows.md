@@ -106,18 +106,18 @@ Dos acciones, ambas persisten:
 
 ```
 /quotes/new
-  [Guardar borrador] → quotes.create(input)            → quote en stage 'new' (aparece en pipeline)
+  [Guardar borrador] → quotes.create(input)            → quote en Pendiente (aparece en pipeline)
                        → redirect a /admin/quotes/[id] (pasa a modo edición)
-  [Enviar]           → create (si hace falta) + transición new→quoted   (requiere isValid)
+  [Enviar]           → create (si hace falta) + transición Pendiente→Enviada   (requiere isValid)
 
-/quotes/[id]  (editable solo si stage ∈ {new, quoted})
-  edición            → quotes.update(id, input)
-  [Enviar]  (si new) → new→quoted
-  [Descargar PDF]    → quotes.generatePdf(id) → URL   (solo sobre quote persistida)
-  [Aprobar]          → confirmed (crea evento)  — normalmente desde el pipeline
+/quotes/[id]  (editable solo si stageId ∈ {Pendiente, Enviada})
+  edición                  → quotes.update(id, input)
+  [Enviar]  (si Pendiente) → Pendiente→Enviada
+  [Descargar PDF]          → quotes.generatePdf(id) → URL   (solo sobre quote persistida)
+  [Aprobar]                → Aprobada (crea evento)  — normalmente desde el pipeline
 ```
 
-Se puede dejar una cotización a medias en `new` (borrador) sin enviarla; ya figura en el tablero.
+Se puede dejar una cotización a medias en Pendiente (borrador) sin enviarla; ya figura en el tablero.
 
 ### 2.6 Cliente — combobox + alta inline de lead (decisión)
 
@@ -159,13 +159,22 @@ se pierde, pero no compite por espacio.
 ### 2.11 Edición
 
 `/admin/quotes/[id]` reusa el mismo builder hidratando el estado desde la quote, **solo si
-`stage ∈ {new, quoted}`**. Desde `confirmed` la quote es read-only (`mach-bar-domain.md §D9/D13`).
+`stageId ∈ {Pendiente, Enviada}`**. Desde Aprobada la quote es read-only (`mach-bar-domain.md
+§D9/D13`).
+
+### 2.12 Historial (`QuoteHistoryCard`)
+
+Debajo del `QuotePreview`, **siempre visible** (edición y read-only, incluso recién creada en
+Pendiente): quién creó la cotización (`createdByName`/`createdAt`) y, si hubo movimientos de stage,
+una línea por cada uno (`stageHistory`: de qué label a cuál, quién y cuándo — `mach-bar-domain.md
+D18`). Labels resueltos con `useQuoteStages` (mismo mapa que usan las columnas del pipeline, §3.1).
+Solo lectura, no hay acciones acá.
 
 ---
 
 ## 3. Pipeline kanban — `/admin/pipeline`
 
-Tablero de 5 columnas (las etapas de `quote.stage`) donde **cada card = una cotización/oportunidad**
+Tablero de 4 columnas (las etapas de `quote.stageId`) donde **cada card = una cotización/oportunidad**
 (`mach-bar-domain.md §9`). Drag & drop con **dnd-kit**. AntD no trae kanban, así que es superficie a
 medida.
 
@@ -174,42 +183,47 @@ medida.
 El tablero necesita las quotes **agrupadas por stage**, no una lista paginada:
 
 ```ts
-usePipelineBoard(filters)  // trpc.quotes.board → { new: Card[], quoted: [], confirmed: [], completed: [], cancelled: [] }
+usePipelineBoard(filters)  // trpc.quotes.board → { [stageId]: Card[] } — 4 keys (mach-bar-domain.md D18)
 ```
 
-- Columnas **abiertas** (`new`/`quoted`/`confirmed`) cargan completas: son deals activos, acotados por
+- Columnas **abiertas** (Pendiente/Enviada/Aprobada) cargan completas: son deals activos, acotados por
   naturaleza.
-- Columnas **terminales** (`completed`/`cancelled`) se **limitan por ventana** (default: mes actual)
-  para que no crezcan sin techo; selector de rango arriba + "ver más".
+- Columna **terminal** (Cancelada) se **limita por ventana** (default: mes actual) para que no crezca
+  sin techo; selector de rango arriba + "ver más".
 - Cada card es una **proyección liviana** (`QuoteCardResource`), no la quote completa:
-  `id, number, clientName, eventTypeName, eventDate, total, stage, validUntil, linesCount`,
-  y en `confirmed`: `staffAssignedCount`, `depositPaid`.
+  `id, number, clientName, eventTypeName, eventDate, total, stageId, validUntil, linesCount`,
+  y en Aprobada: `staffAssignedCount`, `depositPaid`.
+- El **label y color** de cada columna/badge se leen de `quoteStages` (`config.get`, cacheado) —
+  no están hardcodeados en el FE (`useQuoteStages` en `features/settings`).
 
 ### 3.2 Matriz de transiciones (fuente compartida FE/BE)
 
-No todo drag es válido. La matriz vive en **constante compartida** (`@repo/schemas`) y el **service la
-revalida** — la UI solo da la affordance:
+No todo drag es válido. La matriz vive en **constante compartida** (`@repo/schemas`,
+`QUOTE_STAGE_TRANSITIONS` keyed por **id**, no por string) y el **service la revalida** — la UI solo
+da la affordance:
 
-| desde ↓ \ a → | new | quoted | confirmed | completed | cancelled |
-|---|:---:|:---:|:---:|:---:|:---:|
-| **new** | — | ✅ enviar | — | — | ✅ cancelar |
-| **quoted** | — | — | ✅ aprobar\* | — | ✅ cancelar |
-| **confirmed** | — | — | — | ✅ realizar | ✅ cancelar |
-| **completed** | — | — | — | — | — (terminal) |
-| **cancelled** | — | ✅ reabrir | — | — | — |
+| desde ↓ \ a → | Pendiente | Enviada | Aprobada | Cancelada |
+|---|:---:|:---:|:---:|:---:|
+| **Pendiente** | — | ✅ enviar | — | ✅ cancelar |
+| **Enviada** | — | — | ✅ aprobar\* | ✅ cancelar |
+| **Aprobada** | — | — | — (terminal) | ✅ cancelar |
+| **Cancelada** | — | ✅ reabrir | — | — |
 
 Efectos de cada transición:
-- **enviar** (`→quoted`): sin efecto de datos (opcional: marcar fecha de envío).
-- **aprobar** (`→confirmed`): `quotes.approve` → **crea el evento** (`mach-bar-domain.md §11`). Pide
-  **confirm** y, al éxito, ofrece asignar staff (§3.5).
-- **realizar** (`→completed`): marca el evento realizado.
-- **cancelar** (`→cancelled`): pide confirm.
-- **reabrir** (`cancelled→quoted`).
+- **enviar** (`→Enviada`): sin efecto de datos (opcional: marcar fecha de envío).
+- **aprobar** (`→Aprobada`): `quotes.approve` → **crea el evento** (`mach-bar-domain.md §11`). Pide
+  **confirm** y, al éxito, ofrece asignar staff (§3.5). Es terminal para la quote — "marcar el evento
+  como realizado" vive en el módulo `events` (Fase 5), no acá.
+- **cancelar** (`→Cancelada`): pide confirm.
+- **reabrir** (`Cancelada→Enviada`).
+
+Cada transición (y la creación inicial) queda registrada en `quote_stage_history` (quién y cuándo);
+ver §2.12 para dónde se muestra.
 
 Al drag, solo las columnas destino válidas se resaltan; un drop inválido hace **snap-back**. El camino
-es **lineal**: `new → quoted → confirmed` (no se salta `quoted`; para aprobar hay que haber enviado).
-Salir de `confirmed` hacia atrás está **prohibido**: para **des-confirmar** se **cancela** (lo que
-cancela también el evento derivado). Reabrir solo desde `cancelled → quoted`.
+es **lineal**: `Pendiente → Enviada → Aprobada` (no se salta Enviada; para aprobar hay que haber
+enviado). Salir de Aprobada hacia adelante no existe: para **des-aprobar** se **cancela** (lo que
+cancela también el evento derivado). Reabrir solo desde `Cancelada → Enviada`.
 
 ### 3.3 DnD (dnd-kit) + optimistic
 
@@ -219,16 +233,16 @@ cancela también el evento derivado). Reabrir solo desde `cancelled → quoted`.
 - `onDragEnd`: si cambió de stage y la transición es válida → mutación con **optimistic update**
   (mover la card ya en el cache de `quotes.board`; `onError` rollback + `useApiError`; `onSettled`
   invalidar). Las transiciones con efecto (aprobar/cancelar) confirman **antes** de mutar.
-- Mutaciones: `quotes.updateStage` (transiciones sin efecto), `quotes.approve`, `quotes.markCompleted`,
-  `quotes.cancel`. **El server revalida la matriz** (la UI no es el límite).
+- Mutaciones: `quotes.updateStage` (transiciones sin efecto), `quotes.approve`, `quotes.cancel`.
+  **El server revalida la matriz** (la UI no es el límite).
 
 ### 3.4 Card — contenido y badges
 
-`number` · nombre de cliente · fecha (date-fns) · tag de tipo · `total` (`formatMoney`) · nº líneas.
-- **`quoted`**: badge **"vencida"** si `validUntil < hoy` (derivado, `mach-bar-domain.md §9`); no es columna.
-- **`confirmed`**: avatares de staff asignado + botón "Asignar" (§3.5); indicador de depósito pagado.
+`number` · nombre de cliente · fecha (dayjs) · tag de tipo · `total` (`formatMoney`) · nº líneas.
+- **Enviada**: badge **"vencida"** si `validUntil < hoy` (derivado, `mach-bar-domain.md §9`); no es columna.
+- **Aprobada**: avatares de staff asignado + botón "Asignar" (§3.5); indicador de depósito pagado.
 
-### 3.5 Asignar staff (en `confirmed`)
+### 3.5 Asignar staff (en Aprobada)
 
 Botón en la card → `AssignStaffModal`: `staff.getAvailability({ date: eventDate })` (staff sin evento
 ese día) → seleccionar → `events.assignStaff`. Se reusa en el detalle de evento (§5).
@@ -390,10 +404,18 @@ Configuración
 │  Mínimo personas/línea  [ 30 ]       │
 │  Inicio de consecutivo  [ 1043 ]     │  ← último usado: 1042
 └──────────────────────────────────────┘
+
+┌─ Estados de cotización ─────────────┐   → quote_stages (4 filas fijas, D18)
+│  [ Pendiente  ] [ default ▾]         │
+│  [ Enviada    ] [ gold    ▾]         │
+│  [ Aprobada   ] [ green   ▾]         │
+│  [ Cancelada  ] [ red     ▾]         │
+└──────────────────────────────────────┘
                           [ Guardar ]
 ```
 
-Un solo "Guardar" que manda ambos buckets (`config.update`).
+Un solo "Guardar" que manda los tres buckets (`config.update`). Los 4 stages son de **conjunto
+fijo** — el form solo edita `label`/`color` por fila, no agrega/elimina (`mach-bar-domain.md D18`).
 
 ### 5.3 Porcentajes: decimal en DB, `%` en la UI
 
@@ -413,12 +435,14 @@ que los centavos con el dinero (§`mach-bar-domain.md §3`). Input con sufijo `%
 
 ```
 features/settings/components/
-  SettingsPage.tsx       // orquesta; 2 cards en un Form + Guardar
+  SettingsPage.tsx       // orquesta; cards en un Form + Guardar
   TaxRatesCard.tsx       // fila por estado (NY/NJ/CT) con input %
   QuoteDefaultsCard.tsx  // depósito %, validez, min personas/línea, inicio de consecutivo
+  QuoteStagesCard.tsx    // label + color por stage (4 filas fijas, D18)
 hooks/
   useConfig.ts           // config.get (cacheado; compartido con el builder)
   useUpdateConfig.ts     // config.update + invalidar + useApiError
+  useQuoteStages.ts      // config.get → stageMap (label/color) para pipeline/lista/historial
 ```
 
 ### 5.6 Permisos y móvil
@@ -442,9 +466,10 @@ useEvent(id)  // trpc.events.getById → evento + cliente + eventType + composic
 
 ### 6.2 Secciones
 
-1. **Header** — número (de la quote), fecha/hora (date-fns), estado, dirección, tag de tipo, badge de
-   status (derivado de `quote.stage`: upcoming/completed/cancelled). Acciones: ver quote, descargar
-   PDF, marcar realizado / cancelar.
+1. **Header** — número (de la quote), fecha/hora (dayjs), estado, dirección, tag de tipo, badge de
+   status del evento (`upcoming`/`completed` en un campo propio de `events` + `cancelled` derivado de
+   `quote.stageId = Cancelada` — `mach-bar-domain.md §D5/D18`). Acciones: ver quote, descargar PDF,
+   marcar realizado / cancelar.
 2. **Composición** (read-only) — líneas (producto · personas · precio) con opciones agrupadas por
    sección. Es lo que se prepara.
 3. **Pagos** — total / depósito / saldo (`formatMoney`); toggles `depositPaid` + `balancePaid`;
@@ -452,11 +477,12 @@ useEvent(id)  // trpc.events.getById → evento + cliente + eventType + composic
 4. **Staff** — lista `event_staff` (nombre + rol) + **"Asignar"** (`AssignStaffModal` reusado del
    pipeline §3.5) + remover.
 
-### 6.3 Acciones que cambian el stage
+### 6.3 Acciones — realizar / cancelar
 
-"Marcar realizado" (`confirmed→completed`) y "Cancelar" (`→cancelled`) usan la **misma matriz de
-transiciones** que el pipeline (§3.2); el server revalida. Mutaciones `events.markCompleted` /
-`quotes.cancel`.
+- **"Marcar realizado"** — `events.markCompleted`: campo propio del evento, **no** toca
+  `quote.stageId` (Aprobada es terminal para la quote, D18). No pasa por la matriz de transiciones.
+- **"Cancelar"** — `quotes.cancel` (Aprobada→Cancelada): sí usa la **misma matriz de transiciones**
+  que el pipeline (§3.2); el server revalida. Cancela la quote y, por extensión, el evento derivado.
 
 ### 6.4 Componentes (feature `events`)
 
@@ -527,8 +553,8 @@ Métricas del mes de un vistazo (reemplaza el resumen del Excel). **Solo lectura
 
 ```ts
 dashboard.summary({ month, year })    // { eventsCount, revenue(cents), quotesCount, closeRate }
-dashboard.upcomingEvents({ limit })   // próximos eventos (confirmed, eventDate ≥ hoy)
-dashboard.topProducts({ month, year })// productos más solicitados (de quotes confirmed/completed)
+dashboard.upcomingEvents({ limit })   // próximos eventos (quote Aprobada, eventDate ≥ hoy)
+dashboard.topProducts({ month, year })// productos más solicitados (de quotes Aprobada)
 dashboard.quotesByMonth({ year })     // conteo por mes (para la gráfica)
 ```
 

@@ -40,11 +40,13 @@ Monorepo Turborepo + pnpm.
   `.ant-*` a mano **solo** se permiten en el nivel 3 y para arreglos transversales; nunca un
   selector suelto fuera de `@layer`, ni `!` para forzar (rompe el orden de capas).
 
-- **Iconos → siempre `lucide-react`.** Prohibido `@ant-design/icons` (removido) u otra
-  librería de iconos. Naming PascalCase sin `Outlined`, `size` explícito y color por
-  `currentColor` (clases `text-*`). Detalle en `docs/frontend/styling-guide.md` (sección Iconos).
+- **Iconos → `lucide-react` por defecto, siempre.** Prohibido `@ant-design/icons` (removido).
+  Naming PascalCase sin `Outlined`, `size` explícito y color por `currentColor` (clases `text-*`).
+  **`react-icons` es la única excepción**, y solo a pedido explícito del usuario cuando un ícono
+  puntual de lucide no lo convence — nunca a iniciativa propia ni como reemplazo general. Detalle
+  en `docs/frontend/styling-guide.md` (sección Iconos).
 
-- **Fechas → siempre formateadas con `date-fns`** vía el helper `src/lib/date` (hook
+- **Fechas → siempre formateadas con `dayjs`** vía el helper `src/lib/date` (hook
   `useDateFormatter` en componentes). Prohibido `toLocaleDateString`, `Intl.DateTimeFormat`
   y formatos a mano. Locale-aware (es/en). Detalle en `docs/frontend/styling-guide.md` (sección Fechas).
 

@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateQuoteInput,
-  QuoteStage,
+  QuoteStageId,
   QuotesListQuery,
   UpdateQuoteInput,
 } from '@repo/schemas';
@@ -61,7 +61,7 @@ export function useUpdateQuoteStage() {
     }),
   );
   return {
-    updateStage: (id: string, stage: QuoteStage) => mutation.mutateAsync({ id, stage }),
+    updateStage: (id: string, stageId: QuoteStageId) => mutation.mutateAsync({ id, stageId }),
     isPending: mutation.isPending,
   };
 }

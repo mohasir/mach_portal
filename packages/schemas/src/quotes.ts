@@ -3,26 +3,64 @@ import { listQuerySchema } from './pagination';
 import { stateSchema } from './enums';
 import { optionalText } from './fields';
 
-export const QUOTE_STAGES = ['new', 'quoted', 'confirmed', 'completed', 'cancelled'] as const;
-export const quoteStageSchema = z.enum(QUOTE_STAGES);
-export type QuoteStage = z.infer<typeof quoteStageSchema>;
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+
+// Stages are a fixed set backed by a DB table (quote_stages) so label/color are admin-editable
+// (mach-bar-domain.md D18) — but the ids themselves are hardcoded here and never created/removed,
+// so business logic (transitions, editable-stage checks) can key off them safely.
+export const QUOTE_STAGE = {
+  PENDING: 1,
+  QUOTED: 2,
+  CONFIRMED: 3,
+  CANCELLED: 4,
+} as const;
+export const QUOTE_STAGE_IDS = Object.values(QUOTE_STAGE);
+export type QuoteStageId = (typeof QUOTE_STAGE)[keyof typeof QUOTE_STAGE];
+
+export const quoteStageIdSchema = z.union([
+  z.literal(QUOTE_STAGE.PENDING),
+  z.literal(QUOTE_STAGE.QUOTED),
+  z.literal(QUOTE_STAGE.CONFIRMED),
+  z.literal(QUOTE_STAGE.CANCELLED),
+]);
+
+// Free hex color (admin picks it via a ColorPicker, presets = AntD's Tag palette) — not a
+// hardcoded component color, this is admin-authored data (mach-bar-domain.md D18).
+export const quoteStageColorSchema = z
+  .string()
+  .regex(HEX_COLOR_RE, 'config.validation.quoteStagesColorInvalid');
+export type QuoteStageColor = z.infer<typeof quoteStageColorSchema>;
+
+export const quoteStageCatalogItemSchema = z.object({
+  id: quoteStageIdSchema,
+  label: z.string().min(1).max(40),
+  color: quoteStageColorSchema,
+  description: optionalText(200),
+});
+export type QuoteStageCatalogItem = z.infer<typeof quoteStageCatalogItemSchema>;
+
+export const updateQuoteStagesSchema = z
+  .array(quoteStageCatalogItemSchema)
+  .length(QUOTE_STAGE_IDS.length)
+  .refine((rows) => QUOTE_STAGE_IDS.every((id) => rows.some((r) => r.id === id)), {
+    message: 'config.validation.quoteStagesInvalid',
+  });
+export type UpdateQuoteStagesInput = z.infer<typeof updateQuoteStagesSchema>;
 
 export const discountTypeSchema = z.enum(['fixed', 'percent']);
 export type DiscountType = z.infer<typeof discountTypeSchema>;
 
 // Pipeline transition matrix (mach-bar-flows.md §3.2), shared FE/BE so the drag affordance
-// and the server-side check never drift. `confirmed → completed` ("realizar") is only
-// reachable once `events.markCompleted` lands (Fase 5) — the matrix already carries it so
-// Fase 5 doesn't have to touch this file, it just adds the router procedure.
-export const QUOTE_STAGE_TRANSITIONS: Record<QuoteStage, QuoteStage[]> = {
-  new: ['quoted', 'cancelled'],
-  quoted: ['confirmed', 'cancelled'],
-  confirmed: ['completed', 'cancelled'],
-  completed: [],
-  cancelled: ['quoted'],
+// and the server-side check never drift. `confirmed` is a terminal success state for the quote —
+// "realizar el evento" lives on `events` (Fase 5), not as a quote stage.
+export const QUOTE_STAGE_TRANSITIONS: Record<QuoteStageId, QuoteStageId[]> = {
+  [QUOTE_STAGE.PENDING]: [QUOTE_STAGE.QUOTED, QUOTE_STAGE.CANCELLED],
+  [QUOTE_STAGE.QUOTED]: [QUOTE_STAGE.CONFIRMED, QUOTE_STAGE.CANCELLED],
+  [QUOTE_STAGE.CONFIRMED]: [QUOTE_STAGE.CANCELLED],
+  [QUOTE_STAGE.CANCELLED]: [QUOTE_STAGE.QUOTED],
 };
 
-export function canTransition(from: QuoteStage, to: QuoteStage): boolean {
+export function canTransition(from: QuoteStageId, to: QuoteStageId): boolean {
   return QUOTE_STAGE_TRANSITIONS[from].includes(to);
 }
 
@@ -66,7 +104,7 @@ export type UpdateQuoteInput = z.infer<typeof updateQuoteSchema>;
 
 export const updateQuoteStageSchema = z.object({
   id: z.uuid(),
-  stage: quoteStageSchema,
+  stageId: quoteStageIdSchema,
 });
 export type UpdateQuoteStageInput = z.infer<typeof updateQuoteStageSchema>;
 
@@ -75,7 +113,7 @@ export const quotesListQuerySchema = listQuerySchema.extend({
   sortBy: z.enum(['number', 'eventDate', 'total', 'stage', 'createdAt']).default('createdAt'),
   month: z.number().int().min(1).max(12).optional(),
   year: z.number().int().optional(),
-  stage: quoteStageSchema.optional(),
+  stageId: quoteStageIdSchema.optional(),
   state: stateSchema.optional(),
   clientId: z.uuid().optional(),
 });

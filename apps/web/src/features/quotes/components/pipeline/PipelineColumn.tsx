@@ -1,22 +1,23 @@
 'use client';
 import { useDroppable } from '@dnd-kit/core';
-import { Badge, Empty, Typography } from 'antd';
-import { useTranslation } from 'react-i18next';
-import type { QuoteStage } from '@repo/schemas';
-import { QUOTE_STAGE_COLORS } from '../../helpers';
+import { Empty, Typography } from 'antd';
+import type { QuoteStageId } from '@repo/schemas';
+import { useQuoteStages } from '@/features/settings';
+import { hexToRgba } from '@/lib/utils/color';
 import type { QuoteCard as QuoteCardType } from '../../types';
 import { QuoteCard } from './QuoteCard';
 
 interface PipelineColumnProps {
-  stage: QuoteStage;
+  stageId: QuoteStageId;
   cards: QuoteCardType[];
-  onMove: (id: string, from: QuoteStage, to: QuoteStage) => void;
+  onMove: (id: string, from: QuoteStageId, to: QuoteStageId) => void;
   draggable?: boolean;
 }
 
-export function PipelineColumn({ stage, cards, onMove, draggable = true }: PipelineColumnProps) {
-  const { t } = useTranslation('quotes');
-  const { setNodeRef, isOver } = useDroppable({ id: stage, disabled: !draggable });
+export function PipelineColumn({ stageId, cards, onMove, draggable = true }: PipelineColumnProps) {
+  const { stageMap } = useQuoteStages();
+  const stage = stageMap.get(stageId);
+  const { setNodeRef, isOver } = useDroppable({ id: stageId, disabled: !draggable });
 
   return (
     <div
@@ -24,10 +25,19 @@ export function PipelineColumn({ stage, cards, onMove, draggable = true }: Pipel
       className={`flex min-h-40 flex-col gap-2 rounded-lg border p-2 ${
         isOver ? 'border-brand bg-brand/5' : 'border-line'
       }`}
+      style={!isOver && stage ? { backgroundColor: hexToRgba(stage.color, 0.08) } : undefined}
     >
-      <div className="flex items-center justify-between px-1">
-        <Typography.Text strong>{t(`stage.${stage}`)}</Typography.Text>
-        <Badge count={cards.length} color={QUOTE_STAGE_COLORS[stage]} showZero />
+      <div className="flex items-center gap-2 px-1">
+        <span
+          className="h-2 w-2 shrink-0 rounded-full"
+          style={{ backgroundColor: stage?.color }}
+        />
+        <Typography.Text strong className="text-xs tracking-wide text-gray-600 uppercase">
+          {stage?.label}
+        </Typography.Text>
+        <span className="rounded-md bg-gray-200 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+          {cards.length}
+        </span>
       </div>
       {cards.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={false} className="my-4" />

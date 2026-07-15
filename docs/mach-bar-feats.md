@@ -6,17 +6,17 @@
 > no existen (`mach-bar-flows.md`). Actualizar cuando el alcance cambie (nueva feature, feature
 > cerrada).
 
-**Última actualización:** 2026-07-14.
+**Última actualización:** 2026-07-15.
 
 ---
 
 ## Resumen ejecutivo
 
 Hoy se puede llevar una oportunidad de negocio **desde que entra un lead hasta que la cotización
-queda confirmada** (cliente → armar cotización con el catálogo real → moverla por el pipeline hasta
-`confirmed`). Lo que **todavía no existe** es la parte operativa posterior: el **evento en sí**
+queda aprobada** (cliente → armar cotización con el catálogo real → moverla por el pipeline hasta
+Aprobada). Lo que **todavía no existe** es la parte operativa posterior: el **evento en sí**
 (seguimiento de pagos, asignación de staff, marcar como realizado) y el **dashboard** de métricas.
-Ese es el corte exacto: el sistema termina en "cotización confirmada" y no en "evento entregado".
+Ese es el corte exacto: el sistema termina en "cotización aprobada" y no en "evento entregado".
 
 | Área | Alcance hoy |
 |---|---|
@@ -24,8 +24,8 @@ Ese es el corte exacto: el sistema termina en "cotización confirmada" y no en "
 | Staff | ✅ CRUD completo |
 | Catálogo (estaciones/secciones/ítems + precios) | ✅ funcional — faltan datos reales de precio en 7 de 10 estaciones |
 | Tipos de evento | ✅ CRUD completo |
-| Configuración (impuestos, depósito, validez, etc.) | ✅ completo |
-| Cotizaciones (lista + constructor + pipeline) | ✅ completo, hasta `confirmed` |
+| Configuración (impuestos, depósito, validez, estados de cotización, etc.) | ✅ completo |
+| Cotizaciones (lista + constructor + pipeline + creador + historial) | ✅ completo, hasta Aprobada |
 | **Eventos** | ❌ no existe (placeholder de nav únicamente) |
 | **Ficha de cliente 360** (historial quotes+events) | ❌ no existe (depende de eventos) |
 | **Dashboard** | ❌ no existe |
@@ -37,8 +37,7 @@ Ese es el corte exacto: el sistema termina en "cotización confirmada" y no en "
 CRUD estándar: alta, edición, baja, listado con búsqueda/paginado (desktop tabla, móvil cards).
 
 - Cada cliente tiene un **estado derivado** — `lead` o `active` — que el sistema calcula solo:
-  pasa a `active` en cuanto tiene al menos una cotización `confirmed` o `completed`. No es un campo
-  editable a mano.
+  pasa a `active` en cuanto tiene al menos una cotización Aprobada. No es un campo editable a mano.
 - **No existe todavía** la ficha de cliente con historial (ver más abajo, "Fuera de alcance").
 
 ## Staff — `/admin/staff`
@@ -82,6 +81,9 @@ cotizaciones ya emitidas, que guardan su propio snapshot):
 - **Depósito por defecto**, **validez** (meses), **mínimo de personas por línea**, **inicio del
   consecutivo** de cotización (con validación: no puede ser menor al último número ya usado).
 - **Moneda** de visualización de montos.
+- **Estados de cotización**: nombre y color de cada una de las 4 etapas del pipeline (Pendiente,
+  Enviada, Aprobada, Cancelada) — son un conjunto fijo, no se pueden agregar ni eliminar etapas,
+  solo renombrarlas o cambiarles el color.
 - Preferencia de **catálogo ordenable** (activa/desactiva el reorder manual, ver arriba).
 
 Solo visible/editable por `admin`/`superadmin`.
@@ -91,9 +93,8 @@ Solo visible/editable por `admin`/`superadmin`.
 La feature más grande y el corazón del flujo comercial hoy. Tres superficies:
 
 ### Lista — `/admin/quotes`
-Listado estándar con filtros por etapa (`stage`) y estado (US). Click en una fila abre el
-detalle/constructor. No tiene acciones destructivas — los cambios de etapa se hacen desde el
-pipeline.
+Listado estándar con filtros por etapa y estado (US). Click en una fila abre el detalle/constructor.
+No tiene acciones destructivas — los cambios de etapa se hacen desde el pipeline.
 
 ### Constructor — `/admin/quotes/new` y `/admin/quotes/[id]`
 Formulario con **preview en vivo** del documento final (2 columnas en desktop, barra inferior +
@@ -110,19 +111,24 @@ Drawer de preview en móvil):
 - Se puede **guardar como borrador** incompleto (aparece igual en el pipeline) o **enviar**
   (requiere que esté completo: cliente, estado, dirección, ≥1 línea).
 - **Descargar PDF** una vez guardada.
-- Editable solo mientras la etapa es *Borrador* o *Enviada*; desde *Confirmada* queda de solo
+- Editable solo mientras la etapa es *Pendiente* o *Enviada*; desde *Aprobada* queda de solo
   lectura.
+- **Historial**: siempre visible (incluso en un borrador recién creado), muestra quién armó la
+  cotización y, debajo, cada cambio de etapa con quién lo hizo y cuándo.
 
 ### Pipeline — `/admin/pipeline`
-Tablero kanban de las 5 etapas de una cotización: **Borrador → Enviada → Confirmada → Realizada →
-Cancelada** (con reapertura posible de Cancelada → Enviada). Desktop: drag & drop entre columnas.
-Móvil: pestañas por etapa + menú "Mover a…" (misma acción que el drag).
+Tablero kanban de las 4 etapas de una cotización: **Pendiente → Enviada → Aprobada → Cancelada**
+(con reapertura posible de Cancelada → Enviada). Desktop: drag & drop entre columnas. Móvil:
+pestañas por etapa + menú "Mover a…" (misma acción que el drag). El nombre y color de cada columna
+salen de Configuración (ver arriba) — se pueden renombrar/recolorear sin tocar código.
 
 - Solo se permiten los movimientos válidos según una matriz de transiciones fija (no se puede saltar
-  de Borrador a Confirmada, por ejemplo); el intento inválido no se ejecuta.
-- **Confirmar** una cotización pide confirmación explícita — **hoy este paso NO crea un evento
-  todavía** (ver "Fuera de alcance"), solo cambia la etapa.
-- El botón "Asignar staff" que aparece en las cards de *Confirmada* está en la UI pero **no hace
+  de Pendiente a Aprobada, por ejemplo); el intento inválido no se ejecuta.
+- **Aprobar** una cotización pide confirmación explícita — **hoy este paso NO crea un evento
+  todavía** (ver "Fuera de alcance"), solo cambia la etapa. Una vez Aprobada, la cotización no
+  avanza más — no hay una etapa "Realizada" a nivel de cotización (ese concepto vive en el evento,
+  cuando exista Fase 5).
+- El botón "Asignar staff" que aparece en las cards de *Aprobada* está en la UI pero **no hace
   nada todavía** (depende del módulo de eventos).
 
 ---

@@ -4,16 +4,16 @@ import { Card, Dropdown, Tag, Typography, type MenuProps } from 'antd';
 import { useDraggable } from '@dnd-kit/core';
 import { MoveRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { QUOTE_STAGE_TRANSITIONS, type QuoteStage } from '@repo/schemas';
+import { QUOTE_STAGE, QUOTE_STAGE_TRANSITIONS, type QuoteStageId } from '@repo/schemas';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
-import { QUOTE_STAGE_COLORS } from '../../helpers';
+import { useQuoteStages } from '@/features/settings';
 import type { QuoteCard as QuoteCardType } from '../../types';
 
 interface QuoteCardProps {
   card: QuoteCardType;
   draggable?: boolean;
-  onMove: (id: string, from: QuoteStage, to: QuoteStage) => void;
+  onMove: (id: string, from: QuoteStageId, to: QuoteStageId) => void;
 }
 
 export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
@@ -21,6 +21,7 @@ export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
   const router = useRouter();
   const { date } = useDateFormatter();
   const { money } = useMoneyFormatter();
+  const { stageMap } = useQuoteStages();
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: card.id,
@@ -28,21 +29,20 @@ export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
     disabled: !draggable,
   });
 
+  const stageId = card.stageId as QuoteStageId;
+  const stage = stageMap.get(stageId);
   const isExpired =
-    card.stage === 'quoted' &&
+    stageId === QUOTE_STAGE.QUOTED &&
     !!card.validUntil &&
     card.validUntil < new Date().toISOString().slice(0, 10);
 
-  const moveOptions = QUOTE_STAGE_TRANSITIONS[card.stage];
+  const moveOptions = QUOTE_STAGE_TRANSITIONS[stageId];
   const items: MenuProps['items'] = moveOptions.map((to) => ({
     key: to,
-    label: t(`stage.${to}`),
+    label: stageMap.get(to)?.label,
     onClick: (info) => {
-      // AntD's Dropdown menu renders in a portal, so React's synthetic bubbling still
-      // reaches the Card's onClick through the component tree — stop it explicitly or
-      // picking a stage here also navigates to the quote.
       info.domEvent.stopPropagation();
-      onMove(card.id, card.stage, to);
+      onMove(card.id, stageId, to);
     },
   }));
 
@@ -63,7 +63,7 @@ export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
       {...(draggable ? { ...attributes, ...listeners } : {})}
     >
       <div className="flex items-center justify-between gap-2">
-        <Typography.Text strong className="text-xs">
+        <Typography.Text strong className="text-xs" style={{ color: stage?.color }}>
           {card.number}
         </Typography.Text>
         {isExpired && <Tag color="red">{t('pipeline.expired')}</Tag>}

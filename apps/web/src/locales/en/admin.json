@@ -1,7 +1,9 @@
 {
   "nav": {
     "dashboard": "Dashboard",
+    "newQuote": "New quote",
     "events": "Events",
+    "calendarTab": "Calendar",
     "orders": "Orders",
     "clients": "Clients",
     "quotes": "Quotes",

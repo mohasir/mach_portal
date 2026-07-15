@@ -48,16 +48,10 @@ export const STAFF_ITEM: NavItem = {
 
 export const CATALOG_PRODUCTS_ITEM: NavItem = {
   label: 'nav.catalogProducts',
-  href: '/admin/catalog',
+  href: '/admin/products',
   icon: 'catalog',
   guard: { [RESOURCES.PRODUCT]: [READ] },
-};
-
-export const PRICES_ITEM: NavItem = {
-  label: 'nav.prices',
-  href: '/admin/prices',
-  icon: 'prices',
-  guard: { [RESOURCES.PRODUCT]: [READ] },
+  layout: 'bare',
 };
 
 export const EVENT_TYPES_ITEM: NavItem = {
@@ -72,6 +66,7 @@ export const SETTINGS_ITEM: NavItem = {
   href: '/admin/settings',
   icon: 'settings',
   guard: { [RESOURCES.CONFIG]: [READ] },
+  layout: 'bare',
 };
 
 export const USERS_ITEM: NavItem = {
@@ -101,7 +96,6 @@ export const NAV_ITEMS = {
   PIPELINE: PIPELINE_ITEM,
   STAFF: STAFF_ITEM,
   CATALOG_PRODUCTS: CATALOG_PRODUCTS_ITEM,
-  PRICES: PRICES_ITEM,
   EVENT_TYPES: EVENT_TYPES_ITEM,
   SETTINGS: SETTINGS_ITEM,
   USERS: USERS_ITEM,
