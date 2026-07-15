@@ -1,7 +1,7 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, sql } from 'drizzle-orm';
 import type { AppSettingsInput, StateSettingInput } from '@repo/schemas';
 import type { Database } from '../../db';
-import { appSettings, stateSettings } from '../../db/schema';
+import { appSettings, stateSettings, quotes } from '../../db/schema';
 import { publicAppSettingsColumns, publicStateSettingColumns } from './config.resource';
 
 const APP_SETTINGS_ID = 1;
@@ -53,10 +53,10 @@ export class ConfigRepository {
       .then((r) => r[0]!);
   }
 
-  // Fase 4 hook-in point: once `quotes` exists, this becomes MAX(seq) FROM quotes.
-  // No quotes yet, so the last used seq is trivially 0 (docs/mach-bar-plan.md
-  // "Notas de secuenciación").
   async getLastUsedSeq(): Promise<number> {
-    return 0;
+    const [row] = await this.db
+      .select({ value: sql<number>`coalesce(max(${quotes.seq}), 0)` })
+      .from(quotes);
+    return row?.value ?? 0;
   }
 }

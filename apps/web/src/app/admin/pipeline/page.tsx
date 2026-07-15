@@ -1,5 +1,5 @@
-import { PlaceholderPage } from '@/components/shared/PlaceholderPage';
+import { PipelineBoard } from '@/features/quotes';
 
 export default function Page() {
-  return <PlaceholderPage titleKey="nav.pipeline" />;
+  return <PipelineBoard />;
 }

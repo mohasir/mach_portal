@@ -1,0 +1,113 @@
+{
+  "title": "Cotizaciones",
+  "empty": "No hay cotizaciones",
+  "index": {
+    "add": "Nueva cotización"
+  },
+  "columns": {
+    "number": "Número",
+    "client": "Cliente",
+    "eventDate": "Fecha del evento",
+    "stage": "Estado",
+    "total": "Total"
+  },
+  "filters": {
+    "stage": "Estado de la cotización",
+    "state": "Estado (US)"
+  },
+  "stage": {
+    "new": "Borrador",
+    "quoted": "Enviada",
+    "confirmed": "Confirmada",
+    "completed": "Realizada",
+    "cancelled": "Cancelada"
+  },
+  "validation": {
+    "clientRequired": "El cliente es obligatorio"
+  },
+  "form": {
+    "save": "Guardar"
+  },
+  "builder": {
+    "newTitle": "Nueva cotización",
+    "editTitle": "Editar cotización",
+    "saveDraft": "Guardar borrador",
+    "saveChanges": "Guardar cambios",
+    "send": "Enviar",
+    "saved": "Cotización guardada",
+    "sent": "Cotización enviada",
+    "errors": {
+      "clientRequired": "Elegí un cliente para guardar el borrador"
+    },
+    "client": {
+      "label": "Cliente",
+      "placeholder": "Buscar cliente...",
+      "newLead": "Nuevo lead",
+      "name": "Nombre",
+      "phone": "Teléfono"
+    },
+    "event": {
+      "type": "Tipo de evento",
+      "typePlaceholder": "Elegí un tipo",
+      "state": "Estado",
+      "statePlaceholder": "NY / NJ / CT",
+      "date": "Fecha del evento",
+      "time": "Hora",
+      "address": "Dirección",
+      "addressPlaceholder": "Dirección del evento",
+      "notes": "Notas",
+      "notesPlaceholder": "Notas internas"
+    },
+    "lines": {
+      "empty": "Todavía no agregaste ninguna estación",
+      "addPlaceholder": "+ Agregar estación",
+      "remove": "Quitar línea",
+      "numPersons": "Personas",
+      "price": "Precio",
+      "included": "Incluido",
+      "selectAny": "Elegí las que quieras",
+      "maxSelect": "{{selected}}/{{max}}"
+    },
+    "pricing": {
+      "discountType": "Descuento",
+      "discountNone": "Sin descuento",
+      "discountFixed": "Monto fijo",
+      "discountPercent": "Porcentaje",
+      "discountValue": "Valor",
+      "depositRate": "Depósito",
+      "subtotal": "Subtotal",
+      "discount": "Descuento",
+      "tax": "Impuesto ({{rate}}%)",
+      "taxShort": "Impuesto",
+      "total": "Total",
+      "deposit": "Depósito ({{rate}}%)",
+      "balance": "Saldo"
+    },
+    "preview": {
+      "title": "Vista previa",
+      "open": "Ver vista previa",
+      "client": "Cliente",
+      "eventType": "Tipo de evento",
+      "eventDate": "Fecha",
+      "numPersons": "{{count}} personas"
+    }
+  },
+  "pipeline": {
+    "title": "Pipeline",
+    "expired": "Vencida",
+    "moveTo": "Mover a…",
+    "linesCount": "{{count}} líneas",
+    "confirm": {
+      "confirmed": {
+        "title": "¿Aprobar cotización?",
+        "content": "La cotización pasa a Confirmada.",
+        "ok": "Aprobar"
+      },
+      "cancelled": {
+        "title": "¿Cancelar cotización?",
+        "content": "Esta acción no se puede deshacer.",
+        "ok": "Cancelar cotización"
+      }
+    }
+  }
+}

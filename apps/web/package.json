@@ -26,6 +26,7 @@
     "api": "workspace:*",
     "better-auth": "^1",
     "date-fns": "^4.4.0",
+    "dayjs": "^1.11.21",
     "i18next": "^24",
     "lucide-react": "^1.24.0",
     "next": "^15",

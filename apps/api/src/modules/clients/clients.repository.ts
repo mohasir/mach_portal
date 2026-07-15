@@ -1,4 +1,4 @@
-import { asc, count, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, exists, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
 import type {
   ClientsListQuery,
   ClientStatus,
@@ -6,7 +6,7 @@ import type {
   UpdateClientInput,
 } from '@repo/schemas';
 import type { Database } from '../../db';
-import { clients } from '../../db/schema';
+import { clients, quotes } from '../../db/schema';
 import { publicClientColumns } from './clients.resource';
 
 const sortColumns = {
@@ -16,14 +16,21 @@ const sortColumns = {
   createdAt: clients.createdAt,
 } as const;
 
-// Derived status. In phase 1 there are no quotes yet, so it is always 'lead';
-// phase 4 swaps this literal for an EXISTS on confirmed/completed quotes (D3).
-const statusExpr = sql<ClientStatus>`'lead'`;
-
-const publicSelection = () => ({ ...publicClientColumns, status: statusExpr });
-
 export class ClientsRepository {
   constructor(private db: Database) {}
+
+  // Derived status (D3): 'active' if the client has a confirmed/completed quote, else 'lead'.
+  // Built as a proper correlated subquery (not a raw string template) so `clients.id` is
+  // qualified correctly — `quotes` also has an `id` column, which a raw-interpolated
+  // `where quotes.client_id = clients.id` silently resolves against the wrong table.
+  private selection() {
+    const activeQuotes = this.db
+      .select({ one: sql`1` })
+      .from(quotes)
+      .where(and(eq(quotes.clientId, clients.id), inArray(quotes.stage, ['confirmed', 'completed'])));
+    const status = sql<ClientStatus>`(case when ${exists(activeQuotes)} then 'active' else 'lead' end)`;
+    return { ...publicClientColumns, status };
+  }
 
   async findPaginated(query: ClientsListQuery) {
     const { page, pageSize, search, sortBy, sortDir } = query;
@@ -37,7 +44,7 @@ export class ClientsRepository {
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
 
     const items = await this.db
-      .select(publicSelection())
+      .select(this.selection())
       .from(clients)
       .where(where)
       .orderBy(orderBy)
@@ -57,7 +64,7 @@ export class ClientsRepository {
     return this.db
       .insert(clients)
       .values(data)
-      .returning(publicSelection())
+      .returning(this.selection())
       .then((r) => r[0]!);
   }
 
@@ -66,7 +73,7 @@ export class ClientsRepository {
       .update(clients)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(clients.id, id))
-      .returning(publicSelection())
+      .returning(this.selection())
       .then((r) => r[0]);
   }
 

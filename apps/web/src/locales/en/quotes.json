@@ -1,0 +1,113 @@
+{
+  "title": "Quotes",
+  "empty": "No quotes yet",
+  "index": {
+    "add": "New quote"
+  },
+  "columns": {
+    "number": "Number",
+    "client": "Client",
+    "eventDate": "Event date",
+    "stage": "Stage",
+    "total": "Total"
+  },
+  "filters": {
+    "stage": "Quote stage",
+    "state": "State (US)"
+  },
+  "stage": {
+    "new": "Draft",
+    "quoted": "Sent",
+    "confirmed": "Confirmed",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "validation": {
+    "clientRequired": "Client is required"
+  },
+  "form": {
+    "save": "Save"
+  },
+  "builder": {
+    "newTitle": "New quote",
+    "editTitle": "Edit quote",
+    "saveDraft": "Save draft",
+    "saveChanges": "Save changes",
+    "send": "Send",
+    "saved": "Quote saved",
+    "sent": "Quote sent",
+    "errors": {
+      "clientRequired": "Pick a client to save the draft"
+    },
+    "client": {
+      "label": "Client",
+      "placeholder": "Search a client...",
+      "newLead": "New lead",
+      "name": "Name",
+      "phone": "Phone"
+    },
+    "event": {
+      "type": "Event type",
+      "typePlaceholder": "Pick a type",
+      "state": "State",
+      "statePlaceholder": "NY / NJ / CT",
+      "date": "Event date",
+      "time": "Time",
+      "address": "Address",
+      "addressPlaceholder": "Event address",
+      "notes": "Notes",
+      "notesPlaceholder": "Internal notes"
+    },
+    "lines": {
+      "empty": "No stations added yet",
+      "addPlaceholder": "+ Add station",
+      "remove": "Remove line",
+      "numPersons": "Guests",
+      "price": "Price",
+      "included": "Included",
+      "selectAny": "Pick as many as you like",
+      "maxSelect": "{{selected}}/{{max}}"
+    },
+    "pricing": {
+      "discountType": "Discount",
+      "discountNone": "No discount",
+      "discountFixed": "Fixed amount",
+      "discountPercent": "Percentage",
+      "discountValue": "Value",
+      "depositRate": "Deposit",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "tax": "Tax ({{rate}}%)",
+      "taxShort": "Tax",
+      "total": "Total",
+      "deposit": "Deposit ({{rate}}%)",
+      "balance": "Balance"
+    },
+    "preview": {
+      "title": "Preview",
+      "open": "View preview",
+      "client": "Client",
+      "eventType": "Event type",
+      "eventDate": "Date",
+      "numPersons": "{{count}} guests"
+    }
+  },
+  "pipeline": {
+    "title": "Pipeline",
+    "expired": "Expired",
+    "moveTo": "Move to…",
+    "linesCount": "{{count}} lines",
+    "confirm": {
+      "confirmed": {
+        "title": "Approve quote?",
+        "content": "The quote moves to Confirmed.",
+        "ok": "Approve"
+      },
+      "cancelled": {
+        "title": "Cancel quote?",
+        "content": "This action can't be undone.",
+        "ok": "Cancel quote"
+      }
+    }
+  }
+}

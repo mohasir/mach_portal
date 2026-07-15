@@ -12,14 +12,14 @@
 
 ## Docs de referencia (leer al retomar)
 
-| Doc | Rol |
-|---|---|
-| `mach-bar-domain.md` | **Modelo de datos** (canónico): tablas, enums, decisiones D1–D15, precio en cents, estados, RBAC. |
-| `mach-bar-model.dbml` | ER para dbdiagram.io (nombres genéricos). |
-| `mach-bar-flows.md` | **Flujos de front** (canónico): las 8 superficies (§2–§8). |
-| `mach-bar-plan.md` | **Este doc**: plan de ejecución + progreso. |
-| `mach-bar-specs.md` | Spec original (raw). **Superado** por domain/flows; queda como insumo histórico. |
-| `docs/backend/architecture.md` · `docs/frontend/architecture.md` · `docs/frontend/styling-guide.md` | Patrón estricto de BE/FE/estilos. |
+| Doc                                                                                                 | Rol                                                                                               |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `mach-bar-domain.md`                                                                                | **Modelo de datos** (canónico): tablas, enums, decisiones D1–D15, precio en cents, estados, RBAC. |
+| `mach-bar-model.dbml`                                                                               | ER para dbdiagram.io (nombres genéricos).                                                         |
+| `mach-bar-flows.md`                                                                                 | **Flujos de front** (canónico): las 8 superficies (§2–§8).                                        |
+| `mach-bar-plan.md`                                                                                  | **Este doc**: plan de ejecución + progreso.                                                       |
+| `mach-bar-specs.md`                                                                                 | Spec original (raw). **Superado** por domain/flows; queda como insumo histórico.                  |
+| `docs/backend/architecture.md` · `docs/frontend/architecture.md` · `docs/frontend/styling-guide.md` | Patrón estricto de BE/FE/estilos.                                                                 |
 
 **Canónico = `domain` + `model` + `flows`.** Ante conflicto con `mach-bar-specs.md`, mandan los refinados.
 
@@ -31,30 +31,131 @@
 > **Próximo paso**; (3) continuá desde ahí. **Actualizá esta sección** al cerrar cada tarea: marcá ✅,
 > movés el "Próximo paso" y agregás una línea a la bitácora.
 
-**Última actualización:** 2026-07-13 · **Fase actual:** Refinamiento de catálogo (D16/D17) — **rework de Fase 2** antes de Fase 4 · **Próximo paso:** refactor de catálogo (schema + `@repo/schemas` + módulo `products` + forms FE) por el modelo nuevo, luego **re-seed con datos reales** (el usuario pasa las tablas de precio por estación).
+**Última actualización:** 2026-07-14 · **Fase actual:** Cotizaciones (Fase 4) — **cerrada, BE+FE verificados en vivo (desktop+mobile)** · **Próximo paso:** arrancar **Fase 5 (Eventos)** — deps: cotizaciones (✅) + staff (✅). En paralelo sigue pendiente, sin bloquear: terminar el re-seed de catálogo con datos reales (7 de 10 estaciones + decisión de precio de Craft Bar).
 
 Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 
-| Fase | Módulo | BE | FE | Seeder | Checkpoint |
-|---|---|:--:|:--:|:--:|:--:|
-| 1 | Clientes | ✅ | ✅ | ✅ | ✅ |
-| 1 | Staff | ✅ | ✅ | ✅ | ✅ |
-| 2 | Catálogo | 🔨 | 🔨 | 🔨 | ⚠️ |
-| 2 | Tipos de evento | ✅ | ✅ | ✅ | ✅ |
-| 3 | Configuración | ✅ | ✅ | ✅ | ✅ |
-| 4 | Cotizaciones | ☐ | ☐ | ☐ | ☐ |
-| 5 | Eventos | ☐ | ☐ | ☐ | ☐ |
-| 6 | Dashboard | ☐ | ☐ | ☐ | ☐ |
+| Fase | Módulo          | BE  | FE  | Seeder | Checkpoint |
+| ---- | --------------- | :-: | :-: | :----: | :--------: |
+| 1    | Clientes        | ✅  | ✅  |   ✅   |     ✅     |
+| 1    | Staff           | ✅  | ✅  |   ✅   |     ✅     |
+| 2    | Catálogo        | ✅  | ✅  |   🔨   |     🔨     |
+| 2    | Tipos de evento | ✅  | ✅  |   ✅   |     ✅     |
+| 3    | Configuración   | ✅  | ✅  |   ✅   |     ✅     |
+| 4    | Cotizaciones    | ✅  | ✅  |   ✅   |     ✅     |
+| 5    | Eventos         |  ☐  |  ☐  |   ☐    |     ☐      |
+| 6    | Dashboard       |  ☐  |  ☐  |   ☐    |     ☐      |
 
-> ⚠️ **Catálogo en rework (D16/D17):** se construyó sobre el modelo viejo (precio/persona, grupos sin
-> tipo). Se refina a **precio por tramo** (`product_price_tiers`) + **`option_groups.selection_type`
-> (`select`/`included`)** + **`options.description`**. Docs canónicos ya actualizados; falta el código
-> (schema/`@repo/schemas`/módulo `products`/forms FE) y el **re-seed con datos reales** (pendiente que
-> el usuario pase las tablas de precio por estación, incl. Craft Bar). Debe cerrar **antes** de Fase 4.
+> 🔨 **Catálogo — rework D16/D17 cerrado en código, falta el re-seed real.** Schema
+> (`product_price_tiers`, `option_groups.selection_type`, `options.description`), `@repo/schemas`,
+> módulo `products` (con sub-router `products.prices.*`) y forms FE ya están hechos y en `dev`
+> (`check-types` monorepo limpio). **Pendiente:** de las 10 estaciones seedeadas, solo **Mini
+> Pancakes, Crepaletas y Esquites** tienen tabla de precios real; **Crepes, Nachos, Fruit Station,
+> Snack Station, Popsicles, Hot Chocolate y Craft Bar** siguen con `PLACEHOLDER_TIERS` en
+> `apps/api/src/db/seeds/catalog.ts`. Craft Bar además tiene pendiente la **decisión de modelo de
+> precio** (fija vs. por hora) antes de poder cargarle tramos reales. Debe cerrar **antes** de Fase 4.
 
-**Fundaciones** (transversales): guards nuevos ✅ (`STAFF`/`PRODUCT`/`EVENT_TYPE`/`CONFIG` — todos los de Fase 1-3) · enum `state` compartido ✅ · cents (BE) ✅ + `formatMoney`/`useMoneyFormatter` (FE, **currency configurable** vía `config.get`) ✅ · `%` helper ✅ (`lib/percent`) · dnd-kit ✅ (`SortableList`/`useSortableRow`/`ReorderControl` en `features/catalog`) · `computeQuoteTotals` ☐ (entra en Fase 4)
+**Fundaciones** (transversales): guards nuevos ✅ (`STAFF`/`PRODUCT`/`EVENT_TYPE`/`CONFIG` — todos los de Fase 1-3) · enum `state` compartido ✅ · cents (BE) ✅ + `formatMoney`/`useMoneyFormatter` (FE, **currency configurable** vía `config.get`) ✅ · `%` helper ✅ (`lib/percent`) · dnd-kit ✅ (`SortableList`/`useSortableRow`/`ReorderControl` en `features/catalog`) · `computeQuoteTotals` ✅ (`@repo/schemas/quotes`, Fase 4)
 
 **Bitácora de sesión** (lo último arriba):
+
+- **2026-07-14** — **Cotizaciones (Fase 4) — FE completo, cierra la fase.** Feature `quotes`
+  (`apps/web/src/features/quotes`): **lista** estándar `/admin/quotes` (`QuotesPage`/`QuotesTable`,
+  filtros stage/state, click en fila navega al detalle, sin row actions destructivas — el pipeline es
+  donde se cambia de stage); **constructor** a medida `/admin/quotes/new` + `/admin/quotes/[id]`
+  (`QuoteBuilderProvider`/`useQuoteBuilder` con `useReducer` — estado local efímero, NO TanStack Query,
+  per `mach-bar-flows.md §2`; `ClientSection` combobox + alta inline de lead con mini-form propio
+  nombre+teléfono — no reusa `ClientForm` completo, a propósito; `EventSection`; `LineBuilder` con
+  `ProductPicker`/`LineCard`/`OptionGroupChips` — chips con bloqueo por `maxSelect`, grupos `included`
+  read-only; `PricingPanel` + `QuotePreview` con `computeQuoteTotals` **compartido** de
+  `@repo/schemas`, mismo cálculo que el server; 2 columnas desktop / 1 columna + barra inferior fija +
+  Drawer de preview en móvil; modo **read-only** completo cuando `stage` no es `new`/`quoted`); **pipeline**
+  `/admin/pipeline` (`PipelineBoard` con dnd-kit `useDraggable`/`useDroppable` — no `SortableList`, es
+  cross-column no reorder — kanban en desktop, `Segmented` + menú "Mover a…" en móvil; confirm modal en
+  transiciones con efecto `approve`/`cancel`; optimistic update sobre el cache de `quotes.board` con
+  rollback). Ajuste chico al backend: `quotes.getById` ahora denormaliza `clientName`/`eventTypeName`
+  (no existe `clients.getById`, el constructor en modo edición los necesita para mostrar el cliente
+  actual). Nueva dependencia **`dayjs`** en `apps/web` (solo para `DatePicker`/`TimePicker` de AntD, que
+  la requieren nativamente — decisión consciente, discutida con el usuario; el resto de la app sigue
+  formateando fechas con `date-fns`/`useDateFormatter` sin cambios). i18n `quotes.json` (es/en) + reuso
+  de `useProductCatalog` nuevo en `features/catalog` (`products.list`, activos only, para el builder) y
+  `ClientForm`/`useCreateClient` de `features/clients` para el alta de lead. **3 bugs encontrados y
+  corregidos en la prueba en vivo (Playwright headless, desktop 1440px + mobile 390px)**: (1)
+  `ClientSection`/`EventSection` no recibían `readOnly` — una quote `confirmed`/`cancelled` se veía
+  editable en esos dos bloques (los inputs de `LineBuilder` sí estaban bien gateados); (2) la barra de
+  acciones inferior en móvil amontonaba 3 botones + total en una sola fila y se cortaba en 390px —
+  ahora es 2 filas (total+preview arriba, guardar/enviar a ancho completo abajo); (3) **el más
+  importante**: en el menú "Mover a…" del pipeline en móvil, click en una opción también navegaba al
+  detalle de la quote — el `Dropdown` de AntD renderiza el menú en un portal, y los eventos sintéticos
+  de React burbujean por el **árbol de React** (no el DOM), así que el `stopPropagation` en el wrapper
+  del trigger no alcanzaba al click del item del menú; fix: `stopPropagation` en el `domEvent` de cada
+  item del menú. Verificado en vivo (login real, ambos viewports): CRUD completo del constructor
+  (crear→guardar borrador→reabrir→editar, con persistencia y rehidratación correctas), ciclo de stage
+  completo por drag simulado imposible en headless (dnd-kit no dispara con `page.mouse` sintético — se
+  probó el path equivalente del menú "Mover a…" que llama la misma función, incluyendo el modal de
+  confirmación de "Aprobar"), `check-types` monorepo limpio, cero errores de consola. `db:fresh` para
+  dejar la semilla limpia al cerrar. **Cierra Fase 4** (BE+FE+seeder+checkpoint ✅).
+- **2026-07-14** — **Cotizaciones (Fase 4) — backend completo y verificado en vivo** (el usuario pidió
+  pausar antes del FE). Schema `quotes`/`quote_lines`/`quote_line_options` (`quote_stage`/
+  `discount_type` enums propios del archivo, igual que `option_group_type` en `catalog.ts`).
+  `@repo/schemas/quotes`: contrato Zod (`createQuoteSchema`/`updateQuoteSchema` — mismo shape para
+  ambos, reemplazo completo de líneas, sin mínimo de líneas a nivel Zod), **matriz de transiciones
+  compartida** `QUOTE_STAGE_TRANSITIONS`/`canTransition` (incluye `confirmed→completed` aunque no haya
+  router procedure que la dispare todavía — así Fase 5 solo agrega el procedure, no toca la matriz), y
+  **`computeQuoteTotals`** (cascada exacta de `mach-bar-domain.md §7`, verificada contra el ejemplo
+  numérico del doc). Módulo `quotes` (resource/repository/service/router, patrón `docs/backend/
+architecture.md §9` + precedente de anidamiento de `products`): `list`/`getById`/`board` (`READ`,
+  `board` gateado por `RESOURCES.PIPELINE` no `QUOTE`)/`create`/`update`/`updateStage`/`approve`/
+  `cancel` (mutaciones de dominio gateadas por `UPDATE` del recurso `quote`, sin `ACTIONS` nuevas, como
+  fija la sección de fundaciones). Reglas de negocio clave: **snapshot condicional** de
+  `taxRate`/`depositRate`/`validUntil` (se re-calculan en `update` mientras `stage='new'`, quedan
+  congeladas desde `'quoted'`); **`update` rechaza** quotes fuera de `{new, quoted}`
+  (`QUOTE_NOT_EDITABLE`); **`updateStage→quoted` valida completitud** (`state`/`address`/≥1 línea,
+  `QUOTE_INCOMPLETE`); **revalidación server-side de líneas** contra el catálogo vivo (tramo existe,
+  opciones pertenecen a su grupo/producto y están activas, `maxSelect` no excedido — un solo
+  `QUOTE_INVALID_LINES` cubre cualquier inconsistencia). `quote_lines`/`quote_line_options` se insertan
+  con **ids generados en JS (`randomUUID`)** antes del insert, no vía `RETURNING`, para no depender del
+  orden de filas devuelto por Postgres en un insert múltiple. Cerrados los **2 ganchos pendientes** de
+  fases previas: `config.getLastUsedSeq()` (ahora `MAX(seq)` real) y `clients.status` derivado
+  (`EXISTS` contra `quotes.stage IN ('confirmed','completed')`). **Bug propio + fix**: el primer
+  intento de `clients.status` interpoló columnas en un `sql` template crudo
+  (`` sql`... where ${quotes.clientId} = ${clients.id}` ``) — Postgres resolvió el `id` sin calificar
+  contra la tabla **`quotes`** (que también tiene columna `id`) en vez de correlacionar con `clients`,
+  así que todos los clientes daban `'lead'` aunque tuvieran quotes confirmadas. Fix: subquery armada
+  con el query builder (`exists(db.select(...).from(quotes).where(and(eq(...), inArray(...))))`) en vez
+  de interpolación cruda — el builder sí califica las columnas por tabla. Seeder `seedQuotes`: 8
+  cotizaciones repartidas en `new`/`quoted`/`confirmed`/`cancelled` (no `completed`, inalcanzable sin
+  `events`), resolviendo productos/tramos/opciones **por nombre** contra el catálogo ya seedeado (mismo
+  criterio que el resto de los seeders). Verificado **en vivo por tRPC** (login superadmin real): CRUD
+  completo, cascada de precio exacta, las 4 columnas del pipeline agrupan bien,
+  `config.get().lastUsedSeq` refleja el máximo real, `clients.list` deriva `status` correctamente,
+  ciclo de stage completo (`new→quoted` rechazado incompleto → completado → aprobado → doble-approve
+  rechazado → cancelado → reabierto), validación de líneas (tramo inexistente y `maxSelect` excedido)
+  rechazada, `update` sobre quote `confirmed` rechazado. `check-types` monorepo limpio, `db:fresh`
+  limpio. **Pendiente**: las 3 superficies de FE (`/admin/quotes` lista, `/admin/quotes/new`+`/admin/
+quotes/[id]` constructor, `/admin/pipeline` kanban) — plan completo en
+  `/Users/sambar/.claude/plans/playful-crunching-cherny.md`.
+- **2026-07-14** — **Rework de catálogo (D16/D17) implementado en código** (cierra la parte BE/FE del
+  rework descrito abajo, pendiente solo el re-seed real): schema `product_price_tiers`
+  (`numPersons/price` únicos por producto), `option_groups.selectionType` (enum `select`/`included`) +
+  `maxSelect`, `options.description`; `@repo/schemas/catalog` con `priceTierSchema`/`productTiersSchema`
+  (valida `numPersons` sin duplicados) y `updateProductTiersSchema`; módulo `products` con **sub-router
+  nuevo `products.prices.*`** (`list`/`update` de tramos) además de los ya existentes
+  `groups.*`/`options.*`. FE: `ProductForm` con tabla de tramos editable, `OptionGroupForm` con toggle
+  `select`/`included` (+ `maxSelect` condicional), `OptionForm` con `description`. **Superficie nueva
+  `/admin/prices`** (`PricesPage`/`PriceList`/`PricePanel`/`PriceTiersForm`, gateada por
+  `PRODUCT`/`UPDATE`) para editar tramos de precio sin entrar al editor completo del catálogo — no
+  estaba en `mach-bar-flows.md` original, surgió como necesidad operativa (el precio se actualiza más
+  seguido que la estructura del catálogo). **Nuevo setting `app_settings.catalogSortable`** (default
+  `true`): toggle en Settings → Preferences (`CatalogPreferencesCard`) que habilita/deshabilita el
+  reorder manual (drag/flechas) del editor de catálogo (`useCatalogSortable` gatea `SortableList`); útil
+  para bloquear el orden una vez definido. **Re-seed parcial**: `Mini Pancakes`, `Crepaletas` y
+  `Esquites` ya tienen tabla de precios real (tramos de 30 a 150-400 personas, USD cents); el resto
+  (`Crepes`, `Nachos`, `Fruit Station`, `Snack Station`, `Popsicles`, `Craft Bar`) sigue con
+  `PLACEHOLDER_TIERS` genérico. Se sumó **`Hot Chocolate`** como estación nueva (no estaba en la lista
+  original de 9), también con tramos placeholder. Verificado: `check-types` monorepo limpio, working
+  tree limpio (todo comiteado en `dev`). **Pendiente para cerrar Fase 2**: tablas de precio reales de
+  las 7 estaciones que faltan + decisión de modelo de precio de Craft Bar (fija vs. por hora).
 - **2026-07-13** — **Refinamiento del catálogo (D16/D17)** tras revisar el Excel real del negocio. **Precio por tramo** (D16): se elimina `products.base_price` y `quote_lines.price_per_person`; nueva tabla **`product_price_tiers` (`numPersons → price`, price = total del tramo)**; en la quote se elige un tramo existente (dropdown, **solo tramos definidos**) y `price` pre-carga pero es **editable por línea**. **Tipos de grupo** (D17): **`option_groups.selection_type` (`select` | `included`)** — `select` = elige **hasta `max_select`** (sin mínimo, decisión del usuario); `included` = informativo, no se selecciona (ej. "Premium Syrups Included"). **`options.description`** opcional (ingredientes del cóctel del Craft Bar). "Special Dietary Requests" (idéntico en todas las estaciones) → **nota global**, no se duplica por producto. **Craft Bar** se modela como estación con `product_price_tiers` (a confirmar si es fija/horaria al cargar precios). **Docs canónicos actualizados**: `domain` (§2 D16/D17, §4 enum `option_group_type`, §5.1 `quote_lines`, §5.3 catálogo, §6 ER, §7 cascada), `model.dbml`, `flows` (§2 builder, §4 editor). **Pendiente (rework Fase 2)**: código de catálogo (schema Drizzle, `@repo/schemas/catalog`, módulo `products` resource/repo/router, forms FE `ProductForm`/`OptionGroupForm`/`OptionForm`) + **re-seed con datos reales** (el usuario pasa las tablas de precio por estación). Debe cerrar antes de Fase 4.
 - **2026-07-13** — Configuración **BE+FE** hecho (**cierra Fase 3**), + re-verificado en vivo Fase 2 tras reinicio del dev server (`/admin/event-types` y `/admin/catalog` → HTTP 200 limpio, confirma que el 500 anterior era 100% caché de Next, no bug). **Guard `CONFIG` nuevo** (solo superadmin/admin, mismo patrón que ya tenían todos los recursos — `member` sigue sin permisos en ningún resource). Schema `state_settings` (PK `state`) + `app_settings` (singleton `id=1`) usando **`numeric(..., { mode: 'number' })` de Drizzle** (evita casteos string↔number manuales en resource/repo — primera vez que se usa `numeric` en el proyecto). Contrato Zod con tasas como decimal 0-1. Módulo `config`: `get`/`update` transaccional (upsert de ambos buckets), valida `quoteSeqStart` con `SEQUENCE_BELOW_LAST`; `getLastUsedSeq()` es un **placeholder que devuelve 0** (mismo patrón que `clients.status` en Fase 1 — se completa en Fase 4 cuando exista `quotes`). `configResource` expone `lastUsedSeq` como hint de solo lectura para el form. `seedConfig`: NY 8.875%/NJ 6.625%/CT 6.35% (tasas reales) + app_settings default (deposit 50%, validez 3 meses, min 30 personas, seq desde 1, USD). FE: fundación **`lib/percent`** (helper ×100/÷100) + **`lib/money`/`useMoneyFormatter` ahora con currency configurable** (pedido del usuario): `formatMoney` acepta `currency` como parámetro explícito, y `useMoneyFormatter` lo resuelve leyendo `config.get` en background (fallback silencioso a USD si no hay permiso o aún no cargó — vía comportamiento default de TanStack Query, sin código extra). Feature `settings` a medida (`mach-bar-flows.md §5`): `SettingsPage` con **2 cards en un solo `Form`** (`TaxRatesCard` + `QuoteDefaultsCard`, esta última con el **Select de moneda** nuevo), remonta por `key={updatedAt}` para refrescar `initialValues` tras guardar (gotcha de AntD Form). Nav: **`SETTINGS_ITEM` nuevo**, ítem propio (no en el grupo Catálogo, según spec), icono `Settings`, en la lista principal del sidebar. Verificado: `check-types` monorepo + `db:push`/`db:seed` + en vivo por tRPC (`get` con `lastUsedSeq:0`, `update` cambia tasas+currency y persiste, validación Zod de `quoteSeqStart` rechaza `<1`) + rutas HTTP 200 (`/admin/settings`, `/admin/catalog` con el nuevo `useMoneyFormatter` dependiente de config).
 - **2026-07-13** — Tipos de evento **BE+FE** hecho (**cierra Fase 2** en código): **guard `EVENT_TYPE` nuevo**; schema `event_types` (`id/name/isActive/sortOrder`, sin timestamps); contrato Zod (sin `delete`); módulo estándar `eventTypes` (resource/repo/service/router) **sin mutación `delete`** (solo `toggleActive` — soft-delete puro, D14, igual que catálogo); error `EVENT_TYPE_ALREADY_EXISTS`/`NOT_FOUND` + i18n; `seedEventTypes` (Boda/Cumpleaños/Corporativo/Baby Shower/Aniversario/Graduación/Otro). FE: feature `event-types` (espejo de `staff` pero reemplazando la row-action `delete` por `toggleActive` dinámica activar/desactivar); se sumó al **grupo "Catálogo" ya existente** del nav (icono `CalendarHeart`); `route-access`; i18n `eventTypes.json` es/en. **Bug propio + fix**: la row-actions hook usa JSX (`icon: <PowerOff/>`) pero se creó como `.ts` en vez de `.tsx` → rompía el parser; renombrado. El create→delete rápido del archivo dejó la caché de webpack del dev server corrompida (`Module build failed`, no relacionado al código — `check-types` monorepo limpio); pendiente reiniciar `pnpm dev` para re-verificar `/admin/event-types` y `/admin/catalog` en vivo (el usuario lo hace).
@@ -102,6 +203,7 @@ Para features CRUD (clientes, staff, tipos de evento, y las **listas** de quotes
 están en los arch docs; acá va el orden.
 
 **Backend** (`docs/backend/architecture.md §9`)
+
 - [ ] Schema Drizzle en `db/schema/<x>.ts` + reexport en el barrel.
 - [ ] `@repo/schemas/src/<x>.ts`: `createXSchema`, `updateXSchema`, `xListQuerySchema` + reexport.
 - [ ] `resource` → `repository` → `service` → `router`.
@@ -111,6 +213,7 @@ están en los arch docs; acá va el orden.
 - [ ] Seeder `db/seeds/<x>.ts` + registrar en `seeds/index.ts` (en orden de deps).
 
 **Frontend** (`docs/frontend/architecture.md §13`)
+
 - [ ] `types.ts` (inferido de `RouterOutputs`).
 - [ ] `hooks/useX.ts` (`useXList`/`useCreateX`/`useUpdateX`/`useDeleteX`) + `useXRowActions`.
 - [ ] `columns.tsx` · `XCard` · `XTable` · `XForm` · `Create/EditXModal` · `XPage` + barrel.
@@ -129,14 +232,14 @@ están en los arch docs; acá va el orden.
 
 ## Fundaciones transversales (se introducen just-in-time)
 
-| Fundación | Qué | Entra en |
-|---|---|---|
-| **Guards nuevos** | `RESOURCES`: `STAFF`, `PRODUCT`, `EVENT_TYPE`, `CONFIG` + filas en `rolesPermissionsMatrix` (superadmin/admin = CRUD). `CLIENT/EVENT/QUOTE/PIPELINE/DASHBOARD` ya existen. | Fase 1–3 |
-| **Enums compartidos** | `state` (NY/NJ/CT) en `@repo/schemas`; reusado por clients, quotes, events, state_settings. | Fase 1 |
-| **Dinero en centavos** | Utils de cents + `computeQuoteTotals` en paquete compartido; `formatMoney` de display en `apps/web/src/lib`. | cents: Fase 2 · compute: Fase 4 |
-| **Porcentajes** | Helper `%` ↔ decimal (×100 / ÷100) para tasas. | Fase 3 |
-| **dnd-kit** | Dependencia para reordenar (catálogo) y kanban (pipeline). | Fase 2 |
-| **Acciones de dominio** | `approve`/`updateStage`/`assignStaff`/`markCompleted` → gatean por el `UPDATE` del recurso padre (no hay ACTIONS nuevas). | Fase 4–5 |
+| Fundación               | Qué                                                                                                                                                                        | Entra en                        |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| **Guards nuevos**       | `RESOURCES`: `STAFF`, `PRODUCT`, `EVENT_TYPE`, `CONFIG` + filas en `rolesPermissionsMatrix` (superadmin/admin = CRUD). `CLIENT/EVENT/QUOTE/PIPELINE/DASHBOARD` ya existen. | Fase 1–3                        |
+| **Enums compartidos**   | `state` (NY/NJ/CT) en `@repo/schemas`; reusado por clients, quotes, events, state_settings.                                                                                | Fase 1                          |
+| **Dinero en centavos**  | Utils de cents + `computeQuoteTotals` en paquete compartido; `formatMoney` de display en `apps/web/src/lib`.                                                               | cents: Fase 2 · compute: Fase 4 |
+| **Porcentajes**         | Helper `%` ↔ decimal (×100 / ÷100) para tasas.                                                                                                                             | Fase 3                          |
+| **dnd-kit**             | Dependencia para reordenar (catálogo) y kanban (pipeline).                                                                                                                 | Fase 2                          |
+| **Acciones de dominio** | `approve`/`updateStage`/`assignStaff`/`markCompleted` → gatean por el `UPDATE` del recurso padre (no hay ACTIONS nuevas).                                                  | Fase 4–5                        |
 
 ---
 
@@ -145,12 +248,14 @@ están en los arch docs; acá va el orden.
 Sin dependencias. Son features **estándar** (espejo de `users`); su objetivo es **fijar el patrón** de dominio.
 
 ### 1a. Clientes
+
 - **BE**: schema `clients` + `@repo/schemas/clients` + módulo (resource/repo/service/router). Guard `CLIENT` (ya existe).
 - **FE**: feature `clients` estándar. Nav `CLIENTS_ITEM` (ya existe) → `/admin/clients`.
 - **Seeder**: `seedClients` (varios leads + algún active).
 - ⚠️ **`clients.status` derivado** (lead/active) **depende de quotes** → en Fase 1 queda como `lead` para todos (o columna omitida). Se completa en **Fase 4**.
 
 ### 1b. Staff
+
 - **BE**: schema `staff` + schemas + módulo. **Guard `STAFF` nuevo** (+ roles matrix).
 - **FE**: feature `staff` estándar. **Nav `STAFF_ITEM` nuevo** (item + icono + route-access) → `/admin/staff`.
 - **Seeder**: `seedStaff`.
@@ -164,6 +269,7 @@ Sin dependencias. Son features **estándar** (espejo de `users`); su objetivo es
 Sin dependencias. Introduce **cents** (`formatMoney`) y **dnd-kit**.
 
 ### 2a. Catálogo (`products → { product_price_tiers, option_groups → options }`) — modelo D16/D17
+
 - **BE**: schema (products **sin `base_price`** + **`product_price_tiers`** `numPersons→price` cents +
   `option_groups` con **`selection_type`** `select`/`included` + `options` con **`description`**) +
   `@repo/schemas/catalog`. Módulo `products`: read anidado `products.catalog` (`includeInactive`, incluye
@@ -179,6 +285,7 @@ Sin dependencias. Introduce **cents** (`formatMoney`) y **dnd-kit**.
   el usuario pase las tablas de precio por estación.
 
 ### 2b. Tipos de evento
+
 - **BE**: schema `event_types` + schemas + módulo estándar. **Guard `EVENT_TYPE` nuevo**.
 - **FE**: feature `eventTypes` **estándar** (DataTable) con soft-delete. Nav **Catálogo → Tipos de evento**
   (`/admin/event-types`).
@@ -218,7 +325,7 @@ Deps: **clientes, catálogo, config, event_types**. La fase más grande.
   - ⚠️ **`approve` NO crea el evento todavía** (events es Fase 5): por ahora solo `stage→confirmed`. Se completa en Fase 5.
   - ✅ Completar el **`clients.status` derivado** (ya existen quotes).
 - **FE**: **constructor** a medida (`§2`: builder local + preview + `computeQuoteTotals` + guardar-borrador/enviar +
-  alta inline de lead), **pipeline** a medida (`§3`: dnd-kit + optimistic; el botón *asignar staff* queda inerte
+  alta inline de lead), **pipeline** a medida (`§3`: dnd-kit + optimistic; el botón _asignar staff_ queda inerte
   hasta Fase 5), y **lista** de quotes estándar. Nav `QUOTES`/`PIPELINE` (ya existen).
 - **Seeder**: `seedQuotes` — cotizaciones en varios stages (draft/quoted/confirmed) para poblar el pipeline.
 
