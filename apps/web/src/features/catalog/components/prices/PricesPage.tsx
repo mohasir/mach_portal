@@ -2,7 +2,6 @@
 import { Empty, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { useCan } from '@/lib/auth/useCan';
 import { usePricesList } from '../../hooks/usePrices';
 import { PriceList } from './PriceList';
@@ -15,8 +14,6 @@ export function PricesPage() {
 
   return (
     <div>
-      <PageHeader title={t('prices.title')} />
-
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 4 }).map((_, i) => (

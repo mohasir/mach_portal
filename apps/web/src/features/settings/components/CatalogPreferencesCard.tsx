@@ -1,12 +1,12 @@
 'use client';
-import { Divider, Flex, Form, Switch, Typography } from 'antd';
+import { Card, Divider, Flex, Form, Switch, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 
 export function CatalogPreferencesCard() {
   const { t } = useTranslation('settings');
 
   return (
-    <div>
+    <Card>
       <Typography.Title level={4} className="font-heading text-brown m-0!">
         {t('preferences.catalog.title')}
       </Typography.Title>
@@ -23,6 +23,6 @@ export function CatalogPreferencesCard() {
           <Switch />
         </Form.Item>
       </Flex>
-    </div>
+    </Card>
   );
 }

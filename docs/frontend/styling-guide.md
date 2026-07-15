@@ -22,60 +22,66 @@ No usar CSS modules. No usar inline styles. No hardcodear colores hex en compone
 ## Token system
 
 ### Fuente de verdad
+
 `src/lib/theme/antd.ts` — contiene el objeto `MB` con todos los colores de marca y el `machBarTheme` para AntD.
 
 ### Cómo fluyen los tokens
 
 **AntD tokens** → AntD genera `--ant-color-primary`, `--ant-border-radius`, etc. en `:root` → Tailwind los mapea en `@theme`:
 
-| CSS var AntD | Clase Tailwind | Uso |
-|---|---|---|
-| `--ant-color-primary` | `bg-primary` / `text-primary` | Verde oliva — acciones principales |
-| `--ant-color-text` | `text-foreground` | Texto base |
-| `--ant-color-text-secondary` | `text-muted` | Texto secundario |
-| `--ant-color-bg-layout` | `bg-background` | Fondo de página |
-| `--ant-color-bg-container` | `bg-surface` | Fondo de cards/inputs |
-| `--ant-color-border` | `border-line` | Bordes |
-| `--ant-color-error` | `text-error` / `bg-error` | Errores |
+| CSS var AntD                 | Clase Tailwind                | Uso                                |
+| ---------------------------- | ----------------------------- | ---------------------------------- |
+| `--ant-color-primary`        | `bg-primary` / `text-primary` | Verde oliva — acciones principales |
+| `--ant-color-text`           | `text-foreground`             | Texto base                         |
+| `--ant-color-text-secondary` | `text-muted`                  | Texto secundario                   |
+| `--ant-color-bg-layout`      | `bg-background`               | Fondo de página                    |
+| `--ant-color-bg-container`   | `bg-surface`                  | Fondo de cards/inputs              |
+| `--ant-color-border`         | `border-line`                 | Bordes                             |
+| `--ant-color-error`          | `text-error` / `bg-error`     | Errores                            |
 
 **Colores de marca** (no cubiertos por AntD) — definidos directamente en `@theme`:
 
-| Clase Tailwind | Valor | Uso |
-|---|---|---|
-| `text-brown` / `bg-brown` | `#4a2c2a` | Headings, nav dark |
-| `text-mustard` / `bg-mustard` | `#dacd6b` | Highlight, accent |
-| `bg-ivory` | `#f7eed2` | Cotizaciones, quotes |
-| `text-salmon` | `#f28a86` | Alertas, warnings |
-| `bg-olive-faint` | `#f4f4e8` | Fondos sutiles |
+| Clase Tailwind                | Valor     | Uso                  |
+| ----------------------------- | --------- | -------------------- |
+| `text-brown` / `bg-brown`     | `#4a2c2a` | Headings, nav dark   |
+| `text-mustard` / `bg-mustard` | `#dacd6b` | Highlight, accent    |
+| `bg-ivory`                    | `#f7eed2` | Cotizaciones, quotes |
+| `text-salmon`                 | `#f28a86` | Alertas, warnings    |
+| `bg-olive-faint`              | `#f4f4e8` | Fondos sutiles       |
 
 ---
 
 ## Tipografía
 
 ### Fuentes
+
 - **Work Sans** — body y UI. Default en toda la app vía `--font-sans`.
 - **Marcellus** — headings editoriales. Clase `font-heading`.
 
 Las fuentes usan Next.js font optimization — no importar desde Google Fonts directamente.
 
 ### Typography.Title
+
 `level` mapea a HTML heading y tamaño:
 
-| `level` | HTML | Tamaño | Color |
-|---|---|---|---|
-| `1` | `<h1>` | 28px | brown (auto) |
-| `2` | `<h2>` | 22px | brown (auto) |
-| `3` | `<h3>` | 16px | brown (auto) |
-| `4` | `<h4>` | 14px | brown (auto) |
-| `5` | `<h5>` | 13px | brown (auto) |
+| `level` | HTML   | Tamaño | Color        |
+| ------- | ------ | ------ | ------------ |
+| `1`     | `<h1>` | 28px   | brown (auto) |
+| `2`     | `<h2>` | 22px   | brown (auto) |
+| `3`     | `<h3>` | 16px   | brown (auto) |
+| `4`     | `<h4>` | 14px   | brown (auto) |
+| `5`     | `<h5>` | 13px   | brown (auto) |
 
 `colorTextHeading` está mapeado a `MB.brown` — el color es automático. Para Marcellus agregá `font-heading!`:
 
 ```tsx
-<Typography.Title level={1} className="font-heading!">Título</Typography.Title>
+<Typography.Title level={1} className="font-heading!">
+  Título
+</Typography.Title>
 ```
 
 ### Typography.Text — variantes semánticas (props AntD)
+
 ```tsx
 <Typography.Text type="secondary">muted</Typography.Text>   // usa colorTextSecondary = MB.muted
 <Typography.Text type="danger">error</Typography.Text>
@@ -85,6 +91,7 @@ Las fuentes usan Next.js font optimization — no importar desde Google Fonts di
 ```
 
 ### Clases Tailwind del UI kit
+
 ```tsx
 <span className="text-label">FIELD LABEL</span>    // 10px / 600 / uppercase
 <span className="text-small">timestamp</span>       // 11px
@@ -98,14 +105,14 @@ Las fuentes usan Next.js font optimization — no importar desde Google Fonts di
 
 Preferir componentes AntD antes de divs con Tailwind:
 
-| Necesidad | Usar |
-|---|---|
-| Flex layout | `<Flex justify="..." align="...">` |
-| Grid / columnas | `<Row> <Col span={12}>` |
-| Card con borde | `<Card>` — borde y fondo del tema automático |
-| Espaciado entre elementos | `<Space size="...">` |
-| Divider | `<Divider>` |
-| Texto | `<Typography.Text>` / `<Typography.Paragraph>` |
+| Necesidad                 | Usar                                           |
+| ------------------------- | ---------------------------------------------- |
+| Flex layout               | `<Flex justify="..." align="...">`             |
+| Grid / columnas           | `<Row> <Col span={12}>`                        |
+| Card con borde            | `<Card>` — borde y fondo del tema automático   |
+| Espaciado entre elementos | `<Space size="...">`                           |
+| Divider                   | `<Divider>`                                    |
+| Texto                     | `<Typography.Text>` / `<Typography.Paragraph>` |
 
 Tailwind para lo que AntD no tiene prop nativa:
 
@@ -124,7 +131,14 @@ Tailwind para lo que AntD no tiene prop nativa:
 
 ## Iconos
 
-**Todos los iconos vienen de `lucide-react`.** Prohibido `@ant-design/icons` (removido del proyecto) y cualquier otra librería de iconos o SVG inline sueltos.
+**Todos los iconos vienen de `lucide-react` por defecto.** Prohibido `@ant-design/icons` (removido del proyecto) y cualquier otra librería de iconos o SVG inline sueltos.
+
+**Excepción: `react-icons`** — instalado (`apps/web`) para los casos puntuales en que un ícono de
+lucide no se ajusta a lo que el usuario busca. Se usa **solo a pedido explícito** ("este ícono no
+me gusta, probá con react-icons/..."), nunca como elección por defecto ni a iniciativa propia — si
+lucide tiene un ícono razonable para el caso, se usa ese. Mismas reglas de `size`/color que lucide
+(los sets de `react-icons` también soportan `size` y heredan color por `currentColor`/`fill`, según
+el set — revisar el ícono puntual).
 
 ```tsx
 import { Menu, Bell, LogOut } from 'lucide-react';
@@ -134,11 +148,11 @@ import { Menu, Bell, LogOut } from 'lucide-react';
 - **Color:** lucide usa `stroke="currentColor"`, igual que AntD. Heredan el color del contenedor — usá clases `text-*` (`text-muted`, `text-primary`, …), nunca la prop `color` con hex.
 - **Tamaño:** lucide viene a `24px` por defecto (AntD sizaba por `font-size`). Pasá siempre `size` explícito según contexto:
 
-  | Contexto | `size` |
-  |---|---|
-  | Botones de acción, nav, avatar | `18` |
-  | Inline en menús / dropdowns | `16` |
-  | Micro (junto a texto `text-xs`) | `14` |
+  | Contexto                        | `size` |
+  | ------------------------------- | ------ |
+  | Botones de acción, nav, avatar  | `18`   |
+  | Inline en menús / dropdowns     | `16`   |
+  | Micro (junto a texto `text-xs`) | `14`   |
 
 - **Con componentes AntD:** se pasan como `ReactNode` en la prop `icon` (Button, Menu items, Avatar) o `prefix` (Input):
 
@@ -153,7 +167,7 @@ El mapa de iconos de navegación vive en `src/lib/navigation/constants/icons.tsx
 
 ## Fechas
 
-**Toda fecha mostrada al usuario se formatea con `date-fns`** a través del helper central `src/lib/date`. Prohibido `toLocaleDateString`/`toLocaleString`, `Intl.DateTimeFormat` y armar formatos a mano (`${d}/${m}/${y}`).
+**Toda fecha mostrada al usuario se formatea con `dayjs`** a través del helper central `src/lib/date`. Prohibido `toLocaleDateString`/`toLocaleString`, `Intl.DateTimeFormat` y armar formatos a mano (`${d}/${m}/${y}`). Se usa `dayjs` para centralizar en una sola lib de fechas, ya que AntD (`DatePicker`/`TimePicker`) ya la requiere nativamente.
 
 El formateo es **locale-aware** (es/en) y se enlaza al idioma activo. En componentes usar el hook:
 
@@ -162,10 +176,10 @@ import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 
 const { date, dateLong, dateTime, relative } = useDateFormatter();
 
-date(note.createdAt);      // "9 jul 2026"
-dateLong(new Date());      // "9 de julio de 2026"
-dateTime(note.updatedAt);  // "9 jul 2026, 14:30"
-relative(note.createdAt);  // "hace 3 días"
+date(note.createdAt); // "9 jul. 2026"
+dateLong(new Date()); // "9 de julio de 2026"
+dateTime(note.updatedAt); // "9 jul. 2026, 14:30"
+relative(note.createdAt); // "hace 3 días"
 ```
 
 Fuera de componentes (utils, loaders) usar las funciones puras de `src/lib/date`, pasando el locale explícito: `formatDate(value, locale)`.
@@ -213,6 +227,7 @@ Escala de menor a mayor intrusión. **Usá siempre el primer nivel que resuelva 
 ```
 
 Reglas del nivel 3:
+
 - **Siempre** dentro de `@layer components` (nunca un selector suelto fuera de capa: rompe el orden y te obliga a `!`).
 - **Comentá el porqué** — qué estilo de AntD estás neutralizando y su causa.
 - Solo para arreglos **transversales/estructurales**. Un ajuste puntual de una instancia va por nivel 1 o 2.
@@ -241,7 +256,7 @@ const [form] = Form.useForm<MiTipo>();
   >
     <Input />
   </Form.Item>
-</Form>
+</Form>;
 ```
 
 `rules` maneja validación en tiempo real: `required`, `type` (email, url, number), `min`, `max`, `pattern`, `validator` async.

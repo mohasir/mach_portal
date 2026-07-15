@@ -3,6 +3,42 @@
   "snapshotHint": "Changes only affect new quotes; existing ones keep their snapshot.",
   "save": "Save",
   "saveSuccess": "Settings saved",
+  "groups": {
+    "account": "Account",
+    "system": "System"
+  },
+  "profile": {
+    "title": "Profile",
+    "name": "Name",
+    "nameRequired": "Name is required",
+    "email": "Email address",
+    "role": "Role",
+    "updateError": "Couldn't update your profile",
+    "changePassword": {
+      "title": "Change password",
+      "current": "Current password",
+      "currentRequired": "Enter your current password",
+      "new": "New password",
+      "newRequired": "New password must be at least 8 characters",
+      "confirm": "Confirm password",
+      "confirmRequired": "Confirm your new password",
+      "mismatch": "Passwords don't match",
+      "success": "Password updated",
+      "error": "Couldn't change the password"
+    }
+  },
+  "security": {
+    "title": "Security",
+    "sessions": {
+      "title": "Active sessions",
+      "caption": "Devices that are currently signed in to your account.",
+      "current": "Current",
+      "activeNow": "Active now",
+      "revoke": "Revoke",
+      "revokeSuccess": "Session revoked",
+      "revokeError": "Couldn't revoke the session"
+    }
+  },
   "general": {
     "title": "General"
   },
@@ -16,6 +52,12 @@
   },
   "taxRates": {
     "title": "Tax rates by state"
+  },
+  "quoteStages": {
+    "title": "Quote stages",
+    "label": "Label",
+    "color": "Color",
+    "descriptionPlaceholder": "Description (optional) — when this stage applies"
   },
   "quoteDefaults": {
     "title": "Quotes",
@@ -38,6 +80,7 @@
     "quoteValidityInvalid": "Invalid validity",
     "minPersonsInvalid": "Invalid minimum",
     "quoteSeqStartInvalid": "Invalid sequence start",
-    "currencyInvalid": "Invalid currency"
+    "currencyInvalid": "Invalid currency",
+    "quoteStagesLabelInvalid": "Label required"
   }
 }

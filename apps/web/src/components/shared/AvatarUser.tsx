@@ -1,18 +1,23 @@
 'use client';
+import type { ReactNode } from 'react';
 import { Avatar, Typography } from 'antd';
 
 interface AvatarUserProps {
   name: string;
   email?: string | null;
+  size?: number;
+  extra?: ReactNode;
 }
 
-export function AvatarUser({ name, email }: AvatarUserProps) {
+export function AvatarUser({ name, email, size, extra }: AvatarUserProps) {
   const source = name?.trim() || email?.trim() || '';
   const initial = source ? source[0]!.toUpperCase() : '?';
 
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <Avatar className="bg-olive-faint text-brown shrink-0 font-medium">{initial}</Avatar>
+      <Avatar size={size} className="bg-olive-faint text-brown shrink-0 font-medium">
+        {initial}
+      </Avatar>
       <div className="min-w-0">
         <Typography.Text strong className="text-brown block truncate">
           {name || '—'}
@@ -22,6 +27,7 @@ export function AvatarUser({ name, email }: AvatarUserProps) {
             {email}
           </Typography.Text>
         ) : null}
+        {extra}
       </div>
     </div>
   );

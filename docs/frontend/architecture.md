@@ -28,7 +28,7 @@
 | Componentes | **Ant Design v6** |
 | Estilos | **Tailwind CSS v4** sobre tokens AntD (ver `styling-guide.md`) |
 | Iconos | **`lucide-react`** (prohibido `@ant-design/icons`) |
-| Fechas | **`date-fns`** vía `lib/date` (`useDateFormatter`) |
+| Fechas | **`dayjs`** vía `lib/date` (`useDateFormatter`) |
 | i18n | **i18next** + **react-i18next** (namespaces) |
 | Monorepo | **Turborepo** + **pnpm workspaces** |
 
@@ -72,7 +72,7 @@ apps/web/src/
 │   ├── auth/                   # client.ts, useCan, <Can>, navigation.ts + route-access.ts (RBAC por ruta)
 │   ├── navigation/             # Navegación data-driven (items, icons, config, useNavigation)
 │   ├── hooks/                  # useIsDesktop, useDateFormatter, ...
-│   ├── date/                   # helpers date-fns (formatDate/…)
+│   ├── date/                   # helpers dayjs (formatDate/…)
 │   ├── i18n/                   # config.ts
 │   ├── error/                  # useApiError.ts (parser tRPC → i18n)
 │   └── stores/                 # Zustand stores (locale, ui, ...)
@@ -533,7 +533,7 @@ export function useCan() {
 - Recursos en `locales/{es,en}/<namespace>.json`.
 - **Todo** texto visible usa `t('clave')` con `useTranslation('<feature>')`.
 - Namespaces transversales: **`common`** (acciones y tabla: `save`, `cancel`, `edit`, `delete`, `yes`/`no`, `table.actions/copyId/copied/search/total`, `confirm.*`); **`admin`** (shell/navegación); **`auth`** (login + estados de sesión del `AuthProvider`); **`api`** (errores).
-- Fechas: **nunca** `toLocaleDateString`; usar `useDateFormatter()` (date-fns, locale-aware).
+- Fechas: **nunca** `toLocaleDateString`; usar `useDateFormatter()` (dayjs, locale-aware).
 - **Convenciones de claves:** validación `<feature>.validation.<regla>`; UI `<feature>.<seccion>.<clave>` (ej. `<feature>.columns.name`, `<feature>.index.add`); errores `errors.<CODE>` en `api`.
 
 ---
@@ -541,7 +541,7 @@ export function useCan() {
 ## 11. UI (Ant Design + Tailwind)
 
 - Componentes desde **`antd`**, importados por nombre. No hay `@repo/ui`.
-- Tokens (marca MB, `machBarTheme`), AntD↔Tailwind, tipografía, **iconos (`lucide-react`)**, **fechas (`date-fns`)** y la **escala de overrides** están en **`styling-guide.md`** — lectura obligatoria y manda sobre cualquier decisión visual.
+- Tokens (marca MB, `machBarTheme`), AntD↔Tailwind, tipografía, **iconos (`lucide-react`)**, **fechas (`dayjs`)** y la **escala de overrides** están en **`styling-guide.md`** — lectura obligatoria y manda sobre cualquier decisión visual.
 - Reglas rápidas: AntD para componentes/layout, Tailwind para overrides; nada de CSS modules, inline styles, ni hex hardcodeados; mensajes vía `App.useApp()` (no métodos estáticos); `!` de Tailwind como **sufijo** (`m-0!`).
 - **Tablas → siempre `DataTable`** (§4). Prohibido `<Table>` de AntD armado a mano en una feature y prohibido `@tanstack/react-table`.
 - **Estados de carga → `Skeleton` vs `Spin` según el caso** (ninguno prohibido; se elige por caso): usar **`Skeleton`** en la **primera carga** de contenido con forma conocida (páginas, detalles, tablas, cards, formularios que hidratan) — preserva el layout y baja la latencia percibida; usar **`Spin`** para **acciones/mutations** en vuelo (botón `loading`, guardado) y para **refetch sobre contenido ya renderizado** (overlay). Regla: *primera carga → `Skeleton`; acción o refresco de algo ya visible → `Spin`*.

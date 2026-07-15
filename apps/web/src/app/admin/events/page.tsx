@@ -1,5 +1,5 @@
-import { PlaceholderPage } from '@/components/shared/PlaceholderPage';
+import { EventsPage } from '@/features/events';
 
 export default function Page() {
-  return <PlaceholderPage titleKey="nav.events" />;
+  return <EventsPage />;
 }

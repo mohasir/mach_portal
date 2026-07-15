@@ -33,7 +33,7 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
 
       <Flex align="center" gap={16}>
         <LanguageSwitcher />
-        <NotificationMenu />
+        {/* <NotificationMenu /> */}
         <UserMenu />
       </Flex>
     </Flex>

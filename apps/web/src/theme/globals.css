@@ -49,6 +49,25 @@
     justify-content: center;
   }
 
+  /* AntD's Tabs theme tokens (theme/antd.ts) only cover color, not weight —
+     there's no itemActiveFontWeight token, so the active tab label is bolded here. */
+  .ant-tabs-tab-active .ant-tabs-tab-btn {
+    font-weight: 600;
+  }
+
+  /* Same root cause as the .ant-btn-icon fix above: Tailwind's preflight sets
+     svg { display: block }, which breaks .ant-tabs-tab-btn's icon+label row
+     (the icon span isn't flex, so the block svg drops to its own line). */
+  .ant-tabs-tab-btn {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .ant-tabs-tab-icon {
+    display: inline-flex;
+    align-items: center;
+  }
+
   /* Phones collapse the DataTable to a single card column; drop the now-empty header row. */
   @media (max-width: 575px) {
     .mach-datatable .ant-table-thead {

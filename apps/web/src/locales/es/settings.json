@@ -3,6 +3,42 @@
   "snapshotHint": "Los cambios afectan solo a las cotizaciones nuevas; las existentes conservan su snapshot.",
   "save": "Guardar",
   "saveSuccess": "Configuración guardada",
+  "groups": {
+    "account": "Cuenta",
+    "system": "Sistema"
+  },
+  "profile": {
+    "title": "Perfil",
+    "name": "Nombre",
+    "nameRequired": "El nombre es obligatorio",
+    "email": "Correo electrónico",
+    "role": "Rol",
+    "updateError": "No se pudo actualizar el perfil",
+    "changePassword": {
+      "title": "Cambiar contraseña",
+      "current": "Contraseña actual",
+      "currentRequired": "Ingresá tu contraseña actual",
+      "new": "Nueva contraseña",
+      "newRequired": "La nueva contraseña debe tener al menos 8 caracteres",
+      "confirm": "Confirmar contraseña",
+      "confirmRequired": "Confirmá la nueva contraseña",
+      "mismatch": "Las contraseñas no coinciden",
+      "success": "Contraseña actualizada",
+      "error": "No se pudo cambiar la contraseña"
+    }
+  },
+  "security": {
+    "title": "Seguridad",
+    "sessions": {
+      "title": "Sesiones activas",
+      "caption": "Dispositivos que tienen una sesión iniciada en tu cuenta.",
+      "current": "Actual",
+      "activeNow": "Activa ahora",
+      "revoke": "Revocar",
+      "revokeSuccess": "Sesión revocada",
+      "revokeError": "No se pudo revocar la sesión"
+    }
+  },
   "general": {
     "title": "General"
   },
@@ -16,6 +52,12 @@
   },
   "taxRates": {
     "title": "Impuestos por estado"
+  },
+  "quoteStages": {
+    "title": "Estados de cotización",
+    "label": "Nombre",
+    "color": "Color",
+    "descriptionPlaceholder": "Descripción (opcional) — cuándo aplica este estado"
   },
   "quoteDefaults": {
     "title": "Cotizaciones",
@@ -38,6 +80,7 @@
     "quoteValidityInvalid": "Validez inválida",
     "minPersonsInvalid": "Mínimo inválido",
     "quoteSeqStartInvalid": "Inicio de consecutivo inválido",
-    "currencyInvalid": "Moneda inválida"
+    "currencyInvalid": "Moneda inválida",
+    "quoteStagesLabelInvalid": "Nombre requerido"
   }
 }

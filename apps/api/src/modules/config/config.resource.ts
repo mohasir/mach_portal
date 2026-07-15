@@ -1,9 +1,17 @@
-import { appSettings, stateSettings } from '../../db/schema';
+import { appSettings, stateSettings, quoteStages } from '../../db/schema';
 
 export const publicStateSettingColumns = {
   state: stateSettings.state,
   taxRate: stateSettings.taxRate,
   updatedAt: stateSettings.updatedAt,
+} as const;
+
+export const publicQuoteStageColumns = {
+  id: quoteStages.id,
+  label: quoteStages.label,
+  color: quoteStages.color,
+  description: quoteStages.description,
+  sortOrder: quoteStages.sortOrder,
 } as const;
 
 export const publicAppSettingsColumns = {
@@ -24,6 +32,10 @@ export type PublicAppSettings = Pick<
   typeof appSettings.$inferSelect,
   keyof typeof publicAppSettingsColumns
 >;
+export type PublicQuoteStage = Pick<
+  typeof quoteStages.$inferSelect,
+  keyof typeof publicQuoteStageColumns
+>;
 
 export const stateSettingResource = (row: PublicStateSetting) => ({
   state: row.state,
@@ -41,16 +53,24 @@ export const appSettingsResource = (row: PublicAppSettings) => ({
   updatedAt: row.updatedAt,
 });
 
-// `lastUsedSeq` is a read-only hint for the settings form (min bound + caption on
-// quoteSeqStart), not a column — docs/mach-bar-flows.md §5.2/§5.4.
+export const quoteStageResource = (row: PublicQuoteStage) => ({
+  id: row.id,
+  label: row.label,
+  color: row.color,
+  description: row.description,
+  sortOrder: row.sortOrder,
+});
+
 export const configResource = (
   stateRows: PublicStateSetting[],
   appRow: PublicAppSettings,
   lastUsedSeq: number,
+  quoteStageRows: PublicQuoteStage[],
 ) => ({
   stateSettings: stateRows.map(stateSettingResource),
   appSettings: appSettingsResource(appRow),
   lastUsedSeq,
+  quoteStages: quoteStageRows.map(quoteStageResource),
 });
 
 export type ConfigResource = ReturnType<typeof configResource>;

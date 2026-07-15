@@ -8,14 +8,15 @@ export class ConfigService {
   constructor(private repo: ConfigRepository) {}
 
   async get() {
-    const [stateRows, appRow, lastUsedSeq] = await Promise.all([
+    const [stateRows, appRow, lastUsedSeq, quoteStageRows] = await Promise.all([
       this.repo.findStateSettings(),
       this.repo.findAppSettings(),
       this.repo.getLastUsedSeq(),
+      this.repo.findQuoteStages(),
     ]);
     if (!appRow)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.config.NOT_FOUND) });
-    return configResource(stateRows, appRow, lastUsedSeq);
+    return configResource(stateRows, appRow, lastUsedSeq, quoteStageRows);
   }
 
   async update(input: UpdateConfigInput) {
@@ -29,6 +30,7 @@ export class ConfigService {
 
     await this.repo.upsertStateSettings(input.stateSettings);
     await this.repo.upsertAppSettings(input.appSettings);
+    await this.repo.upsertQuoteStages(input.quoteStages);
     return this.get();
   }
 }

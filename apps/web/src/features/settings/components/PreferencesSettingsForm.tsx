@@ -1,6 +1,7 @@
 'use client';
 import { Button, Form, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
+import type { QuoteStageColor, QuoteStageId } from '@repo/schemas';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
 import { useConfig } from '../hooks/useConfig';
 import { useUpdateConfig } from '../hooks/useUpdateConfig';
@@ -28,6 +29,12 @@ export function PreferencesSettingsForm() {
     void updateConfig({
       stateSettings: data.stateSettings.map(({ state, taxRate }) => ({ state, taxRate })),
       appSettings: { ...data.appSettings, catalogSortable: values.catalogSortable },
+      quoteStages: data.quoteStages.map(({ id, label, color, description }) => ({
+        id: id as QuoteStageId,
+        label,
+        color: color as QuoteStageColor,
+        description: description ?? undefined,
+      })),
     });
   };
 
@@ -40,7 +47,7 @@ export function PreferencesSettingsForm() {
       onFinish={onFinish}
       requiredMark={false}
     >
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-6">
         <CatalogPreferencesCard />
       </div>
 

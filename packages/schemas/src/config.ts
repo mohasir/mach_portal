@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { stateSchema } from './enums';
+import { updateQuoteStagesSchema } from './quotes';
 
 const rateSchema = (message: string) => z.number().min(0, message).max(1, message);
 
@@ -25,5 +26,6 @@ export type AppSettingsInput = z.infer<typeof appSettingsSchema>;
 export const updateConfigSchema = z.object({
   stateSettings: z.array(stateSettingSchema).min(1),
   appSettings: appSettingsSchema,
+  quoteStages: updateQuoteStagesSchema,
 });
 export type UpdateConfigInput = z.infer<typeof updateConfigSchema>;
