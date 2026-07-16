@@ -14,7 +14,17 @@
     "cancelled": "Cancelled"
   },
   "calendar": {
-    "moreEvents": "+{{count}} more"
+    "moreEvents": "+{{count}} more",
+    "today": "Today",
+    "prev": "Previous",
+    "next": "Next",
+    "search": "Search",
+    "searchPlaceholder": "Search events…",
+    "views": {
+      "month": "Month",
+      "week": "Week",
+      "year": "Year"
+    }
   },
   "detail": {
     "backToQuote": "View quote",

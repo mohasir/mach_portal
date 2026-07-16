@@ -14,7 +14,17 @@
     "cancelled": "Cancelado"
   },
   "calendar": {
-    "moreEvents": "+{{count}} más"
+    "moreEvents": "+{{count}} más",
+    "today": "Hoy",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar eventos…",
+    "views": {
+      "month": "Mes",
+      "week": "Semana",
+      "year": "Año"
+    }
   },
   "detail": {
     "backToQuote": "Ver cotización",

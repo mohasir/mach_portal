@@ -68,12 +68,19 @@ export type EventListItemResource = ReturnType<typeof eventListItemResource>;
 
 export type EventCalendarRow = Pick<
   EventWithNames,
-  'id' | 'eventDate' | 'clientName' | 'eventTypeName' | 'completedAt' | 'quoteCancelled'
+  | 'id'
+  | 'eventDate'
+  | 'eventTime'
+  | 'clientName'
+  | 'eventTypeName'
+  | 'completedAt'
+  | 'quoteCancelled'
 >;
 
 export const eventCalendarItemResource = (row: EventCalendarRow) => ({
   id: row.id,
   eventDate: row.eventDate,
+  eventTime: row.eventTime,
   clientName: row.clientName,
   eventTypeName: row.eventTypeName,
   status: deriveStatus(row),

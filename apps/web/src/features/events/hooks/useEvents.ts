@@ -12,11 +12,11 @@ export function useEvent(id: string | undefined) {
   return useQuery({ ...trpc.events.getById.queryOptions({ id: id! }), enabled: !!id });
 }
 
-/** Bulk, unpaginated — one visible month at a time (mirrors `quotes.board` vs `quotes.list`). */
-export function useEventsCalendar(query: EventsCalendarQuery) {
+export function useEventsCalendar(query: EventsCalendarQuery, options?: { enabled?: boolean }) {
   const trpc = useTRPC();
   return useQuery({
     ...trpc.events.calendar.queryOptions(query),
     placeholderData: keepPreviousData,
+    enabled: options?.enabled,
   });
 }

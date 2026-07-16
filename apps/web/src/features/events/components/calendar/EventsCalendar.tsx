@@ -1,87 +1,139 @@
 'use client';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Badge, Calendar, Grid } from 'antd';
+import { Calendar, Grid } from 'antd';
 import type { CalendarProps } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
-import { useTranslation } from 'react-i18next';
+import type { Locale as AppLocale } from '@/lib/i18n/config';
+import { useLocaleStore } from '@/lib/stores/locale.store';
 import { useEventsCalendar } from '../../hooks/useEvents';
-import { EVENT_STATUS_COLORS } from '../../helpers';
 import type { EventCalendarItem } from '../../types';
+import { CalendarDayEvents } from './CalendarDayEvents';
+import { CalendarToolbar } from './CalendarToolbar';
+import { WeekView } from './WeekView';
+import { YearView } from './YearView';
+import type { CalendarViewMode } from './types';
 
-const MAX_VISIBLE = 3;
+const UNIT_BY_VIEW: Record<CalendarViewMode, 'month' | 'week' | 'year'> = {
+  month: 'month',
+  week: 'week',
+  year: 'year',
+};
 
 export function EventsCalendar() {
-  const { t } = useTranslation('events');
   const router = useRouter();
+  const locale = useLocaleStore((s) => s.locale) as AppLocale;
   const screens = Grid.useBreakpoint();
+  const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
   const [cursor, setCursor] = useState<Dayjs>(() => dayjs());
+  const [search, setSearch] = useState('');
 
-  const { data } = useEventsCalendar({ month: cursor.month() + 1, year: cursor.year() });
+  const rangeStart = viewMode === 'week' ? cursor.startOf('week') : cursor.startOf('month');
+  const rangeEnd = viewMode === 'week' ? rangeStart.add(6, 'day') : cursor.endOf('month');
+
+  // Year view is a pure date grid (no event dots, matches the reference), so skip the fetch.
+  const calendarEnabled = viewMode !== 'year';
+  const queryA = useEventsCalendar(
+    { month: rangeStart.month() + 1, year: rangeStart.year() },
+    { enabled: calendarEnabled },
+  );
+  const queryB = useEventsCalendar(
+    { month: rangeEnd.month() + 1, year: rangeEnd.year() },
+    { enabled: calendarEnabled },
+  );
+
+  const events = useMemo(() => {
+    const map = new Map<string, EventCalendarItem>();
+    for (const event of queryA.data ?? []) map.set(event.id, event);
+    for (const event of queryB.data ?? []) map.set(event.id, event);
+    return Array.from(map.values());
+  }, [queryA.data, queryB.data]);
+
+  const filteredEvents = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return events;
+    return events.filter(
+      (event) =>
+        event.clientName.toLowerCase().includes(term) ||
+        (event.eventTypeName?.toLowerCase().includes(term) ?? false),
+    );
+  }, [events, search]);
 
   const eventsByDay = useMemo(() => {
     const map = new Map<string, EventCalendarItem[]>();
-    for (const event of data ?? []) {
+    for (const event of filteredEvents) {
       if (!event.eventDate) continue;
       const list = map.get(event.eventDate) ?? [];
       list.push(event);
       map.set(event.eventDate, list);
     }
     return map;
-  }, [data]);
+  }, [filteredEvents]);
+
+  const periodLabel = useMemo(() => {
+    if (viewMode === 'year') return cursor.locale(locale).format('YYYY');
+    if (viewMode === 'month') return cursor.locale(locale).format('MMMM YYYY');
+
+    const start = rangeStart.locale(locale);
+    const end = rangeEnd.locale(locale);
+    if (start.isSame(end, 'month')) return `${start.format('MMM D')} – ${end.format('D, YYYY')}`;
+    if (start.isSame(end, 'year')) return `${start.format('MMM D')} – ${end.format('MMM D, YYYY')}`;
+    return `${start.format('MMM D, YYYY')} – ${end.format('MMM D, YYYY')}`;
+  }, [viewMode, cursor, rangeStart, rangeEnd, locale]);
 
   const goToEvent = (id: string) => router.push(`/admin/events/${id}`);
+  const onToday = () => setCursor(dayjs());
+  const onNavigate = (direction: 'prev' | 'next') => {
+    setCursor((c) => c.add(direction === 'next' ? 1 : -1, UNIT_BY_VIEW[viewMode]));
+  };
+  const onSelectYearDate = (date: Dayjs) => {
+    setCursor(date);
+    setViewMode('month');
+  };
 
   const cellRender: NonNullable<CalendarProps<Dayjs>['cellRender']> = (current, info) => {
     if (info.type !== 'date') return info.originNode;
 
-    const dayEvents = eventsByDay.get(current.format('YYYY-MM-DD')) ?? [];
-    if (!dayEvents.length) return null;
-
-    if (!screens.md) {
-      return (
-        <div className="flex justify-center">
-          <Badge count={dayEvents.length} size="small" color={EVENT_STATUS_COLORS.upcoming} />
-        </div>
-      );
-    }
-
-    const visible = dayEvents.slice(0, MAX_VISIBLE);
-    const hidden = dayEvents.length - visible.length;
-
     return (
-      <ul className="m-0 list-none space-y-0.5 p-0">
-        {visible.map((event) => (
-          <li key={event.id}>
-            <Badge
-              color={EVENT_STATUS_COLORS[event.status]}
-              text={
-                <span
-                  className="cursor-pointer truncate text-xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    goToEvent(event.id);
-                  }}
-                >
-                  {event.clientName}
-                </span>
-              }
-            />
-          </li>
-        ))}
-        {hidden > 0 && (
-          <li className="text-xs text-gray-500">{t('calendar.moreEvents', { count: hidden })}</li>
-        )}
-      </ul>
+      <CalendarDayEvents
+        events={eventsByDay.get(current.format('YYYY-MM-DD')) ?? []}
+        compact={!screens.md}
+        onSelect={goToEvent}
+      />
     );
   };
 
   return (
-    <Calendar
-      value={cursor}
-      fullscreen={!!screens.md}
-      cellRender={cellRender}
-      onPanelChange={setCursor}
-    />
+    <div>
+      <CalendarToolbar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        periodLabel={periodLabel}
+        onNavigate={onNavigate}
+        onToday={onToday}
+        search={search}
+        onSearchChange={setSearch}
+      />
+      {viewMode === 'week' && (
+        <WeekView
+          weekStart={rangeStart}
+          eventsByDay={eventsByDay}
+          locale={locale}
+          onSelectEvent={goToEvent}
+        />
+      )}
+      {viewMode === 'year' && (
+        <YearView year={cursor.year()} locale={locale} onSelectDate={onSelectYearDate} />
+      )}
+      {viewMode === 'month' && (
+        <Calendar
+          value={cursor}
+          mode="month"
+          fullscreen={!!screens.md}
+          cellRender={cellRender}
+          onPanelChange={setCursor}
+        />
+      )}
+    </div>
   );
 }
