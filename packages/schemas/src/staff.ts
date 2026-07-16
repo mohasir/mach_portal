@@ -7,6 +7,11 @@ export const staffListQuerySchema = listQuerySchema.extend({
 });
 export type StaffListQuery = z.infer<typeof staffListQuerySchema>;
 
+export const staffAvailabilityQuerySchema = z.object({
+  date: z.iso.date(),
+});
+export type StaffAvailabilityQuery = z.infer<typeof staffAvailabilityQuerySchema>;
+
 const staffMutationFields = {
   name: z.string().trim().min(1, 'staff.validation.nameRequired').max(120),
   email: optionalEmail('staff.validation.emailInvalid'),
