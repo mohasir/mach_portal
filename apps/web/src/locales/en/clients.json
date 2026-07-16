@@ -45,5 +45,13 @@
   "validation": {
     "nameRequired": "Name is required",
     "emailInvalid": "Invalid email"
+  },
+  "detail": {
+    "edit": "Edit",
+    "tabs": {
+      "quotes": "Quotes",
+      "events": "Events"
+    },
+    "newQuote": "New quote"
   }
 }

@@ -90,8 +90,12 @@ export const quoteListItemResource = (row: QuoteWithNames) => ({
   eventTypeName: row.eventTypeName,
 });
 
-// pipeline card — lean shape, mach-bar-flows.md §3.1 (staffAssignedCount/depositPaid land in Fase 5)
-export type QuoteCardRow = QuoteWithNames & { linesCount: number };
+export type QuoteCardRow = QuoteWithNames & {
+  linesCount: number;
+  eventId: string | null;
+  depositPaid: boolean | null;
+  staffAssignedCount: number;
+};
 
 export const quoteCardResource = (row: QuoteCardRow) => ({
   id: row.id,
@@ -103,14 +107,13 @@ export const quoteCardResource = (row: QuoteCardRow) => ({
   stageId: row.stageId,
   validUntil: row.validUntil,
   linesCount: row.linesCount,
+  eventId: row.eventId,
+  depositPaid: row.depositPaid,
+  staffAssignedCount: row.staffAssignedCount,
 });
 
 export type QuoteCardResource = ReturnType<typeof quoteCardResource>;
 
-// detail — client/eventType/creator names are denormalized (the builder shows them in edit mode;
-// there's no `clients.getById`/`users.getById` to resolve them otherwise), but lines/selections
-// stay raw ids only — the builder already resolves product/option labels from the cached catalog
-// lookup.
 export type QuoteLineSelection = { optionGroupId: string; optionIds: string[] };
 export type QuoteLineDetail = {
   id: string;
@@ -130,20 +133,13 @@ export type StageHistoryRow = {
   changedAt: Date;
 };
 
-export const buildQuoteDetail = (
-  quoteRow: QuoteDetailRow,
+export const buildQuoteLineDetails = (
   lineRows: PublicQuoteLine[],
   optionRows: PublicQuoteLineOption[],
-  historyRows: StageHistoryRow[],
-) => ({
-  ...quoteResource(quoteRow),
-  clientName: quoteRow.clientName,
-  eventTypeName: quoteRow.eventTypeName,
-  createdByName: quoteRow.createdByName,
-  stageHistory: historyRows,
-  lines: lineRows
+): QuoteLineDetail[] =>
+  lineRows
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((line): QuoteLineDetail => {
+    .map((line) => {
       const lineOptions = optionRows.filter((o) => o.quoteLineId === line.id);
       const groupIds = [...new Set(lineOptions.map((o) => o.optionGroupId))];
       return {
@@ -159,7 +155,20 @@ export const buildQuoteDetail = (
             .map((o) => o.optionId),
         })),
       };
-    }),
+    });
+
+export const buildQuoteDetail = (
+  quoteRow: QuoteDetailRow,
+  lineRows: PublicQuoteLine[],
+  optionRows: PublicQuoteLineOption[],
+  historyRows: StageHistoryRow[],
+) => ({
+  ...quoteResource(quoteRow),
+  clientName: quoteRow.clientName,
+  eventTypeName: quoteRow.eventTypeName,
+  createdByName: quoteRow.createdByName,
+  stageHistory: historyRows,
+  lines: buildQuoteLineDetails(lineRows, optionRows),
 });
 
 export type QuoteDetailResource = ReturnType<typeof buildQuoteDetail>;

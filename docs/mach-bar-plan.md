@@ -31,10 +31,10 @@
 > **Próximo paso**; (3) continuá desde ahí. **Actualizá esta sección** al cerrar cada tarea: marcá ✅,
 > movés el "Próximo paso" y agregás una línea a la bitácora.
 
-**Última actualización:** 2026-07-15 · **Fase actual:** Cotizaciones (Fase 4) — **cerrada**, más un
-rework post-cierre (stages por id + createdBy + historial, ver bitácora) · **Próximo paso:** arrancar
-**Fase 5 (Eventos)** — deps: cotizaciones (✅) + staff (✅). En paralelo sigue pendiente, sin bloquear:
-terminar el re-seed de catálogo con datos reales (7 de 10 estaciones + decisión de precio de Craft Bar).
+**Última actualización:** 2026-07-15 · **Fase actual:** Eventos (Fase 5) — **cierra la fase (BE+FE+
+seeder+checkpoint)** (ver bitácora) · **Próximo paso:** Fase 6 **Dashboard** (agregaciones + gráfica).
+En paralelo sigue pendiente, sin bloquear: terminar el re-seed de catálogo con datos reales (7 de 10
+estaciones + decisión de precio de Craft Bar).
 
 Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 
@@ -46,7 +46,7 @@ Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 | 2    | Tipos de evento | ✅  | ✅  |   ✅   |     ✅     |
 | 3    | Configuración   | ✅  | ✅  |   ✅   |     ✅     |
 | 4    | Cotizaciones    | ✅  | ✅  |   ✅   |     ✅     |
-| 5    | Eventos         |  ☐  |  ☐  |   ☐    |     ☐      |
+| 5    | Eventos         | ✅  | ✅  |   ✅   |     ✅     |
 | 6    | Dashboard       |  ☐  |  ☐  |   ☐    |     ☐      |
 
 > 🔨 **Catálogo — rework D16/D17 cerrado en código, falta el re-seed real.** Schema
@@ -62,6 +62,107 @@ Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 
 **Bitácora de sesión** (lo último arriba):
 
+- **2026-07-15** — **Ajuste post-cierre de Fase 5: calendario pasa a página propia.** A pedido del
+  usuario, el tab "Calendario" de `/admin/events` se separa en una superficie propia
+  `/admin/calendar` (`CalendarPage`, nuevo ítem de nav "Calendario" — `NAV_ITEMS.CALENDAR`, debajo del
+  botón "Nueva cotización" en el sidebar, mismo guard `EVENT:READ`; `route-access` lo cubre solo por
+  existir en `NAV_ITEMS`, sin tocar `route-access.ts`). La primera tab de `/admin/events` pasa a
+  llamarse **"Eventos"** y ahora es una tabla estándar (`EventsTable`, ya existía para la ficha de
+  cliente) con **acciones por fila** nuevas (`useEventRowActions`): ver detalle (preset `detail`),
+  y — solo si `status==='upcoming'` + `EVENT:UPDATE` — asignar staff (abre `AssignStaffModal`
+  compartido), marcar realizado y cancelar (mismas mutaciones/confirms que `EventHeader` del detalle).
+  Esto deja las acciones disponibles sin entrar al detalle, tanto en la tabla principal como en la tab
+  "Eventos" de la ficha de cliente (mismo componente `EventsTable`, se benefician ambas). Deviación
+  del `mach-bar-flows.md §6.2` original (que describía el calendario como tab, no como página) —
+  decisión explícita del usuario tras ver la Fase 5 armada. `check-types` monorepo limpio, verificado
+  por curl (200 sin error de servidor) en `/admin/calendar`, `/admin/events` y `/admin/clients/[id]`.
+- **2026-07-15** — **Eventos (Fase 5) — frontend completo, cierra la fase.** Feature `events`
+  (`apps/web/src/features/events`): `EventsCalendar.tsx` — `<Calendar>` de AntD con `cellRender`
+  (badges por día vía `Grid.useBreakpoint()`: lista completa de badges en desktop/tablet, contador
+  compacto en `xs`; `onPanelChange` mantiene el mes visible en estado para refetchear
+  `events.calendar`), reemplaza el placeholder "coming soon" del tab "Calendario" en `/admin/events`.
+  Lista de eventos estándar (`columns`/`EventCard`/`EventsTable`, acepta `clientId` opcional — la
+  reusa la ficha de cliente). **Detalle de evento** a medida `/admin/events/[id]`
+  (`features/events/components/detail/`): `EventHeader` (número de quote, fecha/hora, tag de tipo,
+  badge de status, acciones "ver quote"/"marcar realizado"/"cancelar" — las 2 últimas solo si
+  `status==='upcoming'`, cancelar reusa `quotes.cancel` que ahora también invalida `events` para que
+  el status derivado se refresque), `EventComposition` (read-only, D13: resuelve nombres de
+  producto/opción contra `useProductCatalog()`, igual que `QuotePreview` del builder — `events.lines`
+  solo trae ids), `EventPayments` (toggles deposit/balance + `paymentMethod`, con botón "Guardar"
+  explícito — el monto de depósito/saldo se obtiene con un fetch adicional a `quotes.getById(quoteId)`
+  ya que `events` solo snapshotea `totalAmount`, no `depositAmount`), `EventStaffPanel` (lista +
+  quitar + botón "Asignar"). `AssignStaffModal` (`features/quotes/components/pipeline/`, compartido
+  pipeline+detalle): `staff.getAvailability(eventDate)` → `Select` + rol opcional → `events.assignStaff`.
+  `QuoteCard.tsx` del pipeline: bloque nuevo gateado `stageId===CONFIRMED` +
+  `useCan(EVENT:UPDATE)` con contador de staff (ícono + `staffAssignedCount`, sin avatares con nombre
+  — el board solo expone el conteo, evitar N+1) + botón "Asignar" que abre el modal compartido.
+  **Ficha de cliente 360** `/admin/clients/[id]` (`features/clients/components/detail/`):
+  `ClientInfoCard` (reusa `EditClientModal`), tabs Cotizaciones (`quotes.list({clientId})`, ya
+  soportado por el schema, más botón "Nueva cotización" que precarga el cliente vía querystring
+  `?clientId=&clientName=` — se extendió `emptyBuilderState`/`QuoteBuilderPage` para leerlo) y Eventos
+  (reusa `EventsTable` con `clientId`). Nuevo `clients.getById`/`useClient`. Se agregó navegación de
+  fila a `/admin/clients/[id]` en `ClientsTable`/`ClientCard` (antes ninguna fila era clickeable) —
+  requirió envolver `DataTableRowActions` en un `stopPropagation` local (mismo gotcha de portales ya
+  documentado en la bitácora de Fase 4: los clicks de un `Dropdown`/`Modal` burbujean por el árbol de
+  React, no el DOM). i18n `events.json` (es/en) nuevo namespace + claves nuevas en `clients.json`/
+  `quotes.json`. `check-types` monorepo limpio. **Bug encontrado y corregido en la verificación**:
+  `useEventStaff.ts`/`useEventPayments.ts` importaban `App` (antd) y `useTranslation` (react-i18next)
+  directo, sin `'use client'` propio — al quedar re-exportados desde el barrel `features/events/index.ts`,
+  que un Server Component (`app/admin/events/page.tsx`) importa, Next intentó bundlear esos módulos
+  del lado servidor y explotaba (`createContext is not a function`, React de RSC no lo expone). Fix:
+  `'use client'` al tope de ambos archivos — mismo patrón que ya usan `useApiError.ts`/
+  `useUpdateConfig.ts` en el resto del proyecto. **Verificación**: sin navegador disponible en el
+  entorno de esta sesión, se verificó por curl con sesión real (login superadmin): `/admin/events`,
+  `/admin/events/[id]`, `/admin/clients/[id]`, `/admin/events?view=pipeline` y
+  `/admin/quotes/new?clientId=` devuelven **HTTP 200 sin error de servidor** (el bug de arriba se
+  detectó así, como 500 antes del fix); `events.calendar`/`events.list`/`events.getById`/
+  `clients.getById` devuelven las formas esperadas por tRPC. **Pendiente de verificación visual**
+  (interacción real: calendario, modal de asignar staff, toggles de pago, mobile) — queda para
+  revisión humana en browser. **Cierra Fase 5** (BE+FE+seeder+checkpoint ✅).
+- **2026-07-15** — **Eventos (Fase 5) — backend completo y verificado en vivo** (el usuario pidió
+  parar antes del FE, mismo ritmo que Fase 4). Schema nuevo `events`/`event_staff`
+  (`apps/api/src/db/schema/events.ts`; `events.quoteId` UNIQUE → 1 evento por quote, D4; composición
+  **no se copia** — se lee de la quote vía `quoteId`, D13). Se agregó el enum `payment_method`
+  (`zelle/cash/card/check`) que el domain doc ya preveía pero no existía en código, más un campo
+  propio **`events.completedAt`** (nullable) para "marcar realizado" (D5: ya no depende de
+  `quote.stageId`, que es terminal en Aprobada) — no estaba explícito en el dbml, se agregó siguiendo
+  `mach-bar-flows.md §6.3`. `@repo/schemas/events.ts` nuevo (`eventsListQuerySchema` con filtro
+  `clientId` para la ficha de cliente, `eventsCalendarQuerySchema`, `updateEventPaymentSchema`,
+  `assignStaffSchema`/`removeStaffSchema`) + `staffAvailabilityQuerySchema` en el `staff.ts`
+  existente. Módulo `apps/api/src/modules/events/` (resource/repository/service/router, patrón
+  `docs/backend/architecture.md §3`): `list` (paginado, filtra por `clientId`), `calendar` (bulk por
+  mes/año, mismo criterio que `quotes.board` vs `quotes.list`), `getById` (composición de líneas leída
+  de `quote_lines`/`quote_line_options` — se extrajo `buildQuoteLineDetails` de
+  `quotes.resource.ts` para compartir esa transformación entre quotes y events sin duplicarla),
+  `updatePayment`, `markCompleted`, `assignStaff`/`removeStaff` (con chequeo de "ya asignado" antes
+  del unique constraint, mejor UX que el 500 crudo). Todo gatea sobre `RESOURCES.EVENT`/`UPDATE` —
+  **sin ACTIONS nuevas**, mismo patrón que `quote.approve`/`cancel`. Nuevo `staff.getAvailability`
+  (anti-join contra `event_staff`⨝`events` por `eventDate`, solo activos) agregado al módulo `staff`
+  existente. **`quotes.approve` ahora sí crea el evento** (cerraba pendiente desde Fase 4,
+  `mach-bar-domain.md §11`): nuevo `QuotesRepository.approveWithEvent` — update de stage + insert de
+  historial + insert de `events` en **una sola transacción**; la idempotencia la da la matriz de
+  transiciones (no existe `CONFIRMED→CONFIRMED`), no hizo falta `onConflictDoNothing` sobre el unique
+  de `quoteId`. `quotes.board`/`quoteCardResource` ahora exponen `eventId`/`depositPaid`/
+  `staffAssignedCount` por card (vía `leftJoin` a `events` + subquery de conteo sobre `event_staff`) —
+  lo que va a consumir el botón "Asignar" + avatares del pipeline en el FE. Se sumó también
+  **`clients.getById`** (no existía; lo pedía la ficha de cliente 360) reusando la subquery de
+  `status` derivado ya escrita en `findPaginated`. Nuevo seeder `seedEvents` (corre después de
+  `seedQuotes`): crea eventos para las quotes ya `CONFIRMED` de la semilla (Priya Nair/Corporativo,
+  James O'Connor/Boda) y asigna 2 staff activos por evento (round-robin). `check-types` monorepo
+  limpio. **Verificado en vivo por tRPC** (login superadmin real, `db:fresh` limpio): `events.list`/
+  `calendar`/`getById` devuelven bien (composición correcta, montos coinciden con la quote origen);
+  `staff.getAvailability` excluye correctamente al staff ya asignado ese día; `clients.getById`
+  funciona; `quotes.approve` sobre una quote `Enviada` crea el evento atómicamente y el board lo
+  refleja al toque; re-aprobar la misma quote rechaza por `QUOTE_INVALID_TRANSITION` (idempotencia
+  confirmada); `assignStaff` rechaza una segunda asignación del mismo staff
+  (`EVENT_STAFF_ALREADY_ASSIGNED`); `updatePayment`/`markCompleted`/`removeStaff` OK. Se corrió
+  `db:fresh` una vez más al cerrar para dejar la semilla limpia (las pruebas en vivo mutaron una
+  quote). **Pendiente (Fase 5 FE, plan detallado en
+  `/Users/sambar/.claude/plans/foamy-petting-lightning.md`):** calendario real (AntD `Calendar` +
+  `cellRender` con badges por día — reemplaza el placeholder "coming soon" del tab "Calendario" en
+  `/admin/events`), detalle de evento a medida (`/admin/events/[id]`), `AssignStaffModal` compartido
+  (pipeline + detalle), avatares/botón "Asignar" en `QuoteCard` del pipeline, y ficha de cliente 360
+  (`/admin/clients/[id]`) — todo ya alineado con el usuario antes de escribir código de FE.
 - **2026-07-15** — **Rework post-cierre de Cotizaciones: stages por id + createdBy + historial
   (D18).** A pedido del usuario, con el dominio todavía joven, se corrigió el modelo de
   `quotes.stage` antes de construir Fase 5 encima: (1) **`quote_stage` deja de ser `pgEnum`** — pasa
@@ -366,16 +467,16 @@ Deps: **clientes, catálogo, config, event_types**. La fase más grande.
 
 Deps: **cotizaciones, staff**.
 
-- **BE**: schema `events` + `event_staff` + `@repo/schemas/events`. Módulo `events`: `getById` (con la composición
+- ✅ **BE**: schema `events` + `event_staff` + `@repo/schemas/events`. Módulo `events`: `getById` (con la composición
   **leída de la quote**), `list` (filtros), `assignStaff`/`removeStaff`, `markCompleted`, `updatePayment`
-  (deposit/balance/method). `staff.getAvailability`. Guard `EVENT` (ya existe).
+  (deposit/balance/method). `staff.getAvailability`. Guard `EVENT` (ya existía).
   - ✅ **Completar `quotes.approve`**: al confirmar, **inserta el evento** (snapshot escalar de la quote; `quote_id` unique).
-- **FE**: **lista** de eventos estándar, **detalle de evento** a medida (`§6`), y `AssignStaffModal` compartido
-  (activa el botón del pipeline de Fase 4). Nav `EVENTS` (ya existe).
-  - **Ficha de cliente 360** (`§7`): ahora que existen quotes+events, se arma `/admin/clients/[id]` (header + tabs).
-- **Seeder**: `seedEvents` (eventos desde quotes confirmadas + asignaciones de staff).
+- ✅ **FE**: calendario real (`Calendar` de AntD + `cellRender`) en el tab "Calendario", **detalle de evento** a
+  medida (`§6`), y `AssignStaffModal` compartido (activa el botón del pipeline de Fase 4). Nav `EVENTS` (ya existía).
+  - ✅ **Ficha de cliente 360** (`§7`): `/admin/clients/[id]` (header + tabs Cotizaciones/Eventos).
+- ✅ **Seeder**: `seedEvents` (eventos desde quotes confirmadas + asignaciones de staff).
 
-**Checkpoint**: `db:fresh`; aprobar una quote crea el evento; detalle con pagos y staff; ficha de cliente con historial.
+**Checkpoint** ✅: `db:fresh`; aprobar una quote crea el evento; detalle con pagos y staff; ficha de cliente con historial.
 
 ---
 

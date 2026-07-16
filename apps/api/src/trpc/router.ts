@@ -6,6 +6,7 @@ import { productsRouter } from '../modules/products/products.router';
 import { eventTypesRouter } from '../modules/eventTypes/eventTypes.router';
 import { configRouter } from '../modules/config/config.router';
 import { quotesRouter } from '../modules/quotes/quotes.router';
+import { eventsRouter } from '../modules/events/events.router';
 
 export const appRouter = router({
   users: usersRouter,
@@ -15,6 +16,7 @@ export const appRouter = router({
   eventTypes: eventTypesRouter,
   config: configRouter,
   quotes: quotesRouter,
+  events: eventsRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -20,6 +20,13 @@ export class ClientsService {
     };
   }
 
+  async getById(id: string) {
+    const client = await this.repo.findById(id);
+    if (!client)
+      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.client.NOT_FOUND) });
+    return clientResource(client);
+  }
+
   async create(input: CreateClientInput) {
     const created = await this.repo.create(input);
     return clientResource(created);

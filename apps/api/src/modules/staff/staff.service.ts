@@ -20,6 +20,11 @@ export class StaffService {
     };
   }
 
+  async getAvailability(date: string) {
+    const rows = await this.repo.findAvailable(date);
+    return staffCollectionResource(rows);
+  }
+
   async create(input: CreateStaffInput) {
     const created = await this.repo.create(input);
     return staffResource(created);

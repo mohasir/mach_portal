@@ -1,0 +1,75 @@
+{
+  "title": "Events",
+  "empty": "No events yet",
+  "columns": {
+    "client": "Client",
+    "eventType": "Event type",
+    "eventDate": "Date",
+    "total": "Total",
+    "status": "Status"
+  },
+  "status": {
+    "upcoming": "Upcoming",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "calendar": {
+    "moreEvents": "+{{count}} more"
+  },
+  "detail": {
+    "backToQuote": "View quote",
+    "markCompleted": "Mark completed",
+    "markCompletedSuccess": "Event marked as completed",
+    "markCompletedConfirm": {
+      "title": "Mark as completed?",
+      "content": "This action can't be undone.",
+      "ok": "Mark completed"
+    },
+    "cancel": "Cancel event",
+    "cancelConfirm": {
+      "title": "Cancel event?",
+      "content": "This also cancels the originating quote.",
+      "ok": "Cancel event"
+    },
+    "composition": {
+      "title": "Composition",
+      "numPersons": "{{count}} guests"
+    },
+    "payments": {
+      "title": "Payments",
+      "total": "Total",
+      "deposit": "Deposit",
+      "balance": "Balance",
+      "depositPaid": "Deposit paid",
+      "balancePaid": "Balance paid",
+      "paymentMethod": "Payment method",
+      "paymentMethodPlaceholder": "Pick a method",
+      "save": "Save",
+      "saved": "Payment updated"
+    },
+    "staff": {
+      "title": "Assigned staff",
+      "empty": "No staff assigned",
+      "assign": "Assign",
+      "remove": "Remove",
+      "removeConfirmTitle": "Remove from event?",
+      "removeConfirmContent": "Remove {{name}} from this event?"
+    }
+  },
+  "assignStaff": {
+    "title": "Assign staff",
+    "staffLabel": "Available staff",
+    "staffPlaceholder": "Pick a staff member",
+    "roleLabel": "Role (optional)",
+    "rolePlaceholder": "E.g. Bartender",
+    "empty": "No staff available for this date",
+    "submit": "Assign",
+    "success": "Staff assigned"
+  },
+  "paymentMethods": {
+    "zelle": "Zelle",
+    "cash": "Cash",
+    "card": "Card",
+    "check": "Check"
+  }
+}

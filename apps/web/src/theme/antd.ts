@@ -129,7 +129,7 @@ export const machBarTheme: ThemeConfig = {
       siderBg: '#ffffff',
       headerBg: 'transparent',
       headerPadding: '0 24px',
-      bodyBg: MB.bg,
+      bodyBg: '#f2f2f2',
     },
     Tabs: {
       inkBarColor: MB.brown,

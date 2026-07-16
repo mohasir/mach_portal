@@ -71,7 +71,9 @@ export function useClientsColumns({
       width: 56,
       align: 'right',
       render: (_, client) => (
-        <DataTableRowActions actions={rowActions(client)} label={tc('table.actions')} />
+        <div onClick={(e) => e.stopPropagation()}>
+          <DataTableRowActions actions={rowActions(client)} label={tc('table.actions')} />
+        </div>
       ),
     },
   ];

@@ -1,7 +1,7 @@
 'use client';
-import { Divider, Typography } from 'antd';
+import { Timeline, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { QuoteStageId } from '@repo/schemas';
+import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useQuoteStages } from '@/features/settings';
 import type { QuoteDetail } from '../../types';
@@ -12,34 +12,61 @@ interface QuoteHistoryCardProps {
   stageHistory: QuoteDetail['stageHistory'];
 }
 
-export function QuoteHistoryCard({ createdByName, createdAt, stageHistory }: QuoteHistoryCardProps) {
+export function QuoteHistoryCard({
+  createdByName,
+  createdAt,
+  stageHistory,
+}: QuoteHistoryCardProps) {
   const { t } = useTranslation('quotes');
   const { dateTime } = useDateFormatter();
   const { stageMap } = useQuoteStages();
   const unknownUser = t('history.unknownUser');
-  const label = (stageId: QuoteStageId) => stageMap.get(stageId)?.label ?? stageId;
+  const label = (stageId: QuoteStageId) => stageMap.get(stageId)?.label ?? String(stageId);
+
+  const events = [
+    {
+      key: 'created',
+      date: createdAt,
+      color: stageMap.get(QUOTE_STAGE.PENDING)?.color,
+      content: (
+        <>
+          <strong>{createdByName ?? unknownUser}</strong> {t('history.createdSuffix')}
+        </>
+      ),
+    },
+    ...stageHistory
+      .filter((h) => h.fromStageId !== null)
+      .map((h, index) => ({
+        key: `transition-${index}`,
+        date: h.changedAt,
+        color: stageMap.get(h.toStageId as QuoteStageId)?.color,
+        content: (
+          <>
+            <strong>{h.changedByName ?? unknownUser}</strong> {t('history.movedTo')}{' '}
+            <strong>{label(h.toStageId as QuoteStageId)}</strong>
+          </>
+        ),
+      })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div>
       <Typography.Title level={5} className="font-heading text-brown m-0!">
         {t('history.title')}
       </Typography.Title>
-      <Divider className="mt-3 mb-3" />
-      <div className="flex flex-col gap-2 text-sm text-gray-500">
-        <div>{t('history.createdBy', { name: createdByName ?? unknownUser, date: dateTime(createdAt) })}</div>
-        {stageHistory
-          .filter((h) => h.fromStageId !== null)
-          .map((h, index) => (
-            <div key={index}>
-              {t('history.transition', {
-                from: label(h.fromStageId as QuoteStageId),
-                to: label(h.toStageId as QuoteStageId),
-                name: h.changedByName ?? unknownUser,
-                date: dateTime(h.changedAt),
-              })}
+      <Timeline
+        className="mt-4"
+        items={events.map((event) => ({
+          key: event.key,
+          color: event.color ?? 'gray',
+          content: (
+            <div className="flex flex-col gap-0.5 text-sm">
+              <span>{event.content}</span>
+              <span className="text-xs text-gray-500">{dateTime(event.date)}</span>
             </div>
-          ))}
-      </div>
+          ),
+        }))}
+      />
     </div>
   );
 }

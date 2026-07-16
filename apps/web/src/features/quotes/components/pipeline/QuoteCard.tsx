@@ -1,14 +1,19 @@
 'use client';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Dropdown, Tag, Typography, type MenuProps } from 'antd';
+import { Button, Card, Dropdown, type MenuProps } from 'antd';
 import { useDraggable } from '@dnd-kit/core';
-import { MoveRight } from 'lucide-react';
+import { MoveRight, UserPlus, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ACTIONS, RESOURCES } from '@repo/guards';
 import { QUOTE_STAGE, QUOTE_STAGE_TRANSITIONS, type QuoteStageId } from '@repo/schemas';
-import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
-import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
+import { DataTableRowActions } from '@/components/shared/DataTable';
+import { useCan } from '@/lib/auth/useCan';
 import { useQuoteStages } from '@/features/settings';
+import { useQuoteRowActions } from '../../hooks/useQuoteRowActions';
 import type { QuoteCard as QuoteCardType } from '../../types';
+import { AssignStaffModal } from './AssignStaffModal';
+import { QuoteCardBody } from './QuoteCardBody';
 
 interface QuoteCardProps {
   card: QuoteCardType;
@@ -18,23 +23,20 @@ interface QuoteCardProps {
 
 export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
   const { t } = useTranslation('quotes');
+  const { t: tc } = useTranslation('common');
   const router = useRouter();
-  const { date } = useDateFormatter();
-  const { money } = useMoneyFormatter();
   const { stageMap } = useQuoteStages();
+  const can = useCan();
+  const rowActions = useQuoteRowActions();
+  const [assignOpen, setAssignOpen] = useState(false);
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: card.id,
     data: { card },
     disabled: !draggable,
   });
 
   const stageId = card.stageId as QuoteStageId;
-  const stage = stageMap.get(stageId);
-  const isExpired =
-    stageId === QUOTE_STAGE.QUOTED &&
-    !!card.validUntil &&
-    card.validUntil < new Date().toISOString().slice(0, 10);
 
   const moveOptions = QUOTE_STAGE_TRANSITIONS[stageId];
   const items: MenuProps['items'] = moveOptions.map((to) => ({
@@ -46,37 +48,36 @@ export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
     },
   }));
 
-  const style = transform
-    ? {
-        transform: `translate(${transform.x}px, ${transform.y}px)`,
-        zIndex: isDragging ? 50 : undefined,
-      }
-    : undefined;
-
   return (
     <Card
       ref={draggable ? setNodeRef : undefined}
-      style={style}
       size="small"
-      className={isDragging ? 'opacity-70 shadow-lg' : 'cursor-pointer'}
+      className={isDragging ? 'opacity-40' : 'cursor-pointer'}
       onClick={() => router.push(`/admin/quotes/${card.id}`)}
       {...(draggable ? { ...attributes, ...listeners } : {})}
     >
-      <div className="flex items-center justify-between gap-2">
-        <Typography.Text strong className="text-xs" style={{ color: stage?.color }}>
-          {card.number}
-        </Typography.Text>
-        {isExpired && <Tag color="red">{t('pipeline.expired')}</Tag>}
-      </div>
-      <div className="mt-1 text-sm font-medium">{card.clientName}</div>
-      {card.eventTypeName && <div className="text-xs text-gray-500">{card.eventTypeName}</div>}
-      <div className="mt-2 flex items-center justify-between">
-        <span className="text-xs text-gray-500">{card.eventDate ? date(card.eventDate) : '—'}</span>
-        <span className="text-sm font-semibold">{money(card.total)}</span>
-      </div>
-      <div className="mt-1 text-xs text-gray-500">
-        {t('pipeline.linesCount', { count: card.linesCount })}
-      </div>
+      <QuoteCardBody
+        card={card}
+        actions={
+          <div onClick={(e) => e.stopPropagation()}>
+            <DataTableRowActions actions={rowActions(card)} label={tc('table.actions')} />
+          </div>
+        }
+      />
+      {stageId === QUOTE_STAGE.CONFIRMED && can({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] }) && (
+        <div
+          className="mt-2 flex items-center justify-between gap-2"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span className="flex items-center gap-1 text-xs text-gray-500">
+            <Users size={14} />
+            {t('pipeline.staffCount', { count: card.staffAssignedCount })}
+          </span>
+          <Button size="small" icon={<UserPlus size={14} />} onClick={() => setAssignOpen(true)}>
+            {t('pipeline.assignStaff')}
+          </Button>
+        </div>
+      )}
       {!draggable && moveOptions.length > 0 && (
         <Dropdown menu={{ items }} trigger={['click']}>
           <div
@@ -87,6 +88,16 @@ export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
           </div>
         </Dropdown>
       )}
+      {/* Stops the Modal's portal content from bubbling clicks up to the Card's onClick (React
+          portals bubble through the component tree, not the DOM tree). */}
+      <div onClick={(e) => e.stopPropagation()}>
+        <AssignStaffModal
+          eventId={card.eventId}
+          eventDate={card.eventDate}
+          open={assignOpen}
+          onClose={() => setAssignOpen(false)}
+        />
+      </div>
     </Card>
   );
 }

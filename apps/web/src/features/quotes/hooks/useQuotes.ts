@@ -88,12 +88,32 @@ export function useCancelQuote() {
   const onError = useApiError();
   const mutation = useMutation(
     trpc.quotes.cancel.mutationOptions({
-      onSuccess: () => qc.invalidateQueries(trpc.quotes.pathFilter()),
+      onSuccess: () =>
+        Promise.all([
+          qc.invalidateQueries(trpc.quotes.pathFilter()),
+          qc.invalidateQueries(trpc.events.pathFilter()),
+        ]),
       onError,
     }),
   );
   return {
     cancelQuote: (id: string) => mutation.mutateAsync({ id }),
+    isPending: mutation.isPending,
+  };
+}
+
+export function useArchiveQuote() {
+  const trpc = useTRPC();
+  const qc = useQueryClient();
+  const onError = useApiError();
+  const mutation = useMutation(
+    trpc.quotes.archive.mutationOptions({
+      onSuccess: () => qc.invalidateQueries(trpc.quotes.pathFilter()),
+      onError,
+    }),
+  );
+  return {
+    archiveQuote: (id: string) => mutation.mutateAsync({ id }),
     isPending: mutation.isPending,
   };
 }

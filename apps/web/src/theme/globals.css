@@ -1,30 +1,31 @@
 @layer theme, base, antd, components, utilities;
 
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/preflight.css" layer(base);
-@import "tailwindcss/utilities.css" layer(utilities);
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import 'overlayscrollbars/overlayscrollbars.css' layer(components);
 
 @theme {
-  --color-primary:    var(--ant-color-primary);
-  --color-error:      var(--ant-color-error);
-  --color-warning:    var(--ant-color-warning);
-  --color-success:    var(--ant-color-success);
+  --color-primary: var(--ant-color-primary);
+  --color-error: var(--ant-color-error);
+  --color-warning: var(--ant-color-warning);
+  --color-success: var(--ant-color-success);
   --color-foreground: var(--ant-color-text);
-  --color-muted:      var(--ant-color-text-secondary);
+  --color-muted: var(--ant-color-text-secondary);
   --color-background: var(--ant-color-bg-layout);
-  --color-surface:    var(--ant-color-bg-container);
-  --color-line:       var(--ant-color-border);
+  --color-surface: var(--ant-color-bg-container);
+  --color-line: var(--ant-color-border);
 
   /* ── Brand colors ── */
-  --color-brown:       #4a2c2a;
-  --color-brown-mid:   #7a4a47;
-  --color-mustard:     #dacd6b;
-  --color-ivory:       #f7eed2;
-  --color-ivory-dark:  #ede1b8;
-  --color-salmon:      #f28a86;
+  --color-brown: #4a2c2a;
+  --color-brown-mid: #7a4a47;
+  --color-mustard: #dacd6b;
+  --color-ivory: #f7eed2;
+  --color-ivory-dark: #ede1b8;
+  --color-salmon: #f28a86;
   --color-olive-faint: #f4f4e8;
 
-  --font-sans:    var(--font-work-sans);
+  --font-sans: var(--font-work-sans);
   --font-heading: var(--font-marcellus);
 }
 
@@ -89,5 +90,13 @@
     background-color: var(--color-olive-faint);
     color: var(--ant-color-primary);
     font-weight: 600;
+  }
+
+  /* Kanban column scrollbar (OverlayScrollbars): keep the handle translucent
+     so the tinted column background still shows through it. */
+  .pipeline-column-scrollbar .os-theme-dark {
+    --os-handle-bg: rgba(0, 0, 0, 0.35);
+    --os-handle-bg-hover: rgba(0, 0, 0, 0.5);
+    --os-handle-bg-active: rgba(0, 0, 0, 0.65);
   }
 }

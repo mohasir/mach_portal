@@ -40,4 +40,7 @@ export const quotesRouter = router({
   cancel: update
     .input(z.object({ id: z.uuid() }))
     .mutation(({ input, ctx }) => service.cancel(input.id, ctx.user.id)),
+  archive: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.DELETE] })
+    .input(z.object({ id: z.uuid() }))
+    .mutation(({ input }) => service.archive(input.id)),
 });

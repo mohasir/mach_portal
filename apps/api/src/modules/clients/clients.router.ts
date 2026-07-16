@@ -13,6 +13,10 @@ export const clientsRouter = router({
     .input(clientsListQuerySchema)
     .query(({ input }) => service.list(input)),
 
+  getById: guardedProcedure({ [RESOURCES.CLIENT]: [ACTIONS.READ] })
+    .input(z.object({ id: z.uuid() }))
+    .query(({ input }) => service.getById(input.id)),
+
   create: guardedProcedure({ [RESOURCES.CLIENT]: [ACTIONS.CREATE] })
     .input(createClientSchema)
     .mutation(({ input }) => service.create(input)),

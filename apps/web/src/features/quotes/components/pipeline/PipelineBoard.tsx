@@ -1,7 +1,15 @@
 'use client';
 import { useState } from 'react';
 import { App, Segmented, Skeleton } from 'antd';
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
 import { useTranslation } from 'react-i18next';
 import { canTransition, QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
@@ -9,8 +17,14 @@ import { useQuoteStages } from '@/features/settings';
 import { usePipelineBoard, usePipelineTransitions } from '../../hooks/usePipelineBoard';
 import type { QuoteCard as QuoteCardType } from '../../types';
 import { PipelineColumn } from './PipelineColumn';
+import { QuoteCardPreview } from './QuoteCardPreview';
 
 const CONFIRM_STAGES: QuoteStageId[] = [QUOTE_STAGE.CONFIRMED, QUOTE_STAGE.CANCELLED];
+
+const CONFIRM_STAGE_KEYS: Partial<Record<QuoteStageId, string>> = {
+  [QUOTE_STAGE.CONFIRMED]: 'confirmed',
+  [QUOTE_STAGE.CANCELLED]: 'cancelled',
+};
 
 export function PipelineBoard() {
   const { t } = useTranslation('quotes');
@@ -18,6 +32,7 @@ export function PipelineBoard() {
   const isDesktop = useIsDesktop();
   const { orderedIds, stageMap } = useQuoteStages();
   const [mobileStage, setMobileStage] = useState<QuoteStageId>(QUOTE_STAGE.PENDING);
+  const [activeCard, setActiveCard] = useState<QuoteCardType | null>(null);
   const boardQuery = {};
   const { data, isLoading } = usePipelineBoard(boardQuery);
   const { moveStage, approve, cancel } = usePipelineTransitions(boardQuery);
@@ -34,10 +49,11 @@ export function PipelineBoard() {
     if (!canTransition(from, to)) return;
 
     if (CONFIRM_STAGES.includes(to)) {
+      const stageKey = CONFIRM_STAGE_KEYS[to];
       modal.confirm({
-        title: t(`pipeline.confirm.${to}.title`),
-        content: t(`pipeline.confirm.${to}.content`),
-        okText: t(`pipeline.confirm.${to}.ok`),
+        title: t(`pipeline.confirm.${stageKey}.title`),
+        content: t(`pipeline.confirm.${stageKey}.content`),
+        okText: t(`pipeline.confirm.${stageKey}.ok`),
         okButtonProps: to === QUOTE_STAGE.CANCELLED ? { danger: true } : undefined,
         onOk: () => commitTransition(id, to),
       });
@@ -46,7 +62,13 @@ export function PipelineBoard() {
     }
   };
 
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    const dragged = active.data.current as { card: QuoteCardType } | undefined;
+    setActiveCard(dragged?.card ?? null);
+  };
+
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    setActiveCard(null);
     if (!over) return;
     const dragged = active.data.current as { card: QuoteCardType } | undefined;
     if (!dragged) return;
@@ -57,7 +79,7 @@ export function PipelineBoard() {
   };
 
   return (
-    <div>
+    <div className="h-full min-h-0">
       {isLoading || !data ? (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
           {orderedIds.map((stageId) => (
@@ -65,8 +87,13 @@ export function PipelineBoard() {
           ))}
         </div>
       ) : isDesktop ? (
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragCancel={() => setActiveCard(null)}
+        >
+          <div className="grid h-full auto-rows-fr grid-cols-1 gap-4 lg:grid-cols-4">
             {orderedIds.map((stageId) => (
               <PipelineColumn
                 key={stageId}
@@ -76,9 +103,10 @@ export function PipelineBoard() {
               />
             ))}
           </div>
+          <DragOverlay>{activeCard ? <QuoteCardPreview card={activeCard} /> : null}</DragOverlay>
         </DndContext>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex h-full min-h-0 flex-col gap-4">
           <div className="overflow-x-auto pb-1">
             <Segmented
               value={mobileStage}
@@ -86,12 +114,14 @@ export function PipelineBoard() {
               options={orderedIds.map((id) => ({ value: id, label: stageMap.get(id)?.label }))}
             />
           </div>
-          <PipelineColumn
-            stageId={mobileStage}
-            cards={data[mobileStage]}
-            onMove={runTransition}
-            draggable={false}
-          />
+          <div className="min-h-0 flex-1">
+            <PipelineColumn
+              stageId={mobileStage}
+              cards={data[mobileStage]}
+              onMove={runTransition}
+              draggable={false}
+            />
+          </div>
         </div>
       )}
     </div>

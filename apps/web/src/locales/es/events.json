@@ -1,0 +1,75 @@
+{
+  "title": "Eventos",
+  "empty": "No hay eventos",
+  "columns": {
+    "client": "Cliente",
+    "eventType": "Tipo de evento",
+    "eventDate": "Fecha",
+    "total": "Total",
+    "status": "Estado"
+  },
+  "status": {
+    "upcoming": "Próximo",
+    "completed": "Realizado",
+    "cancelled": "Cancelado"
+  },
+  "calendar": {
+    "moreEvents": "+{{count}} más"
+  },
+  "detail": {
+    "backToQuote": "Ver cotización",
+    "markCompleted": "Marcar realizado",
+    "markCompletedSuccess": "Evento marcado como realizado",
+    "markCompletedConfirm": {
+      "title": "¿Marcar como realizado?",
+      "content": "Esta acción no se puede deshacer.",
+      "ok": "Marcar realizado"
+    },
+    "cancel": "Cancelar evento",
+    "cancelConfirm": {
+      "title": "¿Cancelar evento?",
+      "content": "Esto cancela también la cotización de origen.",
+      "ok": "Cancelar evento"
+    },
+    "composition": {
+      "title": "Composición",
+      "numPersons": "{{count}} personas"
+    },
+    "payments": {
+      "title": "Pagos",
+      "total": "Total",
+      "deposit": "Depósito",
+      "balance": "Saldo",
+      "depositPaid": "Depósito pagado",
+      "balancePaid": "Saldo pagado",
+      "paymentMethod": "Método de pago",
+      "paymentMethodPlaceholder": "Elegí un método",
+      "save": "Guardar",
+      "saved": "Pago actualizado"
+    },
+    "staff": {
+      "title": "Staff asignado",
+      "empty": "Sin staff asignado",
+      "assign": "Asignar",
+      "remove": "Quitar",
+      "removeConfirmTitle": "¿Quitar del evento?",
+      "removeConfirmContent": "¿Quitás a {{name}} de este evento?"
+    }
+  },
+  "assignStaff": {
+    "title": "Asignar staff",
+    "staffLabel": "Staff disponible",
+    "staffPlaceholder": "Elegí un miembro del staff",
+    "roleLabel": "Rol (opcional)",
+    "rolePlaceholder": "Ej. Bartender",
+    "empty": "No hay staff disponible para esta fecha",
+    "submit": "Asignar",
+    "success": "Staff asignado"
+  },
+  "paymentMethods": {
+    "zelle": "Zelle",
+    "cash": "Efectivo",
+    "card": "Tarjeta",
+    "check": "Cheque"
+  }
+}
