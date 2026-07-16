@@ -6,3 +6,4 @@ export * from './catalog';
 export * from './eventTypes';
 export * from './config';
 export * from './quotes';
+export * from './events';

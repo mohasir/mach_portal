@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { createStaffSchema, updateStaffSchema, staffListQuerySchema } from '@repo/schemas';
+import {
+  createStaffSchema,
+  updateStaffSchema,
+  staffAvailabilityQuerySchema,
+  staffListQuerySchema,
+} from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
 import { router, guardedProcedure } from '../../trpc/trpc';
 import { db } from '../../db';
@@ -12,6 +17,10 @@ export const staffRouter = router({
   list: guardedProcedure({ [RESOURCES.STAFF]: [ACTIONS.READ] })
     .input(staffListQuerySchema)
     .query(({ input }) => service.list(input)),
+
+  getAvailability: guardedProcedure({ [RESOURCES.STAFF]: [ACTIONS.READ] })
+    .input(staffAvailabilityQuerySchema)
+    .query(({ input }) => service.getAvailability(input.date)),
 
   create: guardedProcedure({ [RESOURCES.STAFF]: [ACTIONS.CREATE] })
     .input(createStaffSchema)

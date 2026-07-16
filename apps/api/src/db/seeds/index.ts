@@ -7,6 +7,7 @@ import { seedEventTypes } from './eventTypes';
 import { seedConfig } from './config';
 import { seedQuoteStages } from './quoteStages';
 import { seedQuotes } from './quotes';
+import { seedEvents } from './events';
 
 async function main() {
   console.log('🌱 Iniciando seeding...');
@@ -20,6 +21,7 @@ async function main() {
     await seedConfig();
     await seedQuoteStages();
     await seedQuotes();
+    await seedEvents();
     console.log('✅ Seeding completado.');
   } catch (error) {
     console.error('❌ Seeding falló:', error);

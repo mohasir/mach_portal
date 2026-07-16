@@ -33,7 +33,7 @@ export function useUpdateClient() {
 
   const mutation = useMutation(
     trpc.clients.update.mutationOptions({
-      onSuccess: () => qc.invalidateQueries(trpc.clients.list.queryFilter()),
+      onSuccess: () => qc.invalidateQueries(trpc.clients.pathFilter()),
       onError,
     }),
   );
@@ -42,6 +42,11 @@ export function useUpdateClient() {
     updateClient: (id: string, data: UpdateClientInput) => mutation.mutateAsync({ id, data }),
     isPending: mutation.isPending,
   };
+}
+
+export function useClient(id: string | undefined) {
+  const trpc = useTRPC();
+  return useQuery({ ...trpc.clients.getById.queryOptions({ id: id! }), enabled: !!id });
 }
 
 export function useDeleteClient() {

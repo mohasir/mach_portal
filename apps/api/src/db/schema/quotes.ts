@@ -54,6 +54,7 @@ export const quotes = pgTable('quotes', {
     .references(() => quoteStages.id),
   validUntil: date('valid_until', { mode: 'string' }),
   createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
+  archivedAt: timestamp('archived_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
     .defaultNow()

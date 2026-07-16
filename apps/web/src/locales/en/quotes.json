@@ -15,6 +15,11 @@
     "stage": "Quote stage",
     "state": "State (US)"
   },
+  "archive": {
+    "action": "Archive",
+    "confirmTitle": "Archive quote?",
+    "confirmContent": "Quote {{number}} will be removed from the list and the pipeline. This can't be undone."
+  },
   "validation": {
     "clientRequired": "Client is required"
   },
@@ -70,8 +75,8 @@
       "depositRate": "Deposit",
       "subtotal": "Subtotal",
       "discount": "Discount",
-      "tax": "Tax ({{rate}}%)",
-      "taxShort": "Tax",
+      "tax": "Long Distance Travel Fee ({{rate}}%)",
+      "taxShort": "Long Distance Travel Fee",
       "total": "Total",
       "deposit": "Deposit ({{rate}}%)",
       "balance": "Balance"
@@ -82,14 +87,21 @@
       "client": "Client",
       "eventType": "Event type",
       "eventDate": "Date",
-      "numPersons": "{{count}} guests"
+      "line": {
+        "station": "Station",
+        "persons": "Guests",
+        "total": "Total"
+      }
     }
   },
   "pipeline": {
     "title": "Pipeline",
     "expired": "Expired",
+    "noDate": "No date",
     "moveTo": "Move to…",
+    "assignStaff": "Assign staff",
     "linesCount": "{{count}} lines",
+    "staffCount": "{{count}} staff assigned",
     "confirm": {
       "confirmed": {
         "title": "Approve quote?",
@@ -104,9 +116,23 @@
     }
   },
   "history": {
-    "title": "History",
-    "createdBy": "Created by {{name}} on {{date}}",
-    "transition": "From {{from}} to {{to}} — {{name}}, {{date}}",
+    "title": "Activity",
+    "createdSuffix": "created this quote",
+    "movedTo": "moved this quote to",
     "unknownUser": "a user"
+  },
+  "detail": {
+    "title": "Service Quotation",
+    "number": "No.",
+    "client": "Name",
+    "services": "Services",
+    "eventDateTime": "Event date",
+    "location": "Location",
+    "description": "Description",
+    "quantity": "Quantity",
+    "validUntil_one": "Prices valid until {{date}} ({{count}} month)",
+    "validUntil_other": "Prices valid until {{date}} ({{count}} months)",
+    "includedServices": "Included services",
+    "includedLabel": "Included"
   }
 }

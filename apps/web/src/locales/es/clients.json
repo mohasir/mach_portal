@@ -45,5 +45,13 @@
   "validation": {
     "nameRequired": "Nombre requerido",
     "emailInvalid": "Email inválido"
+  },
+  "detail": {
+    "edit": "Editar",
+    "tabs": {
+      "quotes": "Cotizaciones",
+      "events": "Eventos"
+    },
+    "newQuote": "Nueva cotización"
   }
 }

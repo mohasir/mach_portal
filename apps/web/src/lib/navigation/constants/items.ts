@@ -11,6 +11,13 @@ export const DASHBOARD_ITEM: NavItem = {
   guard: { [RESOURCES.DASHBOARD]: [READ] },
 };
 
+export const CALENDAR_ITEM: NavItem = {
+  label: 'nav.calendarTab',
+  href: '/admin/calendar',
+  icon: 'calendar',
+  guard: { [RESOURCES.EVENT]: [READ] },
+};
+
 export const EVENTS_ITEM: NavItem = {
   label: 'nav.events',
   href: '/admin/events',
@@ -30,6 +37,7 @@ export const QUOTES_ITEM: NavItem = {
   href: '/admin/quotes',
   icon: 'quotes',
   guard: { [RESOURCES.QUOTE]: [READ] },
+  layout: 'bare',
 };
 
 export const PIPELINE_ITEM: NavItem = {
@@ -90,6 +98,7 @@ export const SUPPORT_ITEM: NavItem = {
 
 export const NAV_ITEMS = {
   DASHBOARD: DASHBOARD_ITEM,
+  CALENDAR: CALENDAR_ITEM,
   EVENTS: EVENTS_ITEM,
   CLIENTS: CLIENTS_ITEM,
   QUOTES: QUOTES_ITEM,

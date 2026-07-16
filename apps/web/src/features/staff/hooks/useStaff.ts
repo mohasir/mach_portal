@@ -8,6 +8,11 @@ export function useStaffList(query: StaffListQuery) {
   return useQuery({ ...trpc.staff.list.queryOptions(query), placeholderData: keepPreviousData });
 }
 
+export function useStaffAvailability(date: string | undefined) {
+  const trpc = useTRPC();
+  return useQuery({ ...trpc.staff.getAvailability.queryOptions({ date: date! }), enabled: !!date });
+}
+
 export function useCreateStaff() {
   const trpc = useTRPC();
   const qc = useQueryClient();

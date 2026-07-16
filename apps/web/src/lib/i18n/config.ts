@@ -12,6 +12,7 @@ import esCatalog from '@/locales/es/catalog.json';
 import esEventTypes from '@/locales/es/eventTypes.json';
 import esSettings from '@/locales/es/settings.json';
 import esQuotes from '@/locales/es/quotes.json';
+import esEvents from '@/locales/es/events.json';
 import enCommon from '@/locales/en/common.json';
 import enApi from '@/locales/en/api.json';
 import enAuth from '@/locales/en/auth.json';
@@ -23,6 +24,7 @@ import enCatalog from '@/locales/en/catalog.json';
 import enEventTypes from '@/locales/en/eventTypes.json';
 import enSettings from '@/locales/en/settings.json';
 import enQuotes from '@/locales/en/quotes.json';
+import enEvents from '@/locales/en/events.json';
 
 export const locales = ['es', 'en'] as const;
 export type Locale = (typeof locales)[number];
@@ -42,6 +44,7 @@ i18n.use(initReactI18next).init({
       eventTypes: esEventTypes,
       settings: esSettings,
       quotes: esQuotes,
+      events: esEvents,
     },
     en: {
       common: enCommon,
@@ -55,6 +58,7 @@ i18n.use(initReactI18next).init({
       eventTypes: enEventTypes,
       settings: enSettings,
       quotes: enQuotes,
+      events: enEvents,
     },
   },
   lng: defaultLocale,
@@ -71,6 +75,7 @@ i18n.use(initReactI18next).init({
     'eventTypes',
     'settings',
     'quotes',
+    'events',
   ],
   defaultNS: 'common',
   interpolation: { escapeValue: false },

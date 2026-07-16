@@ -36,6 +36,13 @@ export const ErrorCodes = {
     INCOMPLETE: 'QUOTE_INCOMPLETE',
     INVALID_TRANSITION: 'QUOTE_INVALID_TRANSITION',
   },
+  event: {
+    NOT_FOUND: 'EVENT_NOT_FOUND',
+  },
+  eventStaff: {
+    ALREADY_ASSIGNED: 'EVENT_STAFF_ALREADY_ASSIGNED',
+    NOT_FOUND: 'EVENT_STAFF_NOT_FOUND',
+  },
 } as const;
 
 type ValuesOf<T> = T[keyof T];

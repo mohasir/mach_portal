@@ -204,9 +204,16 @@ export class QuotesService {
     if (!current) throw notFound();
     const fromStageId = current.stageId as QuoteStageId;
     this.assertTransition(fromStageId, QUOTE_STAGE.CONFIRMED);
-    // Fase 4 scope: only flips the stage. Creating the derived event is Fase 5
-    // (mach-bar-domain.md §11 "approve NO crea el evento todavía").
-    const updated = await this.repo.updateStage(id, fromStageId, QUOTE_STAGE.CONFIRMED, userId);
+
+    const updated = await this.repo.approveWithEvent(id, fromStageId, userId, {
+      clientId: current.clientId,
+      eventTypeId: current.eventTypeId,
+      eventDate: current.eventDate,
+      eventTime: current.eventTime,
+      state: current.state,
+      address: current.address,
+      totalAmount: current.total,
+    });
     if (!updated) throw notFound();
     return quoteResource(updated);
   }
@@ -219,6 +226,12 @@ export class QuotesService {
     const updated = await this.repo.updateStage(id, fromStageId, QUOTE_STAGE.CANCELLED, userId);
     if (!updated) throw notFound();
     return quoteResource(updated);
+  }
+
+  async archive(id: string) {
+    const archived = await this.repo.archiveById(id);
+    if (!archived) throw notFound();
+    return archived;
   }
 
   private assertTransition(from: QuoteStageId, to: QuoteStageId) {

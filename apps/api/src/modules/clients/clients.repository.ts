@@ -61,6 +61,15 @@ export class ClientsRepository {
     return row?.value ?? 0;
   }
 
+  findById(id: string) {
+    return this.db
+      .select(this.selection())
+      .from(clients)
+      .where(eq(clients.id, id))
+      .limit(1)
+      .then((r) => r[0]);
+  }
+
   create(data: CreateClientInput) {
     return this.db
       .insert(clients)

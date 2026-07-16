@@ -3,7 +3,7 @@ import type { NavGroup } from './types';
 
 export const ADMIN_MENU: NavGroup[] = [
   {
-    items: [NAV_ITEMS.DASHBOARD],
+    items: [NAV_ITEMS.DASHBOARD, NAV_ITEMS.CALENDAR],
   },
   {
     group: 'nav.groups.commerce',

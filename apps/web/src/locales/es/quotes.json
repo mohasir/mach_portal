@@ -15,6 +15,11 @@
     "stage": "Estado de la cotización",
     "state": "Estado (US)"
   },
+  "archive": {
+    "action": "Archivar",
+    "confirmTitle": "¿Archivar cotización?",
+    "confirmContent": "La cotización {{number}} se quitará de la tabla y del pipeline. Esta acción no se puede deshacer."
+  },
   "validation": {
     "clientRequired": "El cliente es obligatorio"
   },
@@ -70,8 +75,8 @@
       "depositRate": "Depósito",
       "subtotal": "Subtotal",
       "discount": "Descuento",
-      "tax": "Impuesto ({{rate}}%)",
-      "taxShort": "Impuesto",
+      "tax": "Long Distance Travel Fee ({{rate}}%)",
+      "taxShort": "Long Distance Travel Fee",
       "total": "Total",
       "deposit": "Depósito ({{rate}}%)",
       "balance": "Saldo"
@@ -82,14 +87,21 @@
       "client": "Cliente",
       "eventType": "Tipo de evento",
       "eventDate": "Fecha",
-      "numPersons": "{{count}} personas"
+      "line": {
+        "station": "Estación",
+        "persons": "Personas",
+        "total": "Total"
+      }
     }
   },
   "pipeline": {
     "title": "Pipeline",
     "expired": "Vencida",
+    "noDate": "Sin fecha",
     "moveTo": "Mover a…",
+    "assignStaff": "Asignar staff",
     "linesCount": "{{count}} líneas",
+    "staffCount": "{{count}} staff asignado",
     "confirm": {
       "confirmed": {
         "title": "¿Aprobar cotización?",
@@ -104,9 +116,23 @@
     }
   },
   "history": {
-    "title": "Historial",
-    "createdBy": "Creada por {{name}} el {{date}}",
-    "transition": "De {{from}} a {{to}} — {{name}}, {{date}}",
+    "title": "Actividad",
+    "createdSuffix": "creó esta cotización",
+    "movedTo": "movió la cotización a",
     "unknownUser": "un usuario"
+  },
+  "detail": {
+    "title": "Cotización de servicio",
+    "number": "No.",
+    "client": "Nombre",
+    "services": "Servicios",
+    "eventDateTime": "Fecha del evento",
+    "location": "Ubicación",
+    "description": "Descripción",
+    "quantity": "Cantidad",
+    "validUntil_one": "Precios válidos hasta el {{date}} ({{count}} mes)",
+    "validUntil_other": "Precios válidos hasta el {{date}} ({{count}} meses)",
+    "includedServices": "Servicios incluidos",
+    "includedLabel": "Incluido"
   }
 }

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, asc, count, desc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import {
   QUOTE_STAGE,
   type QuoteLineInput,
@@ -15,6 +15,8 @@ import {
   quoteStageHistory,
   clients,
   eventTypes,
+  events,
+  eventStaff,
   products,
   productPriceTiers,
   optionGroups,
@@ -47,6 +49,7 @@ export class QuotesRepository {
     const { page, pageSize, search, sortBy, sortDir, month, year, stageId, state, clientId } =
       query;
     const where = and(
+      isNull(quotes.archivedAt),
       search
         ? or(ilike(quotes.number, `%${search}%`), ilike(clients.name, `%${search}%`))
         : undefined,
@@ -93,7 +96,7 @@ export class QuotesRepository {
       .innerJoin(clients, eq(quotes.clientId, clients.id))
       .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
       .leftJoin(user, eq(quotes.createdById, user.id))
-      .where(eq(quotes.id, id))
+      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt)))
       .limit(1);
     if (!quoteRow) return undefined;
 
@@ -133,8 +136,17 @@ export class QuotesRepository {
     return this.db
       .select(publicQuoteColumns)
       .from(quotes)
-      .where(eq(quotes.id, id))
+      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt)))
       .limit(1)
+      .then((r) => r[0]);
+  }
+
+  archiveById(id: string) {
+    return this.db
+      .update(quotes)
+      .set({ archivedAt: new Date() })
+      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt)))
+      .returning({ id: quotes.id })
       .then((r) => r[0]);
   }
 
@@ -153,17 +165,30 @@ export class QuotesRepository {
 
     const baseSelect = () =>
       this.db
-        .select({ ...publicQuoteColumns, clientName: clients.name, eventTypeName: eventTypes.name })
+        .select({
+          ...publicQuoteColumns,
+          clientName: clients.name,
+          eventTypeName: eventTypes.name,
+          eventId: events.id,
+          depositPaid: events.depositPaid,
+          staffAssignedCount: sql<number>`(
+            select count(*)::int from ${eventStaff} where ${eventStaff.eventId} = ${events.id}
+          )`,
+        })
         .from(quotes)
         .innerJoin(clients, eq(quotes.clientId, clients.id))
-        .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id));
+        .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
+        .leftJoin(events, eq(events.quoteId, quotes.id));
 
     const [openRows, terminalRows] = await Promise.all([
-      baseSelect().where(inArray(quotes.stageId, OPEN_STAGES)).orderBy(asc(quotes.eventDate)),
+      baseSelect()
+        .where(and(inArray(quotes.stageId, OPEN_STAGES), isNull(quotes.archivedAt)))
+        .orderBy(asc(quotes.eventDate)),
       baseSelect()
         .where(
           and(
             inArray(quotes.stageId, TERMINAL_STAGES),
+            isNull(quotes.archivedAt),
             sql`extract(month from ${quotes.updatedAt}) = ${month}`,
             sql`extract(year from ${quotes.updatedAt}) = ${year}`,
           ),
@@ -310,6 +335,33 @@ export class QuotesRepository {
       await tx
         .insert(quoteStageHistory)
         .values({ quoteId: id, fromStageId, toStageId, changedById: userId });
+      return updated;
+    });
+  }
+
+  // Approve → create the derived event, atomically (mach-bar-domain.md §11). The transition
+  // matrix (no CONFIRMED→CONFIRMED edge) is what keeps this idempotent in practice — a second
+  // approve on an already-confirmed quote never reaches here.
+  approveWithEvent(
+    id: string,
+    fromStageId: QuoteStageId,
+    userId: string,
+    eventData: Omit<typeof events.$inferInsert, 'quoteId'>,
+  ) {
+    return this.db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(quotes)
+        .set({ stageId: QUOTE_STAGE.CONFIRMED })
+        .where(eq(quotes.id, id))
+        .returning(publicQuoteColumns);
+      if (!updated) return undefined;
+      await tx.insert(quoteStageHistory).values({
+        quoteId: id,
+        fromStageId,
+        toStageId: QUOTE_STAGE.CONFIRMED,
+        changedById: userId,
+      });
+      await tx.insert(events).values({ ...eventData, quoteId: id });
       return updated;
     });
   }

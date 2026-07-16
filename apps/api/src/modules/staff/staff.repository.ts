@@ -1,7 +1,7 @@
-import { asc, count, desc, eq, ilike, or, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, notInArray, or, type SQL } from 'drizzle-orm';
 import type { CreateStaffInput, StaffListQuery, UpdateStaffInput } from '@repo/schemas';
 import type { Database } from '../../db';
-import { staff } from '../../db/schema';
+import { events, eventStaff, staff } from '../../db/schema';
 import { publicStaffColumns } from './staff.resource';
 
 const sortColumns = {
@@ -43,10 +43,13 @@ export class StaffRepository {
 
   create(data: CreateStaffInput) {
     // insert ... returning always yields the inserted row.
-    return this.db.insert(staff).values(data).returning(publicStaffColumns).then((r) => r[0]!);
+    return this.db
+      .insert(staff)
+      .values(data)
+      .returning(publicStaffColumns)
+      .then((r) => r[0]!);
   }
 
-  // staff has no updatedAt column (docs/mach-bar-domain.md §5.2).
   updateById(id: string, data: UpdateStaffInput) {
     return this.db
       .update(staff)
@@ -62,5 +65,18 @@ export class StaffRepository {
       .where(eq(staff.id, id))
       .returning({ id: staff.id })
       .then((r) => r[0]);
+  }
+
+  findAvailable(date: string) {
+    const assignedThatDay = this.db
+      .select({ staffId: eventStaff.staffId })
+      .from(eventStaff)
+      .innerJoin(events, eq(eventStaff.eventId, events.id))
+      .where(eq(events.eventDate, date));
+
+    return this.db
+      .select(publicStaffColumns)
+      .from(staff)
+      .where(and(eq(staff.isActive, true), notInArray(staff.id, assignedThatDay)));
   }
 }

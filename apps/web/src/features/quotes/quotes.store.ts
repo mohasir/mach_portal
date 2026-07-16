@@ -24,10 +24,13 @@ export interface QuoteBuilderState {
   depositRate: number;
 }
 
-export function emptyBuilderState(depositRate: number): QuoteBuilderState {
+export function emptyBuilderState(
+  depositRate: number,
+  initialClient?: { clientId: string; clientName: string },
+): QuoteBuilderState {
   return {
-    clientId: null,
-    clientName: null,
+    clientId: initialClient?.clientId ?? null,
+    clientName: initialClient?.clientName ?? null,
     eventTypeId: null,
     eventDate: null,
     eventTime: null,

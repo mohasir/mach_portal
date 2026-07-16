@@ -13,19 +13,22 @@ interface ClientCardProps {
   client: Client;
   onEdit: (client: Client) => void;
   onDelete: (client: Client) => void;
+  onClick?: () => void;
 }
 
-export function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
+export function ClientCard({ client, onEdit, onDelete, onClick }: ClientCardProps) {
   const { t } = useTranslation('clients');
   const { t: tc } = useTranslation('common');
   const { date } = useDateFormatter();
   const rowActions = useClientRowActions({ onEdit, onDelete });
 
   return (
-    <Card size="small">
+    <Card size="small" onClick={onClick} className={onClick ? 'cursor-pointer' : undefined}>
       <div className="flex items-start justify-between gap-3">
         <AvatarUser name={client.name} email={client.email} />
-        <DataTableRowActions actions={rowActions(client)} label={tc('table.actions')} />
+        <div onClick={(e) => e.stopPropagation()}>
+          <DataTableRowActions actions={rowActions(client)} label={tc('table.actions')} />
+        </div>
       </div>
 
       <Flex wrap gap={8} align="center" className="mt-3">

@@ -1,15 +1,20 @@
 'use client';
+import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Empty, Tabs, Typography } from 'antd';
-import { Calendar, Columns3, Table2 } from 'lucide-react';
+import { Tabs } from 'antd';
+import { CalendarDays, Columns3, Table2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useCan } from '@/lib/auth/useCan';
+import { useLayoutStore } from '@/lib/stores/layout.store';
 import { PipelineBoard, QuotesTable, type Quote } from '@/features/quotes';
+import { useEventsViewStore, type EventsViewTab } from '../events.store';
+import { EventsTable } from './EventsTable';
 
-type ViewKey = 'calendar' | 'quotes' | 'pipeline';
-const DEFAULT_VIEW: ViewKey = 'calendar';
+const VALID_VIEWS: EventsViewTab[] = ['events', 'quotes', 'pipeline'];
+const isValidView = (value: string | null): value is EventsViewTab =>
+  VALID_VIEWS.includes(value as EventsViewTab);
 
 export function EventsPage() {
   const { t } = useTranslation('admin');
@@ -17,28 +22,32 @@ export function EventsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const can = useCan();
+  const setFillViewport = useLayoutStore((s) => s.setFillViewport);
+  const { activeTab, setActiveTab } = useEventsViewStore();
 
   const canCreateQuote = can({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] });
   const onRowClick = (quote: Quote) => router.push(`/admin/quotes/${quote.id}`);
 
   const paramView = searchParams.get('view');
-  const activeKey: ViewKey =
-    paramView === 'quotes' || paramView === 'pipeline' ? paramView : DEFAULT_VIEW;
+  const activeKey: EventsViewTab = isValidView(paramView) ? paramView : activeTab;
+  const isPipelineActive = activeKey === 'pipeline';
 
   const onChange = (key: string) => {
     router.replace(`/admin/events?view=${key}`, { scroll: false });
+    setActiveTab(key as EventsViewTab);
   };
+
+  useEffect(() => {
+    setFillViewport(isPipelineActive);
+    return () => setFillViewport(false);
+  }, [isPipelineActive, setFillViewport]);
 
   const items = [
     can({ [RESOURCES.EVENT]: [ACTIONS.READ] }) && {
-      key: 'calendar' as const,
-      label: t('nav.calendarTab'),
-      icon: <Calendar size={16} />,
-      children: (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} className="mt-16">
-          <Typography.Text className="text-muted">{t('placeholder.comingSoon')}</Typography.Text>
-        </Empty>
-      ),
+      key: 'events' as const,
+      label: t('nav.events'),
+      icon: <CalendarDays size={16} />,
+      children: <EventsTable />,
     },
     can({ [RESOURCES.QUOTE]: [ACTIONS.READ] }) && {
       key: 'quotes' as const,
@@ -55,13 +64,30 @@ export function EventsPage() {
   ].filter((item) => !!item);
 
   return (
-    <div>
-      <PageHeader
-        title={t('nav.events')}
-        actionLabel={canCreateQuote ? tq('index.add') : undefined}
-        onAction={canCreateQuote ? () => router.push('/admin/quotes/new') : undefined}
+    <div className="flex h-full min-h-0 flex-col">
+      <Tabs
+        activeKey={activeKey}
+        onChange={onChange}
+        items={items}
+        className="min-h-0 flex-1"
+        classNames={{ body: 'h-full', content: 'h-full' }}
+        renderTabBar={(tabBarProps, DefaultTabBar) => (
+          <div
+            className={
+              isPipelineActive
+                ? undefined
+                : 'sticky top-0 z-10 -mx-4 -mt-4 bg-surface px-4 pt-4 md:-mx-8 md:-mt-8 md:px-8 md:pt-8'
+            }
+          >
+            <PageHeader
+              title={t('nav.events')}
+              actionLabel={canCreateQuote ? tq('index.add') : undefined}
+              onAction={canCreateQuote ? () => router.push('/admin/quotes/new') : undefined}
+            />
+            <DefaultTabBar {...tabBarProps} />
+          </div>
+        )}
       />
-      <Tabs activeKey={activeKey} onChange={onChange} items={items} />
     </div>
   );
 }
