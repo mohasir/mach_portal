@@ -1,5 +1,5 @@
 'use client';
-import { Button, Card, Divider, Form, Input, Tag, Typography } from 'antd';
+import { Button, Form, Input, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { RoleType } from '@repo/guards';
 import { useSession } from '@/lib/auth/client';
@@ -8,6 +8,7 @@ import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { ROLE_COLORS } from '@/features/users/helpers';
 import { useUpdateProfile } from '../hooks/useUpdateProfile';
+import { SettingsCard } from './SettingsCard';
 
 interface ProfileFormValues {
   name: string;
@@ -31,12 +32,7 @@ export function ProfileInfoCard() {
   };
 
   return (
-    <Card>
-      <Typography.Title level={4} className="font-heading text-brown m-0!">
-        {t('profile.title')}
-      </Typography.Title>
-      <Divider className="mt-3 mb-6" />
-
+    <SettingsCard title={t('profile.title')}>
       <div className="mb-6">
         <AvatarUser
           name={user?.name ?? ''}
@@ -72,6 +68,6 @@ export function ProfileInfoCard() {
           {t('save')}
         </Button>
       </Form>
-    </Card>
+    </SettingsCard>
   );
 }

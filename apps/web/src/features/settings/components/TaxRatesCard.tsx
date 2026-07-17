@@ -1,9 +1,10 @@
 'use client';
-import { Card, Divider, Form, InputNumber, Typography } from 'antd';
+import { Form, InputNumber } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { Config } from '../types';
 import { STATE_NAMES } from '../contants';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
+import { SettingsCard } from './SettingsCard';
 
 interface TaxRatesCardProps {
   states: Config['stateSettings'];
@@ -13,12 +14,7 @@ export function TaxRatesCard({ states }: TaxRatesCardProps) {
   const { t } = useTranslation('settings');
 
   return (
-    <Card>
-      <Typography.Title level={4} className="font-heading text-brown m-0!">
-        {t('taxRates.title')}
-      </Typography.Title>
-      <Divider className="mt-3 mb-6" />
-
+    <SettingsCard title={t('taxRates.title')}>
       {states.map((s, index) => (
         <FieldRow key={s.state} title={STATE_NAMES[s.state]} required>
           <Form.Item
@@ -37,6 +33,6 @@ export function TaxRatesCard({ states }: TaxRatesCardProps) {
           </Form.Item>
         </FieldRow>
       ))}
-    </Card>
+    </SettingsCard>
   );
 }

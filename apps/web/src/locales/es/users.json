@@ -25,6 +25,7 @@
   "roles": {
     "superadmin": "Superadmin",
     "admin": "Admin",
+    "manager": "Gerente",
     "member": "Miembro"
   },
   "create": {

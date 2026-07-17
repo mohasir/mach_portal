@@ -1,5 +1,5 @@
 'use client';
-import { Button, Card, Divider, Skeleton, Tag, Typography } from 'antd';
+import { Button, Skeleton, Tag, Typography } from 'antd';
 import { Monitor, Smartphone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '@/lib/auth/client';
@@ -7,6 +7,7 @@ import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { isMobileUserAgent, parseUserAgent } from '@/lib/utils/userAgent';
 import { useActiveSessions } from '../hooks/useActiveSessions';
 import { useRevokeSession } from '../hooks/useRevokeSession';
+import { SettingsCard } from './SettingsCard';
 
 export function ActiveSessionsCard() {
   const { t } = useTranslation('settings');
@@ -17,15 +18,7 @@ export function ActiveSessionsCard() {
   const { revokeSession, isPending } = useRevokeSession();
 
   return (
-    <Card>
-      <Typography.Title level={4} className="font-heading text-brown m-0!">
-        {t('security.sessions.title')}
-      </Typography.Title>
-      <Typography.Text type="secondary" className="text-xs">
-        {t('security.sessions.caption')}
-      </Typography.Text>
-      <Divider className="mt-3 mb-6" />
-
+    <SettingsCard title={t('security.sessions.title')} caption={t('security.sessions.caption')}>
       {isLoading ? (
         <Skeleton active paragraph={{ rows: 3 }} />
       ) : (
@@ -77,6 +70,6 @@ export function ActiveSessionsCard() {
           })}
         </div>
       )}
-    </Card>
+    </SettingsCard>
   );
 }

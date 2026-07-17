@@ -5,7 +5,8 @@
   "saveSuccess": "Settings saved",
   "groups": {
     "account": "Account",
-    "system": "System"
+    "system": "System",
+    "access": "Access"
   },
   "profile": {
     "title": "Profile",
@@ -73,6 +74,54 @@
     "lastUsedSeqHint": "Last used: {{seq}}",
     "currency": "Currency",
     "currencyCaption": "Currency used to display quote amounts."
+  },
+  "permissions": {
+    "title": "Permissions",
+    "description": "Read-only view of what each role can do. Roles and permissions can't be created, edited, or assigned here.",
+    "actions": {
+      "create": "Create",
+      "read": "View",
+      "update": "Edit",
+      "delete": "Delete"
+    },
+    "resources": {
+      "dashboard": {
+        "label": "Dashboard",
+        "caption": "Overview metrics and KPIs on the home screen."
+      },
+      "event": {
+        "label": "Events",
+        "caption": "Venue events, their scheduling and details."
+      },
+      "client": {
+        "label": "Clients",
+        "caption": "Client records and their contact information."
+      },
+      "quote": {
+        "label": "Quotes",
+        "caption": "Price quotes and the quote builder."
+      },
+      "pipeline": {
+        "label": "Pipeline",
+        "caption": "Quote pipeline stages and tracking."
+      },
+      "staff": {
+        "label": "Staff",
+        "caption": "Staff members and their assignments."
+      },
+      "product": {
+        "label": "Products",
+        "caption": "Catalog products, options and pricing."
+      },
+      "event_type": {
+        "label": "Event types",
+        "caption": "Event type definitions used across the catalog."
+      },
+      "config": {
+        "label": "Configuration",
+        "caption": "Global app settings: tax rates, deposits, quote defaults."
+      }
+    }
   },
   "validation": {
     "taxRateInvalid": "Invalid rate",

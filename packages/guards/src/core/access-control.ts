@@ -26,6 +26,9 @@ export const roles = {
   [ROLES.ADMIN]: ac.newRole({
     ...permissionsByRole[ROLES.ADMIN],
   }),
+  [ROLES.MANAGER]: ac.newRole({
+    ...permissionsByRole[ROLES.MANAGER],
+  }),
   [ROLES.MEMBER]: ac.newRole({
     ...permissionsByRole[ROLES.MEMBER],
   }),

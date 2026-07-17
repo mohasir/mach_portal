@@ -1,8 +1,9 @@
 'use client';
-import { Card, Divider, Form, InputNumber, Select, Typography } from 'antd';
+import { Form, InputNumber, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { CURRENCY_OPTIONS } from '../contants';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
+import { SettingsCard } from './SettingsCard';
 
 interface QuoteDefaultsCardProps {
   lastUsedSeq: number;
@@ -13,12 +14,7 @@ export function QuoteDefaultsCard({ lastUsedSeq }: QuoteDefaultsCardProps) {
   const minSeqStart = Math.max(1, lastUsedSeq);
 
   return (
-    <Card>
-      <Typography.Title level={4} className="font-heading text-brown m-0!">
-        {t('quoteDefaults.title')}
-      </Typography.Title>
-      <Divider className="mt-3 mb-6" />
-
+    <SettingsCard title={t('quoteDefaults.title')}>
       <FieldRow
         title={t('quoteDefaults.depositRate')}
         caption={t('quoteDefaults.depositRateCaption')}
@@ -89,6 +85,6 @@ export function QuoteDefaultsCard({ lastUsedSeq }: QuoteDefaultsCardProps) {
           <Select options={CURRENCY_OPTIONS} className="w-full" />
         </Form.Item>
       </FieldRow>
-    </Card>
+    </SettingsCard>
   );
 }

@@ -1,8 +1,9 @@
 'use client';
-import { Button, Card, Divider, Form, Input, Typography } from 'antd';
+import { Button, Form, Input } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { useChangePassword } from '../hooks/useChangePassword';
+import { SettingsCard } from './SettingsCard';
 
 interface ChangePasswordFormValues {
   currentPassword: string;
@@ -16,17 +17,15 @@ export function ChangePasswordCard() {
   const { changePassword, isPending } = useChangePassword();
 
   const onFinish = async (values: ChangePasswordFormValues) => {
-    await changePassword({ currentPassword: values.currentPassword, newPassword: values.newPassword });
+    await changePassword({
+      currentPassword: values.currentPassword,
+      newPassword: values.newPassword,
+    });
     form.resetFields();
   };
 
   return (
-    <Card>
-      <Typography.Title level={4} className="font-heading text-brown m-0!">
-        {t('profile.changePassword.title')}
-      </Typography.Title>
-      <Divider className="mt-3 mb-6" />
-
+    <SettingsCard title={t('profile.changePassword.title')}>
       <Form layout="vertical" form={form} onFinish={onFinish} requiredMark={false}>
         <Form.Item
           name="currentPassword"
@@ -68,6 +67,6 @@ export function ChangePasswordCard() {
           {t('save')}
         </Button>
       </Form>
-    </Card>
+    </SettingsCard>
   );
 }

@@ -5,7 +5,8 @@
   "saveSuccess": "Configuración guardada",
   "groups": {
     "account": "Cuenta",
-    "system": "Sistema"
+    "system": "Sistema",
+    "access": "Acceso"
   },
   "profile": {
     "title": "Perfil",
@@ -73,6 +74,54 @@
     "lastUsedSeqHint": "Último usado: {{seq}}",
     "currency": "Moneda",
     "currencyCaption": "Moneda en la que se muestran los montos de las cotizaciones."
+  },
+  "permissions": {
+    "title": "Permisos",
+    "description": "Vista de solo lectura de lo que puede hacer cada rol. Los roles y permisos no se pueden crear, editar ni asignar desde acá.",
+    "actions": {
+      "create": "Crear",
+      "read": "Ver",
+      "update": "Editar",
+      "delete": "Eliminar"
+    },
+    "resources": {
+      "dashboard": {
+        "label": "Panel",
+        "caption": "Métricas y KPIs generales en la pantalla de inicio."
+      },
+      "event": {
+        "label": "Eventos",
+        "caption": "Eventos del salón, su programación y detalles."
+      },
+      "client": {
+        "label": "Clientes",
+        "caption": "Registros de clientes y su información de contacto."
+      },
+      "quote": {
+        "label": "Cotizaciones",
+        "caption": "Cotizaciones de precios y el armador de cotizaciones."
+      },
+      "pipeline": {
+        "label": "Pipeline",
+        "caption": "Etapas de seguimiento de las cotizaciones."
+      },
+      "staff": {
+        "label": "Personal",
+        "caption": "Miembros del personal y sus asignaciones."
+      },
+      "product": {
+        "label": "Productos",
+        "caption": "Productos del catálogo, opciones y precios."
+      },
+      "event_type": {
+        "label": "Tipos de evento",
+        "caption": "Definiciones de tipos de evento usadas en el catálogo."
+      },
+      "config": {
+        "label": "Configuración",
+        "caption": "Configuración global: impuestos, depósitos, valores por defecto de cotizaciones."
+      }
+    }
   },
   "validation": {
     "taxRateInvalid": "Tasa inválida",

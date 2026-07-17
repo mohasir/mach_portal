@@ -1,17 +1,13 @@
 'use client';
-import { Card, Divider, Flex, Form, Switch, Typography } from 'antd';
+import { Flex, Form, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { SettingsCard } from './SettingsCard';
 
 export function CatalogPreferencesCard() {
   const { t } = useTranslation('settings');
 
   return (
-    <Card>
-      <Typography.Title level={4} className="font-heading text-brown m-0!">
-        {t('preferences.catalog.title')}
-      </Typography.Title>
-      <Divider className="mt-3 mb-6" />
-
+    <SettingsCard title={t('preferences.catalog.title')}>
       <Flex justify="space-between" align="start" gap={16}>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5 py-1">
           <span>{t('preferences.catalog.sortable')}</span>
@@ -23,6 +19,6 @@ export function CatalogPreferencesCard() {
           <Switch />
         </Form.Item>
       </Flex>
-    </Card>
+    </SettingsCard>
   );
 }

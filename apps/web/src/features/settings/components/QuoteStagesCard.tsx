@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Button, Card, ColorPicker, Divider, Form, Input, Tag, Typography } from 'antd';
+import { Button, ColorPicker, Form, Input, Tag } from 'antd';
 import type { InputRef } from 'antd';
 import type { Color } from 'antd/es/color-picker';
 import { Pencil } from 'lucide-react';
@@ -9,6 +9,7 @@ import type { Config } from '../types';
 import { TAG_COLOR_PRESETS } from '../contants';
 import { useIsSuperAdmin } from '@/lib/auth/useIsSuperAdmin';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
+import { SettingsCard } from './SettingsCard';
 
 interface QuoteStagesCardProps {
   stages: Config['quoteStages'];
@@ -106,15 +107,10 @@ export function QuoteStagesCard({ stages }: QuoteStagesCardProps) {
   const { t } = useTranslation('settings');
 
   return (
-    <Card>
-      <Typography.Title level={4} className="font-heading text-brown m-0!">
-        {t('quoteStages.title')}
-      </Typography.Title>
-      <Divider className="mt-3 mb-6" />
-
+    <SettingsCard title={t('quoteStages.title')}>
       {stages.map((s, index) => (
         <QuoteStageRow key={s.id} index={index} caption={s.description} />
       ))}
-    </Card>
+    </SettingsCard>
   );
 }

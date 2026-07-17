@@ -15,10 +15,18 @@ export function UserForm({ mode, initialValues, onSubmit, isPending }: UserFormP
   const { t } = useTranslation('users');
   const [form] = Form.useForm<CreateUserInput>();
 
-  const roleOptions = Object.values(ROLES).map((role) => ({ value: role, label: t(`roles.${role}`) }));
+  const roleOptions = Object.values(ROLES)
+    .filter((role) => role !== ROLES.MANAGER)
+    .map((role) => ({ value: role, label: t(`roles.${role}`) }));
 
   return (
-    <Form form={form} layout="vertical" initialValues={initialValues} onFinish={onSubmit} requiredMark={false}>
+    <Form
+      form={form}
+      layout="vertical"
+      initialValues={initialValues}
+      onFinish={onSubmit}
+      requiredMark={false}
+    >
       <Form.Item
         name="name"
         label={t('form.name')}
@@ -43,7 +51,10 @@ export function UserForm({ mode, initialValues, onSubmit, isPending }: UserFormP
           <Form.Item
             name="password"
             label={t('form.password')}
-            rules={[{ required: true, message: t('validation.passwordMin') }, { min: 8, message: t('validation.passwordMin') }]}
+            rules={[
+              { required: true, message: t('validation.passwordMin') },
+              { min: 8, message: t('validation.passwordMin') },
+            ]}
           >
             <Input.Password placeholder={t('form.passwordPlaceholder')} />
           </Form.Item>
