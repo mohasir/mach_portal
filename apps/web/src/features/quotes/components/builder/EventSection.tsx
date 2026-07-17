@@ -2,7 +2,7 @@
 import { DatePicker, Form, Input, Select, TimePicker } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { stateSchema, type StateValue } from '@repo/schemas';
+import { STATE_NAMES, stateSchema, type StateValue } from '@repo/schemas';
 import type { EventType } from '@/features/event-types';
 import { useQuoteBuilder, type QuoteBuilderState } from '../../hooks/useQuoteBuilder';
 
@@ -68,7 +68,7 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
           <Select
             allowClear
             placeholder={t('builder.event.statePlaceholder')}
-            options={stateSchema.options.map((s) => ({ value: s, label: s }))}
+            options={stateSchema.options.map((s) => ({ value: s, label: STATE_NAMES[s] }))}
           />
         </Form.Item>
         <Form.Item name="eventDate" label={t('builder.event.date')}>

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { and, asc, count, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import {
   QUOTE_STAGE,
+  type CreateClientInput,
   type QuoteLineInput,
   type QuoteStageId,
   type QuotesBoardQuery,
@@ -292,9 +293,27 @@ export class QuotesRepository {
     if (optionRows.length > 0) await tx.insert(quoteLineOptions).values(optionRows);
   }
 
-  async insertFull(quoteData: typeof quotes.$inferInsert, lines: QuoteLineInput[]) {
+  private async resolveClientId(
+    tx: Tx,
+    clientId: string | undefined,
+    newClient?: CreateClientInput,
+  ) {
+    if (!newClient) return clientId!;
+    const [created] = await tx.insert(clients).values(newClient).returning({ id: clients.id });
+    return created!.id;
+  }
+
+  async insertFull(
+    quoteData: Omit<typeof quotes.$inferInsert, 'clientId'> & { clientId?: string },
+    lines: QuoteLineInput[],
+    newClient?: CreateClientInput,
+  ) {
     return this.db.transaction(async (tx) => {
-      const [quote] = await tx.insert(quotes).values(quoteData).returning(publicQuoteColumns);
+      const clientId = await this.resolveClientId(tx, quoteData.clientId, newClient);
+      const [quote] = await tx
+        .insert(quotes)
+        .values({ ...quoteData, clientId })
+        .returning(publicQuoteColumns);
       await tx.insert(quoteStageHistory).values({
         quoteId: quote!.id,
         fromStageId: null,
@@ -308,13 +327,15 @@ export class QuotesRepository {
 
   async replaceLines(
     id: string,
-    quoteData: Partial<typeof quotes.$inferInsert>,
+    quoteData: Omit<Partial<typeof quotes.$inferInsert>, 'clientId'> & { clientId?: string },
     lines: QuoteLineInput[],
+    newClient?: CreateClientInput,
   ) {
     return this.db.transaction(async (tx) => {
+      const clientId = await this.resolveClientId(tx, quoteData.clientId, newClient);
       const [quote] = await tx
         .update(quotes)
-        .set(quoteData)
+        .set({ ...quoteData, clientId })
         .where(eq(quotes.id, id))
         .returning(publicQuoteColumns);
       if (!quote) return undefined;

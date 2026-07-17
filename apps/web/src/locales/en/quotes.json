@@ -40,9 +40,12 @@
     "client": {
       "label": "Client",
       "placeholder": "Search a client...",
-      "newLead": "New lead",
+      "noResults": "No clients found",
+      "addNew": "Add new client",
+      "backToSearch": "Back to search",
       "name": "Name",
-      "phone": "Phone"
+      "phone": "Phone",
+      "email": "Email"
     },
     "event": {
       "type": "Event type",

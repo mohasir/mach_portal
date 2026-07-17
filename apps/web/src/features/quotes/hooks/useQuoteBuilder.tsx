@@ -8,7 +8,7 @@ import {
 } from '../quotes.store';
 
 export { emptyBuilderState } from '../quotes.store';
-export type { LineDraft, QuoteBuilderState } from '../quotes.store';
+export type { LineDraft, NewClientDraft, QuoteBuilderState } from '../quotes.store';
 
 const QuoteBuilderContext = createContext<QuoteBuilderStoreApi | null>(null);
 

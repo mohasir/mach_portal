@@ -1,11 +1,3 @@
-import type { StateValue } from '@repo/schemas';
-
-export const STATE_NAMES: Record<StateValue, string> = {
-  NY: 'New York',
-  NJ: 'New Jersey',
-  CT: 'Connecticut',
-};
-
 // ISO 4217 code
 export const CURRENCY_OPTIONS = [
   { value: 'USD', label: 'USD — US Dollar' },

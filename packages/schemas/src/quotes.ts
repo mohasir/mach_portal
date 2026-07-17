@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { listQuerySchema } from './pagination';
 import { stateSchema } from './enums';
 import { optionalText } from './fields';
+import { createClientSchema } from './clients';
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
@@ -28,7 +29,7 @@ export const quoteStageIdSchema = z.union([
 // hardcoded component color, this is admin-authored data (mach-bar-domain.md D18).
 export const quoteStageColorSchema = z
   .string()
-  .regex(HEX_COLOR_RE, 'config.validation.quoteStagesColorInvalid');
+  .regex(HEX_COLOR_RE, 'config:validation.quoteStagesColorInvalid');
 export type QuoteStageColor = z.infer<typeof quoteStageColorSchema>;
 
 export const quoteStageCatalogItemSchema = z.object({
@@ -82,8 +83,11 @@ export type QuoteLineInput = z.infer<typeof quoteLineInputSchema>;
 // ── quote ──
 const blankToUndefined = (v: unknown) => (v === '' || v == null ? undefined : v);
 
+export const quoteNewClientSchema = createClientSchema.pick({ name: true, phone: true, email: true });
+
 const quoteMutationFields = {
-  clientId: z.uuid(),
+  clientId: z.preprocess(blankToUndefined, z.uuid().optional()),
+  newClient: quoteNewClientSchema.optional(),
   eventTypeId: z.preprocess(blankToUndefined, z.uuid().optional()),
   eventDate: z.preprocess(blankToUndefined, z.iso.date().optional()),
   eventTime: optionalText(20),
@@ -96,8 +100,15 @@ const quoteMutationFields = {
   lines: z.array(quoteLineInputSchema).default([]),
 } as const;
 
-export const createQuoteSchema = z.object(quoteMutationFields);
-export const updateQuoteSchema = z.object(quoteMutationFields);
+const clientXor = (data: { clientId?: string; newClient?: unknown }) =>
+  !!data.clientId !== !!data.newClient;
+
+export const createQuoteSchema = z
+  .object(quoteMutationFields)
+  .refine(clientXor, { message: 'quotes.validation.clientRequired', path: ['clientId'] });
+export const updateQuoteSchema = z
+  .object(quoteMutationFields)
+  .refine(clientXor, { message: 'quotes.validation.clientRequired', path: ['clientId'] });
 
 export type CreateQuoteInput = z.infer<typeof createQuoteSchema>;
 export type UpdateQuoteInput = z.infer<typeof updateQuoteSchema>;

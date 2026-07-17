@@ -9,9 +9,16 @@ export interface LineDraft {
   selections: Record<string, string[]>;
 }
 
+export interface NewClientDraft {
+  name: string;
+  phone: string;
+  email: string;
+}
+
 export interface QuoteBuilderState {
   clientId: string | null;
   clientName: string | null; // display-only, not sent to the server
+  newClient: NewClientDraft | null;
   eventTypeId: string | null;
   eventDate: string | null;
   eventTime: string | null;
@@ -31,6 +38,7 @@ export function emptyBuilderState(
   return {
     clientId: initialClient?.clientId ?? null,
     clientName: initialClient?.clientName ?? null,
+    newClient: null,
     eventTypeId: null,
     eventDate: null,
     eventTime: null,

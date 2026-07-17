@@ -46,7 +46,7 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
       <div className="flex flex-col gap-1 text-sm">
         <div className="flex justify-between">
           <span className="text-gray-500">{t('builder.preview.client')}</span>
-          <span className="font-medium">{state.clientName ?? '—'}</span>
+          <span className="font-medium">{state.newClient?.name || state.clientName || '—'}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-500">{t('builder.preview.eventType')}</span>

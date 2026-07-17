@@ -9,7 +9,7 @@ import type { EventType } from '@/features/event-types';
 import { useConfig } from '@/features/settings';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
-import { isQuoteReadyToSend, toCreateInput } from '../../helpers';
+import { hasClient, isQuoteReadyToSend, toCreateInput } from '../../helpers';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { useCreateQuote, useUpdateQuote, useUpdateQuoteStage } from '../../hooks/useQuotes';
 import type { QuoteDetail } from '../../types';
@@ -66,7 +66,7 @@ export function QuoteBuilderContent({
   const canSend = isQuoteReadyToSend(state);
 
   const handleSaveDraft = async () => {
-    if (!state.clientId) {
+    if (!hasClient(state)) {
       message.error(t('builder.errors.clientRequired'));
       return;
     }
@@ -98,7 +98,7 @@ export function QuoteBuilderContent({
 
   const formContent = (
     <Card>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col">
         <ClientSection readOnly={readOnly} />
         <EventSection eventTypes={eventTypes} readOnly={readOnly} />
         <LineBuilder catalog={catalog} readOnly={readOnly} />

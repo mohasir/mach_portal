@@ -117,6 +117,7 @@ export class QuotesService {
         ...totals,
       },
       input.lines,
+      input.newClient,
     );
     return quoteResource(created);
   }
@@ -149,6 +150,7 @@ export class QuotesService {
         ...totals,
       },
       input.lines,
+      input.newClient,
     );
     if (!updated) throw notFound();
     return quoteResource(updated);

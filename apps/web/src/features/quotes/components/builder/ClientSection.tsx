@@ -1,14 +1,16 @@
 'use client';
 import { useState } from 'react';
-import { Button, Form, Input, Modal, Select, Spin } from 'antd';
-import { Plus } from 'lucide-react';
+import { Button, Form, Input, Select, Spin } from 'antd';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useClientsList, useCreateClient } from '@/features/clients';
-import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
+import { useClientsList } from '@/features/clients';
+import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { useQuoteBuilder, type NewClientDraft } from '../../hooks/useQuoteBuilder';
 
-interface LeadFormValues {
+interface NewClientFormValues {
   name: string;
   phone?: string;
+  email?: string;
 }
 
 interface ClientSectionProps {
@@ -19,9 +21,6 @@ export function ClientSection({ readOnly }: ClientSectionProps) {
   const { t } = useTranslation('quotes');
   const { state, setFields } = useQuoteBuilder();
   const [search, setSearch] = useState('');
-  const [isCreateOpen, setCreateOpen] = useState(false);
-  const [form] = Form.useForm<LeadFormValues>();
-  const { createClient, isPending } = useCreateClient();
 
   const { data, isLoading } = useClientsList({
     page: 1,
@@ -37,66 +36,96 @@ export function ClientSection({ readOnly }: ClientSectionProps) {
     options.unshift({ value: state.clientId, label: state.clientName });
   }
 
-  const handleCreate = async (values: LeadFormValues) => {
-    const created = await createClient({ name: values.name, phone: values.phone });
-    setFields({ clientId: created.id, clientName: created.name });
-    setCreateOpen(false);
-    form.resetFields();
+  const startCreate = () => {
+    setFields({
+      clientId: null,
+      clientName: null,
+      newClient: { name: search, phone: '', email: '' },
+    });
   };
 
-  return (
-    <>
-      <Form.Item label={t('builder.client.label')} required className="mb-4">
-        <div className="flex items-center gap-2">
-          <Select
-            showSearch={{ onSearch: setSearch, filterOption: false }}
-            allowClear
-            disabled={readOnly}
-            className="flex-1"
-            placeholder={t('builder.client.placeholder')}
-            value={state.clientId ?? undefined}
-            notFoundContent={isLoading ? <Spin size="small" /> : null}
-            options={options}
-            onChange={(value, option) => {
-              const label = Array.isArray(option)
-                ? undefined
-                : (option?.label as string | undefined);
-              setFields({ clientId: value ?? null, clientName: value ? (label ?? null) : null });
-            }}
-          />
-          {!readOnly && (
-            <Button icon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
-              {t('builder.client.newLead')}
-            </Button>
-          )}
-        </div>
-      </Form.Item>
+  const backToSearch = () => setFields({ newClient: null });
 
-      <Modal
-        title={t('builder.client.newLead')}
-        open={isCreateOpen}
-        onCancel={() => setCreateOpen(false)}
-        footer={null}
-        destroyOnHidden
-      >
-        <Form form={form} layout="vertical" onFinish={handleCreate} requiredMark={false}>
+  const handleNewClientChange = (changed: Partial<NewClientFormValues>) => {
+    setFields({ newClient: { ...(state.newClient as NewClientDraft), ...changed } });
+  };
+
+  if (state.newClient) {
+    return (
+      <div className="flex flex-col gap-3">
+        <Button
+          type="text"
+          size="small"
+          className="self-start"
+          disabled={readOnly}
+          icon={<ArrowLeft size={14} />}
+          onClick={backToSearch}
+        >
+          {t('builder.client.backToSearch')}
+        </Button>
+
+        <Form<NewClientFormValues>
+          layout="vertical"
+          disabled={readOnly}
+          initialValues={state.newClient}
+          onValuesChange={handleNewClientChange}
+          requiredMark={false}
+        >
           <Form.Item
             name="name"
-            label={t('builder.client.name')}
+            label={<FieldLabel title={t('builder.client.name')} required />}
             rules={[{ required: true, message: t('validation.clientRequired') }]}
           >
-            <Input />
+            <Input autoFocus />
           </Form.Item>
-          <Form.Item name="phone" label={t('builder.client.phone')}>
-            <Input />
-          </Form.Item>
-          <Form.Item className="mb-0">
-            <Button type="primary" htmlType="submit" loading={isPending} block>
-              {t('form.save')}
-            </Button>
-          </Form.Item>
+          <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+            <Form.Item name="phone" label={<FieldLabel title={t('builder.client.phone')} />}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="email" label={<FieldLabel title={t('builder.client.email')} />}>
+              <Input />
+            </Form.Item>
+          </div>
         </Form>
-      </Modal>
-    </>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4 flex flex-col gap-1">
+      <FieldLabel title={t('builder.client.label')} required />
+      <Select
+        showSearch={{ onSearch: setSearch, filterOption: false }}
+        allowClear
+        disabled={readOnly}
+        className="w-full"
+        placeholder={t('builder.client.placeholder')}
+        value={state.clientId ?? undefined}
+        onInputKeyDown={(e) => {
+          if (e.key === 'Enter' && !isLoading && options.length === 0) startCreate();
+        }}
+        notFoundContent={
+          isLoading ? (
+            <Spin size="small" />
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-2">
+              <span className="text-muted text-sm">{t('builder.client.noResults')}</span>
+              <Button size="small" icon={<Plus size={14} />} onClick={startCreate}>
+                {t('builder.client.addNew')}
+              </Button>
+            </div>
+          )
+        }
+        options={options}
+        onChange={(value, option) => {
+          const label = Array.isArray(option) ? undefined : (option?.label as string | undefined);
+          setFields({
+            clientId: value ?? null,
+            clientName: value ? (label ?? null) : null,
+            newClient: null,
+          });
+        }}
+      />
+    </div>
   );
 }

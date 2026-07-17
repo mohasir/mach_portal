@@ -1,8 +1,8 @@
 'use client';
 import { Form, InputNumber } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { STATE_NAMES } from '@repo/schemas';
 import type { Config } from '../types';
-import { STATE_NAMES } from '../contants';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
 import { SettingsCard } from './SettingsCard';
 

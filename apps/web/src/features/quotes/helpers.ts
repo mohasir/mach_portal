@@ -27,7 +27,14 @@ export function toQuoteLineInputs(lines: LineDraft[]): QuoteLineInput[] {
 
 export function toCreateInput(state: QuoteBuilderState): CreateQuoteInput {
   return {
-    clientId: state.clientId!,
+    clientId: state.newClient ? undefined : (state.clientId ?? undefined),
+    newClient: state.newClient
+      ? {
+          name: state.newClient.name.trim(),
+          phone: state.newClient.phone.trim() || undefined,
+          email: state.newClient.email.trim() || undefined,
+        }
+      : undefined,
     eventTypeId: state.eventTypeId ?? undefined,
     eventDate: state.eventDate ?? undefined,
     eventTime: state.eventTime ?? undefined,
@@ -45,6 +52,7 @@ export function toBuilderState(detail: QuoteDetail): QuoteBuilderState {
   return {
     clientId: detail.clientId,
     clientName: detail.clientName,
+    newClient: null,
     eventTypeId: detail.eventTypeId,
     eventDate: detail.eventDate,
     eventTime: detail.eventTime,
@@ -64,9 +72,13 @@ export function toBuilderState(detail: QuoteDetail): QuoteBuilderState {
   };
 }
 
+export function hasClient(state: QuoteBuilderState): boolean {
+  return !!state.clientId || !!state.newClient?.name.trim();
+}
+
 /** Enables "Enviar" — "Guardar borrador" only needs a client. */
 export function isQuoteReadyToSend(state: QuoteBuilderState): boolean {
   return (
-    !!state.clientId && !!state.state && state.address.trim().length > 0 && state.lines.length > 0
+    hasClient(state) && !!state.state && state.address.trim().length > 0 && state.lines.length > 0
   );
 }
