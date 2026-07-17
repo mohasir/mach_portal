@@ -16,7 +16,7 @@ export function UserForm({ mode, initialValues, onSubmit, isPending }: UserFormP
   const [form] = Form.useForm<CreateUserInput>();
 
   const roleOptions = Object.values(ROLES)
-    .filter((role) => role !== ROLES.MANAGER)
+    .filter((role) => role !== ROLES.SUPERADMIN)
     .map((role) => ({ value: role, label: t(`roles.${role}`) }));
 
   return (
