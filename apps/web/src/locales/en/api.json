@@ -23,6 +23,8 @@
     "EVENT_NOT_FOUND": "The event does not exist",
     "EVENT_STAFF_ALREADY_ASSIGNED": "That staff member is already assigned to this event",
     "EVENT_STAFF_NOT_FOUND": "That staff assignment does not exist",
+    "EVENT_STAFF_EVENT_COMPLETED": "Staff can't be assigned to an event that's already completed",
+    "EVENT_PAYMENT_EXCEEDS_BALANCE": "That amount exceeds the outstanding balance",
     "CONFLICT": "The resource already exists",
     "UNAUTHORIZED": "Your session expired, please sign in again",
     "FORBIDDEN": "You don't have permission for this action",

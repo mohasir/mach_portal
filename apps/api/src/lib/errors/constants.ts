@@ -42,6 +42,10 @@ export const ErrorCodes = {
   eventStaff: {
     ALREADY_ASSIGNED: 'EVENT_STAFF_ALREADY_ASSIGNED',
     NOT_FOUND: 'EVENT_STAFF_NOT_FOUND',
+    EVENT_COMPLETED: 'EVENT_STAFF_EVENT_COMPLETED',
+  },
+  eventPayment: {
+    EXCEEDS_BALANCE: 'EVENT_PAYMENT_EXCEEDS_BALANCE',
   },
 } as const;
 

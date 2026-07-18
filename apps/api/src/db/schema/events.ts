@@ -13,6 +13,7 @@ import { clients } from './clients';
 import { eventTypes } from './eventTypes';
 import { quotes } from './quotes';
 import { staff } from './staff';
+import { user } from './auth';
 
 export const events = pgTable('events', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -56,3 +57,17 @@ export const eventStaff = pgTable(
   },
   (t) => [unique('event_staff_event_staff_unique').on(t.eventId, t.staffId)],
 );
+
+export const eventPayments = pgTable('event_payments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  eventId: uuid('event_id')
+    .notNull()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  method: paymentMethodEnum('method').notNull(),
+  amount: integer('amount').notNull(),
+  paidAt: date('paid_at', { mode: 'string' }).notNull(),
+  reference: text('reference'),
+  notes: text('notes'),
+  createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});

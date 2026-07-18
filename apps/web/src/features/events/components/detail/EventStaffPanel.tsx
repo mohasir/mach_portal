@@ -27,13 +27,17 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
     });
   };
 
+  const canAssign = event.status !== 'completed';
+
   return (
     <Card
       title={t('detail.staff.title')}
       extra={
-        <Button size="small" icon={<UserPlus size={14} />} onClick={() => setAssignOpen(true)}>
-          {t('detail.staff.assign')}
-        </Button>
+        canAssign && (
+          <Button size="small" icon={<UserPlus size={14} />} onClick={() => setAssignOpen(true)}>
+            {t('detail.staff.assign')}
+          </Button>
+        )
       }
     >
       {event.staff.length === 0 ? (

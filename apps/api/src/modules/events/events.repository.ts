@@ -4,19 +4,21 @@ import {
   type AssignStaffInput,
   type EventsCalendarQuery,
   type EventsListQuery,
+  type RegisterEventPaymentInput,
   type RemoveStaffInput,
-  type UpdateEventPaymentInput,
 } from '@repo/schemas';
 import type { Database } from '../../db';
 import {
   clients,
   events,
+  eventPayments,
   eventStaff,
   eventTypes,
   quoteLineOptions,
   quoteLines,
   quotes,
   staff,
+  user,
 } from '../../db/schema';
 import { resolvePagination } from '../../lib/utils/pagination';
 import { publicQuoteLineColumns, publicQuoteLineOptionColumns } from '../quotes/quotes.resource';
@@ -97,8 +99,9 @@ export class EventsRepository {
       : [];
 
     const staffRows = await this.findStaff(id);
+    const paymentRows = await this.findPayments(id);
 
-    return { eventRow, lineRows, optionRows, staffRows };
+    return { eventRow, lineRows, optionRows, staffRows, paymentRows };
   }
 
   findStaff(eventId: string) {
@@ -115,13 +118,57 @@ export class EventsRepository {
       .where(eq(eventStaff.eventId, eventId));
   }
 
-  updatePayment(id: string, data: UpdateEventPaymentInput) {
+  findPayments(eventId: string) {
     return this.db
-      .update(events)
-      .set(data)
-      .where(eq(events.id, id))
-      .returning(publicEventColumns)
-      .then((r) => r[0]);
+      .select({
+        id: eventPayments.id,
+        method: eventPayments.method,
+        amount: eventPayments.amount,
+        paidAt: eventPayments.paidAt,
+        reference: eventPayments.reference,
+        notes: eventPayments.notes,
+        createdByName: user.name,
+        createdAt: eventPayments.createdAt,
+      })
+      .from(eventPayments)
+      .leftJoin(user, eq(eventPayments.createdById, user.id))
+      .where(eq(eventPayments.eventId, eventId))
+      .orderBy(desc(eventPayments.paidAt), desc(eventPayments.createdAt));
+  }
+
+  async registerPayment(
+    eventId: string,
+    data: RegisterEventPaymentInput,
+    createdById: string | null,
+  ) {
+    return this.db.transaction(async (tx) => {
+      const [event] = await tx
+        .select({ totalAmount: events.totalAmount, depositAmount: quotes.depositAmount })
+        .from(events)
+        .innerJoin(quotes, eq(events.quoteId, quotes.id))
+        .where(eq(events.id, eventId))
+        .limit(1);
+      if (!event) return undefined;
+
+      const [sumRow] = await tx
+        .select({ paidSoFar: sql<number>`coalesce(sum(${eventPayments.amount}), 0)::int` })
+        .from(eventPayments)
+        .where(eq(eventPayments.eventId, eventId));
+
+      const totalPaid = (sumRow?.paidSoFar ?? 0) + data.amount;
+      if (totalPaid > event.totalAmount) return 'exceeds-balance' as const;
+
+      await tx.insert(eventPayments).values({ eventId, ...data, createdById });
+      await tx
+        .update(events)
+        .set({
+          depositPaid: totalPaid >= event.depositAmount,
+          balancePaid: totalPaid >= event.totalAmount,
+        })
+        .where(eq(events.id, eventId));
+
+      return 'ok' as const;
+    });
   }
 
   markCompleted(id: string) {
@@ -131,6 +178,15 @@ export class EventsRepository {
       .where(eq(events.id, id))
       .returning(publicEventColumns)
       .then((r) => r[0]);
+  }
+
+  async isCompleted(eventId: string) {
+    const [row] = await this.db
+      .select({ completedAt: events.completedAt })
+      .from(events)
+      .where(eq(events.id, eventId))
+      .limit(1);
+    return !!row?.completedAt;
   }
 
   async isStaffAssigned(eventId: string, staffId: string) {

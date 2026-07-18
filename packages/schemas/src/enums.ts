@@ -9,5 +9,5 @@ export const STATE_NAMES: Record<StateValue, string> = {
   CT: 'Connecticut',
 };
 
-export const paymentMethodSchema = z.enum(['zelle', 'cash', 'card', 'check']);
+export const paymentMethodSchema = z.enum(['zelle', 'cash', 'card', 'check', 'transfer']);
 export type PaymentMethod = z.infer<typeof paymentMethodSchema>;

@@ -1,6 +1,9 @@
 {
   "title": "Eventos",
   "empty": "No hay eventos",
+  "validation": {
+    "amountRequired": "El monto debe ser mayor a 0"
+  },
   "columns": {
     "client": "Cliente",
     "eventType": "Tipo de evento",
@@ -28,6 +31,7 @@
   },
   "detail": {
     "backToQuote": "Ver cotización",
+    "pastDue": "La fecha de este evento ya pasó. ¿Deseás marcarlo como realizado?",
     "markCompleted": "Marcar realizado",
     "markCompletedSuccess": "Evento marcado como realizado",
     "markCompletedConfirm": {
@@ -50,16 +54,34 @@
       "title": "Composición"
     },
     "payments": {
-      "title": "Pagos",
-      "total": "Total",
-      "deposit": "Depósito",
+      "title": "Estado de Pago",
+      "total": "Total factura",
+      "paid": "Pagado",
       "balance": "Saldo",
-      "depositPaid": "Depósito pagado",
-      "balancePaid": "Saldo pagado",
-      "paymentMethod": "Método de pago",
-      "paymentMethodPlaceholder": "Elegí un método",
-      "save": "Guardar",
-      "saved": "Pago actualizado"
+      "status": {
+        "pending": "Pendiente",
+        "partial": "Parcial",
+        "paid": "Pagado"
+      },
+      "register": {
+        "title": "Registrar pago",
+        "method": "Método",
+        "methodPlaceholder": "Seleccione…",
+        "percent": "Porcentaje",
+        "percentPlaceholder": "Elegí un %",
+        "amount": "Monto",
+        "date": "Fecha",
+        "reference": "Referencia",
+        "referencePlaceholder": "N° cheque, transferencia…",
+        "notes": "Notas",
+        "submit": "Registrar"
+      },
+      "history": {
+        "title": "Histórico de pagos",
+        "empty": "Sin pagos registrados",
+        "registeredBy": "Registrado por {{name}}"
+      },
+      "registered": "Pago registrado"
     },
     "staff": {
       "title": "Staff asignado",
@@ -84,6 +106,7 @@
     "zelle": "Zelle",
     "cash": "Efectivo",
     "card": "Tarjeta",
-    "check": "Cheque"
+    "check": "Cheque",
+    "transfer": "Transferencia"
   }
 }

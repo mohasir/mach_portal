@@ -95,6 +95,7 @@
   "pipeline": {
     "title": "Pipeline",
     "expired": "Expired",
+    "pastDue": "Past due",
     "noDate": "No date",
     "moveTo": "Move to…",
     "assignStaff": "Assign staff",
@@ -130,6 +131,7 @@
     "quantity": "Quantity",
     "validUntil_one": "Prices valid until {{date}} ({{count}} month)",
     "validUntil_other": "Prices valid until {{date}} ({{count}} months)",
+    "pastDue": "This event's date has already passed. Do you want to confirm the event anyway?",
     "includedServices": "Included services",
     "includedLabel": "Included"
   }

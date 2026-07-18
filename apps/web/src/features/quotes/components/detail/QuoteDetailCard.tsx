@@ -1,9 +1,11 @@
 'use client';
 import { Alert, Descriptions, Divider, Table, Typography, type TableColumnsType } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { QUOTE_STAGE } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import { useConfig } from '@/features/settings';
 import { Logo } from '@/components/shared/Logo';
+import { isPastDate } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import type { QuoteDetail } from '../../types';
@@ -56,6 +58,11 @@ export function QuoteDetailCard({ detail, catalog }: QuoteDetailCardProps) {
     ? `${date(detail.eventDate)}${detail.eventTime ? `, ${detail.eventTime}` : ''}`
     : (detail.eventTime ?? '—');
 
+  const isPastDue =
+    (detail.stageId === QUOTE_STAGE.PENDING || detail.stageId === QUOTE_STAGE.QUOTED) &&
+    isPastDate(detail.eventDate);
+
+  console.log(isPastDue);
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-start justify-between gap-4">
@@ -100,6 +107,10 @@ export function QuoteDetailCard({ detail, catalog }: QuoteDetailCardProps) {
             count: config?.appSettings.quoteValidityMonths ?? 0,
           })}
         />
+      )}
+
+      {isPastDue && (
+        <Alert className="mt-4 mb-4" type="warning" showIcon title={t('detail.pastDue')} />
       )}
 
       <div className="flex-1">

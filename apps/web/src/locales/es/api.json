@@ -23,6 +23,8 @@
     "EVENT_NOT_FOUND": "El evento no existe",
     "EVENT_STAFF_ALREADY_ASSIGNED": "Ese miembro del staff ya está asignado a este evento",
     "EVENT_STAFF_NOT_FOUND": "Esa asignación de staff no existe",
+    "EVENT_STAFF_EVENT_COMPLETED": "No se puede asignar staff a un evento ya realizado",
+    "EVENT_PAYMENT_EXCEEDS_BALANCE": "Ese monto supera el saldo pendiente",
     "CONFLICT": "El recurso ya existe",
     "UNAUTHORIZED": "Tu sesión expiró, iniciá sesión de nuevo",
     "FORBIDDEN": "No tenés permiso para esta acción",

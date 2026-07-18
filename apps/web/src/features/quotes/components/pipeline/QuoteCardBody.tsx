@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Tag, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
+import { isPastDate } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useQuoteStages } from '@/features/settings';
@@ -21,10 +22,9 @@ export function QuoteCardBody({ card, actions }: QuoteCardBodyProps) {
 
   const stageId = card.stageId as QuoteStageId;
   const stage = stageMap.get(stageId);
-  const isExpired =
-    stageId === QUOTE_STAGE.QUOTED &&
-    !!card.validUntil &&
-    card.validUntil < new Date().toISOString().slice(0, 10);
+  const isExpired = stageId === QUOTE_STAGE.QUOTED && isPastDate(card.validUntil);
+  const isPastDue =
+    (stageId === QUOTE_STAGE.PENDING || stageId === QUOTE_STAGE.QUOTED) && isPastDate(card.eventDate);
 
   return (
     <>
@@ -34,6 +34,7 @@ export function QuoteCardBody({ card, actions }: QuoteCardBodyProps) {
         </Typography.Text>
         <div className="flex items-center gap-1">
           {isExpired && <Tag color="red">{t('pipeline.expired')}</Tag>}
+          {isPastDue && <Tag color="orange">{t('pipeline.pastDue')}</Tag>}
           {actions}
         </div>
       </div>

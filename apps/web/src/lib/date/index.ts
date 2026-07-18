@@ -35,3 +35,6 @@ export const formatDateTime = (value: DateInput, locale: AppLocale) =>
 
 export const formatRelative = (value: DateInput, locale: AppLocale) =>
   toDayjs(value, locale).fromNow();
+
+export const isPastDate = (value?: DateInput | null) =>
+  !!value && dayjs(value).isBefore(dayjs(), 'day');

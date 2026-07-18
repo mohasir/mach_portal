@@ -3,8 +3,8 @@ import {
   assignStaffSchema,
   eventsCalendarQuerySchema,
   eventsListQuerySchema,
+  registerEventPaymentSchema,
   removeStaffSchema,
-  updateEventPaymentSchema,
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
 import { router, guardedProcedure } from '../../trpc/trpc';
@@ -27,9 +27,9 @@ export const eventsRouter = router({
     .input(z.object({ id: z.uuid() }))
     .query(({ input }) => service.getById(input.id)),
 
-  updatePayment: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] })
-    .input(z.object({ id: z.uuid(), data: updateEventPaymentSchema }))
-    .mutation(({ input }) => service.updatePayment(input.id, input.data)),
+  registerPayment: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] })
+    .input(z.object({ id: z.uuid(), data: registerEventPaymentSchema }))
+    .mutation(({ input, ctx }) => service.registerPayment(input.id, input.data, ctx.user.id)),
 
   markCompleted: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] })
     .input(z.object({ id: z.uuid() }))

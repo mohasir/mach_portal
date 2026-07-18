@@ -1,6 +1,9 @@
 {
   "title": "Events",
   "empty": "No events yet",
+  "validation": {
+    "amountRequired": "Amount must be greater than 0"
+  },
   "columns": {
     "client": "Client",
     "eventType": "Event type",
@@ -28,6 +31,7 @@
   },
   "detail": {
     "backToQuote": "View quote",
+    "pastDue": "This event's date has already passed. Do you want to mark it as completed?",
     "markCompleted": "Mark completed",
     "markCompletedSuccess": "Event marked as completed",
     "markCompletedConfirm": {
@@ -50,16 +54,34 @@
       "title": "Composition"
     },
     "payments": {
-      "title": "Payments",
-      "total": "Total",
-      "deposit": "Deposit",
+      "title": "Payment Status",
+      "total": "Invoice total",
+      "paid": "Paid",
       "balance": "Balance",
-      "depositPaid": "Deposit paid",
-      "balancePaid": "Balance paid",
-      "paymentMethod": "Payment method",
-      "paymentMethodPlaceholder": "Pick a method",
-      "save": "Save",
-      "saved": "Payment updated"
+      "status": {
+        "pending": "Pending",
+        "partial": "Partial",
+        "paid": "Paid"
+      },
+      "register": {
+        "title": "Register payment",
+        "method": "Method",
+        "methodPlaceholder": "Select…",
+        "percent": "Percentage",
+        "percentPlaceholder": "Pick a %",
+        "amount": "Amount",
+        "date": "Date",
+        "reference": "Reference",
+        "referencePlaceholder": "Check #, transfer…",
+        "notes": "Notes",
+        "submit": "Register"
+      },
+      "history": {
+        "title": "Payment history",
+        "empty": "No payments registered",
+        "registeredBy": "Registered by {{name}}"
+      },
+      "registered": "Payment registered"
     },
     "staff": {
       "title": "Assigned staff",
@@ -84,6 +106,7 @@
     "zelle": "Zelle",
     "cash": "Cash",
     "card": "Card",
-    "check": "Check"
+    "check": "Check",
+    "transfer": "Transfer"
   }
 }

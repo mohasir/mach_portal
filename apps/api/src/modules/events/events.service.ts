@@ -4,8 +4,8 @@ import {
   type AssignStaffInput,
   type EventsCalendarQuery,
   type EventsListQuery,
+  type RegisterEventPaymentInput,
   type RemoveStaffInput,
-  type UpdateEventPaymentInput,
 } from '@repo/schemas';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import { EventsRepository } from './events.repository';
@@ -38,13 +38,25 @@ export class EventsService {
   async getById(id: string) {
     const result = await this.repo.findById(id);
     if (!result) throw notFound();
-    return buildEventDetail(result.eventRow, result.lineRows, result.optionRows, result.staffRows);
+    return buildEventDetail(
+      result.eventRow,
+      result.lineRows,
+      result.optionRows,
+      result.staffRows,
+      result.paymentRows,
+    );
   }
 
-  async updatePayment(id: string, input: UpdateEventPaymentInput) {
-    const updated = await this.repo.updatePayment(id, input);
-    if (!updated) throw notFound();
-    return eventResource(updated);
+  async registerPayment(id: string, input: RegisterEventPaymentInput, createdById: string | null) {
+    const result = await this.repo.registerPayment(id, input, createdById);
+    if (result === undefined) throw notFound();
+    if (result === 'exceeds-balance') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        cause: new AppError(ErrorCodes.eventPayment.EXCEEDS_BALANCE),
+      });
+    }
+    return { ok: true };
   }
 
   async markCompleted(id: string) {
@@ -54,6 +66,13 @@ export class EventsService {
   }
 
   async assignStaff(input: AssignStaffInput) {
+    const completed = await this.repo.isCompleted(input.eventId);
+    if (completed) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        cause: new AppError(ErrorCodes.eventStaff.EVENT_COMPLETED),
+      });
+    }
     const alreadyAssigned = await this.repo.isStaffAssigned(input.eventId, input.staffId);
     if (alreadyAssigned) {
       throw new TRPCError({

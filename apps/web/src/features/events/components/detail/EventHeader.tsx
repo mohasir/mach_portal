@@ -1,9 +1,10 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { App, Button, Card, Space, Tag, Typography } from 'antd';
+import { Alert, App, Button, Card, Space, Tag, Typography } from 'antd';
 import { CheckCircle, ExternalLink, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCancelQuote } from '@/features/quotes';
+import { isPastDate } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { EVENT_STATUS_COLORS } from '../../helpers';
 import { useMarkEventCompleted } from '../../hooks/useEventPayments';
@@ -15,6 +16,7 @@ interface EventHeaderProps {
 
 export function EventHeader({ event }: EventHeaderProps) {
   const { t } = useTranslation('events');
+  const { t: tc } = useTranslation('common');
   const router = useRouter();
   const { modal } = App.useApp();
   const { date } = useDateFormatter();
@@ -22,6 +24,7 @@ export function EventHeader({ event }: EventHeaderProps) {
   const { cancelQuote, isPending: isCancelling } = useCancelQuote();
 
   const isUpcoming = event.status === 'upcoming';
+  const isPastDue = isUpcoming && isPastDate(event.eventDate);
 
   const onMarkCompleted = () => {
     modal.confirm({
@@ -88,6 +91,20 @@ export function EventHeader({ event }: EventHeaderProps) {
           )}
         </Space>
       </div>
+
+      {isPastDue && (
+        <Alert
+          className="mt-3"
+          type="warning"
+          showIcon
+          title={t('detail.pastDue')}
+          action={
+            <Button size="small" loading={isCompleting} onClick={onMarkCompleted}>
+              {tc('yes')}
+            </Button>
+          }
+        />
+      )}
     </Card>
   );
 }

@@ -1,3 +1,4 @@
+import type { PaymentMethod } from '@repo/schemas';
 import { events } from '../../db/schema';
 import {
   buildQuoteLineDetails,
@@ -95,14 +96,37 @@ export type EventStaffRow = {
   assignedAt: Date;
 };
 
+export type EventPaymentRow = {
+  id: string;
+  method: PaymentMethod;
+  amount: number;
+  paidAt: string;
+  reference: string | null;
+  notes: string | null;
+  createdByName: string | null;
+  createdAt: Date;
+};
+
+export type PaymentStatus = 'pending' | 'partial' | 'paid';
+
+const derivePaymentStatus = (totalAmount: number, totalPaid: number): PaymentStatus =>
+  totalPaid <= 0 ? 'pending' : totalPaid >= totalAmount ? 'paid' : 'partial';
+
 export const buildEventDetail = (
   eventRow: EventWithNames,
   lineRows: PublicQuoteLine[],
   optionRows: PublicQuoteLineOption[],
   staffRows: EventStaffRow[],
-) => ({
-  ...eventListItemResource(eventRow),
-  lines: buildQuoteLineDetails(lineRows, optionRows),
-  staff: staffRows,
-});
+  paymentRows: EventPaymentRow[],
+) => {
+  const totalPaid = paymentRows.reduce((sum, p) => sum + p.amount, 0);
+  return {
+    ...eventListItemResource(eventRow),
+    lines: buildQuoteLineDetails(lineRows, optionRows),
+    staff: staffRows,
+    payments: paymentRows,
+    totalPaid,
+    paymentStatus: derivePaymentStatus(eventRow.totalAmount, totalPaid),
+  };
+};
 export type EventDetailResource = ReturnType<typeof buildEventDetail>;

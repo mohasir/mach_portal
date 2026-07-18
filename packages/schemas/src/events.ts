@@ -15,15 +15,14 @@ export const eventsCalendarQuerySchema = z.object({
 });
 export type EventsCalendarQuery = z.infer<typeof eventsCalendarQuerySchema>;
 
-export const updateEventPaymentSchema = z.object({
-  depositPaid: z.boolean(),
-  balancePaid: z.boolean(),
-  paymentMethod: z.preprocess(
-    (v) => (v === '' || v == null ? undefined : v),
-    paymentMethodSchema.optional(),
-  ),
+export const registerEventPaymentSchema = z.object({
+  method: paymentMethodSchema,
+  amount: z.number().int().positive('events.validation.amountRequired'),
+  paidAt: z.iso.date(),
+  reference: optionalText(120),
+  notes: optionalText(500),
 });
-export type UpdateEventPaymentInput = z.infer<typeof updateEventPaymentSchema>;
+export type RegisterEventPaymentInput = z.infer<typeof registerEventPaymentSchema>;
 
 export const assignStaffSchema = z.object({
   eventId: z.uuid(),
