@@ -1,20 +1,22 @@
-import { Typography } from 'antd';
+import Image from 'next/image';
+import machFavicon from '@/assets/machFavicon.webp';
+import machLogo from '@/assets/machLogo.webp';
 
 interface LogoProps {
   iconOnly?: boolean;
 }
 
 export function Logo({ iconOnly = false }: LogoProps) {
+  if (iconOnly) {
+    return <Image src={machFavicon} alt="Mach" priority className="h-9 w-9 shrink-0 rounded-lg" />;
+  }
+
   return (
-    <div className="flex items-center gap-2">
-      <div className="bg-primary font-heading flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg text-white">
-        M
-      </div>
-      {!iconOnly && (
-        <Typography.Text strong className="font-heading text-brown text-lg leading-none">
-          Mach Portal
-        </Typography.Text>
-      )}
-    </div>
+    <Image
+      src={machLogo}
+      alt="Mach Snack Bar & Drinks"
+      priority
+      className="h-full shrink-0 w-full object-contain"
+    />
   );
 }

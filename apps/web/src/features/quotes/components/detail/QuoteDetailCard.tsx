@@ -7,6 +7,7 @@ import { Logo } from '@/components/shared/Logo';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import type { QuoteDetail } from '../../types';
+import { QuoteSummary } from '../QuoteSummary';
 
 interface QuoteDetailCardProps {
   detail: QuoteDetail;
@@ -58,7 +59,9 @@ export function QuoteDetailCard({ detail, catalog }: QuoteDetailCardProps) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-start justify-between gap-4">
-        <Logo />
+        <div className="flex h-16 item-center justify-center">
+          <Logo />
+        </div>
         <div className="text-right">
           <Typography.Text type="secondary" className="text-xs tracking-wide">
             {t('detail.title')}
@@ -111,33 +114,14 @@ export function QuoteDetailCard({ detail, catalog }: QuoteDetailCardProps) {
 
       <Divider className="my-3" />
 
-      <div className="flex flex-col gap-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-gray-500">{t('builder.pricing.subtotal')}</span>
-          <span>{money(detail.subtotal)}</span>
-        </div>
-        {detail.discountAmount > 0 && (
-          <div className="flex justify-between">
-            <span className="text-gray-500">{t('builder.pricing.discount')}</span>
-            <span>- {money(detail.discountAmount)}</span>
-          </div>
-        )}
-        <div className="flex justify-between">
-          <span className="text-gray-500">{t('builder.pricing.taxShort')}</span>
-          <span>{money(detail.taxAmount)}</span>
-        </div>
-        <div className="flex justify-between text-base font-semibold">
-          <span>{t('builder.pricing.total')}</span>
-          <span>{money(detail.total)}</span>
-        </div>
-        <Divider className="my-1" />
-        <div className="flex justify-between">
-          <span className="text-gray-500">
-            {t('builder.pricing.deposit', { rate: Math.round(detail.depositRate * 100) })}
-          </span>
-          <span>{money(detail.depositAmount)}</span>
-        </div>
-      </div>
+      <QuoteSummary
+        subtotal={detail.subtotal}
+        discountAmount={detail.discountAmount}
+        taxAmount={detail.taxAmount}
+        total={detail.total}
+        depositRate={detail.depositRate}
+        depositAmount={detail.depositAmount}
+      />
     </div>
   );
 }

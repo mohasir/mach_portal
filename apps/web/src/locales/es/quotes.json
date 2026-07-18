@@ -31,7 +31,7 @@
     "editTitle": "Editar cotización",
     "saveDraft": "Guardar borrador",
     "saveChanges": "Guardar cambios",
-    "send": "Enviar",
+    "send": "Generar cotización",
     "saved": "Cotización guardada",
     "sent": "Cotización enviada",
     "errors": {
@@ -89,12 +89,7 @@
       "open": "Ver vista previa",
       "client": "Cliente",
       "eventType": "Tipo de evento",
-      "eventDate": "Fecha",
-      "line": {
-        "station": "Estación",
-        "persons": "Personas",
-        "total": "Total"
-      }
+      "eventDate": "Fecha"
     }
   },
   "pipeline": {

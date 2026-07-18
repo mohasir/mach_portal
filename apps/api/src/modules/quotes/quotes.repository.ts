@@ -185,7 +185,7 @@ export class QuotesRepository {
     const [openRows, terminalRows] = await Promise.all([
       baseSelect()
         .where(and(inArray(quotes.stageId, OPEN_STAGES), isNull(quotes.archivedAt)))
-        .orderBy(asc(quotes.eventDate)),
+        .orderBy(desc(quotes.createdAt)),
       baseSelect()
         .where(
           and(
@@ -195,7 +195,7 @@ export class QuotesRepository {
             sql`extract(year from ${quotes.updatedAt}) = ${year}`,
           ),
         )
-        .orderBy(desc(quotes.updatedAt)),
+        .orderBy(desc(quotes.createdAt)),
     ]);
 
     const rows = [...openRows, ...terminalRows];

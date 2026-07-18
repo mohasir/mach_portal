@@ -17,12 +17,25 @@ interface EventFormValues {
   eventTime?: Dayjs;
   state?: StateValue;
   address?: string;
-  notes?: string;
 }
 
 export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
   const { t } = useTranslation('quotes');
   const { state, setFields } = useQuoteBuilder();
+  const [form] = Form.useForm<EventFormValues>();
+  const eventDate = Form.useWatch('eventDate', form);
+
+  const disabledDate = (current: Dayjs) => current.isBefore(dayjs(), 'day');
+
+  const disabledTime = () => {
+    if (!eventDate || !eventDate.isSame(dayjs(), 'day')) return {};
+    const now = dayjs();
+    return {
+      disabledHours: () => Array.from({ length: now.hour() }, (_, h) => h),
+      disabledMinutes: (selectedHour: number) =>
+        selectedHour === now.hour() ? Array.from({ length: now.minute() }, (_, m) => m) : [],
+    };
+  };
 
   const initialValues: EventFormValues = {
     eventTypeId: state.eventTypeId ?? undefined,
@@ -30,7 +43,6 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
     eventTime: state.eventTime ? dayjs(state.eventTime, 'HH:mm') : undefined,
     state: state.state ?? undefined,
     address: state.address,
-    notes: state.notes,
   };
 
   const handleValuesChange = (changed: Partial<EventFormValues>) => {
@@ -44,12 +56,12 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
     }
     if ('state' in changed) patch.state = changed.state ?? null;
     if ('address' in changed) patch.address = changed.address ?? '';
-    if ('notes' in changed) patch.notes = changed.notes ?? '';
     setFields(patch);
   };
 
   return (
     <Form<EventFormValues>
+      form={form}
       layout="vertical"
       disabled={readOnly}
       initialValues={initialValues}
@@ -72,22 +84,24 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
           />
         </Form.Item>
         <Form.Item name="eventDate" label={t('builder.event.date')}>
-          <DatePicker className="w-full" />
+          <DatePicker className="w-full" disabledDate={disabledDate} />
         </Form.Item>
         <Form.Item name="eventTime" label={t('builder.event.time')}>
-          <TimePicker className="w-full" format="HH:mm" minuteStep={15} />
+          <TimePicker
+            className="w-full"
+            format="HH:mm"
+            minuteStep={15}
+            needConfirm={false}
+            showNow={false}
+            classNames={{ popup: { content: 'min-w-[150px]' } }}
+            disabledTime={disabledTime}
+          />
         </Form.Item>
       </div>
       <Form.Item name="address" label={t('builder.event.address')} required>
         <Input.TextArea
           autoSize={{ minRows: 1, maxRows: 3 }}
           placeholder={t('builder.event.addressPlaceholder')}
-        />
-      </Form.Item>
-      <Form.Item name="notes" label={t('builder.event.notes')}>
-        <Input.TextArea
-          autoSize={{ minRows: 2, maxRows: 4 }}
-          placeholder={t('builder.event.notesPlaceholder')}
         />
       </Form.Item>
     </Form>

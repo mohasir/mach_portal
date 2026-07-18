@@ -12,7 +12,10 @@ export function SidebarLogo({ collapsed = false, onNavigate }: SidebarLogoProps)
     <Link
       href={DEFAULT_REDIRECT_HOME}
       onClick={onNavigate}
-      className={`flex h-16 items-center transition-opacity hover:opacity-80 ${collapsed ? 'justify-center px-0' : 'px-4'}`}
+      className="flex h-22 justify-center items-center transition-opacity hover:opacity-80 py-2"
+      style={{
+        margin: !collapsed ? '1rem .5rem 1rem .5rem' : '0',
+      }}
     >
       <Logo iconOnly={collapsed} />
     </Link>

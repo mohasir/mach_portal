@@ -11,15 +11,15 @@ export function AdminLayoutContainer({ children }: { children: React.ReactNode }
   const isDesktop = useIsDesktop();
   const layoutMode = useLayoutMode();
   const fillViewport = useLayoutStore((s) => s.fillViewport);
-  const [collapsed, setCollapsed] = useState(false);
+  const toggleSidebarCollapsed = useLayoutStore((s) => s.toggleSidebarCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const onToggleSidebar = () => (isDesktop ? setCollapsed((c) => !c) : setMobileOpen((o) => !o));
+  const onToggleSidebar = () => (isDesktop ? toggleSidebarCollapsed() : setMobileOpen((o) => !o));
 
   return (
     <Layout hasSider className="bg-background h-screen overflow-hidden">
       {isDesktop ? (
-        <AppSidebar collapsed={collapsed} />
+        <AppSidebar />
       ) : (
         <Drawer
           placement="left"

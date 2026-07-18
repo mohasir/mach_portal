@@ -99,4 +99,13 @@
     --os-handle-bg-hover: rgba(0, 0, 0, 0.5);
     --os-handle-bg-active: rgba(0, 0, 0, 0.65);
   }
+
+  /* TimePicker/DatePicker-with-time panel: the selected hour/minute cell
+     defaults to controlItemBgActive (a faint neutral tint) instead of the
+     solid colorPrimary "pill" DatePicker uses for its selected day — no
+     component token exposes this, so match it here for visual consistency. */
+  .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+    background: var(--ant-color-primary);
+    color: var(--ant-color-text-light-solid);
+  }
 }

@@ -14,7 +14,7 @@ export function SidebarContent({ collapsed = false, onNavigate }: SidebarContent
       <SidebarLogo collapsed={collapsed} onNavigate={onNavigate} />
 
       <div className={`flex-1 overflow-y-auto py-2 px-3`}>
-        <SidebarNav onNavigate={onNavigate} />
+        <SidebarNav collapsed={collapsed} onNavigate={onNavigate} />
       </div>
 
       {/* <div className="p-3">

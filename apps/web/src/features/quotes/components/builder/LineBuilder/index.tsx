@@ -30,6 +30,7 @@ export function LineBuilder({ catalog, readOnly }: LineBuilderProps) {
 
   return (
     <div className="flex flex-col gap-3">
+      {!readOnly && <ProductPicker catalog={catalog} onAdd={handleAdd} />}
       {state.lines.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('builder.lines.empty')} />
       ) : (
@@ -49,7 +50,6 @@ export function LineBuilder({ catalog, readOnly }: LineBuilderProps) {
           );
         })
       )}
-      {!readOnly && <ProductPicker catalog={catalog} onAdd={handleAdd} />}
     </div>
   );
 }

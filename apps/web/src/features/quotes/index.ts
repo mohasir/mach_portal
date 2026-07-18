@@ -5,5 +5,7 @@ export { useQuotesColumns } from './components/list/columns';
 export { QuoteBuilderPage } from './components/builder/QuoteBuilderPage';
 export { QuoteDetailPage } from './components/detail/QuoteDetailPage';
 export { PipelineBoard } from './components/pipeline/PipelineBoard';
+export { QuoteLineItem, type QuoteLineItemGroup } from './components/QuoteLineItem';
 export { useCancelQuote, useQuote, useQuotesList } from './hooks/useQuotes';
+export { getStationIcon } from './helpers';
 export type { Quote, QuoteDetail, QuoteBoard, QuoteCard } from './types';

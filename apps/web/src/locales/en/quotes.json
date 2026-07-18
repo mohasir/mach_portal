@@ -31,7 +31,7 @@
     "editTitle": "Edit quote",
     "saveDraft": "Save draft",
     "saveChanges": "Save changes",
-    "send": "Send",
+    "send": "Generate quote",
     "saved": "Quote saved",
     "sent": "Quote sent",
     "errors": {
@@ -89,12 +89,7 @@
       "open": "View preview",
       "client": "Client",
       "eventType": "Event type",
-      "eventDate": "Date",
-      "line": {
-        "station": "Station",
-        "persons": "Guests",
-        "total": "Total"
-      }
+      "eventDate": "Date"
     }
   },
   "pipeline": {

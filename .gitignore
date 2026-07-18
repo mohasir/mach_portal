@@ -6,6 +6,7 @@ dist
 .turbo
 drizzle
 *.tsbuildinfo
+.DS_Store
 
 # CodeGraph — índice local (artefacto) + config MCP/agente con ruta absoluta (no portable)
 .codegraph/

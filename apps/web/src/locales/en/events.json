@@ -41,9 +41,13 @@
       "content": "This also cancels the originating quote.",
       "ok": "Cancel event"
     },
+    "tabs": {
+      "services": "Included services",
+      "staff": "Staff",
+      "payments": "Payments"
+    },
     "composition": {
-      "title": "Composition",
-      "numPersons": "{{count}} guests"
+      "title": "Composition"
     },
     "payments": {
       "title": "Payments",

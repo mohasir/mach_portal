@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Button, Skeleton } from 'antd';
+import { Button, Skeleton, Tabs } from 'antd';
 import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useProductCatalog } from '@/features/catalog';
@@ -42,18 +42,30 @@ export function EventDetailPage({ eventId }: EventDetailPageProps) {
     );
   }
 
+  const tabItems = [
+    {
+      key: 'services',
+      label: t('detail.tabs.services'),
+      children: <EventComposition lines={event.lines} catalog={catalog} />,
+    },
+    {
+      key: 'staff',
+      label: t('detail.tabs.staff'),
+      children: <EventStaffPanel event={event} />,
+    },
+    {
+      key: 'payments',
+      label: t('detail.tabs.payments'),
+      children: <EventPayments event={event} />,
+    },
+  ];
+
   return (
     <div>
       <PageHeader title={title} />
       <div className="flex flex-col gap-4">
         <EventHeader event={event} />
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <EventComposition lines={event.lines} catalog={catalog} />
-          <div className="flex flex-col gap-4">
-            <EventPayments event={event} />
-            <EventStaffPanel event={event} />
-          </div>
-        </div>
+        <Tabs items={tabItems} />
       </div>
     </div>
   );

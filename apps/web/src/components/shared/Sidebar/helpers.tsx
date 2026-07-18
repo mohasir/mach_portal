@@ -15,7 +15,11 @@ export const isGroupVisible = (group: NavGroup, can: CanFn): boolean =>
       : isItemVisible(item, can),
   );
 
-const toMenuItem = (item: NavItem, can: CanFn, t: TFunction): NonNullable<MenuProps['items']>[number] => {
+const toMenuItem = (
+  item: NavItem,
+  can: CanFn,
+  t: TFunction,
+): NonNullable<MenuProps['items']>[number] => {
   const icon = item.icon ? IconMap[item.icon] : undefined;
 
   if (item.children?.length) {
@@ -35,7 +39,12 @@ const toMenuItem = (item: NavItem, can: CanFn, t: TFunction): NonNullable<MenuPr
   };
 };
 
-export function buildMenuItems(menu: NavGroup[], can: CanFn, t: TFunction): MenuProps['items'] {
+export function buildMenuItems(
+  menu: NavGroup[],
+  can: CanFn,
+  t: TFunction,
+  collapsed = false,
+): MenuProps['items'] {
   const items: NonNullable<MenuProps['items']> = [];
 
   menu.forEach((group, index) => {
@@ -43,12 +52,19 @@ export function buildMenuItems(menu: NavGroup[], can: CanFn, t: TFunction): Menu
 
     const visibleItems = group.items
       .filter((item) =>
-        item.children?.length ? item.children.some((c) => isItemVisible(c, can)) : isItemVisible(item, can),
+        item.children?.length
+          ? item.children.some((c) => isItemVisible(c, can))
+          : isItemVisible(item, can),
       )
       .map((item) => toMenuItem(item, can, t));
 
     if (group.group) {
-      items.push({ key: `group-${index}`, type: 'group', label: t(group.group), children: visibleItems });
+      items.push({
+        key: `group-${index}`,
+        type: 'group',
+        label: collapsed ? '' : t(group.group),
+        children: visibleItems,
+      });
     } else {
       items.push(...visibleItems);
     }

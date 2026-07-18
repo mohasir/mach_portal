@@ -18,6 +18,7 @@ import type { QuoteDetail } from '../../types';
 import { ClientSection, type ApiFieldError, type ClientSectionHandle } from './ClientSection';
 import { EventSection } from './EventSection';
 import { LineBuilder } from './LineBuilder';
+import { NotesSection } from './NotesSection';
 import { PricingPanel } from './PricingPanel';
 import { QuoteHistoryCard } from './QuoteHistoryCard';
 import { QuotePreview } from './QuotePreview';
@@ -105,9 +106,9 @@ export function QuoteBuilderContent({
         await updateQuote(quoteId, input);
         message.success(t('builder.saved'));
       } else {
-        const created = await createQuote(input);
+        await createQuote(input);
         message.success(t('builder.saved'));
-        router.push(`/admin/quotes/${created.id}`);
+        router.push('/admin/events?view=pipeline');
       }
     } catch (error) {
       reportSaveError(error);
@@ -117,6 +118,7 @@ export function QuoteBuilderContent({
   const handleSend = async () => {
     if (!canSend) return;
     const input = toCreateInput(state);
+    const isNew = !quoteId;
     let id = quoteId;
     try {
       if (id) {
@@ -136,21 +138,29 @@ export function QuoteBuilderContent({
       return;
     }
     message.success(t('builder.sent'));
-    router.push(`/admin/quotes/${id}`);
+    router.push(isNew ? '/admin/events?view=pipeline' : `/admin/quotes/${id}`);
   };
 
   const formContent = (
     <Card>
+      <div className="mb-6 flex items-center justify-between gap-2">
+        <Typography.Title level={2} className="font-heading text-brown m-0">
+          {quoteId ? t('builder.editTitle') : t('builder.newTitle')}
+        </Typography.Title>
+      </div>
       <div className="flex flex-col">
         <ClientSection ref={clientSectionRef} readOnly={readOnly} />
         <EventSection eventTypes={eventTypes} readOnly={readOnly} />
+        <Divider className="mt-2 mb-6" />
         <LineBuilder catalog={catalog} readOnly={readOnly} />
+        <Divider className="my-4" />
+        <NotesSection readOnly={readOnly} />
       </div>
     </Card>
   );
 
   const previewContent = (
-    <div className="flex flex-col gap-6">
+    <div className="flex h-full min-h-0 flex-col gap-6">
       {/* {!readOnly && (
         <>
           <PricingPanel totals={totals} />
@@ -173,28 +183,34 @@ export function QuoteBuilderContent({
 
   return (
     <div className="pb-24 lg:pb-0">
-      <div className="mb-6 flex items-center justify-between gap-2">
-        <Typography.Title level={2} className="font-heading text-brown m-0">
-          {quoteId ? t('builder.editTitle') : t('builder.newTitle')}
-        </Typography.Title>
-        {!readOnly && isDesktop && (
-          <Space>
-            <Button onClick={handleSaveDraft} loading={isPending}>
-              {saveLabel}
-            </Button>
-            {showSendButton && (
-              <Button type="primary" disabled={!canSend} onClick={handleSend} loading={isPending}>
-                {t('builder.send')}
-              </Button>
-            )}
-          </Space>
-        )}
-      </div>
-
       {isDesktop ? (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_480px]">
           {formContent}
-          <Card className="sticky top-4 self-start">{previewContent}</Card>
+          <div>
+            <div className="sticky top-4 flex h-[calc(100vh-6rem)] flex-col gap-4">
+              <Card className="min-h-0 flex-1" classNames={{ body: 'flex h-full flex-col' }}>
+                {previewContent}
+              </Card>
+              {!readOnly && (
+                <div className="flex mb-20 shrink-0 gap-2">
+                  <Button className="flex-1" onClick={handleSaveDraft} loading={isPending}>
+                    {saveLabel}
+                  </Button>
+                  {showSendButton && (
+                    <Button
+                      className="flex-1"
+                      type="primary"
+                      disabled={!canSend}
+                      onClick={handleSend}
+                      loading={isPending}
+                    >
+                      {t('builder.send')}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       ) : (
         <>
@@ -210,7 +226,7 @@ export function QuoteBuilderContent({
               </Button>
             </div>
             {!readOnly && (
-              <div className="flex gap-2">
+              <div className="flex mb-4 gap-2">
                 <Button className="flex-1" onClick={handleSaveDraft} loading={isPending}>
                   {saveLabel}
                 </Button>

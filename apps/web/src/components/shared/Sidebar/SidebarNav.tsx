@@ -7,7 +7,12 @@ import { useNavigation } from '@/lib/navigation';
 import { buildMenuItems, findActiveKey } from './helpers';
 import { NewQuoteButton } from './NewQuoteButton';
 
-export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+interface SidebarNavProps {
+  collapsed?: boolean;
+  onNavigate?: () => void;
+}
+
+export function SidebarNav({ collapsed = false, onNavigate }: SidebarNavProps) {
   const { t } = useTranslation('admin');
   const can = useCan();
   const pathname = usePathname();
@@ -24,7 +29,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     );
   }
 
-  const items = buildMenuItems(menu, can, t) ?? [];
+  const items = buildMenuItems(menu, can, t, collapsed) ?? [];
   const activeKey = findActiveKey(menu, pathname ?? '');
 
   const onClick = ({ key }: { key: string }) => {
@@ -42,7 +47,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <>
       <Menu {...menuProps} items={items.slice(0, 1)} />
-      <NewQuoteButton onNavigate={onNavigate} />
+      <NewQuoteButton collapsed={collapsed} onNavigate={onNavigate} />
       <Menu {...menuProps} items={items.slice(1)} />
     </>
   );

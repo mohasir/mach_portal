@@ -41,9 +41,13 @@
       "content": "Esto cancela también la cotización de origen.",
       "ok": "Cancelar evento"
     },
+    "tabs": {
+      "services": "Servicios incluidos",
+      "staff": "Staff",
+      "payments": "Pagos"
+    },
     "composition": {
-      "title": "Composición",
-      "numPersons": "{{count}} personas"
+      "title": "Composición"
     },
     "payments": {
       "title": "Pagos",
