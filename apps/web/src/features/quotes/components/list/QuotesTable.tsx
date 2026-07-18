@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Select } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { stateSchema, type QuotesListQuery } from '@repo/schemas';
+import { paginationOf, stateSchema, type QuotesListQuery } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { useQuoteStages } from '@/features/settings';
 import { useQuotesList } from '../../hooks/useQuotes';
@@ -54,7 +54,7 @@ export function QuotesTable({ onRowClick }: QuotesTableProps) {
         onRow={(row) => ({ onClick: () => onRowClick(row), className: 'cursor-pointer' })}
         dataSource={data?.items}
         loading={isLoading}
-        total={data?.pagination.total}
+        total={paginationOf(data)?.total}
         searchPlaceholder={tc('table.search')}
         emptyText={t('empty')}
       />

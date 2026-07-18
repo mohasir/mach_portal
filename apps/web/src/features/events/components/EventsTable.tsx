@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
-import type { EventsListQuery } from '@repo/schemas';
+import { paginationOf, type EventsListQuery } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { AssignStaffModal } from '@/features/quotes/components/pipeline/AssignStaffModal';
 import { useEventsList } from '../hooks/useEvents';
@@ -38,7 +38,7 @@ export function EventsTable({ clientId }: EventsTableProps) {
         onRow={(row) => ({ onClick: () => onRowClick(row), className: 'cursor-pointer' })}
         dataSource={data?.items}
         loading={isLoading}
-        total={data?.pagination.total}
+        total={paginationOf(data)?.total}
         searchPlaceholder={tc('table.search')}
         emptyText={t('empty')}
       />

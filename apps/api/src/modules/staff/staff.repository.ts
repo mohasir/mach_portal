@@ -2,6 +2,7 @@ import { and, asc, count, desc, eq, ilike, notInArray, or, type SQL } from 'driz
 import type { CreateStaffInput, StaffListQuery, UpdateStaffInput } from '@repo/schemas';
 import type { Database } from '../../db';
 import { events, eventStaff, staff } from '../../db/schema';
+import { resolvePagination } from '../../lib/utils/pagination';
 import { publicStaffColumns } from './staff.resource';
 
 const sortColumns = {
@@ -14,7 +15,7 @@ export class StaffRepository {
   constructor(private db: Database) {}
 
   async findPaginated(query: StaffListQuery) {
-    const { page, pageSize, search, sortBy, sortDir } = query;
+    const { search, sortBy, sortDir } = query;
     const where = search
       ? or(
           ilike(staff.name, `%${search}%`),
@@ -23,17 +24,18 @@ export class StaffRepository {
         )
       : undefined;
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
+    const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
 
     const items = await this.db
       .select(publicStaffColumns)
       .from(staff)
       .where(where)
       .orderBy(orderBy)
-      .limit(pageSize)
-      .offset((page - 1) * pageSize);
+      .limit(limit)
+      .offset(offset);
 
-    const total = await this.countAll(where);
-    return { items, total };
+    const total = paginate ? await this.countAll(where) : items.length;
+    return { items, total, paginate, page, pageSize };
   }
 
   private async countAll(where: SQL | undefined) {

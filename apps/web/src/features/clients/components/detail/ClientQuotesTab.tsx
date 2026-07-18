@@ -4,7 +4,7 @@ import { Button } from 'antd';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
-import type { QuotesListQuery } from '@repo/schemas';
+import { paginationOf, type QuotesListQuery } from '@repo/schemas';
 import { QuoteRowCard, useQuotesColumns, useQuotesList, type Quote } from '@/features/quotes';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { useCan } from '@/lib/auth/useCan';
@@ -48,7 +48,7 @@ export function ClientQuotesTab({ client }: ClientQuotesTabProps) {
         onRow={(row) => ({ onClick: () => onRowClick(row), className: 'cursor-pointer' })}
         dataSource={data?.items}
         loading={isLoading}
-        total={data?.pagination.total}
+        total={paginationOf(data)?.total}
         searchPlaceholder={tCommon('table.search')}
         emptyText={t('empty')}
       />

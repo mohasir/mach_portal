@@ -8,6 +8,7 @@ import {
 } from '@repo/schemas';
 import type { Database } from '../../db';
 import { clients, quotes } from '../../db/schema';
+import { resolvePagination } from '../../lib/utils/pagination';
 import { publicClientColumns } from './clients.resource';
 
 const sortColumns = {
@@ -34,26 +35,29 @@ export class ClientsRepository {
   }
 
   async findPaginated(query: ClientsListQuery) {
-    const { page, pageSize, search, sortBy, sortDir } = query;
+    const { search, sortBy, sortDir, nameOnly } = query;
     const where = search
-      ? or(
-          ilike(clients.name, `%${search}%`),
-          ilike(clients.email, `%${search}%`),
-          ilike(clients.phone, `%${search}%`),
-        )
+      ? nameOnly
+        ? ilike(clients.name, `%${search}%`)
+        : or(
+            ilike(clients.name, `%${search}%`),
+            ilike(clients.email, `%${search}%`),
+            ilike(clients.phone, `%${search}%`),
+          )
       : undefined;
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
+    const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
 
     const items = await this.db
       .select(this.selection())
       .from(clients)
       .where(where)
       .orderBy(orderBy)
-      .limit(pageSize)
-      .offset((page - 1) * pageSize);
+      .limit(limit)
+      .offset(offset);
 
-    const total = await this.countAll(where);
-    return { items, total };
+    const total = paginate ? await this.countAll(where) : items.length;
+    return { items, total, paginate, page, pageSize };
   }
 
   private async countAll(where: SQL | undefined) {

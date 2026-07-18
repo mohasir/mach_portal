@@ -1,19 +1,21 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { App, Button, Card, Divider, Drawer, Space, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { TRPCClientError } from '@trpc/client';
 import { computeQuoteTotals, QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
 import { useConfig } from '@/features/settings';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
+import { useApiError } from '@/lib/error/useApiError';
 import { hasClient, isQuoteReadyToSend, toCreateInput } from '../../helpers';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { useCreateQuote, useUpdateQuote, useUpdateQuoteStage } from '../../hooks/useQuotes';
 import type { QuoteDetail } from '../../types';
-import { ClientSection } from './ClientSection';
+import { ClientSection, type ApiFieldError, type ClientSectionHandle } from './ClientSection';
 import { EventSection } from './EventSection';
 import { LineBuilder } from './LineBuilder';
 import { PricingPanel } from './PricingPanel';
@@ -43,6 +45,8 @@ export function QuoteBuilderContent({
   const { state } = useQuoteBuilder();
   const { data: config } = useConfig();
   const { money } = useMoneyFormatter();
+  const clientSectionRef = useRef<ClientSectionHandle>(null);
+  const onApiError = useApiError();
 
   const { createQuote, isPending: isCreating } = useCreateQuote();
   const { updateQuote, isPending: isUpdating } = useUpdateQuote();
@@ -65,19 +69,48 @@ export function QuoteBuilderContent({
 
   const canSend = isQuoteReadyToSend(state);
 
+  // create/update don't have their own onError (see useQuotes.ts) — a failed client lookup can
+  // fail on `newClient.*` (owned by ClientSection) as easily as on a top-level quote field, so
+  // routing decides where to show it instead of a single generic toast.
+  // `update`'s input is `{ id, data: updateQuoteSchema }`, so a `data.newClient.email` issue
+  // there comes back as `['data', 'newClient', 'email']` — one level deeper than on `create`
+  // (`['newClient', 'email']`) — normalize both before handing off to ClientSection.
+  const reportSaveError = (error: unknown) => {
+    if (error instanceof TRPCClientError) {
+      const fieldErrors = (
+        error.data as { fieldErrors?: ApiFieldError[] | null } | null | undefined
+      )?.fieldErrors;
+      const clientFieldErrors = fieldErrors
+        ?.map((fe) => {
+          const i = fe.path.indexOf('newClient');
+          return i === -1 ? null : { ...fe, path: fe.path.slice(i) };
+        })
+        .filter((fe): fe is ApiFieldError => fe !== null);
+      if (clientFieldErrors?.length) {
+        clientSectionRef.current?.setFieldErrors(clientFieldErrors);
+        return;
+      }
+    }
+    onApiError(error);
+  };
+
   const handleSaveDraft = async () => {
     if (!hasClient(state)) {
       message.error(t('builder.errors.clientRequired'));
       return;
     }
     const input = toCreateInput(state);
-    if (quoteId) {
-      await updateQuote(quoteId, input);
-      message.success(t('builder.saved'));
-    } else {
-      const created = await createQuote(input);
-      message.success(t('builder.saved'));
-      router.push(`/admin/quotes/${created.id}`);
+    try {
+      if (quoteId) {
+        await updateQuote(quoteId, input);
+        message.success(t('builder.saved'));
+      } else {
+        const created = await createQuote(input);
+        message.success(t('builder.saved'));
+        router.push(`/admin/quotes/${created.id}`);
+      }
+    } catch (error) {
+      reportSaveError(error);
     }
   };
 
@@ -85,13 +118,23 @@ export function QuoteBuilderContent({
     if (!canSend) return;
     const input = toCreateInput(state);
     let id = quoteId;
-    if (id) {
-      await updateQuote(id, input);
-    } else {
-      const created = await createQuote(input);
-      id = created.id;
+    try {
+      if (id) {
+        await updateQuote(id, input);
+      } else {
+        const created = await createQuote(input);
+        id = created.id;
+      }
+    } catch (error) {
+      reportSaveError(error);
+      return;
     }
-    await updateStage(id, QUOTE_STAGE.QUOTED);
+    try {
+      await updateStage(id, QUOTE_STAGE.QUOTED);
+    } catch {
+      // error notificado por el onError de useUpdateQuoteStage
+      return;
+    }
     message.success(t('builder.sent'));
     router.push(`/admin/quotes/${id}`);
   };
@@ -99,7 +142,7 @@ export function QuoteBuilderContent({
   const formContent = (
     <Card>
       <div className="flex flex-col">
-        <ClientSection readOnly={readOnly} />
+        <ClientSection ref={clientSectionRef} readOnly={readOnly} />
         <EventSection eventTypes={eventTypes} readOnly={readOnly} />
         <LineBuilder catalog={catalog} readOnly={readOnly} />
       </div>

@@ -24,11 +24,10 @@ export class EventsService {
   constructor(private repo: EventsRepository) {}
 
   async list(query: EventsListQuery) {
-    const { items, total } = await this.repo.findPaginated(query);
-    return {
-      items: eventCollectionResource(items),
-      pagination: paginationMeta(total, query.page, query.pageSize),
-    };
+    const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(query);
+    const resource = eventCollectionResource(items);
+    if (!paginate) return { items: resource };
+    return { items: resource, pagination: paginationMeta(total, page, pageSize) };
   }
 
   async calendar(query: EventsCalendarQuery) {

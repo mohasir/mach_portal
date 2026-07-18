@@ -43,11 +43,10 @@ export class QuotesService {
   ) {}
 
   async list(query: QuotesListQuery) {
-    const { items, total } = await this.repo.findPaginated(query);
-    return {
-      items: items.map(quoteListItemResource),
-      pagination: paginationMeta(total, query.page, query.pageSize),
-    };
+    const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(query);
+    const resource = items.map(quoteListItemResource);
+    if (!paginate) return { items: resource };
+    return { items: resource, pagination: paginationMeta(total, page, pageSize) };
   }
 
   async getById(id: string) {

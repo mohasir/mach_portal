@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import type { ClientsListQuery } from '@repo/schemas';
+import { paginationOf, type ClientsListQuery } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { useClientsList, useDeleteClient } from '../hooks/useClients';
 import { useClientsColumns } from './columns';
@@ -41,7 +41,7 @@ export function ClientsTable({ onEdit }: ClientsTableProps) {
       onRow={(client) => ({ onClick: () => onRowClick(client), className: 'cursor-pointer' })}
       dataSource={data?.items}
       loading={isLoading}
-      total={data?.pagination.total}
+      total={paginationOf(data)?.total}
       searchPlaceholder={tc('table.search')}
       emptyText={t('empty')}
     />

@@ -1,6 +1,6 @@
 'use client';
 import { useTranslation } from 'react-i18next';
-import type { UsersListQuery } from '@repo/schemas';
+import { paginationOf, type UsersListQuery } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { useDeleteUser, useUsersList } from '../hooks/useUsers';
 import { useUsersColumns } from './columns';
@@ -30,7 +30,7 @@ export function UsersTable({ onEdit }: UsersTableProps) {
       renderCard={(user) => <UserCard user={user} onEdit={onEdit} onDelete={onDelete} />}
       dataSource={data?.items}
       loading={isLoading}
-      total={data?.pagination.total}
+      total={paginationOf(data)?.total}
       searchPlaceholder={tc('table.search')}
       emptyText={t('empty')}
     />

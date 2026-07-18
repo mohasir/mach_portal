@@ -1,6 +1,6 @@
 'use client';
 import { useTranslation } from 'react-i18next';
-import type { StaffListQuery } from '@repo/schemas';
+import { paginationOf, type StaffListQuery } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { useDeleteStaff, useStaffList } from '../hooks/useStaff';
 import { useStaffColumns } from './columns';
@@ -30,7 +30,7 @@ export function StaffTable({ onEdit }: StaffTableProps) {
       renderCard={(member) => <StaffCard member={member} onEdit={onEdit} onDelete={onDelete} />}
       dataSource={data?.items}
       loading={isLoading}
-      total={data?.pagination.total}
+      total={paginationOf(data)?.total}
       searchPlaceholder={tc('table.search')}
       emptyText={t('empty')}
     />

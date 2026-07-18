@@ -8,11 +8,18 @@ import {
   type UpdateEventPaymentInput,
 } from '@repo/schemas';
 import type { Database } from '../../db';
-import { clients, events, eventStaff, eventTypes, quoteLineOptions, quoteLines, quotes, staff } from '../../db/schema';
 import {
-  publicQuoteLineColumns,
-  publicQuoteLineOptionColumns,
-} from '../quotes/quotes.resource';
+  clients,
+  events,
+  eventStaff,
+  eventTypes,
+  quoteLineOptions,
+  quoteLines,
+  quotes,
+  staff,
+} from '../../db/schema';
+import { resolvePagination } from '../../lib/utils/pagination';
+import { publicQuoteLineColumns, publicQuoteLineOptionColumns } from '../quotes/quotes.resource';
 import { publicEventColumns } from './events.resource';
 
 const sortColumns = {
@@ -40,21 +47,18 @@ export class EventsRepository {
   }
 
   async findPaginated(query: EventsListQuery) {
-    const { page, pageSize, search, sortBy, sortDir, clientId } = query;
+    const { search, sortBy, sortDir, clientId } = query;
     const where = and(
       search ? ilike(clients.name, `%${search}%`) : undefined,
       clientId ? eq(events.clientId, clientId) : undefined,
     );
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
+    const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
 
-    const items = await this.baseSelect()
-      .where(where)
-      .orderBy(orderBy)
-      .limit(pageSize)
-      .offset((page - 1) * pageSize);
+    const items = await this.baseSelect().where(where).orderBy(orderBy).limit(limit).offset(offset);
 
-    const total = await this.countAll(where);
-    return { items, total };
+    const total = paginate ? await this.countAll(where) : items.length;
+    return { items, total, paginate, page, pageSize };
   }
 
   private async countAll(where: SQL | undefined) {

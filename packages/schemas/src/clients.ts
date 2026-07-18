@@ -10,13 +10,14 @@ export type ClientStatus = z.infer<typeof clientStatusSchema>;
 
 export const clientsListQuerySchema = listQuerySchema.extend({
   sortBy: z.enum(['name', 'city', 'state', 'createdAt']).default('createdAt'),
+  nameOnly: z.boolean().optional(),
 });
 export type ClientsListQuery = z.infer<typeof clientsListQuerySchema>;
 
 const clientMutationFields = {
-  name: z.string().trim().min(1, 'clients.validation.nameRequired').max(120),
+  name: z.string().trim().min(1, 'clients:validation.nameRequired').max(120),
   phone: optionalText(40),
-  email: optionalEmail('clients.validation.emailInvalid'),
+  email: optionalEmail('clients:validation.emailInvalid'),
   city: optionalText(120),
   state: z.preprocess((v) => (v === '' || v === null ? undefined : v), stateSchema.optional()),
   address: optionalText(240),

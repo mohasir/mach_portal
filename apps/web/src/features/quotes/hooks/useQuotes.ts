@@ -18,14 +18,15 @@ export function useQuote(id: string | undefined) {
   return useQuery({ ...trpc.quotes.getById.queryOptions({ id: id! }), enabled: !!id });
 }
 
+// create/update don't wire onError here — the client (and quote) fields it can fail on live
+// across two components (ClientSection, EventSection), so QuoteBuilderContent owns routing the
+// error to the right one instead of a single generic toast.
 export function useCreateQuote() {
   const trpc = useTRPC();
   const qc = useQueryClient();
-  const onError = useApiError();
   const mutation = useMutation(
     trpc.quotes.create.mutationOptions({
       onSuccess: () => qc.invalidateQueries(trpc.quotes.pathFilter()),
-      onError,
     }),
   );
   return {
@@ -37,11 +38,9 @@ export function useCreateQuote() {
 export function useUpdateQuote() {
   const trpc = useTRPC();
   const qc = useQueryClient();
-  const onError = useApiError();
   const mutation = useMutation(
     trpc.quotes.update.mutationOptions({
       onSuccess: () => qc.invalidateQueries(trpc.quotes.pathFilter()),
-      onError,
     }),
   );
   return {

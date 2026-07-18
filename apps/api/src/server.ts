@@ -23,6 +23,15 @@ app.all('/api/auth/*path', toNodeHandler(auth));
 app.use(express.json());
 
 // 3) tRPC
-app.use('/trpc', createExpressMiddleware({ router: appRouter, createContext }));
+app.use(
+  '/trpc',
+  createExpressMiddleware({
+    router: appRouter,
+    createContext,
+    onError({ error, path, type, input }) {
+      console.error(`[trpc] ${type} ${path ?? '<unknown>'}`, { input, error });
+    },
+  }),
+);
 
 app.listen(env.PORT, () => console.log(`API on :${env.PORT}`));

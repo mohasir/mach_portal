@@ -1,5 +1,5 @@
 'use client';
-import { Modal } from 'antd';
+import { Form, Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CreateClientInput } from '@repo/schemas';
 import { useUpdateClient } from '../hooks/useClients';
@@ -14,7 +14,8 @@ interface EditClientModalProps {
 
 export function EditClientModal({ client, open, onClose }: EditClientModalProps) {
   const { t } = useTranslation('clients');
-  const { updateClient, isPending } = useUpdateClient();
+  const [form] = Form.useForm<CreateClientInput>();
+  const { updateClient, isPending } = useUpdateClient(form);
 
   const onSubmit = async (values: CreateClientInput) => {
     if (!client) return;
@@ -22,7 +23,7 @@ export function EditClientModal({ client, open, onClose }: EditClientModalProps)
       await updateClient(client.id, values);
       onClose();
     } catch {
-      // error notificado por useApiError
+      // error notificado por useApiError (toast genérico o form.setFields por campo)
     }
   };
 
@@ -31,6 +32,7 @@ export function EditClientModal({ client, open, onClose }: EditClientModalProps)
       {client && (
         <ClientForm
           key={client.id}
+          form={form}
           initialValues={{
             name: client.name,
             email: client.email ?? undefined,

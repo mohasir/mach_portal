@@ -44,7 +44,7 @@ export const updateQuoteStagesSchema = z
   .array(quoteStageCatalogItemSchema)
   .length(QUOTE_STAGE_IDS.length)
   .refine((rows) => QUOTE_STAGE_IDS.every((id) => rows.some((r) => r.id === id)), {
-    message: 'config.validation.quoteStagesInvalid',
+    message: 'config:validation.quoteStagesInvalid',
   });
 export type UpdateQuoteStagesInput = z.infer<typeof updateQuoteStagesSchema>;
 
@@ -74,8 +74,8 @@ export type QuoteLineSelectionInput = z.infer<typeof quoteLineSelectionSchema>;
 
 export const quoteLineInputSchema = z.object({
   productId: z.uuid(),
-  numPersons: z.number().int().min(1, 'quotes.validation.numPersonsInvalid'),
-  subtotal: z.number().int().min(0, 'quotes.validation.subtotalInvalid'),
+  numPersons: z.number().int().min(1, 'quotes:validation.numPersonsInvalid'),
+  subtotal: z.number().int().min(0, 'quotes:validation.subtotalInvalid'),
   selections: z.array(quoteLineSelectionSchema).default([]),
 });
 export type QuoteLineInput = z.infer<typeof quoteLineInputSchema>;
@@ -83,7 +83,11 @@ export type QuoteLineInput = z.infer<typeof quoteLineInputSchema>;
 // ── quote ──
 const blankToUndefined = (v: unknown) => (v === '' || v == null ? undefined : v);
 
-export const quoteNewClientSchema = createClientSchema.pick({ name: true, phone: true, email: true });
+export const quoteNewClientSchema = createClientSchema.pick({
+  name: true,
+  phone: true,
+  email: true,
+});
 
 const quoteMutationFields = {
   clientId: z.preprocess(blankToUndefined, z.uuid().optional()),
@@ -105,10 +109,10 @@ const clientXor = (data: { clientId?: string; newClient?: unknown }) =>
 
 export const createQuoteSchema = z
   .object(quoteMutationFields)
-  .refine(clientXor, { message: 'quotes.validation.clientRequired', path: ['clientId'] });
+  .refine(clientXor, { message: 'quotes:validation.clientRequired', path: ['clientId'] });
 export const updateQuoteSchema = z
   .object(quoteMutationFields)
-  .refine(clientXor, { message: 'quotes.validation.clientRequired', path: ['clientId'] });
+  .refine(clientXor, { message: 'quotes:validation.clientRequired', path: ['clientId'] });
 
 export type CreateQuoteInput = z.infer<typeof createQuoteSchema>;
 export type UpdateQuoteInput = z.infer<typeof updateQuoteSchema>;

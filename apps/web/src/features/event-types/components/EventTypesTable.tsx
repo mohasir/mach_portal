@@ -1,6 +1,6 @@
 'use client';
 import { useTranslation } from 'react-i18next';
-import type { EventTypesListQuery } from '@repo/schemas';
+import { paginationOf, type EventTypesListQuery } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { useEventTypesList, useToggleEventTypeActive } from '../hooks/useEventTypes';
 import { useEventTypesColumns } from './columns';
@@ -27,7 +27,7 @@ export function EventTypesTable({ onEdit }: EventTypesTableProps) {
       mobileRenderType="list"
       dataSource={data?.items}
       loading={isLoading}
-      total={data?.pagination.total}
+      total={paginationOf(data)?.total}
       searchPlaceholder={tc('table.search')}
       emptyText={t('empty')}
     />

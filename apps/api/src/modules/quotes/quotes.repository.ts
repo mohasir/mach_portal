@@ -24,6 +24,7 @@ import {
   options,
   user,
 } from '../../db/schema';
+import { resolvePagination } from '../../lib/utils/pagination';
 import {
   publicQuoteColumns,
   publicQuoteLineColumns,
@@ -47,8 +48,7 @@ export class QuotesRepository {
   constructor(private db: Database) {}
 
   async findPaginated(query: QuotesListQuery) {
-    const { page, pageSize, search, sortBy, sortDir, month, year, stageId, state, clientId } =
-      query;
+    const { search, sortBy, sortDir, month, year, stageId, state, clientId } = query;
     const where = and(
       isNull(quotes.archivedAt),
       search
@@ -61,6 +61,7 @@ export class QuotesRepository {
       clientId ? eq(quotes.clientId, clientId) : undefined,
     );
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
+    const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
 
     const items = await this.db
       .select({ ...publicQuoteColumns, clientName: clients.name, eventTypeName: eventTypes.name })
@@ -69,11 +70,11 @@ export class QuotesRepository {
       .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
       .where(where)
       .orderBy(orderBy)
-      .limit(pageSize)
-      .offset((page - 1) * pageSize);
+      .limit(limit)
+      .offset(offset);
 
-    const total = await this.countAll(where);
-    return { items, total };
+    const total = paginate ? await this.countAll(where) : items.length;
+    return { items, total, paginate, page, pageSize };
   }
 
   private async countAll(where: SQL | undefined) {

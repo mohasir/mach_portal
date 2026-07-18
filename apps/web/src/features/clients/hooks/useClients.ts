@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { FormInstance } from 'antd';
 import type { ClientsListQuery, CreateClientInput, UpdateClientInput } from '@repo/schemas';
 import { useTRPC } from '@/lib/trpc/client';
 import { useApiError } from '@/lib/error/useApiError';
@@ -8,10 +9,10 @@ export function useClientsList(query: ClientsListQuery) {
   return useQuery({ ...trpc.clients.list.queryOptions(query), placeholderData: keepPreviousData });
 }
 
-export function useCreateClient() {
+export function useCreateClient(form?: FormInstance) {
   const trpc = useTRPC();
   const qc = useQueryClient();
-  const onError = useApiError();
+  const onError = useApiError(form);
 
   const mutation = useMutation(
     trpc.clients.create.mutationOptions({
@@ -26,10 +27,10 @@ export function useCreateClient() {
   };
 }
 
-export function useUpdateClient() {
+export function useUpdateClient(form?: FormInstance) {
   const trpc = useTRPC();
   const qc = useQueryClient();
-  const onError = useApiError();
+  const onError = useApiError(form);
 
   const mutation = useMutation(
     trpc.clients.update.mutationOptions({

@@ -1,7 +1,12 @@
 import { asc, count, desc, eq, ilike, type SQL } from 'drizzle-orm';
-import type { CreateEventTypeInput, EventTypesListQuery, UpdateEventTypeInput } from '@repo/schemas';
+import type {
+  CreateEventTypeInput,
+  EventTypesListQuery,
+  UpdateEventTypeInput,
+} from '@repo/schemas';
 import type { Database } from '../../db';
 import { eventTypes } from '../../db/schema';
+import { resolvePagination } from '../../lib/utils/pagination';
 import { publicEventTypeColumns } from './eventTypes.resource';
 
 const sortColumns = {
@@ -14,20 +19,21 @@ export class EventTypesRepository {
   constructor(private db: Database) {}
 
   async findPaginated(query: EventTypesListQuery) {
-    const { page, pageSize, search, sortBy, sortDir } = query;
+    const { search, sortBy, sortDir } = query;
     const where = search ? ilike(eventTypes.name, `%${search}%`) : undefined;
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
+    const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
 
     const items = await this.db
       .select(publicEventTypeColumns)
       .from(eventTypes)
       .where(where)
       .orderBy(orderBy)
-      .limit(pageSize)
-      .offset((page - 1) * pageSize);
+      .limit(limit)
+      .offset(offset);
 
-    const total = await this.countAll(where);
-    return { items, total };
+    const total = paginate ? await this.countAll(where) : items.length;
+    return { items, total, paginate, page, pageSize };
   }
 
   private async countAll(where: SQL | undefined) {
@@ -45,7 +51,11 @@ export class EventTypesRepository {
   }
 
   create(data: CreateEventTypeInput) {
-    return this.db.insert(eventTypes).values(data).returning(publicEventTypeColumns).then((r) => r[0]!);
+    return this.db
+      .insert(eventTypes)
+      .values(data)
+      .returning(publicEventTypeColumns)
+      .then((r) => r[0]!);
   }
 
   updateById(id: string, data: UpdateEventTypeInput) {

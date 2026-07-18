@@ -1,15 +1,23 @@
 import { initTRPC, TRPCError } from '@trpc/server';
+import { ZodError } from 'zod';
 import { hasPermission, type PermissionCheck } from '@repo/guards';
 import type { Context } from './context';
 import { AppError } from '../lib/errors';
 
 const t = initTRPC.context<Context>().create({
   errorFormatter({ shape, error }) {
+    const zodError = error.cause instanceof ZodError ? error.cause : null;
+    const data = { ...shape.data };
+    if (zodError) delete data.stack;
     return {
       ...shape,
+      message: zodError ? 'Invalid input' : shape.message,
       data: {
-        ...shape.data,
+        ...data,
         errorCode: error.cause instanceof AppError ? error.cause.code : null,
+        fieldErrors: zodError
+          ? zodError.issues.map((issue) => ({ path: issue.path, message: issue.message }))
+          : null,
       },
     };
   },

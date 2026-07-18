@@ -2,6 +2,7 @@ import { asc, count, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
 import type { UsersListQuery } from '@repo/schemas';
 import type { Database } from '../../db';
 import { session, user } from '../../db/schema';
+import { resolvePagination } from '../../lib/utils/pagination';
 import { publicUserColumns } from './users.resource';
 
 const sortColumns = {
@@ -23,22 +24,23 @@ export class UsersRepository {
   constructor(private db: Database) {}
 
   async findPaginated(query: UsersListQuery) {
-    const { page, pageSize, search, sortBy, sortDir } = query;
+    const { search, sortBy, sortDir } = query;
     const where = search
       ? or(ilike(user.name, `%${search}%`), ilike(user.email, `%${search}%`))
       : undefined;
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
+    const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
 
     const items = await this.db
       .select(publicSelection())
       .from(user)
       .where(where)
       .orderBy(orderBy)
-      .limit(pageSize)
-      .offset((page - 1) * pageSize);
+      .limit(limit)
+      .offset(offset);
 
-    const total = await this.countAll(where);
-    return { items, total };
+    const total = paginate ? await this.countAll(where) : items.length;
+    return { items, total, paginate, page, pageSize };
   }
 
   private async countAll(where: SQL | undefined) {

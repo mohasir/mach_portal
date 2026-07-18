@@ -13,11 +13,10 @@ export class StaffService {
   constructor(private repo: StaffRepository) {}
 
   async list(query: StaffListQuery) {
-    const { items, total } = await this.repo.findPaginated(query);
-    return {
-      items: staffCollectionResource(items),
-      pagination: paginationMeta(total, query.page, query.pageSize),
-    };
+    const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(query);
+    const resource = staffCollectionResource(items);
+    if (!paginate) return { items: resource };
+    return { items: resource, pagination: paginationMeta(total, page, pageSize) };
   }
 
   async getAvailability(date: string) {

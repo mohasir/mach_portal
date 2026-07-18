@@ -13,11 +13,10 @@ export class ClientsService {
   constructor(private repo: ClientsRepository) {}
 
   async list(query: ClientsListQuery) {
-    const { items, total } = await this.repo.findPaginated(query);
-    return {
-      items: clientCollectionResource(items),
-      pagination: paginationMeta(total, query.page, query.pageSize),
-    };
+    const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(query);
+    const resource = clientCollectionResource(items);
+    if (!paginate) return { items: resource };
+    return { items: resource, pagination: paginationMeta(total, page, pageSize) };
   }
 
   async getById(id: string) {
