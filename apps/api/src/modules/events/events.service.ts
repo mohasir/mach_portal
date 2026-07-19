@@ -95,7 +95,7 @@ export class EventsService {
     if (!payment) throw new AppError(ErrorCodes.eventPayment.NOT_FOUND, undefined, 404);
 
     const ext = EXTENSION_BY_MIME[file.mimetype] ?? 'bin';
-    const key = `event-payments/${payment.eventId}/${paymentId}/${randomUUID()}.${ext}`;
+    const key = `event-payments/${randomUUID()}.${ext}`;
     const { url } = await this.storage.upload({
       key,
       body: file.buffer,
