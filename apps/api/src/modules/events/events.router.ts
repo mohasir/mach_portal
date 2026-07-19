@@ -4,10 +4,11 @@ import {
   eventsCalendarQuerySchema,
   eventsListQuerySchema,
   registerEventPaymentSchema,
+  removeEventPaymentAttachmentSchema,
   removeStaffSchema,
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
-import { router, guardedProcedure } from '../../trpc/trpc';
+import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { db } from '../../db';
 import { EventsRepository } from './events.repository';
 import { EventsService } from './events.service';
@@ -42,4 +43,8 @@ export const eventsRouter = router({
   removeStaff: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] })
     .input(removeStaffSchema)
     .mutation(({ input }) => service.removeStaff(input)),
+
+  removePaymentAttachment: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] })
+    .input(removeEventPaymentAttachmentSchema)
+    .mutation(({ input }) => service.removePaymentAttachment(input)),
 });

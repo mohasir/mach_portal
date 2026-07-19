@@ -7,7 +7,7 @@ import {
   updateQuoteStageSchema,
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
-import { router, guardedProcedure } from '../../trpc/trpc';
+import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { db } from '../../db';
 import { ConfigRepository } from '../config/config.repository';
 import { QuotesRepository } from './quotes.repository';

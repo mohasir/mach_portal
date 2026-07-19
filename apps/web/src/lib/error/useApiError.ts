@@ -1,6 +1,8 @@
 'use client';
 import { App, type FormInstance } from 'antd';
+import type { MessageInstance } from 'antd/es/message/interface';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { TRPCClientError } from '@trpc/client';
 
 interface ApiFieldError {
@@ -12,6 +14,19 @@ interface ApiErrorData {
   code?: string;
   errorCode?: string;
   fieldErrors?: ApiFieldError[] | null;
+}
+
+/**
+ * Traduce un `errorCode`/`code` de dominio a un toast, para transportes que no son
+ * tRPC (ej. la ruta Express de upload de comprobantes) y por eso no producen un
+ * `TRPCClientError` que `useApiError` pueda inspeccionar directamente.
+ */
+export function reportApiErrorCode(
+  errorCode: string | null | undefined,
+  t: TFunction<'api'>,
+  message: MessageInstance,
+) {
+  message.error(t(errorCode ? `errors.${errorCode}` : 'errors.generic', t('errors.generic')));
 }
 
 /**
@@ -34,10 +49,7 @@ export function useApiError(form?: FormInstance) {
         );
         return;
       }
-      const key = data?.errorCode
-        ? `errors.${data.errorCode}`
-        : `errors.${data?.code ?? 'generic'}`;
-      message.error(t(key, t('errors.generic')));
+      reportApiErrorCode(data?.errorCode ?? data?.code, t, message);
       return;
     }
     message.error(t('errors.generic'));

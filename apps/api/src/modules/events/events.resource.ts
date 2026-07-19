@@ -107,6 +107,40 @@ export type EventPaymentRow = {
   createdAt: Date;
 };
 
+export type EventPaymentAttachmentRow = {
+  id: string;
+  paymentId: string;
+  key: string;
+  url: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  createdByName: string | null;
+  createdAt: Date;
+};
+
+export const eventPaymentAttachmentResource = (row: EventPaymentAttachmentRow) => ({
+  id: row.id,
+  url: row.url,
+  fileName: row.fileName,
+  mimeType: row.mimeType,
+  size: row.size,
+  createdByName: row.createdByName,
+  createdAt: row.createdAt,
+});
+export type EventPaymentAttachmentResource = ReturnType<typeof eventPaymentAttachmentResource>;
+
+export const buildEventPaymentDetails = (
+  paymentRows: EventPaymentRow[],
+  attachmentRows: EventPaymentAttachmentRow[],
+) =>
+  paymentRows.map((payment) => ({
+    ...payment,
+    attachments: attachmentRows
+      .filter((a) => a.paymentId === payment.id)
+      .map(eventPaymentAttachmentResource),
+  }));
+
 export type PaymentStatus = 'pending' | 'partial' | 'paid';
 
 const derivePaymentStatus = (totalAmount: number, totalPaid: number): PaymentStatus =>
@@ -118,13 +152,14 @@ export const buildEventDetail = (
   optionRows: PublicQuoteLineOption[],
   staffRows: EventStaffRow[],
   paymentRows: EventPaymentRow[],
+  attachmentRows: EventPaymentAttachmentRow[],
 ) => {
   const totalPaid = paymentRows.reduce((sum, p) => sum + p.amount, 0);
   return {
     ...eventListItemResource(eventRow),
     lines: buildQuoteLineDetails(lineRows, optionRows),
     staff: staffRows,
-    payments: paymentRows,
+    payments: buildEventPaymentDetails(paymentRows, attachmentRows),
     totalPaid,
     paymentStatus: derivePaymentStatus(eventRow.totalAmount, totalPaid),
   };

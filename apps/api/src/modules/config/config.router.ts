@@ -1,6 +1,6 @@
 import { updateConfigSchema } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
-import { router, guardedProcedure } from '../../trpc/trpc';
+import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { db } from '../../db';
 import { ConfigRepository } from './config.repository';
 import { ConfigService } from './config.service';

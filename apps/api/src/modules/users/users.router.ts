@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createUserSchema, updateUserSchema, usersListQuerySchema } from '@repo/schemas';
-import { router, guardedProcedure } from '../../trpc/trpc';
+import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { db } from '../../db';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import { UsersRepository } from './users.repository';

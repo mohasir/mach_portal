@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createClientSchema, updateClientSchema, clientsListQuerySchema } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
-import { router, guardedProcedure } from '../../trpc/trpc';
+import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { db } from '../../db';
 import { ClientsRepository } from './clients.repository';
 import { ClientsService } from './clients.service';

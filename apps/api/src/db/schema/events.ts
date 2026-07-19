@@ -71,3 +71,17 @@ export const eventPayments = pgTable('event_payments', {
   createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const eventPaymentAttachments = pgTable('event_payment_attachments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  paymentId: uuid('payment_id')
+    .notNull()
+    .references(() => eventPayments.id, { onDelete: 'cascade' }),
+  key: text('key').notNull(),
+  url: text('url').notNull(),
+  fileName: text('file_name').notNull(),
+  mimeType: text('mime_type').notNull(),
+  size: integer('size').notNull(),
+  createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});

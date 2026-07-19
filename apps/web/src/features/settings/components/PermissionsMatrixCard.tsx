@@ -20,7 +20,11 @@ const permissionsByRole = Object.fromEntries(
 ) as Record<RoleType, RolePermissions>;
 
 function isGranted(role: RoleType, resource: ResourceType, action: ActionType) {
-  return !!permissionsByRole[role]?.[resource]?.includes(action);
+  // Widen to `ActionType[]` first — `resource` isn't a literal here, so TS sees a
+  // union of each resource's own narrower action-array type and can't resolve
+  // `.includes(action)` directly against it.
+  const actions: ActionType[] | undefined = permissionsByRole[role]?.[resource];
+  return !!actions?.includes(action);
 }
 
 export function PermissionsMatrixCard() {

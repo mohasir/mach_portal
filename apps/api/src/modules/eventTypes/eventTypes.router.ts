@@ -6,7 +6,7 @@ import {
   updateEventTypeSchema,
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
-import { router, guardedProcedure } from '../../trpc/trpc';
+import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { db } from '../../db';
 import { EventTypesRepository } from './eventTypes.repository';
 import { EventTypesService } from './eventTypes.service';

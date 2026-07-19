@@ -20,6 +20,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1090.0",
     "@repo/guards": "workspace:*",
     "@repo/schemas": "workspace:*",
     "@trpc/server": "^11",
@@ -28,6 +29,7 @@
     "dotenv": "^16",
     "drizzle-orm": "^0.45",
     "express": "^5",
+    "multer": "^2.2.0",
     "postgres": "^3",
     "zod": "^4"
   },
@@ -37,6 +39,7 @@
     "@repo/typescript-config": "workspace:*",
     "@types/cors": "^2",
     "@types/express": "^5",
+    "@types/multer": "^2.2.0",
     "drizzle-kit": "^0.31",
     "esbuild": "^0.25",
     "tsx": "^4",

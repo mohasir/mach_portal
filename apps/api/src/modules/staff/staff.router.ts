@@ -6,7 +6,7 @@ import {
   staffListQuerySchema,
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
-import { router, guardedProcedure } from '../../trpc/trpc';
+import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { db } from '../../db';
 import { StaffRepository } from './staff.repository';
 import { StaffService } from './staff.service';

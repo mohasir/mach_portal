@@ -12,6 +12,7 @@ import {
   clients,
   events,
   eventPayments,
+  eventPaymentAttachments,
   eventStaff,
   eventTypes,
   quoteLineOptions,
@@ -100,8 +101,11 @@ export class EventsRepository {
 
     const staffRows = await this.findStaff(id);
     const paymentRows = await this.findPayments(id);
+    const attachmentRows = paymentRows.length
+      ? await this.findAttachmentsByPaymentIds(paymentRows.map((p) => p.id))
+      : [];
 
-    return { eventRow, lineRows, optionRows, staffRows, paymentRows };
+    return { eventRow, lineRows, optionRows, staffRows, paymentRows, attachmentRows };
   }
 
   findStaff(eventId: string) {
@@ -168,6 +172,59 @@ export class EventsRepository {
         .where(eq(events.id, eventId));
 
       return 'ok' as const;
+    });
+  }
+
+  async findPaymentById(paymentId: string) {
+    const [row] = await this.db
+      .select({ id: eventPayments.id, eventId: eventPayments.eventId })
+      .from(eventPayments)
+      .where(eq(eventPayments.id, paymentId))
+      .limit(1);
+    return row;
+  }
+
+  findAttachmentsByPaymentIds(paymentIds: string[]) {
+    return this.db
+      .select({
+        id: eventPaymentAttachments.id,
+        paymentId: eventPaymentAttachments.paymentId,
+        key: eventPaymentAttachments.key,
+        url: eventPaymentAttachments.url,
+        fileName: eventPaymentAttachments.fileName,
+        mimeType: eventPaymentAttachments.mimeType,
+        size: eventPaymentAttachments.size,
+        createdByName: user.name,
+        createdAt: eventPaymentAttachments.createdAt,
+      })
+      .from(eventPaymentAttachments)
+      .leftJoin(user, eq(eventPaymentAttachments.createdById, user.id))
+      .where(inArray(eventPaymentAttachments.paymentId, paymentIds))
+      .orderBy(desc(eventPaymentAttachments.createdAt));
+  }
+
+  createAttachment(data: typeof eventPaymentAttachments.$inferInsert) {
+    return this.db
+      .insert(eventPaymentAttachments)
+      .values(data)
+      .returning()
+      .then((r) => r[0]);
+  }
+
+  async deleteAttachment(eventId: string, attachmentId: string) {
+    return this.db.transaction(async (tx) => {
+      const [row] = await tx
+        .select({ id: eventPaymentAttachments.id, key: eventPaymentAttachments.key })
+        .from(eventPaymentAttachments)
+        .innerJoin(eventPayments, eq(eventPaymentAttachments.paymentId, eventPayments.id))
+        .where(
+          and(eq(eventPaymentAttachments.id, attachmentId), eq(eventPayments.eventId, eventId)),
+        )
+        .limit(1);
+      if (!row) return undefined;
+
+      await tx.delete(eventPaymentAttachments).where(eq(eventPaymentAttachments.id, attachmentId));
+      return row;
     });
   }
 

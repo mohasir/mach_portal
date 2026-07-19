@@ -11,7 +11,7 @@ import {
   updateProductTiersSchema,
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
-import { router, guardedProcedure } from '../../trpc/trpc';
+import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { db } from '../../db';
 import { ProductsRepository } from './products.repository';
 import { ProductsService } from './products.service';

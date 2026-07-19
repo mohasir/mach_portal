@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useProductCatalog } from '@/features/catalog';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useEvent } from '../../hooks/useEvents';
+import { EventAttachments } from './EventAttachments';
 import { EventHeader } from './EventHeader';
 import { EventComposition } from './EventComposition';
 import { EventPayments } from './EventPayments';
@@ -57,6 +58,11 @@ export function EventDetailPage({ eventId }: EventDetailPageProps) {
       key: 'payments',
       label: t('detail.tabs.payments'),
       children: <EventPayments event={event} />,
+    },
+    {
+      key: 'attachments',
+      label: t('detail.tabs.attachments'),
+      children: <EventAttachments event={event} />,
     },
   ];
 

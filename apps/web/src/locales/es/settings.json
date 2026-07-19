@@ -82,7 +82,8 @@
       "create": "Crear",
       "read": "Ver",
       "update": "Editar",
-      "delete": "Eliminar"
+      "delete": "Eliminar",
+      "upload_attachment": "Subir comprobante"
     },
     "resources": {
       "dashboard": {

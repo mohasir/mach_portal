@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     return [
       { source: '/api/auth/:path*', destination: `${API_URL}/api/auth/:path*` },
       { source: '/trpc/:path*', destination: `${API_URL}/trpc/:path*` },
+      { source: '/api/uploads/:path*', destination: `${API_URL}/api/uploads/:path*` },
     ];
   },
 };

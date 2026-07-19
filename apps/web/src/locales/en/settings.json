@@ -82,7 +82,8 @@
       "create": "Create",
       "read": "View",
       "update": "Edit",
-      "delete": "Delete"
+      "delete": "Delete",
+      "upload_attachment": "Upload receipt"
     },
     "resources": {
       "dashboard": {

@@ -48,7 +48,8 @@
     "tabs": {
       "services": "Servicios incluidos",
       "staff": "Staff",
-      "payments": "Pagos"
+      "payments": "Pagos",
+      "attachments": "Adjuntos"
     },
     "composition": {
       "title": "Composición"
@@ -81,7 +82,20 @@
         "empty": "Sin pagos registrados",
         "registeredBy": "Registrado por {{name}}"
       },
-      "registered": "Pago registrado"
+      "registered": "Pago registrado",
+      "attachments": {
+        "upload": "Comprobante",
+        "uploadModalTitle": "Subir comprobante",
+        "dragText": "Arrastrá el archivo acá o hacé clic para seleccionar",
+        "dragHint": "Imágenes o PDF, hasta {{maxSize}}MB",
+        "uploaded": "Comprobante subido",
+        "remove": "Quitar comprobante",
+        "removed": "Comprobante eliminado",
+        "removeConfirmTitle": "¿Eliminar comprobante?",
+        "removeConfirmContent": "Esta acción no se puede deshacer.",
+        "invalidType": "Ese tipo de archivo no está permitido. Usá una imagen o un PDF",
+        "tooLarge": "El archivo supera el tamaño máximo permitido (10MB)"
+      }
     },
     "staff": {
       "title": "Staff asignado",
@@ -90,6 +104,11 @@
       "remove": "Quitar",
       "removeConfirmTitle": "¿Quitar del evento?",
       "removeConfirmContent": "¿Quitás a {{name}} de este evento?"
+    },
+    "attachments": {
+      "title": "Adjuntos",
+      "empty": "Sin adjuntos subidos",
+      "sharedBy": "Subido por {{name}} el {{date}}"
     }
   },
   "assignStaff": {

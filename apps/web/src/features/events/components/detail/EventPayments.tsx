@@ -1,10 +1,13 @@
 'use client';
+import { useState } from 'react';
 import {
+  App,
   Button,
   Card,
   DatePicker,
   Empty,
   Form,
+  Image,
   Input,
   InputNumber,
   Select,
@@ -12,14 +15,19 @@ import {
   Typography,
 } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
-import { User } from 'lucide-react';
+import { FileText, Paperclip, User, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { paymentMethodSchema, type PaymentMethod } from '@repo/schemas';
+import { AttachmentUploadModal } from '@/components/shared/Attachment';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { PAYMENT_METHOD_ICONS, PAYMENT_STATUS_COLORS } from '../../helpers';
-import { useRegisterEventPayment } from '../../hooks/useEventPayments';
+import {
+  useRegisterEventPayment,
+  useRemoveEventPaymentAttachment,
+  useUploadEventPaymentAttachment,
+} from '../../hooks/useEventPayments';
 import type { EventDetail } from '../../types';
 
 interface EventPaymentsProps {
@@ -41,8 +49,12 @@ export function EventPayments({ event }: EventPaymentsProps) {
   const { t } = useTranslation('events');
   const { date } = useDateFormatter();
   const { money } = useMoneyFormatter();
+  const { modal } = App.useApp();
   const [form] = Form.useForm<PaymentFormValues>();
   const { registerPayment, isPending } = useRegisterEventPayment();
+  const { uploadUrl, onUploaded, onUploadError } = useUploadEventPaymentAttachment();
+  const { removeAttachment } = useRemoveEventPaymentAttachment();
+  const [uploadPaymentId, setUploadPaymentId] = useState<string | null>(null);
 
   const balance = event.totalAmount - event.totalPaid;
 
@@ -60,6 +72,15 @@ export function EventPayments({ event }: EventPaymentsProps) {
   const onPercentChange = (percent: number) => {
     const amountCents = Math.min(balance, Math.round((event.totalAmount * percent) / 100));
     form.setFieldValue('amount', amountCents / 100);
+  };
+
+  const onRemoveAttachment = (attachmentId: string) => {
+    modal.confirm({
+      title: t('detail.payments.attachments.removeConfirmTitle'),
+      content: t('detail.payments.attachments.removeConfirmContent'),
+      okButtonProps: { danger: true },
+      onOk: () => removeAttachment(event.id, attachmentId),
+    });
   };
 
   return (
@@ -214,6 +235,47 @@ export function EventPayments({ event }: EventPaymentsProps) {
                     {payment.notes && (
                       <span className="text-xs text-gray-500">{payment.notes}</span>
                     )}
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      {payment.attachments.map((attachment) => (
+                        <div key={attachment.id} className="group relative">
+                          {attachment.mimeType.startsWith('image/') ? (
+                            <Image
+                              src={attachment.url}
+                              alt={attachment.fileName}
+                              width={36}
+                              height={36}
+                              className="rounded object-cover"
+                            />
+                          ) : (
+                            <a
+                              href={attachment.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              title={attachment.fileName}
+                              className="border-line text-gray-500 flex h-9 w-9 items-center justify-center rounded border"
+                            >
+                              <FileText size={16} />
+                            </a>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => onRemoveAttachment(attachment.id)}
+                            aria-label={t('detail.payments.attachments.remove')}
+                            className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-gray-500 opacity-0 shadow transition-opacity group-hover:opacity-100 hover:text-red-600"
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ))}
+                      <Button
+                        size="small"
+                        type="dashed"
+                        icon={<Paperclip size={12} />}
+                        onClick={() => setUploadPaymentId(payment.id)}
+                      >
+                        {t('detail.payments.attachments.upload')}
+                      </Button>
+                    </div>
                   </div>
                 );
               })}
@@ -221,6 +283,19 @@ export function EventPayments({ event }: EventPaymentsProps) {
           )}
         </div>
       </div>
+
+      <AttachmentUploadModal
+        open={!!uploadPaymentId}
+        onClose={() => setUploadPaymentId(null)}
+        title={t('detail.payments.attachments.uploadModalTitle')}
+        dragText={t('detail.payments.attachments.dragText')}
+        hintText={(maxSizeMb) => t('detail.payments.attachments.dragHint', { maxSize: maxSizeMb })}
+        invalidTypeMessage={t('detail.payments.attachments.invalidType')}
+        tooLargeMessage={t('detail.payments.attachments.tooLarge')}
+        action={uploadPaymentId ? uploadUrl(uploadPaymentId) : ''}
+        onUploaded={onUploaded}
+        onUploadError={onUploadError}
+      />
     </Card>
   );
 }

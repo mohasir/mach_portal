@@ -48,7 +48,8 @@
     "tabs": {
       "services": "Included services",
       "staff": "Staff",
-      "payments": "Payments"
+      "payments": "Payments",
+      "attachments": "Attachments"
     },
     "composition": {
       "title": "Composition"
@@ -81,7 +82,20 @@
         "empty": "No payments registered",
         "registeredBy": "Registered by {{name}}"
       },
-      "registered": "Payment registered"
+      "registered": "Payment registered",
+      "attachments": {
+        "upload": "Receipt",
+        "uploadModalTitle": "Upload receipt",
+        "dragText": "Drag a file here, or click to select",
+        "dragHint": "Images or PDF, up to {{maxSize}}MB",
+        "uploaded": "Receipt uploaded",
+        "remove": "Remove receipt",
+        "removed": "Receipt removed",
+        "removeConfirmTitle": "Remove receipt?",
+        "removeConfirmContent": "This action cannot be undone.",
+        "invalidType": "That file type isn't allowed. Use an image or a PDF",
+        "tooLarge": "The file exceeds the maximum allowed size (10MB)"
+      }
     },
     "staff": {
       "title": "Assigned staff",
@@ -90,6 +104,11 @@
       "remove": "Remove",
       "removeConfirmTitle": "Remove from event?",
       "removeConfirmContent": "Remove {{name}} from this event?"
+    },
+    "attachments": {
+      "title": "Attachments",
+      "empty": "No attachments uploaded",
+      "sharedBy": "Uploaded by {{name}} on {{date}}"
     }
   },
   "assignStaff": {

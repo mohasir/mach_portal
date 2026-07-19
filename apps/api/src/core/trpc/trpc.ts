@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import { ZodError } from 'zod';
 import { hasPermission, type PermissionCheck } from '@repo/guards';
 import type { Context } from './context';
-import { AppError } from '../lib/errors';
+import { AppError } from '../../lib/errors';
 
 const t = initTRPC.context<Context>().create({
   errorFormatter({ shape, error }) {
