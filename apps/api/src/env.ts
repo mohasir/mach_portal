@@ -13,6 +13,8 @@ const schema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().min(1),
   R2_BUCKET_NAME: z.string().min(1),
   R2_PUBLIC_URL: z.url(),
+  PDF_SERVICE_URL: z.url(),
+  PDF_SERVICE_API_KEY: z.string().min(1),
 });
 
 export const env = schema.parse(process.env);

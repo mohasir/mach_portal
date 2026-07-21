@@ -11,8 +11,10 @@ import { SecuritySettingsForm } from './SecuritySettingsForm';
 import { GeneralSettingsForm } from './GeneralSettingsForm';
 import { PreferencesSettingsForm } from './PreferencesSettingsForm';
 import { PermissionsSettingsForm } from './PermissionsSettingsForm';
+import { QuotePdfTemplateForm } from './QuotePdfTemplateForm';
 
-type SettingsSection = 'profile' | 'security' | 'general' | 'preferences' | 'permissions';
+type SettingsSection =
+  'profile' | 'security' | 'general' | 'preferences' | 'quotePdfTemplate' | 'permissions';
 
 export function SettingsPage() {
   const { t } = useTranslation('settings');
@@ -27,6 +29,7 @@ export function SettingsPage() {
       : []),
     { key: 'general', label: t('general.title'), group: t('groups.system') },
     { key: 'preferences', label: t('preferences.title'), group: t('groups.system') },
+    { key: 'quotePdfTemplate', label: t('quotePdfTemplate.title'), group: t('groups.system') },
   ];
 
   const sectionLabel = menuItems.find((item) => item.key === section)?.label ?? '';
@@ -59,6 +62,7 @@ export function SettingsPage() {
           {section === 'security' && <SecuritySettingsForm />}
           {section === 'general' && <GeneralSettingsForm />}
           {section === 'preferences' && <PreferencesSettingsForm />}
+          {section === 'quotePdfTemplate' && <QuotePdfTemplateForm />}
           {section === 'permissions' && isSuperAdmin && <PermissionsSettingsForm />}
         </div>
       </div>

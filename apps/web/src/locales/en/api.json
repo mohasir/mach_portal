@@ -20,6 +20,8 @@
     "QUOTE_INVALID_LINES": "One of the quote lines has invalid data",
     "QUOTE_INCOMPLETE": "The quote is missing required data to be sent",
     "QUOTE_INVALID_TRANSITION": "That stage change isn't allowed",
+    "QUOTE_PDF_GENERATION_FAILED": "Couldn't generate the quote PDF. Try again in a few minutes",
+    "QUOTE_PDF_NOT_ALLOWED": "The PDF can only be generated for a Sent or Approved quote",
     "EVENT_NOT_FOUND": "The event does not exist",
     "EVENT_STAFF_ALREADY_ASSIGNED": "That staff member is already assigned to this event",
     "EVENT_STAFF_NOT_FOUND": "That staff assignment does not exist",

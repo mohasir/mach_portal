@@ -23,6 +23,8 @@ export const publicQuoteColumns = {
   stageId: quotes.stageId,
   validUntil: quotes.validUntil,
   createdById: quotes.createdById,
+  pdfUrl: quotes.pdfUrl,
+  pdfGeneratedAt: quotes.pdfGeneratedAt,
   createdAt: quotes.createdAt,
   updatedAt: quotes.updatedAt,
 } as const;
@@ -76,6 +78,8 @@ export const quoteResource = (row: PublicQuote) => ({
   stageId: row.stageId,
   validUntil: row.validUntil,
   createdById: row.createdById,
+  pdfUrl: row.pdfUrl,
+  pdfGeneratedAt: row.pdfGeneratedAt,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });

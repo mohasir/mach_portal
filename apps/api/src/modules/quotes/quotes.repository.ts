@@ -134,6 +134,15 @@ export class QuotesRepository {
       .orderBy(asc(quoteStageHistory.changedAt));
   }
 
+  setPdfInfo(id: string, { url, key }: { url: string; key: string }) {
+    return this.db
+      .update(quotes)
+      .set({ pdfUrl: url, pdfKey: key, pdfGeneratedAt: new Date() })
+      .where(eq(quotes.id, id))
+      .returning(publicQuoteColumns)
+      .then((r) => r[0]);
+  }
+
   findQuoteRow(id: string) {
     return this.db
       .select(publicQuoteColumns)

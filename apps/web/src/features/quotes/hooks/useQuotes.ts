@@ -101,6 +101,25 @@ export function useCancelQuote() {
   };
 }
 
+export function useGenerateQuotePdf() {
+  const trpc = useTRPC();
+  const qc = useQueryClient();
+  const onError = useApiError();
+  const mutation = useMutation(
+    trpc.quotes.generatePdf.mutationOptions({
+      onSuccess: (data) => {
+        qc.invalidateQueries(trpc.quotes.pathFilter());
+        if (data.pdfUrl) window.open(data.pdfUrl, '_blank');
+      },
+      onError,
+    }),
+  );
+  return {
+    generatePdf: (id: string) => mutation.mutateAsync({ id }),
+    isPending: mutation.isPending,
+  };
+}
+
 export function useArchiveQuote() {
   const trpc = useTRPC();
   const qc = useQueryClient();

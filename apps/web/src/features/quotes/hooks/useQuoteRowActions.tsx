@@ -1,18 +1,25 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Archive } from 'lucide-react';
+import { Archive, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { QUOTE_STAGE } from '@repo/schemas';
 import type { RowActionItem } from '@/components/shared/DataTable';
 import { useArchiveQuote } from './useQuotes';
 
+interface QuoteRowActionsRow {
+  id: string;
+  number: string;
+  stageId: number;
+  pdfUrl?: string | null;
+}
+
 export function useQuoteRowActions() {
   const { t } = useTranslation('quotes');
   const router = useRouter();
   const { archiveQuote } = useArchiveQuote();
 
-  return (row: { id: string; number: string; stageId: number }): RowActionItem[] => {
+  return (row: QuoteRowActionsRow): RowActionItem[] => {
     const isEditable = row.stageId === QUOTE_STAGE.PENDING || row.stageId === QUOTE_STAGE.QUOTED;
 
     return [
@@ -20,6 +27,16 @@ export function useQuoteRowActions() {
         key: 'detail',
         onClick: () => router.push(`/admin/quotes/preview/${row.id}`),
       },
+      ...(row.pdfUrl
+        ? ([
+            {
+              key: 'viewPdf',
+              label: t('detail.viewPdf'),
+              icon: <Download size={16} />,
+              onClick: () => window.open(row.pdfUrl!, '_blank'),
+            },
+          ] as RowActionItem[])
+        : []),
       ...(isEditable
         ? ([
             {
