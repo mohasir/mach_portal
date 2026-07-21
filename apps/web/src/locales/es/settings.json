@@ -54,6 +54,23 @@
   "taxRates": {
     "title": "Impuestos por estado"
   },
+  "quotePdfTemplate": {
+    "title": "Plantilla de PDF",
+    "caption": "Textos fijos que se imprimen en el PDF de cada cotización generada.",
+    "services": "Duración de servicios",
+    "servicesCaption": "Se imprimen como \"Estación: Duración\" en la sección \"SERVICE DURATION\" del PDF.",
+    "serviceLabelPlaceholder": "Ej: Snack Station",
+    "serviceDurationPlaceholder": "Ej: Up to 2 hours of service",
+    "addService": "Agregar servicio",
+    "removeService": "Quitar servicio",
+    "termsAndConditions": "Términos y condiciones",
+    "termsAndConditionsCaption": "Un término por línea — a medida que escribís se muestran como badges debajo. Se imprimen como una lista de viñetas; si no cargás ninguno, esa sección no aparece en el PDF.",
+    "termsAndConditionsPlaceholder": "El depósito no es reembolsable\nLos precios pueden variar según disponibilidad",
+    "validityNote": "Nota de validez",
+    "validityNoteCaption": "Aparece junto a los totales del PDF (ej. \"Los precios son válidos por...\").",
+    "dietaryNote": "Nota dietética",
+    "dietaryNoteCaption": "Aparece al pie de la página \"Services Included\" (solo si la cotización tiene ítems con detalle)."
+  },
   "quoteStages": {
     "title": "Estados de cotización",
     "label": "Nombre",
@@ -131,6 +148,8 @@
     "minPersonsInvalid": "Mínimo inválido",
     "quoteSeqStartInvalid": "Inicio de consecutivo inválido",
     "currencyInvalid": "Moneda inválida",
-    "quoteStagesLabelInvalid": "Nombre requerido"
+    "quoteStagesLabelInvalid": "Nombre requerido",
+    "serviceLabelRequired": "La estación es obligatoria",
+    "serviceDurationRequired": "La duración es obligatoria"
   }
 }

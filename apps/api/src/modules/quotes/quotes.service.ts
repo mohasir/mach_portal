@@ -4,6 +4,7 @@ import {
   computeQuoteTotals,
   paginationMeta,
   QUOTE_STAGE,
+  TEMPLATE_TYPES,
   type CreateQuoteInput,
   type QuoteLineInput,
   type QuoteStageId,
@@ -12,10 +13,17 @@ import {
   type UpdateQuoteInput,
 } from '@repo/schemas';
 import { AppError, ErrorCodes } from '../../lib/errors';
+import { generateQuotePdf } from '../../lib/pdfService/client';
 import { ConfigRepository } from '../config/config.repository';
+import { ProductsRepository } from '../products/products.repository';
+import { buildProductTree } from '../products/products.resource';
+import { TemplatesRepository } from '../templates/templates.repository';
+import { quotePdfTemplateResource } from '../templates/templates.resource';
 import { QuotesRepository } from './quotes.repository';
+import { buildQuotePdfPayload } from './quotes.pdf';
 import {
   buildQuoteDetail,
+  buildQuoteLineDetails,
   quoteCardResource,
   quoteListItemResource,
   quoteResource,
@@ -23,6 +31,7 @@ import {
 } from './quotes.resource';
 
 const EDITABLE_STAGES: QuoteStageId[] = [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED];
+const PDF_ALLOWED_STAGES: QuoteStageId[] = [QUOTE_STAGE.QUOTED, QUOTE_STAGE.CONFIRMED];
 
 type CatalogContext = Awaited<ReturnType<QuotesRepository['loadCatalogContext']>>;
 
@@ -40,6 +49,8 @@ export class QuotesService {
   constructor(
     private repo: QuotesRepository,
     private configRepo: ConfigRepository,
+    private productsRepo: ProductsRepository,
+    private templatesRepo: TemplatesRepository,
   ) {}
 
   async list(query: QuotesListQuery) {
@@ -58,6 +69,40 @@ export class QuotesService {
       result.optionRows,
       result.historyRows,
     );
+  }
+
+  async generatePdf(id: string) {
+    const result = await this.repo.findById(id);
+    if (!result) throw notFound();
+    if (!PDF_ALLOWED_STAGES.includes(result.quoteRow.stageId as QuoteStageId)) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        cause: new AppError(ErrorCodes.quote.PDF_NOT_ALLOWED),
+      });
+    }
+
+    const lines = buildQuoteLineDetails(result.lineRows, result.optionRows);
+    const { productRows, tierRows, groupRows, optionRows } = await this.productsRepo.findTree(true);
+    const catalog = buildProductTree(productRows, tierRows, groupRows, optionRows);
+    const templateRow = await this.templatesRepo.findByType(TEMPLATE_TYPES.QUOTE_PDF);
+    const { content: template } = quotePdfTemplateResource(templateRow);
+
+    const payload = buildQuotePdfPayload(result.quoteRow, lines, catalog, template);
+
+    let pdf: { url: string; key: string };
+    try {
+      pdf = await generateQuotePdf(payload);
+    } catch (err) {
+      console.error('pdf generation failed', err);
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        cause: new AppError(ErrorCodes.quote.PDF_GENERATION_FAILED),
+      });
+    }
+
+    const updated = await this.repo.setPdfInfo(id, pdf);
+    if (!updated) throw notFound();
+    return quoteResource(updated);
   }
 
   async board(query: QuotesBoardQuery) {

@@ -133,6 +133,9 @@
     "validUntil_other": "Precios válidos hasta el {{date}} ({{count}} meses)",
     "pastDue": "La fecha de este evento ya pasó. ¿Deseás confirmar el evento de todas formas?",
     "includedServices": "Servicios incluidos",
-    "includedLabel": "Incluido"
+    "includedLabel": "Incluido",
+    "generatePdf": "Generar PDF",
+    "viewPdf": "Ver PDF",
+    "pdfGeneratedAt": "Generado el {{date}}"
   }
 }
