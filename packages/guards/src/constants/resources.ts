@@ -7,7 +7,11 @@ export const RESOURCES = {
   STAFF: 'staff',
   PRODUCT: 'product',
   EVENT_TYPE: 'event_type',
-  CONFIG: 'config',
+  TAX_RATES: 'tax_rates',
+  QUOTE_DEFAULTS: 'quote_defaults',
+  QUOTE_STAGES: 'quote_stages',
+  CATALOG_PREFERENCES: 'catalog_preferences',
+  QUOTE_PDF_TEMPLATE: 'quote_pdf_template',
 } as const;
 
 export type ResourceType = (typeof RESOURCES)[keyof typeof RESOURCES];

@@ -1,9 +1,11 @@
 'use client';
 import { Fragment } from 'react';
+import { Divider } from 'antd';
 import { FaRegSquare, FaSquareCheck } from 'react-icons/fa6';
 import { useTranslation } from 'react-i18next';
 import {
   ROLES,
+  RESOURCES,
   permissionsMatrix,
   rolesPermissionsMatrix,
   type ActionType,
@@ -14,6 +16,14 @@ import {
 import { SettingsCard } from './SettingsCard';
 
 const VISIBLE_ROLES: RoleType[] = [ROLES.MEMBER, ROLES.MANAGER, ROLES.ADMIN];
+
+const CONFIGURATION_RESOURCES = new Set<ResourceType>([
+  RESOURCES.TAX_RATES,
+  RESOURCES.QUOTE_DEFAULTS,
+  RESOURCES.QUOTE_STAGES,
+  RESOURCES.CATALOG_PREFERENCES,
+  RESOURCES.QUOTE_PDF_TEMPLATE,
+]);
 
 const permissionsByRole = Object.fromEntries(
   rolesPermissionsMatrix.map(({ role, permissions }) => [role, permissions]),
@@ -42,33 +52,48 @@ export function PermissionsMatrixCard() {
             </div>
           ))}
 
-          {permissionsMatrix.map(({ resource, actions }) => (
-            <Fragment key={resource}>
-              <div className="bg-gray-100 col-span-4 mt-3 rounded-md px-3 py-2">
-                <div className="text-sm font-semibold">
-                  {t(`permissions.resources.${resource}.label`)}
-                </div>
-                <div className="text-muted text-xs">
-                  {t(`permissions.resources.${resource}.caption`)}
-                </div>
-              </div>
+          {permissionsMatrix.map(({ resource, actions }, index) => {
+            const isFirstConfigurationResource =
+              CONFIGURATION_RESOURCES.has(resource) &&
+              !CONFIGURATION_RESOURCES.has(permissionsMatrix[index - 1]?.resource as ResourceType);
 
-              {actions.map((action) => (
-                <Fragment key={`${resource}-${action}`}>
-                  <div className="pl-4 text-sm">{t(`permissions.actions.${action}`)}</div>
-                  {VISIBLE_ROLES.map((role) => (
-                    <div key={role} className="flex justify-center">
-                      {isGranted(role, resource, action) ? (
-                        <FaSquareCheck size={18} className="text-primary" />
-                      ) : (
-                        <FaRegSquare size={18} className="text-gray-300" />
-                      )}
+            return (
+              <Fragment key={resource}>
+                {isFirstConfigurationResource && (
+                  <div className="col-span-4">
+                    <Divider className="mt-6 mb-4" />
+                    <div className="mt-4 text-base font-semibold">
+                      {t('permissions.groups.configurations')}
                     </div>
-                  ))}
-                </Fragment>
-              ))}
-            </Fragment>
-          ))}
+                  </div>
+                )}
+
+                <div className="bg-gray-100 col-span-4 mt-3 rounded-md px-3 py-2">
+                  <div className="text-sm font-semibold">
+                    {t(`permissions.resources.${resource}.label`)}
+                  </div>
+                  <div className="text-muted text-xs">
+                    {t(`permissions.resources.${resource}.caption`)}
+                  </div>
+                </div>
+
+                {actions.map((action) => (
+                  <Fragment key={`${resource}-${action}`}>
+                    <div className="pl-4 text-sm">{t(`permissions.actions.${action}`)}</div>
+                    {VISIBLE_ROLES.map((role) => (
+                      <div key={role} className="flex justify-center">
+                        {isGranted(role, resource, action) ? (
+                          <FaSquareCheck size={18} className="text-primary" />
+                        ) : (
+                          <FaRegSquare size={18} className="text-gray-300" />
+                        )}
+                      </div>
+                    ))}
+                  </Fragment>
+                ))}
+              </Fragment>
+            );
+          })}
         </div>
       </div>
     </SettingsCard>

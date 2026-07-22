@@ -8,10 +8,10 @@ import { TemplatesService } from './templates.service';
 const service = new TemplatesService(new TemplatesRepository(db));
 
 export const templatesRouter = router({
-  getQuotePdf: guardedProcedure({ [RESOURCES.CONFIG]: [ACTIONS.READ] }).query(() =>
+  getQuotePdf: guardedProcedure({ [RESOURCES.QUOTE_PDF_TEMPLATE]: [ACTIONS.VIEW] }).query(() =>
     service.getQuotePdf(),
   ),
-  updateQuotePdf: guardedProcedure({ [RESOURCES.CONFIG]: [ACTIONS.UPDATE] })
+  updateQuotePdf: guardedProcedure({ [RESOURCES.QUOTE_PDF_TEMPLATE]: [ACTIONS.UPDATE] })
     .input(updateQuotePdfTemplateSchema)
     .mutation(({ input }) => service.updateQuotePdf(input.content)),
 });

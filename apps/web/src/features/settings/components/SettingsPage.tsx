@@ -3,9 +3,11 @@ import { useState } from 'react';
 import { Card } from 'antd';
 import { ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ACTIONS, RESOURCES } from '@repo/guards';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { SectionMenu, type SectionMenuItem } from '@/components/shared/SectionMenu';
 import { useIsSuperAdmin } from '@/lib/auth/useIsSuperAdmin';
+import { useCan } from '@/lib/auth/useCan';
 import { ProfileSettingsForm } from './ProfileSettingsForm';
 import { SecuritySettingsForm } from './SecuritySettingsForm';
 import { GeneralSettingsForm } from './GeneralSettingsForm';
@@ -19,7 +21,15 @@ type SettingsSection =
 export function SettingsPage() {
   const { t } = useTranslation('settings');
   const isSuperAdmin = useIsSuperAdmin();
+  const can = useCan();
   const [section, setSection] = useState<SettingsSection>('profile');
+
+  const canViewGeneral =
+    can({ [RESOURCES.TAX_RATES]: [ACTIONS.VIEW] }) ||
+    can({ [RESOURCES.QUOTE_DEFAULTS]: [ACTIONS.VIEW] }) ||
+    can({ [RESOURCES.QUOTE_STAGES]: [ACTIONS.VIEW] });
+  const canViewPreferences = can({ [RESOURCES.CATALOG_PREFERENCES]: [ACTIONS.VIEW] });
+  const canViewQuotePdfTemplate = can({ [RESOURCES.QUOTE_PDF_TEMPLATE]: [ACTIONS.VIEW] });
 
   const menuItems: SectionMenuItem[] = [
     { key: 'profile', label: t('profile.title'), group: t('groups.account') },
@@ -27,9 +37,21 @@ export function SettingsPage() {
     ...(isSuperAdmin
       ? [{ key: 'permissions', label: t('permissions.title'), group: t('groups.access') }]
       : []),
-    { key: 'general', label: t('general.title'), group: t('groups.system') },
-    { key: 'preferences', label: t('preferences.title'), group: t('groups.system') },
-    { key: 'quotePdfTemplate', label: t('quotePdfTemplate.title'), group: t('groups.system') },
+    ...(canViewGeneral
+      ? [{ key: 'general', label: t('general.title'), group: t('groups.system') }]
+      : []),
+    ...(canViewPreferences
+      ? [{ key: 'preferences', label: t('preferences.title'), group: t('groups.system') }]
+      : []),
+    ...(canViewQuotePdfTemplate
+      ? [
+          {
+            key: 'quotePdfTemplate',
+            label: t('quotePdfTemplate.title'),
+            group: t('groups.system'),
+          },
+        ]
+      : []),
   ];
 
   const sectionLabel = menuItems.find((item) => item.key === section)?.label ?? '';

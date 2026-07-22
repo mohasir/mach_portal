@@ -4,6 +4,7 @@ export const ACTIONS = {
   UPDATE: 'update',
   DELETE: 'delete',
   UPLOAD_ATTACHMENT: 'upload_attachment',
+  VIEW: 'view',
 } as const;
 
 export type ActionType = (typeof ACTIONS)[keyof typeof ACTIONS];
