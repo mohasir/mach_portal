@@ -17,6 +17,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@repo/guards": "workspace:*",
     "@repo/schemas": "workspace:*",
+    "@serwist/next": "^9.5.12",
     "@tailwindcss/postcss": "^4",
     "@tanstack/react-query": "^5",
     "@trpc/client": "^11",
@@ -35,6 +36,7 @@
     "react-dom": "^19",
     "react-i18next": "^15",
     "react-icons": "^5.7.0",
+    "serwist": "^9.5.12",
     "tailwindcss": "^4",
     "zod": "^4",
     "zustand": "^5"
