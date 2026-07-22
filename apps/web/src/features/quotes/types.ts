@@ -1,4 +1,4 @@
-import { QUOTE_STAGE } from '@repo/schemas';
+import type { QUOTE_STAGE } from '@repo/schemas';
 import type { RouterOutputs } from '@/lib/trpc/types';
 
 export type Quote = RouterOutputs['quotes']['list']['items'][number];
