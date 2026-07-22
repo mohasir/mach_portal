@@ -5,9 +5,6 @@ import type { NextConfig } from 'next';
 const API_URL = process.env.API_URL ?? 'http://127.0.0.1:8080';
 
 const nextConfig: NextConfig = {
-  // TEMP: unminified server bundle to get a readable stack trace for the /admin/settings
-  // build-time createContext failure. Revert once diagnosed.
-  experimental: { serverMinification: false },
   async rewrites() {
     return [
       { source: '/api/auth/:path*', destination: `${API_URL}/api/auth/:path*` },
