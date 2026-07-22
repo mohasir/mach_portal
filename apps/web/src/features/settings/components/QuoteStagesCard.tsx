@@ -1,33 +1,37 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Button, ColorPicker, Form, Input, Tag } from 'antd';
+import { Button, ColorPicker, Form, Input, Skeleton, Tag } from 'antd';
 import type { InputRef } from 'antd';
 import type { Color } from 'antd/es/color-picker';
 import { Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { Config } from '../types';
+import { ACTIONS, RESOURCES } from '@repo/guards';
 import { TAG_COLOR_PRESETS } from '../contants';
-import { useIsSuperAdmin } from '@/lib/auth/useIsSuperAdmin';
+import { useCan } from '@/lib/auth/useCan';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
+import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
+import { useConfig } from '../hooks/useConfig';
+import { useUpdateQuoteStagesConfig } from '../hooks/useUpdateQuoteStagesConfig';
+import {
+  toQuoteStagesFormValues,
+  toQuoteStagesUpdateInput,
+  type QuoteStagesFormValues,
+} from '../helpers';
 import { SettingsCard } from './SettingsCard';
-
-interface QuoteStagesCardProps {
-  stages: Config['quoteStages'];
-}
 
 interface QuoteStageRowProps {
   index: number;
   caption?: string | null;
+  canEdit: boolean;
 }
 
-function QuoteStageRow({ index, caption }: QuoteStageRowProps) {
+function QuoteStageRow({ index, caption, canEdit }: QuoteStageRowProps) {
   const { t } = useTranslation('settings');
   const form = Form.useFormInstance();
   const color: string | undefined = Form.useWatch(['quoteStages', index, 'color'], form);
   const label: string | undefined = Form.useWatch(['quoteStages', index, 'label'], form);
   const [editingLabel, setEditingLabel] = useState(false);
   const inputRef = useRef<InputRef>(null);
-  const isSuperAdmin = useIsSuperAdmin();
 
   useEffect(() => {
     if (editingLabel) inputRef.current?.focus({ cursor: 'all' });
@@ -53,7 +57,7 @@ function QuoteStageRow({ index, caption }: QuoteStageRowProps) {
       {!editingLabel && (
         <div className="flex items-center gap-1.5">
           <span>{label || t('quoteStages.label')}</span>
-          {isSuperAdmin && (
+          {canEdit && (
             <Button
               type="text"
               size="small"
@@ -103,14 +107,48 @@ function QuoteStageRow({ index, caption }: QuoteStageRowProps) {
   );
 }
 
-export function QuoteStagesCard({ stages }: QuoteStagesCardProps) {
+export function QuoteStagesCard() {
   const { t } = useTranslation('settings');
+  const can = useCan();
+  const { data, isLoading } = useConfig();
+  const { updateQuoteStages, isPending } = useUpdateQuoteStagesConfig();
+  const [form] = Form.useForm<QuoteStagesFormValues>();
+  const unchanged = useIsFormUnchanged(form, data ? toQuoteStagesFormValues(data) : undefined);
+
+  if (!can({ [RESOURCES.QUOTE_STAGES]: [ACTIONS.VIEW] })) return null;
+  if (isLoading || !data) return <Skeleton active paragraph={{ rows: 4 }} />;
+
+  const canEdit = can({ [RESOURCES.QUOTE_STAGES]: [ACTIONS.UPDATE] });
+  const onFinish = (values: QuoteStagesFormValues) => {
+    void updateQuoteStages(toQuoteStagesUpdateInput(values));
+  };
 
   return (
-    <SettingsCard title={t('quoteStages.title')}>
-      {stages.map((s, index) => (
-        <QuoteStageRow key={s.id} index={index} caption={s.description} />
-      ))}
-    </SettingsCard>
+    <Form
+      key={JSON.stringify(data.quoteStages)}
+      form={form}
+      layout="vertical"
+      initialValues={toQuoteStagesFormValues(data)}
+      onFinish={onFinish}
+      disabled={!canEdit}
+    >
+      <SettingsCard title={t('quoteStages.title')}>
+        {data.quoteStages.map((s, index) => (
+          <QuoteStageRow key={s.id} index={index} caption={s.description} canEdit={canEdit} />
+        ))}
+      </SettingsCard>
+
+      {canEdit && (
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={isPending}
+          disabled={unchanged}
+          className="mt-6"
+        >
+          {t('save')}
+        </Button>
+      )}
+    </Form>
   );
 }

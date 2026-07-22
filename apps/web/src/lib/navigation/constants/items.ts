@@ -73,7 +73,6 @@ export const SETTINGS_ITEM: NavItem = {
   label: 'nav.settings',
   href: '/admin/settings',
   icon: 'settings',
-  guard: { [RESOURCES.CONFIG]: [READ] },
   layout: 'bare',
 };
 

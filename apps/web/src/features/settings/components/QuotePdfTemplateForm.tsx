@@ -3,6 +3,8 @@ import { Button, Form, Input, Skeleton, Tag } from 'antd';
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { QuotePdfTemplateContent, ServiceInfo } from '@repo/schemas';
+import { ACTIONS, RESOURCES } from '@repo/guards';
+import { useCan } from '@/lib/auth/useCan';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
 import { useQuotePdfTemplate } from '../hooks/useQuotePdfTemplate';
 import { useUpdateQuotePdfTemplate } from '../hooks/useUpdateQuotePdfTemplate';
@@ -37,16 +39,19 @@ const toContent = (values: QuotePdfTemplateFormValues): QuotePdfTemplateContent 
 
 export function QuotePdfTemplateForm() {
   const { t } = useTranslation('settings');
+  const can = useCan();
   const { data, isLoading } = useQuotePdfTemplate();
   const { updateQuotePdfTemplate, isPending } = useUpdateQuotePdfTemplate();
   const [form] = Form.useForm<QuotePdfTemplateFormValues>();
   const unchanged = useIsFormUnchanged(form, data ? toFormValues(data.content) : undefined);
   const termsPreview = parseTerms(Form.useWatch('termsAndConditionsText', form) ?? '');
 
+  if (!can({ [RESOURCES.QUOTE_PDF_TEMPLATE]: [ACTIONS.VIEW] })) return null;
   if (isLoading || !data) {
     return <Skeleton active paragraph={{ rows: 6 }} />;
   }
 
+  const canEdit = can({ [RESOURCES.QUOTE_PDF_TEMPLATE]: [ACTIONS.UPDATE] });
   const onFinish = (values: QuotePdfTemplateFormValues) =>
     void updateQuotePdfTemplate(toContent(values));
 
@@ -57,6 +62,7 @@ export function QuotePdfTemplateForm() {
       layout="vertical"
       initialValues={toFormValues(data.content)}
       onFinish={onFinish}
+      disabled={!canEdit}
     >
       <SettingsCard title={t('quotePdfTemplate.title')} caption={t('quotePdfTemplate.caption')}>
         <Form.Item
@@ -160,15 +166,17 @@ export function QuotePdfTemplateForm() {
         </Form.Item>
       </SettingsCard>
 
-      <Button
-        type="primary"
-        htmlType="submit"
-        loading={isPending}
-        disabled={unchanged}
-        className="mt-6"
-      >
-        {t('save')}
-      </Button>
+      {canEdit && (
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={isPending}
+          disabled={unchanged}
+          className="mt-6"
+        >
+          {t('save')}
+        </Button>
+      )}
     </Form>
   );
 }

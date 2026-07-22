@@ -95,12 +95,16 @@
   "permissions": {
     "title": "Permissions",
     "description": "Read-only view of what each role can do. Roles and permissions can't be created, edited, or assigned here.",
+    "groups": {
+      "configurations": "Configurations"
+    },
     "actions": {
       "create": "Create",
       "read": "View",
       "update": "Edit",
       "delete": "Delete",
-      "upload_attachment": "Upload receipt"
+      "upload_attachment": "Upload receipt",
+      "view": "View"
     },
     "resources": {
       "dashboard": {
@@ -135,9 +139,25 @@
         "label": "Event types",
         "caption": "Event type definitions used across the catalog."
       },
-      "config": {
-        "label": "Configuration",
-        "caption": "Global app settings: tax rates, deposits, quote defaults."
+      "tax_rates": {
+        "label": "Tax rates",
+        "caption": "Tax rates applied to quotes, by state."
+      },
+      "quote_defaults": {
+        "label": "Quote defaults",
+        "caption": "Default deposit, validity, minimum persons, sequence and currency for new quotes."
+      },
+      "quote_stages": {
+        "label": "Quote stages",
+        "caption": "Labels, colors and descriptions of the quote pipeline stages."
+      },
+      "catalog_preferences": {
+        "label": "Catalog preferences",
+        "caption": "Whether the product catalog can be reordered by dragging."
+      },
+      "quote_pdf_template": {
+        "label": "Quote PDF template",
+        "caption": "Fixed text and services printed on the PDF of every generated quote."
       }
     }
   },

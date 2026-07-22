@@ -1,5 +1,10 @@
 import { asc, eq, sql } from 'drizzle-orm';
-import type { AppSettingsInput, QuoteStageCatalogItem, StateSettingInput } from '@repo/schemas';
+import type {
+  QuoteStageCatalogItem,
+  StateSettingInput,
+  UpdateCatalogPreferencesInput,
+  UpdateQuoteDefaultsInput,
+} from '@repo/schemas';
 import type { Database } from '../../db';
 import { appSettings, stateSettings, quotes, quoteStages } from '../../db/schema';
 import {
@@ -52,14 +57,20 @@ export class ConfigRepository {
     });
   }
 
-  upsertAppSettings(data: AppSettingsInput) {
+  updateQuoteDefaults(data: UpdateQuoteDefaultsInput) {
     return this.db
-      .insert(appSettings)
-      .values({ id: APP_SETTINGS_ID, ...data })
-      .onConflictDoUpdate({
-        target: appSettings.id,
-        set: { ...data, updatedAt: new Date() },
-      })
+      .update(appSettings)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(appSettings.id, APP_SETTINGS_ID))
+      .returning(publicAppSettingsColumns)
+      .then((r) => r[0]!);
+  }
+
+  updateCatalogPreferences(data: UpdateCatalogPreferencesInput) {
+    return this.db
+      .update(appSettings)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(appSettings.id, APP_SETTINGS_ID))
       .returning(publicAppSettingsColumns)
       .then((r) => r[0]!);
   }

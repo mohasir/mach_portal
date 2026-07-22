@@ -95,12 +95,16 @@
   "permissions": {
     "title": "Permisos",
     "description": "Vista de solo lectura de lo que puede hacer cada rol. Los roles y permisos no se pueden crear, editar ni asignar desde acá.",
+    "groups": {
+      "configurations": "Configuraciones"
+    },
     "actions": {
       "create": "Crear",
       "read": "Ver",
       "update": "Editar",
       "delete": "Eliminar",
-      "upload_attachment": "Subir comprobante"
+      "upload_attachment": "Subir comprobante",
+      "view": "Ver"
     },
     "resources": {
       "dashboard": {
@@ -135,9 +139,25 @@
         "label": "Tipos de evento",
         "caption": "Definiciones de tipos de evento usadas en el catálogo."
       },
-      "config": {
-        "label": "Configuración",
-        "caption": "Configuración global: impuestos, depósitos, valores por defecto de cotizaciones."
+      "tax_rates": {
+        "label": "Impuestos",
+        "caption": "Tasas de impuesto aplicadas a las cotizaciones, por estado."
+      },
+      "quote_defaults": {
+        "label": "Valores por defecto",
+        "caption": "Depósito, validez, mínimo de personas, consecutivo y moneda por defecto para cotizaciones nuevas."
+      },
+      "quote_stages": {
+        "label": "Estados de cotización",
+        "caption": "Nombres, colores y descripciones de los estados del pipeline de cotizaciones."
+      },
+      "catalog_preferences": {
+        "label": "Preferencias de catálogo",
+        "caption": "Si el catálogo de productos se puede reordenar arrastrando."
+      },
+      "quote_pdf_template": {
+        "label": "Plantilla de PDF",
+        "caption": "Textos fijos y servicios que se imprimen en el PDF de cada cotización generada."
       }
     }
   },
