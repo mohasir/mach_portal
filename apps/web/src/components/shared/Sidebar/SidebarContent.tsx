@@ -1,5 +1,4 @@
 'use client';
-import { LogoutButton } from '@/components/shared/LogoutButton';
 import { SidebarLogo } from './SidebarLogo';
 import { SidebarNav } from './SidebarNav';
 
@@ -16,10 +15,6 @@ export function SidebarContent({ collapsed = false, onNavigate }: SidebarContent
       <div className={`flex-1 overflow-y-auto py-2 px-3`}>
         <SidebarNav collapsed={collapsed} onNavigate={onNavigate} />
       </div>
-
-      {/* <div className="p-3">
-        <LogoutButton collapsed={collapsed} />
-      </div> */}
     </div>
   );
 }

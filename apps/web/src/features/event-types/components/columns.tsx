@@ -1,5 +1,5 @@
 'use client';
-import { Tag, type TableColumnsType } from 'antd';
+import type { TableColumnsType } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { useEventTypeRowActions } from '../hooks/useEventTypeRowActions';

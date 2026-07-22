@@ -1,5 +1,5 @@
-import { Card, TableColumnsType, TableColumnType, Typography } from 'antd';
-import { ReactNode } from 'react';
+import { Card, type TableColumnsType, type TableColumnType, Typography } from 'antd';
+import type { ReactNode } from 'react';
 
 export function AutoRowCard<TData extends object>({
   record,

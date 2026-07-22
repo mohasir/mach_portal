@@ -1,7 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { App, Button, Card, Divider, Drawer, Space } from 'antd';
+import { App, Button, Card, Divider, Drawer } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { TRPCClientError } from '@trpc/client';
 import { computeQuoteTotals, QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
@@ -19,7 +19,6 @@ import { ClientSection, type ApiFieldError, type ClientSectionHandle } from './C
 import { EventSection } from './EventSection';
 import { LineBuilder } from './LineBuilder';
 import { NotesSection } from './NotesSection';
-import { PricingPanel } from './PricingPanel';
 import { QuotePreview } from './QuotePreview';
 
 interface QuoteBuilderContentProps {

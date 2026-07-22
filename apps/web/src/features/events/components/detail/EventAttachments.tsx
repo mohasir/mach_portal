@@ -1,5 +1,5 @@
 'use client';
-import { Card, Empty, Image } from 'antd';
+import { Empty, Image } from 'antd';
 import { FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';

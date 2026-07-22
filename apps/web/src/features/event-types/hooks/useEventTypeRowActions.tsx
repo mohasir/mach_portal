@@ -1,6 +1,5 @@
 'use client';
 import { App } from 'antd';
-import { Power, PowerOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { RowActionItem } from '@/components/shared/DataTable';
@@ -11,7 +10,6 @@ interface UseEventTypeRowActionsParams {
 }
 
 export function useEventTypeRowActions({ onEdit }: UseEventTypeRowActionsParams) {
-  const { t } = useTranslation('eventTypes');
   const { t: tc } = useTranslation('common');
   const { message } = App.useApp();
 

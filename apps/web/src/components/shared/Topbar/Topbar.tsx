@@ -4,7 +4,6 @@ import { Button, Flex, Typography } from 'antd';
 import { Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher';
-import { NotificationMenu } from '@/components/NotificationMenu/NotificationMenu';
 import { UserMenu } from '@/components/UserProfile/UserMenu';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 
@@ -33,7 +32,6 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
 
       <Flex align="center" gap={16}>
         <LanguageSwitcher />
-        {/* <NotificationMenu /> */}
         <UserMenu />
       </Flex>
     </Flex>

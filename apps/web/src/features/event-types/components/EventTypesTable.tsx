@@ -2,9 +2,8 @@
 import { useTranslation } from 'react-i18next';
 import { paginationOf, type EventTypesListQuery } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
-import { useEventTypesList, useToggleEventTypeActive } from '../hooks/useEventTypes';
+import { useEventTypesList } from '../hooks/useEventTypes';
 import { useEventTypesColumns } from './columns';
-import { EventTypeCard } from './EventTypeCard';
 import type { EventType } from '../types';
 
 interface EventTypesTableProps {

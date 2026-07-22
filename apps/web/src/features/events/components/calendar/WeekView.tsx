@@ -54,7 +54,7 @@ export function WeekView({
           timed: dayEvents.filter((e) => !!e.eventTime),
         };
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `days` is derived fresh each render from weekStart/locale
+    // `days` is derived fresh each render from weekStart/locale
     [weekStart, locale, eventsByDay],
   );
 
@@ -71,7 +71,6 @@ export function WeekView({
       : DEFAULT_SCROLL_HOUR;
     scrollRef.current.scrollTop = targetHour * HOUR_HEIGHT;
     // Re-scroll only when the visible week changes, not on every data refresh.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekStart]);
 
   if (!screens.md) {
