@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import withSerwistInit from '@serwist/next';
 
 // Server-only: where Next forwards the proxied API paths. Not exposed to the
 // browser, so the app is single-origin and auth cookies land on the web origin.
@@ -14,4 +15,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withSerwist = withSerwistInit({
+  swSrc: 'src/app/sw.ts',
+  swDest: 'public/sw.js',
+  disable: process.env.NODE_ENV === 'development',
+  reloadOnOnline: false,
+});
+
+export default withSerwist(nextConfig);
