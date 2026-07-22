@@ -34,13 +34,14 @@ export interface QuoteBuilderState {
 export function emptyBuilderState(
   depositRate: number,
   initialClient?: { clientId: string; clientName: string },
+  initialEventDate?: string,
 ): QuoteBuilderState {
   return {
     clientId: initialClient?.clientId ?? null,
     clientName: initialClient?.clientName ?? null,
     newClient: null,
     eventTypeId: null,
-    eventDate: null,
+    eventDate: initialEventDate ?? null,
     eventTime: null,
     state: null,
     address: '',

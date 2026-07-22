@@ -4,7 +4,10 @@ import { useRouter } from 'next/navigation';
 import { Calendar, Grid } from 'antd';
 import type { CalendarProps } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
+import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { Locale as AppLocale } from '@/lib/i18n/config';
+import { useCan } from '@/lib/auth/useCan';
+import { isPastDate } from '@/lib/date';
 import { useLocaleStore } from '@/lib/stores/locale.store';
 import { useEventsCalendar } from '../../hooks/useEvents';
 import type { EventCalendarItem } from '../../types';
@@ -22,6 +25,8 @@ const UNIT_BY_VIEW: Record<CalendarViewMode, 'month' | 'week' | 'year'> = {
 
 export function EventsCalendar() {
   const router = useRouter();
+  const can = useCan();
+  const canCreateQuote = can({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] });
   const locale = useLocaleStore((s) => s.locale) as AppLocale;
   const screens = Grid.useBreakpoint();
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
@@ -76,12 +81,16 @@ export function EventsCalendar() {
 
     const start = rangeStart.locale(locale);
     const end = rangeEnd.locale(locale);
-    if (start.isSame(end, 'month')) return `${start.format('MMM D')} – ${end.format('D, YYYY')}`;
-    if (start.isSame(end, 'year')) return `${start.format('MMM D')} – ${end.format('MMM D, YYYY')}`;
-    return `${start.format('MMM D, YYYY')} – ${end.format('MMM D, YYYY')}`;
+    if (start.isSame(end, 'month')) return `${start.format('MMM D')} - ${end.format('D, YYYY')}`;
+    if (start.isSame(end, 'year')) return `${start.format('MMM D')} - ${end.format('MMM D, YYYY')}`;
+    return `${start.format('MMM D, YYYY')} - ${end.format('MMM D, YYYY')}`;
   }, [viewMode, cursor, rangeStart, rangeEnd, locale]);
 
   const goToEvent = (id: string) => router.push(`/admin/events/${id}`);
+  const goToNewQuote = (date: Dayjs) => {
+    if (isPastDate(date.format('YYYY-MM-DD'))) return;
+    router.push(`/admin/quotes/new?eventDate=${date.format('YYYY-MM-DD')}`);
+  };
   const onToday = () => setCursor(dayjs());
   const onNavigate = (direction: 'prev' | 'next') => {
     setCursor((c) => c.add(direction === 'next' ? 1 : -1, UNIT_BY_VIEW[viewMode]));
@@ -120,6 +129,7 @@ export function EventsCalendar() {
           eventsByDay={eventsByDay}
           locale={locale}
           onSelectEvent={goToEvent}
+          onSelectDate={canCreateQuote ? goToNewQuote : undefined}
         />
       )}
       {viewMode === 'year' && (
@@ -132,6 +142,9 @@ export function EventsCalendar() {
           fullscreen={!!screens.md}
           cellRender={cellRender}
           onPanelChange={setCursor}
+          onSelect={(date, info) => {
+            if (canCreateQuote && info.source === 'date') goToNewQuote(date);
+          }}
         />
       )}
     </div>

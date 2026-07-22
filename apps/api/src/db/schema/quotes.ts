@@ -7,6 +7,7 @@ import {
   date,
   pgEnum,
   timestamp,
+  boolean,
 } from 'drizzle-orm/pg-core';
 import { stateEnum } from './enums';
 import { clients } from './clients';
@@ -52,6 +53,7 @@ export const quotes = pgTable('quotes', {
     .notNull()
     .default(1) // QUOTE_STAGE.PENDING
     .references(() => quoteStages.id),
+  isDraft: boolean('is_draft').notNull().default(true),
   validUntil: date('valid_until', { mode: 'string' }),
   createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
   pdfUrl: text('pdf_url'),

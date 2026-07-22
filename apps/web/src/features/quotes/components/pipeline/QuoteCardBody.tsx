@@ -33,6 +33,7 @@ export function QuoteCardBody({ card, actions }: QuoteCardBodyProps) {
           {card.number}
         </Typography.Text>
         <div className="flex items-center gap-1">
+          {card.isDraft && <Tag>{t('pipeline.draftTag')}</Tag>}
           {isExpired && <Tag color="red">{t('pipeline.expired')}</Tag>}
           {isPastDue && <Tag color="orange">{t('pipeline.pastDue')}</Tag>}
           {actions}

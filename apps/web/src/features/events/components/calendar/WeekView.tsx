@@ -11,6 +11,7 @@ interface WeekViewProps {
   eventsByDay: Map<string, EventCalendarItem[]>;
   locale: Locale;
   onSelectEvent: (id: string) => void;
+  onSelectDate?: (day: Dayjs) => void;
 }
 
 const HOUR_HEIGHT = 48;
@@ -31,7 +32,13 @@ const parseHour = (time: string) => {
   return (h ?? 0) + (m ?? 0) / 60;
 };
 
-export function WeekView({ weekStart, eventsByDay, locale, onSelectEvent }: WeekViewProps) {
+export function WeekView({
+  weekStart,
+  eventsByDay,
+  locale,
+  onSelectEvent,
+  onSelectDate,
+}: WeekViewProps) {
   const screens = Grid.useBreakpoint();
   const scrollRef = useRef<HTMLDivElement>(null);
   const today = dayjs();
@@ -73,12 +80,16 @@ export function WeekView({ weekStart, eventsByDay, locale, onSelectEvent }: Week
         {days.map((day, index) => {
           const key = day.format('YYYY-MM-DD');
           const isToday = day.isSame(today, 'day');
+          const canCreate = !!onSelectDate && !day.isBefore(today, 'day');
           return (
             <div
               key={key}
               className={`flex items-start gap-3 p-3 ${index > 0 ? 'border-line border-t' : ''}`}
             >
-              <div className="flex w-12 shrink-0 flex-col items-center">
+              <div
+                className={`flex w-12 shrink-0 flex-col items-center ${canCreate ? 'cursor-pointer' : ''}`}
+                onClick={canCreate ? () => onSelectDate(day) : undefined}
+              >
                 <span className="text-xs text-gray-500 uppercase">{day.format('ddd')}</span>
                 <span className={`text-lg font-medium ${isToday ? 'text-primary' : ''}`}>
                   {day.format('D')}
@@ -105,8 +116,13 @@ export function WeekView({ weekStart, eventsByDay, locale, onSelectEvent }: Week
         <div className="w-14 shrink-0" />
         {dayBuckets.map(({ day }) => {
           const isToday = day.isSame(today, 'day');
+          const canCreate = !!onSelectDate && !day.isBefore(today, 'day');
           return (
-            <div key={day.format('YYYY-MM-DD')} className="flex flex-1 flex-col items-center py-2">
+            <div
+              key={day.format('YYYY-MM-DD')}
+              className={`flex flex-1 flex-col items-center py-2 ${canCreate ? 'cursor-pointer' : ''}`}
+              onClick={canCreate ? () => onSelectDate(day) : undefined}
+            >
               <span className="text-xs text-gray-500 uppercase">{day.format('ddd')}</span>
               <span
                 className={

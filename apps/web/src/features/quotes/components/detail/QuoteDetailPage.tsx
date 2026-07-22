@@ -1,9 +1,11 @@
 'use client';
+import { useRouter } from 'next/navigation';
 import { Button, Card, Skeleton, Typography } from 'antd';
 import { Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE } from '@repo/schemas';
 import { useProductCatalog } from '@/features/catalog';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { isAfter } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useGenerateQuotePdf, useQuote } from '../../hooks/useQuotes';
@@ -17,13 +19,21 @@ interface QuoteDetailPageProps {
 
 export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
   const { t } = useTranslation('quotes');
+  const router = useRouter();
   const { dateTime } = useDateFormatter();
   const { data: detail, isLoading: quoteLoading } = useQuote(quoteId);
   const { data: catalog, isLoading: catalogLoading } = useProductCatalog();
   const { generatePdf, isPending: isGeneratingPdf } = useGenerateQuotePdf();
 
+  const onBack = () => router.back();
+
   if (quoteLoading || catalogLoading || !detail || !catalog) {
-    return <Skeleton active paragraph={{ rows: 12 }} />;
+    return (
+      <div>
+        <PageHeader title={t('detail.title')} onBack={onBack} />
+        <Skeleton active paragraph={{ rows: 12 }} />
+      </div>
+    );
   }
 
   const hasPdf = Boolean(detail.pdfUrl);
@@ -41,24 +51,30 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      {(hasPdf || canGeneratePdf) && (
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-          <Button
-            type="primary"
-            icon={<Download size={16} />}
-            loading={isGeneratingPdf}
-            className="w-full sm:w-auto"
-            onClick={handleClick}
-          >
-            {t('detail.generatePdf')}
-          </Button>
-          {detail.pdfGeneratedAt && (
-            <Typography.Text type="secondary" className="text-xs">
-              {t('detail.pdfGeneratedAt', { date: dateTime(detail.pdfGeneratedAt) })}
-            </Typography.Text>
-          )}
-        </div>
-      )}
+      <PageHeader
+        title={detail.number}
+        onBack={onBack}
+        actions={
+          (hasPdf || canGeneratePdf) && (
+            <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
+              <Button
+                type="primary"
+                icon={<Download size={16} />}
+                loading={isGeneratingPdf}
+                className="w-full sm:w-auto"
+                onClick={handleClick}
+              >
+                {t('detail.generatePdf')}
+              </Button>
+              {detail.pdfGeneratedAt && (
+                <Typography.Text type="secondary" className="text-xs">
+                  {t('detail.pdfGeneratedAt', { date: dateTime(detail.pdfGeneratedAt) })}
+                </Typography.Text>
+              )}
+            </div>
+          )
+        }
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
         <Card className="min-h-[calc(100vh-88px)]" classNames={{ body: 'flex h-full flex-col' }}>

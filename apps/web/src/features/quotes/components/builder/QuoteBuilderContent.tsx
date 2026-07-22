@@ -1,32 +1,30 @@
 'use client';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { App, Button, Card, Divider, Drawer, Space, Typography } from 'antd';
+import { App, Button, Card, Divider, Drawer, Space } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { TRPCClientError } from '@trpc/client';
 import { computeQuoteTotals, QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { useConfig } from '@/features/settings';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useApiError } from '@/lib/error/useApiError';
 import { hasClient, isQuoteReadyToSend, toCreateInput } from '../../helpers';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
-import { useCreateQuote, useUpdateQuote, useUpdateQuoteStage } from '../../hooks/useQuotes';
-import type { QuoteDetail } from '../../types';
+import { useCreateQuote, useUpdateQuote } from '../../hooks/useQuotes';
 import { ClientSection, type ApiFieldError, type ClientSectionHandle } from './ClientSection';
 import { EventSection } from './EventSection';
 import { LineBuilder } from './LineBuilder';
 import { NotesSection } from './NotesSection';
 import { PricingPanel } from './PricingPanel';
-import { QuoteHistoryCard } from './QuoteHistoryCard';
 import { QuotePreview } from './QuotePreview';
 
 interface QuoteBuilderContentProps {
   quoteId?: string;
   stageId?: QuoteStageId;
-  detail?: QuoteDetail;
   catalog: Product[];
   eventTypes: EventType[];
 }
@@ -34,7 +32,6 @@ interface QuoteBuilderContentProps {
 export function QuoteBuilderContent({
   quoteId,
   stageId,
-  detail,
   catalog,
   eventTypes,
 }: QuoteBuilderContentProps) {
@@ -51,13 +48,12 @@ export function QuoteBuilderContent({
 
   const { createQuote, isPending: isCreating } = useCreateQuote();
   const { updateQuote, isPending: isUpdating } = useUpdateQuote();
-  const { updateStage, isPending: isSending } = useUpdateQuoteStage();
 
   const readOnly = !!stageId && stageId !== QUOTE_STAGE.PENDING && stageId !== QUOTE_STAGE.QUOTED;
   const showSendButton = !readOnly && (!stageId || stageId === QUOTE_STAGE.PENDING);
   const saveLabel =
     stageId === QUOTE_STAGE.QUOTED ? t('builder.saveChanges') : t('builder.saveDraft');
-  const isPending = isCreating || isUpdating || isSending;
+  const isPending = isCreating || isUpdating;
 
   const taxRate = config?.stateSettings.find((s) => s.state === state.state)?.taxRate ?? 0;
   const totals = computeQuoteTotals({
@@ -100,7 +96,7 @@ export function QuoteBuilderContent({
       message.error(t('builder.errors.clientRequired'));
       return;
     }
-    const input = toCreateInput(state);
+    const input = toCreateInput(state, true);
     try {
       if (quoteId) {
         await updateQuote(quoteId, input);
@@ -117,7 +113,7 @@ export function QuoteBuilderContent({
 
   const handleSend = async () => {
     if (!canSend) return;
-    const input = toCreateInput(state);
+    const input = toCreateInput(state, false);
     const isNew = !quoteId;
     let id = quoteId;
     try {
@@ -131,23 +127,12 @@ export function QuoteBuilderContent({
       reportSaveError(error);
       return;
     }
-    try {
-      await updateStage(id, QUOTE_STAGE.QUOTED);
-    } catch {
-      // error notificado por el onError de useUpdateQuoteStage
-      return;
-    }
-    message.success(t('builder.sent'));
+    message.success(t('builder.created'));
     router.push(isNew ? '/admin/events?view=pipeline' : `/admin/quotes/${id}`);
   };
 
   const formContent = (
     <Card>
-      <div className="mb-6 flex items-center justify-between gap-2">
-        <Typography.Title level={2} className="font-heading text-brown m-0">
-          {quoteId ? t('builder.editTitle') : t('builder.newTitle')}
-        </Typography.Title>
-      </div>
       <div className="flex flex-col">
         <ClientSection ref={clientSectionRef} readOnly={readOnly} />
         <EventSection eventTypes={eventTypes} readOnly={readOnly} />
@@ -168,21 +153,15 @@ export function QuoteBuilderContent({
         </>
       )} */}
       <QuotePreview catalog={catalog} eventTypes={eventTypes} totals={totals} readOnly={readOnly} />
-      {detail && (
-        <>
-          <QuoteHistoryCard
-            createdByName={detail.createdByName}
-            createdAt={detail.createdAt}
-            stageHistory={detail.stageHistory}
-          />
-          <Divider className="my-2" />
-        </>
-      )}
     </div>
   );
 
   return (
     <div className="pb-24 lg:pb-0">
+      <PageHeader
+        title={quoteId ? t('builder.editTitle') : t('builder.newTitle')}
+        onBack={() => router.back()}
+      />
       {isDesktop ? (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_480px]">
           {formContent}

@@ -25,8 +25,9 @@ export function toQuoteLineInputs(lines: LineDraft[]): QuoteLineInput[] {
   }));
 }
 
-export function toCreateInput(state: QuoteBuilderState): CreateQuoteInput {
+export function toCreateInput(state: QuoteBuilderState, isDraft: boolean): CreateQuoteInput {
   return {
+    isDraft,
     clientId: state.newClient ? undefined : (state.clientId ?? undefined),
     newClient: state.newClient
       ? {

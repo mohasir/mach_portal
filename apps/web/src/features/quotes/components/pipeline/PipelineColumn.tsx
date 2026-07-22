@@ -11,7 +11,7 @@ import { QuoteCard } from './QuoteCard';
 interface PipelineColumnProps {
   stageId: QuoteStageId;
   cards: QuoteCardType[];
-  onMove: (id: string, from: QuoteStageId, to: QuoteStageId) => void;
+  onMove: (id: string, from: QuoteStageId, to: QuoteStageId, isDraft: boolean) => void;
   draggable?: boolean;
 }
 

@@ -1,7 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Button, Skeleton, Tabs } from 'antd';
-import { ArrowLeft } from 'lucide-react';
+import { Skeleton, Tabs } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useProductCatalog } from '@/features/catalog';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -22,22 +21,13 @@ export function EventDetailPage({ eventId }: EventDetailPageProps) {
   const { data: event, isLoading: isEventLoading } = useEvent(eventId);
   const { data: catalog, isLoading: isCatalogLoading } = useProductCatalog();
 
-  const title = (
-    <div className="flex items-center gap-2">
-      <Button
-        type="text"
-        icon={<ArrowLeft size={18} />}
-        onClick={() => router.push('/admin/events')}
-        aria-label={t('title')}
-      />
-      <span>{event?.clientName ?? t('title')}</span>
-    </div>
-  );
+  const title = event?.clientName ?? t('title');
+  const onBack = () => router.push('/admin/events');
 
   if (isEventLoading || isCatalogLoading || !event || !catalog) {
     return (
       <div>
-        <PageHeader title={title} />
+        <PageHeader title={title} onBack={onBack} />
         <Skeleton active paragraph={{ rows: 10 }} />
       </div>
     );
@@ -68,7 +58,7 @@ export function EventDetailPage({ eventId }: EventDetailPageProps) {
 
   return (
     <div>
-      <PageHeader title={title} />
+      <PageHeader title={title} onBack={onBack} />
       <div className="flex flex-col gap-4">
         <EventHeader event={event} />
         <Tabs items={tabItems} />

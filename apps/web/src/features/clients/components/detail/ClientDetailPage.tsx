@@ -1,7 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Button, Skeleton, Tabs } from 'antd';
-import { ArrowLeft } from 'lucide-react';
+import { Skeleton, Tabs } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useClient } from '../../hooks/useClients';
@@ -18,22 +17,13 @@ export function ClientDetailPage({ clientId }: ClientDetailPageProps) {
   const router = useRouter();
   const { data: client, isLoading } = useClient(clientId);
 
-  const title = (
-    <div className="flex items-center gap-2">
-      <Button
-        type="text"
-        icon={<ArrowLeft size={18} />}
-        onClick={() => router.push('/admin/clients')}
-        aria-label={t('title')}
-      />
-      <span>{client?.name ?? t('title')}</span>
-    </div>
-  );
+  const title = client?.name ?? t('title');
+  const onBack = () => router.push('/admin/clients');
 
   if (isLoading || !client) {
     return (
       <div>
-        <PageHeader title={title} />
+        <PageHeader title={title} onBack={onBack} />
         <Skeleton active paragraph={{ rows: 10 }} />
       </div>
     );
@@ -41,7 +31,7 @@ export function ClientDetailPage({ clientId }: ClientDetailPageProps) {
 
   return (
     <div>
-      <PageHeader title={title} />
+      <PageHeader title={title} onBack={onBack} />
       <div className="flex flex-col gap-4">
         <ClientInfoCard client={client} />
         <Tabs

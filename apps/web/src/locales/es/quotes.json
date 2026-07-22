@@ -31,9 +31,9 @@
     "editTitle": "Editar cotización",
     "saveDraft": "Guardar borrador",
     "saveChanges": "Guardar cambios",
-    "send": "Generar cotización",
+    "send": "Crear cotización",
     "saved": "Cotización guardada",
-    "sent": "Cotización enviada",
+    "created": "Cotización creada",
     "errors": {
       "clientRequired": "Elegí un cliente para guardar el borrador"
     },
@@ -89,8 +89,15 @@
       "open": "Ver vista previa",
       "client": "Cliente",
       "eventType": "Tipo de evento",
-      "eventDate": "Fecha"
+      "eventDate": "Fecha",
+      "address": "Dirección"
     }
+  },
+  "stages": {
+    "pending": "Pendiente",
+    "quoted": "Enviada",
+    "confirmed": "Aprobada",
+    "cancelled": "Cancelada"
   },
   "pipeline": {
     "title": "Pipeline",
@@ -99,8 +106,9 @@
     "noDate": "Sin fecha",
     "moveTo": "Mover a…",
     "assignStaff": "Asignar staff",
+    "noStaff": "Sin asignar",
     "linesCount": "{{count}} líneas",
-    "staffCount": "{{count}} staff asignado",
+    "draftTag": "Borrador",
     "confirm": {
       "confirmed": {
         "title": "¿Aprobar cotización?",
@@ -111,6 +119,12 @@
         "title": "¿Cancelar cotización?",
         "content": "Esta acción no se puede deshacer.",
         "ok": "Cancelar cotización"
+      },
+      "draft": {
+        "title": "¿Continuar con esta cotización?",
+        "content": "Todavía está guardada como borrador.",
+        "caption": "Una vez que cambie de etapa, dejará de ser un borrador.",
+        "ok": "Continuar"
       }
     }
   },

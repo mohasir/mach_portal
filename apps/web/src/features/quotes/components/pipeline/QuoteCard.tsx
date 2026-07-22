@@ -1,15 +1,16 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Card, Dropdown, type MenuProps } from 'antd';
+import { Avatar, Button, Card, Divider, Dropdown, Tooltip, type MenuProps } from 'antd';
 import { useDraggable } from '@dnd-kit/core';
-import { MoveRight, UserPlus, Users } from 'lucide-react';
+import { MoveRight, UserPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { QUOTE_STAGE, QUOTE_STAGE_TRANSITIONS, type QuoteStageId } from '@repo/schemas';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { useCan } from '@/lib/auth/useCan';
 import { useQuoteStages } from '@/features/settings';
+import { MB } from '@/theme/antd';
 import { useQuoteRowActions } from '../../hooks/useQuoteRowActions';
 import type { QuoteCard as QuoteCardType } from '../../types';
 import { AssignStaffModal } from './AssignStaffModal';
@@ -18,7 +19,7 @@ import { QuoteCardBody } from './QuoteCardBody';
 interface QuoteCardProps {
   card: QuoteCardType;
   draggable?: boolean;
-  onMove: (id: string, from: QuoteStageId, to: QuoteStageId) => void;
+  onMove: (id: string, from: QuoteStageId, to: QuoteStageId, isDraft: boolean) => void;
 }
 
 export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
@@ -44,7 +45,7 @@ export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
     label: stageMap.get(to)?.label,
     onClick: (info) => {
       info.domEvent.stopPropagation();
-      onMove(card.id, stageId, to);
+      onMove(card.id, stageId, to, card.isDraft);
     },
   }));
 
@@ -53,7 +54,13 @@ export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
       ref={draggable ? setNodeRef : undefined}
       size="small"
       className={isDragging ? 'opacity-40' : 'cursor-pointer'}
-      onClick={() => router.push(`/admin/quotes/${card.id}`)}
+      onClick={() =>
+        router.push(
+          stageId === QUOTE_STAGE.PENDING
+            ? `/admin/quotes/${card.id}`
+            : `/admin/quotes/preview/${card.id}`,
+        )
+      }
       {...(draggable ? { ...attributes, ...listeners } : {})}
     >
       <QuoteCardBody
@@ -65,18 +72,37 @@ export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
         }
       />
       {stageId === QUOTE_STAGE.CONFIRMED && can({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] }) && (
-        <div
-          className="mt-2 flex items-center justify-between gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <span className="flex items-center gap-1 text-xs text-gray-500">
-            <Users size={14} />
-            {t('pipeline.staffCount', { count: card.staffAssignedCount })}
-          </span>
-          <Button size="small" icon={<UserPlus size={14} />} onClick={() => setAssignOpen(true)}>
-            {t('pipeline.assignStaff')}
-          </Button>
-        </div>
+        <>
+          <Divider className="my-2" />
+          <div
+            className="mt-2 flex items-center justify-between gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {card.staffMembers.length > 0 ? (
+              <Avatar.Group
+                max={{ count: 3, style: { backgroundColor: MB.oliveFaint, color: MB.brown } }}
+              >
+                {card.staffMembers.map((member) => (
+                  <Tooltip key={member.id} title={member.name}>
+                    <Avatar className="bg-olive-faint text-brown font-medium">
+                      {member.name[0]?.toUpperCase()}
+                    </Avatar>
+                  </Tooltip>
+                ))}
+              </Avatar.Group>
+            ) : (
+              <span className="text-xs text-gray-500">{t('pipeline.noStaff')}</span>
+            )}
+            <Button
+              shape="circle"
+              size="small"
+              icon={<UserPlus size={14} />}
+              aria-label={t('pipeline.assignStaff')}
+              onClick={() => setAssignOpen(true)}
+              className="h-8 w-8"
+            />
+          </div>
+        </>
       )}
       {!draggable && moveOptions.length > 0 && (
         <Dropdown menu={{ items }} trigger={['click']}>

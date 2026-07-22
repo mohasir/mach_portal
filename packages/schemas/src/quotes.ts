@@ -108,7 +108,7 @@ const clientXor = (data: { clientId?: string; newClient?: unknown }) =>
   !!data.clientId !== !!data.newClient;
 
 export const createQuoteSchema = z
-  .object(quoteMutationFields)
+  .object({ ...quoteMutationFields, isDraft: z.boolean() })
   .refine(clientXor, { message: 'quotes:validation.clientRequired', path: ['clientId'] });
 export const updateQuoteSchema = z
   .object(quoteMutationFields)

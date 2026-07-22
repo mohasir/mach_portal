@@ -19,7 +19,7 @@ export const CALENDAR_ITEM: NavItem = {
 };
 
 export const EVENTS_ITEM: NavItem = {
-  label: 'nav.events',
+  label: 'nav.quotes',
   href: '/admin/events',
   icon: 'events',
   guard: { [RESOURCES.EVENT]: [READ] },

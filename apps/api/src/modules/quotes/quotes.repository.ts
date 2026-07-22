@@ -18,6 +18,7 @@ import {
   eventTypes,
   events,
   eventStaff,
+  staff,
   products,
   productPriceTiers,
   optionGroups,
@@ -182,8 +183,14 @@ export class QuotesRepository {
           eventTypeName: eventTypes.name,
           eventId: events.id,
           depositPaid: events.depositPaid,
-          staffAssignedCount: sql<number>`(
-            select count(*)::int from ${eventStaff} where ${eventStaff.eventId} = ${events.id}
+          staffMembers: sql<{ id: string; name: string }[]>`(
+            select coalesce(
+              json_agg(json_build_object('id', ${staff.id}, 'name', ${staff.name}) order by ${eventStaff.assignedAt}),
+              '[]'
+            )
+            from ${eventStaff}
+            inner join ${staff} on ${staff.id} = ${eventStaff.staffId}
+            where ${eventStaff.eventId} = ${events.id}
           )`,
         })
         .from(quotes)
@@ -359,7 +366,7 @@ export class QuotesRepository {
     return this.db.transaction(async (tx) => {
       const [updated] = await tx
         .update(quotes)
-        .set({ stageId: toStageId })
+        .set({ stageId: toStageId, isDraft: false })
         .where(eq(quotes.id, id))
         .returning(publicQuoteColumns);
       if (!updated) return undefined;

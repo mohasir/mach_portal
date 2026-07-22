@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { App, Segmented, Skeleton } from 'antd';
+import { App, Segmented, Skeleton, Typography } from 'antd';
 import {
   DndContext,
   DragOverlay,
@@ -45,21 +45,43 @@ export function PipelineBoard() {
     return moveStage(id, to);
   };
 
-  const runTransition = (id: string, from: QuoteStageId, to: QuoteStageId) => {
+  const runTransition = (id: string, from: QuoteStageId, to: QuoteStageId, isDraft: boolean) => {
     if (!canTransition(from, to)) return;
 
-    if (CONFIRM_STAGES.includes(to)) {
-      const stageKey = CONFIRM_STAGE_KEYS[to];
+    const proceed = () => {
+      if (CONFIRM_STAGES.includes(to)) {
+        const stageKey = CONFIRM_STAGE_KEYS[to];
+        modal.confirm({
+          title: t(`pipeline.confirm.${stageKey}.title`),
+          content: t(`pipeline.confirm.${stageKey}.content`),
+          okText: t(`pipeline.confirm.${stageKey}.ok`),
+          okButtonProps: to === QUOTE_STAGE.CANCELLED ? { danger: true } : undefined,
+          onOk: () => commitTransition(id, to),
+        });
+      } else {
+        void commitTransition(id, to);
+      }
+    };
+
+    // Leaving Pending while still a draft needs an extra heads-up — clearing `isDraft` on
+    // the transition (QuotesRepository.updateStage) is otherwise silent.
+    if (from === QUOTE_STAGE.PENDING && isDraft) {
       modal.confirm({
-        title: t(`pipeline.confirm.${stageKey}.title`),
-        content: t(`pipeline.confirm.${stageKey}.content`),
-        okText: t(`pipeline.confirm.${stageKey}.ok`),
-        okButtonProps: to === QUOTE_STAGE.CANCELLED ? { danger: true } : undefined,
-        onOk: () => commitTransition(id, to),
+        title: t('pipeline.confirm.draft.title'),
+        content: (
+          <div className="flex flex-col gap-1">
+            <span>{t('pipeline.confirm.draft.content')}</span>
+            <Typography.Text type="secondary" className="mt-1 text-xs">
+              {t('pipeline.confirm.draft.caption')}
+            </Typography.Text>
+          </div>
+        ),
+        okText: t('pipeline.confirm.draft.ok'),
+        onOk: proceed,
       });
-    } else {
-      void commitTransition(id, to);
+      return;
     }
+    proceed();
   };
 
   const handleDragStart = ({ active }: DragStartEvent) => {
@@ -75,7 +97,7 @@ export function PipelineBoard() {
     const toStage = over.id as QuoteStageId;
     const fromStage = dragged.card.stageId as QuoteStageId;
     if (fromStage === toStage) return;
-    runTransition(dragged.card.id, fromStage, toStage);
+    runTransition(dragged.card.id, fromStage, toStage, dragged.card.isDraft);
   };
 
   return (

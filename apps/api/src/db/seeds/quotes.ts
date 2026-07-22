@@ -390,6 +390,7 @@ export async function seedQuotes() {
         discountValue: seed.discountValue ?? null,
         validUntil: validUntil.toISOString().slice(0, 10),
         stageId: seed.stageId,
+        isDraft: seed.stageId === QUOTE_STAGE.PENDING,
         createdById: creatorId,
         ...totals,
       })

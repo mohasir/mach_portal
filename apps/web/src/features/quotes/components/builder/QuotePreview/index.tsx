@@ -44,7 +44,12 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
           <span className="text-gray-500">{t('builder.preview.eventDate')}</span>
           <span>{state.eventDate ? date(state.eventDate) : '—'}</span>
         </div>
-        {state.address && <div className="text-gray-500">{state.address}</div>}
+        {state.address && (
+          <div className="flex justify-between">
+            <span className="text-gray-500">{t('builder.preview.address')}</span>
+            <span>{state.address}</span>
+          </div>
+        )}
       </div>
 
       <Divider className="my-3 shrink-0" />

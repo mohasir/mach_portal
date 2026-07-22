@@ -21,6 +21,7 @@ export const publicQuoteColumns = {
   depositRate: quotes.depositRate,
   depositAmount: quotes.depositAmount,
   stageId: quotes.stageId,
+  isDraft: quotes.isDraft,
   validUntil: quotes.validUntil,
   createdById: quotes.createdById,
   pdfUrl: quotes.pdfUrl,
@@ -76,6 +77,7 @@ export const quoteResource = (row: PublicQuote) => ({
   depositRate: row.depositRate,
   depositAmount: row.depositAmount,
   stageId: row.stageId,
+  isDraft: row.isDraft,
   validUntil: row.validUntil,
   createdById: row.createdById,
   pdfUrl: row.pdfUrl,
@@ -94,11 +96,13 @@ export const quoteListItemResource = (row: QuoteWithNames) => ({
   eventTypeName: row.eventTypeName,
 });
 
+export type QuoteCardStaffMember = { id: string; name: string };
+
 export type QuoteCardRow = QuoteWithNames & {
   linesCount: number;
   eventId: string | null;
   depositPaid: boolean | null;
-  staffAssignedCount: number;
+  staffMembers: QuoteCardStaffMember[];
 };
 
 export const quoteCardResource = (row: QuoteCardRow) => ({
@@ -109,11 +113,12 @@ export const quoteCardResource = (row: QuoteCardRow) => ({
   eventDate: row.eventDate,
   total: row.total,
   stageId: row.stageId,
+  isDraft: row.isDraft,
   validUntil: row.validUntil,
   linesCount: row.linesCount,
   eventId: row.eventId,
   depositPaid: row.depositPaid,
-  staffAssignedCount: row.staffAssignedCount,
+  staffMembers: row.staffMembers,
 });
 
 export type QuoteCardResource = ReturnType<typeof quoteCardResource>;

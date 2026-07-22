@@ -20,6 +20,7 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
   const searchParams = useSearchParams();
   const prefillClientId = searchParams.get('clientId');
   const prefillClientName = searchParams.get('clientName');
+  const prefillEventDate = searchParams.get('eventDate');
   const { data: config, isLoading: configLoading } = useConfig();
   const { data: catalog, isLoading: catalogLoading } = useProductCatalog();
   const { data: eventTypesData, isLoading: eventTypesLoading } = useEventTypesList({
@@ -60,6 +61,7 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
         prefillClientId && prefillClientName
           ? { clientId: prefillClientId, clientName: prefillClientName }
           : undefined,
+        prefillEventDate ?? undefined,
       );
 
   return (
@@ -67,7 +69,6 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
       <QuoteBuilderContent
         quoteId={quoteId}
         stageId={stageId}
-        detail={detail}
         catalog={catalog}
         eventTypes={eventTypesData.items}
       />

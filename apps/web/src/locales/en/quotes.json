@@ -31,9 +31,9 @@
     "editTitle": "Edit quote",
     "saveDraft": "Save draft",
     "saveChanges": "Save changes",
-    "send": "Generate quote",
+    "send": "Create quote",
     "saved": "Quote saved",
-    "sent": "Quote sent",
+    "created": "Quote created",
     "errors": {
       "clientRequired": "Pick a client to save the draft"
     },
@@ -89,8 +89,15 @@
       "open": "View preview",
       "client": "Client",
       "eventType": "Event type",
-      "eventDate": "Date"
+      "eventDate": "Date",
+      "address": "Address"
     }
+  },
+  "stages": {
+    "pending": "Pending",
+    "quoted": "Sent",
+    "confirmed": "Approved",
+    "cancelled": "Cancelled"
   },
   "pipeline": {
     "title": "Pipeline",
@@ -99,8 +106,9 @@
     "noDate": "No date",
     "moveTo": "Move to…",
     "assignStaff": "Assign staff",
+    "noStaff": "Unassigned",
     "linesCount": "{{count}} lines",
-    "staffCount": "{{count}} staff assigned",
+    "draftTag": "Draft",
     "confirm": {
       "confirmed": {
         "title": "Approve quote?",
@@ -111,6 +119,12 @@
         "title": "Cancel quote?",
         "content": "This action can't be undone.",
         "ok": "Cancel quote"
+      },
+      "draft": {
+        "title": "Continue with this quote?",
+        "content": "It's still saved as a draft.",
+        "caption": "Once it changes stage, it will no longer be a draft.",
+        "ok": "Continue"
       }
     }
   },
