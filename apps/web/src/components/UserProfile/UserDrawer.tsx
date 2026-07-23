@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher';
 import { RoleTag } from '@/components/shared/RoleTag';
-import { env } from '@/env';
 import { signOut, useSession } from '@/lib/auth/client';
 
 export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {

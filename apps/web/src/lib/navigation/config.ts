@@ -1,5 +1,5 @@
 import { NAV_ITEMS } from './constants/items';
-import type { NavGroup, NavItem } from './types';
+import type { NavGroup } from './types';
 
 export const ADMIN_MENU: NavGroup[] = [
   {
