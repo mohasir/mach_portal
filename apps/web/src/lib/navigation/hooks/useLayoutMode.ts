@@ -10,21 +10,22 @@ function flattenItems(items: NavItem[]): NavItem[] {
   return items.flatMap((item) => [item, ...(item.children ? flattenItems(item.children) : [])]);
 }
 
-// Routes with a layout override that aren't sidebar destinations (e.g. the quote builder, only
-// reachable from the Events page) — kept out of ADMIN_MENU so they don't render in the sidebar.
-const HIDDEN_LAYOUT_ITEMS: NavItem[] = [NAV_ITEMS.QUOTES, NAV_ITEMS.OPTIONS];
+const HIDDEN_LAYOUT_ITEMS: NavItem[] = flattenItems([NAV_ITEMS.QUOTE_BUILDER, NAV_ITEMS.OPTIONS]);
 
-const ALL_ITEMS = flattenItems([
-  ...ADMIN_MENU.flatMap((group) => group.items),
-  ...HIDDEN_LAYOUT_ITEMS,
-]);
+const VISIBLE_ITEMS = flattenItems(ADMIN_MENU.flatMap((group) => group.items));
 
 export function useLayoutMode(): LayoutMode {
   const pathname = usePathname() ?? '';
 
-  const match = ALL_ITEMS.filter(
+  // A sidebar destination always wins on an exact match. This lets /admin/quotes (the list,
+  // default layout) sit at the same href as the hidden quote-builder item (bare) below, which
+  // only ever matches the builder's subpaths (/admin/quotes/new, /admin/quotes/[id], ...).
+  const visibleExact = VISIBLE_ITEMS.find((item) => item.href === pathname);
+  if (visibleExact) return visibleExact.layout ?? 'default';
+
+  const hiddenMatch = HIDDEN_LAYOUT_ITEMS.filter(
     (item) => item.href && (pathname === item.href || pathname.startsWith(`${item.href}/`)),
   ).sort((a, b) => (b.href?.length ?? 0) - (a.href?.length ?? 0))[0];
 
-  return match?.layout ?? 'default';
+  return hiddenMatch?.layout ?? 'default';
 }
