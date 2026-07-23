@@ -13,6 +13,7 @@
     "prices": "Precios",
     "eventTypes": "Tipos de evento",
     "settings": "Configuración",
+    "options": "Opciones",
     "statistics": "Estadísticas",
     "finance": "Finanzas",
     "users": "Usuarios",
@@ -37,7 +38,8 @@
     "search": "Buscar por fecha, nombre o ID...",
     "notifications": "Notificaciones",
     "noNotifications": "No hay notificaciones",
-    "toggleMenu": "Abrir/cerrar menú"
+    "toggleMenu": "Abrir/cerrar menú",
+    "greeting": "Hola, {{name}}"
   },
   "dashboard": {
     "title": "Panel",

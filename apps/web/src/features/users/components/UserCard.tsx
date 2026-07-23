@@ -2,11 +2,10 @@
 import { Card, Flex, Tag, Typography } from 'antd';
 import { BadgeCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { type RoleType } from '@repo/guards';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { AvatarUser } from '@/components/shared/AvatarUser';
+import { RoleTag } from '@/components/shared/RoleTag';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
-import { ROLE_COLORS } from '../helpers';
 import { useUserRowActions } from '../hooks/useUserRowActions';
 import type { User } from '../types';
 
@@ -30,11 +29,7 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
       </div>
 
       <Flex wrap gap={8} align="center" className="mt-3">
-        {user.role ? (
-          <Tag color={ROLE_COLORS[user.role as RoleType] ?? 'default'}>
-            {t(`roles.${user.role}`, user.role)}
-          </Tag>
-        ) : null}
+        <RoleTag role={user.role} />
         {user.emailVerified ? (
           <Tag color="green" icon={<BadgeCheck size={14} />}>
             {t('columns.emailVerified')}

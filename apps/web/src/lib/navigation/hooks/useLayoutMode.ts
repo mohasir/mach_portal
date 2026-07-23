@@ -12,7 +12,7 @@ function flattenItems(items: NavItem[]): NavItem[] {
 
 // Routes with a layout override that aren't sidebar destinations (e.g. the quote builder, only
 // reachable from the Events page) — kept out of ADMIN_MENU so they don't render in the sidebar.
-const HIDDEN_LAYOUT_ITEMS: NavItem[] = [NAV_ITEMS.QUOTES];
+const HIDDEN_LAYOUT_ITEMS: NavItem[] = [NAV_ITEMS.QUOTES, NAV_ITEMS.OPTIONS];
 
 const ALL_ITEMS = flattenItems([
   ...ADMIN_MENU.flatMap((group) => group.items),

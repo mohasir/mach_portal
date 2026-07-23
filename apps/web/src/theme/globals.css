@@ -108,4 +108,12 @@
     background: var(--ant-color-primary);
     color: var(--ant-color-text-light-solid);
   }
+
+  /* Kill the browser-y overscroll bounce and tap-highlight flash so the
+     installed PWA feels like a native app rather than a website. */
+  html,
+  body {
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
 }

@@ -131,7 +131,7 @@ export function QuoteBuilderContent({
   };
 
   const formContent = (
-    <Card>
+    <Card classNames={{ body: 'p-0 lg:p-[22px]' }}>
       <div className="flex flex-col">
         <ClientSection ref={clientSectionRef} readOnly={readOnly} />
         <EventSection eventTypes={eventTypes} readOnly={readOnly} />

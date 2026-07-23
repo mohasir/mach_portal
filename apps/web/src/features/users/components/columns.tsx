@@ -1,12 +1,11 @@
 'use client';
 import { Tag, type TableColumnsType } from 'antd';
-import { type RoleType } from '@repo/guards';
 import { BadgeCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { AvatarUser } from '@/components/shared/AvatarUser';
+import { RoleTag } from '@/components/shared/RoleTag';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
-import { ROLE_COLORS } from '../helpers';
 import { useUserRowActions } from '../hooks/useUserRowActions';
 import type { User } from '../types';
 
@@ -48,12 +47,7 @@ export function useUsersColumns({
       title: t('columns.role'),
       dataIndex: 'role',
       key: 'role',
-      render: (role: string | null) =>
-        role ? (
-          <Tag color={ROLE_COLORS[role as RoleType] ?? 'default'}>{t(`roles.${role}`, role)}</Tag>
-        ) : (
-          '—'
-        ),
+      render: (role: string | null) => (role ? <RoleTag role={role} /> : '—'),
     },
     {
       title: t('columns.sessions'),

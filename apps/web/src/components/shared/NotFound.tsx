@@ -8,7 +8,7 @@ export function NotFound({ home = '/', fullScreen = false }: { home?: string; fu
   const router = useRouter();
 
   return (
-    <Flex justify="center" align="center" className={`${fullScreen ? 'min-h-screen' : 'min-h-[60vh]'} p-6`}>
+    <Flex justify="center" align="center" className={`${fullScreen ? 'min-h-dvh' : 'min-h-[60vh]'} p-6`}>
       <Result
         status="404"
         title={t('notFound.title')}

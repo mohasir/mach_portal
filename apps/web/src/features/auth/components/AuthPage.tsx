@@ -43,7 +43,7 @@ export function AuthPage() {
   };
 
   return (
-    <Flex justify="center" align="center" className="min-h-screen">
+    <Flex justify="center" align="center" className="min-h-dvh">
       <Card className="w-full max-w-90" classNames={{ body: 'p-8' }}>
         <Typography.Title level={2} className="font-heading text-brown mb-6">
           {mode === 'signin' ? t('signinTitle') : t('signupTitle')}
