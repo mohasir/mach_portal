@@ -10,6 +10,7 @@
   },
   "profile": {
     "title": "Perfil",
+    "editTitle": "Editar perfil",
     "name": "Nombre",
     "nameRequired": "El nombre es obligatorio",
     "email": "Correo electrónico",

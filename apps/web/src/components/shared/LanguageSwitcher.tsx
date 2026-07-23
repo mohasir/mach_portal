@@ -5,7 +5,12 @@ import { Languages } from 'lucide-react';
 import i18n from '@/lib/i18n/config';
 import { useLocaleStore } from '@/lib/stores/locale.store';
 
-export function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  block?: boolean;
+  className?: string;
+}
+
+export function LanguageSwitcher({ block, className = 'px-1' }: LanguageSwitcherProps = {}) {
   const locale = useLocaleStore((s) => s.locale);
   const setLocale = useLocaleStore((s) => s.setLocale);
 
@@ -16,7 +21,13 @@ export function LanguageSwitcher() {
   const toggle = () => setLocale(locale === 'es' ? 'en' : 'es');
 
   return (
-    <Button className='px-1'  type="text" icon={<Languages size={16} />} onClick={toggle}>
+    <Button
+      type="text"
+      block={block}
+      icon={<Languages size={16} />}
+      onClick={toggle}
+      className={className}
+    >
       {locale.toUpperCase()}
     </Button>
   );

@@ -1,5 +1,7 @@
+'use client';
 import type { ReactNode } from 'react';
 import { Card, Divider, Typography } from 'antd';
+import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 
 interface SettingsCardProps {
   title: ReactNode;
@@ -7,6 +9,7 @@ interface SettingsCardProps {
   dividerClassName?: string;
   className?: string;
   children: ReactNode;
+  variant?: 'card' | 'plain';
 }
 
 export function SettingsCard({
@@ -15,9 +18,13 @@ export function SettingsCard({
   dividerClassName = 'mt-3 mb-6',
   className,
   children,
+  variant,
 }: SettingsCardProps) {
-  return (
-    <Card className={className}>
+  const isDesktop = useIsDesktop();
+  const resolvedVariant = variant ?? (isDesktop ? 'card' : 'plain');
+
+  const content = (
+    <>
       <Typography.Title level={3} className="font-heading text-brown m-0!">
         {title}
       </Typography.Title>
@@ -28,6 +35,12 @@ export function SettingsCard({
       )}
       <Divider className={dividerClassName} />
       {children}
-    </Card>
+    </>
   );
+
+  if (resolvedVariant === 'plain') {
+    return <div className={className}>{content}</div>;
+  }
+
+  return <Card className={className}>{content}</Card>;
 }
