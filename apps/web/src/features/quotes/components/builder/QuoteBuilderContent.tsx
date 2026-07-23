@@ -130,17 +130,15 @@ export function QuoteBuilderContent({
     router.push(isNew ? '/admin/events?view=pipeline' : `/admin/quotes/${id}`);
   };
 
-  const formContent = (
-    <Card classNames={{ body: 'p-0 lg:p-[22px]' }}>
-      <div className="flex flex-col">
-        <ClientSection ref={clientSectionRef} readOnly={readOnly} />
-        <EventSection eventTypes={eventTypes} readOnly={readOnly} />
-        <Divider className="mt-2 mb-6" />
-        <LineBuilder catalog={catalog} readOnly={readOnly} />
-        <Divider className="my-4" />
-        <NotesSection readOnly={readOnly} />
-      </div>
-    </Card>
+  const formFields = (
+    <div className="flex flex-col">
+      <ClientSection ref={clientSectionRef} readOnly={readOnly} />
+      <EventSection eventTypes={eventTypes} readOnly={readOnly} />
+      <Divider className="mt-2 mb-6" />
+      <LineBuilder catalog={catalog} readOnly={readOnly} />
+      <Divider className="my-4" />
+      <NotesSection readOnly={readOnly} />
+    </div>
   );
 
   const previewContent = (
@@ -163,7 +161,7 @@ export function QuoteBuilderContent({
       />
       {isDesktop ? (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_480px]">
-          {formContent}
+          <Card classNames={{ body: 'p-0 lg:p-[22px]' }}>{formFields}</Card>
           <div>
             <div className="sticky top-4 flex h-[calc(100vh-6rem)] flex-col gap-4">
               <Card className="min-h-0 flex-1" classNames={{ body: 'flex h-full flex-col' }}>
@@ -192,7 +190,7 @@ export function QuoteBuilderContent({
         </div>
       ) : (
         <>
-          {formContent}
+          {formFields}
           <div className="border-line fixed inset-x-0 bottom-0 z-10 flex flex-col gap-2 border-t bg-white p-3">
             <div className="flex items-center justify-between">
               <div className="flex flex-col">

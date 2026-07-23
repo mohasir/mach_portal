@@ -7,7 +7,7 @@ export const ADMIN_MENU: NavGroup[] = [
   },
   {
     group: 'nav.groups.commerce',
-    items: [NAV_ITEMS.EVENTS, NAV_ITEMS.CLIENTS, NAV_ITEMS.STAFF],
+    items: [NAV_ITEMS.QUOTES, NAV_ITEMS.EVENTS, NAV_ITEMS.CLIENTS, NAV_ITEMS.STAFF],
   },
   {
     group: 'nav.groups.catalog',
@@ -26,3 +26,8 @@ export const ADMIN_MENU: NavGroup[] = [
     items: [NAV_ITEMS.FAQ, NAV_ITEMS.SUPPORT],
   }, */
 ];
+
+export const NAV_BOTTOM_MENU = {
+  leftItems: [NAV_ITEMS.DASHBOARD, NAV_ITEMS.CALENDAR],
+  rightItems: [NAV_ITEMS.QUOTES, NAV_ITEMS.OPTIONS],
+};

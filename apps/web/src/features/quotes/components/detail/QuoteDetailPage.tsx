@@ -8,6 +8,7 @@ import { useProductCatalog } from '@/features/catalog';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { isAfter } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
+import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useGenerateQuotePdf, useQuote } from '../../hooks/useQuotes';
 import { QuoteHistoryCard } from '../builder/QuoteHistoryCard';
 import { QuoteDetailCard } from './QuoteDetailCard';
@@ -20,6 +21,7 @@ interface QuoteDetailPageProps {
 export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
   const { t } = useTranslation('quotes');
   const router = useRouter();
+  const isDesktop = useIsDesktop();
   const { dateTime } = useDateFormatter();
   const { data: detail, isLoading: quoteLoading } = useQuote(quoteId);
   const { data: catalog, isLoading: catalogLoading } = useProductCatalog();
@@ -49,13 +51,16 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
     void generatePdf(quoteId);
   };
 
+  const showPdfAction = hasPdf || canGeneratePdf;
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
         title={detail.number}
         onBack={onBack}
         actions={
-          (hasPdf || canGeneratePdf) && (
+          isDesktop &&
+          showPdfAction && (
             <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
               <Button
                 type="primary"
@@ -77,9 +82,25 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
-        <Card className="min-h-[calc(100vh-88px)]" classNames={{ body: 'flex h-full flex-col' }}>
-          <QuoteDetailCard detail={detail} catalog={catalog} />
-        </Card>
+        {isDesktop ? (
+          <Card className="min-h-[calc(100vh-88px)]" classNames={{ body: 'flex h-full flex-col' }}>
+            <QuoteDetailCard
+              detail={detail}
+              catalog={catalog}
+              onGeneratePdf={handleClick}
+              isGeneratingPdf={isGeneratingPdf}
+              showPdfAction={showPdfAction}
+            />
+          </Card>
+        ) : (
+          <QuoteDetailCard
+            detail={detail}
+            catalog={catalog}
+            onGeneratePdf={handleClick}
+            isGeneratingPdf={isGeneratingPdf}
+            showPdfAction={showPdfAction}
+          />
+        )}
         <div className="flex flex-col gap-6 self-start">
           <Card>
             <QuoteIncludedServicesCard detail={detail} catalog={catalog} />

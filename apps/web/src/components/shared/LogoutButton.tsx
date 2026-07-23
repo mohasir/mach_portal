@@ -4,8 +4,14 @@ import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { signOut } from '@/lib/auth/client';
+import { IconBadge } from './IconBadge';
 
-export function LogoutButton({ collapsed = false }: { collapsed?: boolean }) {
+interface LogoutButtonProps {
+  collapsed?: boolean;
+  iconOnly?: boolean;
+}
+
+export function LogoutButton({ collapsed = false, iconOnly = false }: LogoutButtonProps) {
   const { t } = useTranslation('admin');
   const router = useRouter();
 
@@ -13,6 +19,18 @@ export function LogoutButton({ collapsed = false }: { collapsed?: boolean }) {
     await signOut();
     router.replace('/login');
   };
+
+  if (iconOnly) {
+    return (
+      <Button
+        type="text"
+        danger
+        icon={<IconBadge icon={LogOut} className="bg-salmon/20 text-error" />}
+        onClick={onLogout}
+        aria-label={t('common.logout')}
+      />
+    );
+  }
 
   return (
     <Button

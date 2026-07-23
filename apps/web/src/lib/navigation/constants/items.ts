@@ -19,7 +19,7 @@ export const CALENDAR_ITEM: NavItem = {
 };
 
 export const EVENTS_ITEM: NavItem = {
-  label: 'nav.quotes',
+  label: 'nav.events',
   href: '/admin/events',
   icon: 'events',
   guard: { [RESOURCES.EVENT]: [READ] },
@@ -37,6 +37,11 @@ export const QUOTES_ITEM: NavItem = {
   href: '/admin/quotes',
   icon: 'quotes',
   guard: { [RESOURCES.QUOTE]: [READ] },
+};
+
+export const QUOTE_BUILDER_ITEM: NavItem = {
+  label: 'nav.quotes',
+  href: '/admin/quotes',
   layout: 'bare',
 };
 
@@ -108,6 +113,7 @@ export const NAV_ITEMS = {
   EVENTS: EVENTS_ITEM,
   CLIENTS: CLIENTS_ITEM,
   QUOTES: QUOTES_ITEM,
+  QUOTE_BUILDER: QUOTE_BUILDER_ITEM,
   PIPELINE: PIPELINE_ITEM,
   STAFF: STAFF_ITEM,
   CATALOG_PRODUCTS: CATALOG_PRODUCTS_ITEM,

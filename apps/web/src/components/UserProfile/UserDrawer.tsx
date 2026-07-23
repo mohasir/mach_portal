@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import { LogOut, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AvatarUser } from '@/components/shared/AvatarUser';
+import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher';
 import { RoleTag } from '@/components/shared/RoleTag';
-import { env } from '@/env';
 import { signOut, useSession } from '@/lib/auth/client';
 
 export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -26,7 +26,14 @@ export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   };
 
   return (
-    <Drawer open={open} onClose={onClose} placement="right" size={300} title={null} closable={false}>
+    <Drawer
+      open={open}
+      onClose={onClose}
+      placement="right"
+      size={300}
+      title={null}
+      closable={false}
+    >
       <div className="flex h-full flex-col gap-6">
         <AvatarUser
           name={user?.name ?? ''}
@@ -36,6 +43,7 @@ export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         />
 
         <div className="flex flex-col gap-1">
+          <LanguageSwitcher block className="justify-start" />
           <Button
             type="text"
             block
@@ -55,15 +63,6 @@ export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => vo
           >
             {t('common.logout')}
           </Button>
-        </div>
-
-        <div className="mt-auto flex flex-col gap-1 text-center">
-          <span className="text-caption text-muted">
-            v{env.NEXT_PUBLIC_APP_VERSION} · {env.NEXT_PUBLIC_APP_COMMIT}
-          </span>
-          <span className="text-caption text-muted">
-            © {new Date().getFullYear()} Oravitech, todos los derechos reservados
-          </span>
         </div>
       </div>
     </Drawer>

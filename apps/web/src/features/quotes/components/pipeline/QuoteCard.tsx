@@ -1,15 +1,17 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Avatar, Button, Card, Divider, Dropdown, Tooltip, type MenuProps } from 'antd';
+import { Avatar, Button, Card, Divider, Tooltip } from 'antd';
 import { useDraggable } from '@dnd-kit/core';
-import { MoveRight, UserPlus } from 'lucide-react';
+import { ChevronDown, UserPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { QUOTE_STAGE, QUOTE_STAGE_TRANSITIONS, type QuoteStageId } from '@repo/schemas';
+import { BottomSheet } from '@/components/shared/BottomSheet';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { useCan } from '@/lib/auth/useCan';
 import { useQuoteStages } from '@/features/settings';
+import { hexToRgba } from '@/lib/utils/color';
 import { MB } from '@/theme/antd';
 import { useQuoteRowActions } from '../../hooks/useQuoteRowActions';
 import type { QuoteCard as QuoteCardType } from '../../types';
@@ -30,6 +32,7 @@ export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
   const can = useCan();
   const rowActions = useQuoteRowActions();
   const [assignOpen, setAssignOpen] = useState(false);
+  const [moveSheetOpen, setMoveSheetOpen] = useState(false);
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: card.id,
@@ -38,16 +41,9 @@ export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
   });
 
   const stageId = card.stageId as QuoteStageId;
+  const currentStage = stageMap.get(stageId);
 
   const moveOptions = QUOTE_STAGE_TRANSITIONS[stageId];
-  const items: MenuProps['items'] = moveOptions.map((to) => ({
-    key: to,
-    label: stageMap.get(to)?.label,
-    onClick: (info) => {
-      info.domEvent.stopPropagation();
-      onMove(card.id, stageId, to, card.isDraft);
-    },
-  }));
 
   return (
     <Card
@@ -63,14 +59,30 @@ export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
       }
       {...(draggable ? { ...attributes, ...listeners } : {})}
     >
-      <QuoteCardBody
-        card={card}
-        actions={
-          <div onClick={(e) => e.stopPropagation()}>
-            <DataTableRowActions actions={rowActions(card)} label={tc('table.actions')} />
-          </div>
-        }
-      />
+      <div className="mb-2 flex items-center justify-between gap-2">
+        {!draggable && moveOptions.length > 0 && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMoveSheetOpen(true);
+            }}
+            className="flex w-fit items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+            style={
+              currentStage
+                ? { backgroundColor: hexToRgba(currentStage.color, 0.15), color: currentStage.color }
+                : undefined
+            }
+          >
+            {t('pipeline.moveTo')}
+            <ChevronDown size={14} />
+          </button>
+        )}
+        <div className="ml-auto" onClick={(e) => e.stopPropagation()}>
+          <DataTableRowActions actions={rowActions(card)} label={tc('table.actions')} />
+        </div>
+      </div>
+      <QuoteCardBody card={card} />
       {stageId === QUOTE_STAGE.CONFIRMED && can({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] }) && (
         <>
           <Divider className="my-2" />
@@ -104,19 +116,43 @@ export function QuoteCard({ card, draggable, onMove }: QuoteCardProps) {
           </div>
         </>
       )}
-      {!draggable && moveOptions.length > 0 && (
-        <Dropdown menu={{ items }} trigger={['click']}>
-          <div
-            className="border-line mt-2 flex items-center justify-center gap-1 rounded border p-1.5 text-xs"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <MoveRight size={14} /> {t('pipeline.moveTo')}
-          </div>
-        </Dropdown>
-      )}
-      {/* Stops the Modal's portal content from bubbling clicks up to the Card's onClick (React
-          portals bubble through the component tree, not the DOM tree). */}
+      {/* Stops the sheet/modal portal content from bubbling clicks up to the Card's onClick
+          (React portals bubble through the component tree, not the DOM tree). */}
       <div onClick={(e) => e.stopPropagation()}>
+        <BottomSheet
+          open={moveSheetOpen}
+          onClose={() => setMoveSheetOpen(false)}
+          title={t('pipeline.moveTo')}
+        >
+          {moveOptions.map((to, index) => {
+            const stage = stageMap.get(to);
+            return (
+              <button
+                key={to}
+                type="button"
+                onClick={() => {
+                  setMoveSheetOpen(false);
+                  onMove(card.id, stageId, to, card.isDraft);
+                }}
+                className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left ${
+                  index > 0 ? 'border-line/50 border-t' : ''
+                }`}
+              >
+                <span>{stage?.label}</span>
+                <span
+                  className="rounded-full px-3 py-1 text-xs font-medium"
+                  style={
+                    stage
+                      ? { backgroundColor: hexToRgba(stage.color, 0.15), color: stage.color }
+                      : undefined
+                  }
+                >
+                  {stage?.label}
+                </span>
+              </button>
+            );
+          })}
+        </BottomSheet>
         <AssignStaffModal
           eventId={card.eventId}
           eventDate={card.eventDate}
