@@ -1,12 +1,10 @@
 'use client';
-import { Card, Layout } from 'antd';
+import { Layout } from 'antd';
 import { BottomNav } from '@/components/shared/BottomNav';
 import { MobileTopbar } from '@/components/shared/Topbar';
-import { useLayoutMode } from '@/lib/navigation';
 import { useLayoutStore } from '@/lib/stores/layout.store';
 
 export function AdminLayoutMobile({ children }: { children: React.ReactNode }) {
-  const layoutMode = useLayoutMode();
   const fillViewport = useLayoutStore((s) => s.fillViewport);
 
   return (
