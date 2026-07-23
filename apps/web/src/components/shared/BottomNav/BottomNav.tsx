@@ -5,10 +5,7 @@ import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { useCan } from '@/lib/auth/useCan';
-import { IconMap, NAV_ITEMS, type NavItem } from '@/lib/navigation';
-
-const LEFT_ITEMS = [NAV_ITEMS.DASHBOARD, NAV_ITEMS.CALENDAR];
-const RIGHT_ITEMS = [NAV_ITEMS.EVENTS, NAV_ITEMS.OPTIONS];
+import { IconMap, NAV_BOTTOM_MENU, type NavItem } from '@/lib/navigation';
 
 export function BottomNav() {
   const { t } = useTranslation('admin');
@@ -35,7 +32,7 @@ export function BottomNav() {
 
   return (
     <nav className="border-line bg-surface flex border-t pb-[env(safe-area-inset-bottom)]">
-      {LEFT_ITEMS.map(renderTab)}
+      {NAV_BOTTOM_MENU.leftItems.map(renderTab)}
 
       {canCreateQuote && (
         <div className="-mt-5 flex flex-1 items-start justify-center">
@@ -51,7 +48,7 @@ export function BottomNav() {
         </div>
       )}
 
-      {RIGHT_ITEMS.map(renderTab)}
+      {NAV_BOTTOM_MENU.rightItems.map(renderTab)}
     </nav>
   );
 }

@@ -1,5 +1,5 @@
 import { NAV_ITEMS } from './constants/items';
-import type { NavGroup } from './types';
+import type { NavGroup, NavItem } from './types';
 
 export const ADMIN_MENU: NavGroup[] = [
   {
@@ -26,3 +26,8 @@ export const ADMIN_MENU: NavGroup[] = [
     items: [NAV_ITEMS.FAQ, NAV_ITEMS.SUPPORT],
   }, */
 ];
+
+export const NAV_BOTTOM_MENU = {
+  leftItems: [NAV_ITEMS.DASHBOARD, NAV_ITEMS.CALENDAR],
+  rightItems: [NAV_ITEMS.QUOTES, NAV_ITEMS.OPTIONS],
+};
