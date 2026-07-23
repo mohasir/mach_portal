@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Tabs } from 'antd';
-import { Columns3, Table2 } from 'lucide-react';
+import { Columns3, Plus, Table2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -70,13 +70,22 @@ export function QuotesPage() {
             className={
               isPipelineActive
                 ? undefined
-                : 'sticky top-0 z-10 -mx-4 -mt-4 bg-surface px-4 pt-4 md:-mx-8 md:-mt-8 md:px-8 md:pt-8'
+                : 'md:sticky md:top-0 md:z-10 md:-mx-8 md:-mt-8 md:bg-surface md:px-8 md:pt-8'
             }
           >
             <PageHeader
               title={t('title')}
               actionLabel={canCreate ? t('index.add') : undefined}
               onAction={canCreate ? () => router.push('/admin/quotes/new') : undefined}
+              mobileAction={
+                canCreate
+                  ? {
+                      icon: Plus,
+                      onClick: () => router.push('/admin/quotes/new'),
+                      ariaLabel: t('index.add'),
+                    }
+                  : undefined
+              }
             />
             <DefaultTabBar {...tabBarProps} />
           </div>
