@@ -2,7 +2,6 @@
 import { Col, Row, Typography } from 'antd';
 import { ArrowUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { PageHeader } from '@/components/shared/PageHeader';
 
 const STATS = [
   { key: 'new', value: 245, delta: '20%', bg: 'bg-olive-faint' },
@@ -15,7 +14,6 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <PageHeader title={t('dashboard.title')} />
       <Row gutter={[16, 16]}>
         {STATS.map((s) => (
           <Col xs={24} md={8} key={s.key}>

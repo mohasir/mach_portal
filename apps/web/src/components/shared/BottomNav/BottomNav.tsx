@@ -1,0 +1,57 @@
+'use client';
+import { Button } from 'antd';
+import { usePathname, useRouter } from 'next/navigation';
+import { Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { ACTIONS, RESOURCES } from '@repo/guards';
+import { useCan } from '@/lib/auth/useCan';
+import { IconMap, NAV_ITEMS, type NavItem } from '@/lib/navigation';
+
+const LEFT_ITEMS = [NAV_ITEMS.DASHBOARD, NAV_ITEMS.CALENDAR];
+const RIGHT_ITEMS = [NAV_ITEMS.EVENTS, NAV_ITEMS.OPTIONS];
+
+export function BottomNav() {
+  const { t } = useTranslation('admin');
+  const can = useCan();
+  const pathname = usePathname() ?? '';
+  const router = useRouter();
+
+  const canCreateQuote = can({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] });
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+
+  const renderTab = (item: NavItem) => {
+    if (item.guard && !can(item.guard)) return null;
+    return (
+      <button
+        key={item.href}
+        onClick={() => router.push(item.href!)}
+        className={`flex flex-1 flex-col items-center gap-0.5 py-2 ${isActive(item.href!) ? 'text-primary' : 'text-muted'}`}
+      >
+        {IconMap[item.icon!]}
+        <span className="text-caption">{t(item.label)}</span>
+      </button>
+    );
+  };
+
+  return (
+    <nav className="border-line bg-surface flex border-t pb-[env(safe-area-inset-bottom)]">
+      {LEFT_ITEMS.map(renderTab)}
+
+      {canCreateQuote && (
+        <div className="-mt-5 flex flex-1 items-start justify-center">
+          <Button
+            type="primary"
+            shape="circle"
+            size="large"
+            icon={<Plus size={22} />}
+            onClick={() => router.push('/admin/quotes/new')}
+            aria-label={t('nav.newQuote')}
+            className="shadow-lg"
+          />
+        </div>
+      )}
+
+      {RIGHT_ITEMS.map(renderTab)}
+    </nav>
+  );
+}

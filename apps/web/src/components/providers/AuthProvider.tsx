@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   if (isServerError) {
     return (
-      <Flex justify="center" align="center" className="min-h-screen p-6">
+      <Flex justify="center" align="center" className="min-h-dvh p-6">
         <Result
           status="500"
           title={t('session.errorTitle')}
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   if (isPending || !session) {
     return (
-      <Flex justify="center" align="center" className="min-h-screen">
+      <Flex justify="center" align="center" className="min-h-dvh">
         <Spin />
       </Flex>
     );
