@@ -1,12 +1,11 @@
 'use client';
-import { Button, Form, Input, Tag } from 'antd';
+import { Button, Form, Input } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { RoleType } from '@repo/guards';
 import { useSession } from '@/lib/auth/client';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { AvatarUser } from '@/components/shared/AvatarUser';
-import { ROLE_COLORS } from '@/features/users/helpers';
+import { RoleTag } from '@/components/shared/RoleTag';
 import { useUpdateProfile } from '../hooks/useUpdateProfile';
 import { SettingsCard } from './SettingsCard';
 
@@ -16,7 +15,6 @@ interface ProfileFormValues {
 
 export function ProfileInfoCard() {
   const { t } = useTranslation('settings');
-  const { t: tUsers } = useTranslation('users');
   const { data } = useSession();
   const user = data?.user as
     | { name: string; email: string; image?: string | null; role?: string | null; updatedAt?: Date }
@@ -38,13 +36,7 @@ export function ProfileInfoCard() {
           name={user?.name ?? ''}
           email={user?.email}
           size={64}
-          extra={
-            user?.role && (
-              <Tag color={ROLE_COLORS[user.role as RoleType] ?? 'default'} className="mt-1">
-                {tUsers(`roles.${user.role}`, user.role)}
-              </Tag>
-            )
-          }
+          extra={<RoleTag role={user?.role} className="mt-1" />}
         />
       </div>
 

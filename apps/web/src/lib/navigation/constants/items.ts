@@ -76,6 +76,13 @@ export const SETTINGS_ITEM: NavItem = {
   layout: 'bare',
 };
 
+export const OPTIONS_ITEM: NavItem = {
+  label: 'nav.options',
+  href: '/admin/options',
+  icon: 'more',
+  layout: 'bare',
+};
+
 export const USERS_ITEM: NavItem = {
   label: 'nav.users',
   href: '/admin/users',
@@ -106,6 +113,7 @@ export const NAV_ITEMS = {
   CATALOG_PRODUCTS: CATALOG_PRODUCTS_ITEM,
   EVENT_TYPES: EVENT_TYPES_ITEM,
   SETTINGS: SETTINGS_ITEM,
+  OPTIONS: OPTIONS_ITEM,
   USERS: USERS_ITEM,
   FAQ: FAQ_ITEM,
   SUPPORT: SUPPORT_ITEM,

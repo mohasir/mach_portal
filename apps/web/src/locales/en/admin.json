@@ -13,6 +13,7 @@
     "prices": "Prices",
     "eventTypes": "Event types",
     "settings": "Settings",
+    "options": "Options",
     "statistics": "Statistics",
     "finance": "Finance",
     "users": "Users",
@@ -37,7 +38,8 @@
     "search": "Search by date, name or ID...",
     "notifications": "Notifications",
     "noNotifications": "No notifications",
-    "toggleMenu": "Toggle menu"
+    "toggleMenu": "Toggle menu",
+    "greeting": "Hi, {{name}}"
   },
   "dashboard": {
     "title": "Dashboard",
