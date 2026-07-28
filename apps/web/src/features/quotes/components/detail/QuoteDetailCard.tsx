@@ -1,11 +1,20 @@
 'use client';
-import { Alert, Button, Descriptions, Divider, Table, Typography, type TableColumnsType } from 'antd';
+import {
+  Alert,
+  Button,
+  Descriptions,
+  Divider,
+  Table,
+  Typography,
+  type TableColumnsType,
+} from 'antd';
 import { Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import { useConfig } from '@/features/settings';
 import { Logo } from '@/components/shared/Logo';
+import { ShareButton } from '@/components/shared/ShareButton';
 import { isPastDate } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
@@ -33,6 +42,7 @@ export function QuoteDetailCard({
   const { date } = useDateFormatter();
   const { money } = useMoneyFormatter();
   const { data: config } = useConfig();
+  const hasPdf = Boolean(detail.pdfUrl);
 
   const lineRows = detail.lines
     .map((line) => {
@@ -83,17 +93,22 @@ export function QuoteDetailCard({
             date + a compact PDF button here. */}
         <div className="flex items-center justify-between gap-2 sm:hidden">
           <span className="text-xs text-gray-500">{date(detail.createdAt)}</span>
-          {showPdfAction && (
-            <Button
-              type="primary"
-              size="small"
-              icon={<Download size={14} />}
-              loading={isGeneratingPdf}
-              onClick={onGeneratePdf}
-            >
-              {t('detail.generatePdf')}
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {hasPdf && (
+              <ShareButton url={detail.pdfUrl!} title={detail.number} iconOnly size="small" />
+            )}
+            {showPdfAction && (
+              <Button
+                type="primary"
+                size="small"
+                icon={<Download size={14} />}
+                loading={isGeneratingPdf}
+                onClick={onGeneratePdf}
+              >
+                {t('detail.generatePdf')}
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="hidden sm:block sm:text-right">
@@ -118,7 +133,7 @@ export function QuoteDetailCard({
           {detail.eventTypeName ?? '—'}
         </Descriptions.Item>
         <Descriptions.Item label={t('detail.location')} span={{ xs: 1, sm: 2 }}>
-          {detail.address ?? '—'}
+          {[detail.address, detail.city].filter(Boolean).join(', ') || '—'}
         </Descriptions.Item>
       </Descriptions>
 
@@ -155,6 +170,7 @@ export function QuoteDetailCard({
       <QuoteSummary
         subtotal={detail.subtotal}
         discountAmount={detail.discountAmount}
+        longDistanceAmount={detail.longDistanceAmount}
         taxAmount={detail.taxAmount}
         total={detail.total}
         depositRate={detail.depositRate}

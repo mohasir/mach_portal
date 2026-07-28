@@ -35,6 +35,7 @@ export function MobileTopbar() {
             <Typography.Title level={3} className="font-heading text-brown m-0! min-w-0 truncate">
               {header.title}
             </Typography.Title>
+            {header.titleSuffix && <span className="shrink-0">{header.titleSuffix}</span>}
           </Flex>
         ) : (
           <Flex

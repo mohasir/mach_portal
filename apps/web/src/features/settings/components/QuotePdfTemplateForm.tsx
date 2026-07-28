@@ -4,6 +4,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { QuotePdfTemplateContent, ServiceInfo } from '@repo/schemas';
 import { ACTIONS, RESOURCES } from '@repo/guards';
+import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { useCan } from '@/lib/auth/useCan';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
 import { useQuotePdfTemplate } from '../hooks/useQuotePdfTemplate';
@@ -66,7 +67,7 @@ export function QuotePdfTemplateForm() {
     >
       <SettingsCard title={t('quotePdfTemplate.title')} caption={t('quotePdfTemplate.caption')}>
         <Form.Item
-          label={t('quotePdfTemplate.services')}
+          label={<FieldLabel title={t('quotePdfTemplate.services')} />}
           tooltip={t('quotePdfTemplate.servicesCaption')}
         >
           <Form.List name="services">
@@ -129,7 +130,7 @@ export function QuotePdfTemplateForm() {
 
         <Form.Item
           name="termsAndConditionsText"
-          label={t('quotePdfTemplate.termsAndConditions')}
+          label={<FieldLabel title={t('quotePdfTemplate.termsAndConditions')} />}
           tooltip={t('quotePdfTemplate.termsAndConditionsCaption')}
           className={termsPreview.length > 0 ? 'mb-2' : undefined}
         >
@@ -150,7 +151,7 @@ export function QuotePdfTemplateForm() {
 
         <Form.Item
           name="validityNote"
-          label={t('quotePdfTemplate.validityNote')}
+          label={<FieldLabel title={t('quotePdfTemplate.validityNote')} />}
           tooltip={t('quotePdfTemplate.validityNoteCaption')}
         >
           <Input.TextArea rows={2} maxLength={300} showCount />
@@ -158,7 +159,7 @@ export function QuotePdfTemplateForm() {
 
         <Form.Item
           name="dietaryNote"
-          label={t('quotePdfTemplate.dietaryNote')}
+          label={<FieldLabel title={t('quotePdfTemplate.dietaryNote')} />}
           tooltip={t('quotePdfTemplate.dietaryNoteCaption')}
           className="mb-0"
         >

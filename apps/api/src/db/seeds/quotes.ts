@@ -363,10 +363,13 @@ export async function seedQuotes() {
     const depositRate = appRow.depositRate;
 
     const lines = seed.lines.map((l) => resolveLine(l, ctx));
+    const subtotal = lines.reduce((sum, l) => sum + l.subtotal, 0);
+    const longDistanceAmount = Math.round(subtotal * taxRate);
     const totals = computeQuoteTotals({
       lines: lines.map((l) => ({ subtotal: l.subtotal })),
       discountType: seed.discountType,
       discountValue: seed.discountValue,
+      longDistanceAmount,
       taxRate,
       depositRate,
     });

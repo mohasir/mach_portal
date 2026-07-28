@@ -2,6 +2,8 @@
 import { Button, Form, Input, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CreateStaffInput } from '@repo/schemas';
+import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { PhoneInput } from '@/components/shared/Inputs/PhoneInput';
 
 interface StaffFormProps {
   initialValues?: Partial<CreateStaffInput>;
@@ -23,7 +25,7 @@ export function StaffForm({ initialValues, onSubmit, isPending }: StaffFormProps
     >
       <Form.Item
         name="name"
-        label={t('form.name')}
+        label={<FieldLabel title={t('form.name')} required />}
         rules={[{ required: true, message: t('validation.nameRequired') }, { max: 120 }]}
       >
         <Input placeholder={t('form.namePlaceholder')} />
@@ -31,17 +33,21 @@ export function StaffForm({ initialValues, onSubmit, isPending }: StaffFormProps
 
       <Form.Item
         name="email"
-        label={t('form.email')}
+        label={<FieldLabel title={t('form.email')} />}
         rules={[{ type: 'email', message: t('validation.emailInvalid') }]}
       >
         <Input placeholder={t('form.emailPlaceholder')} />
       </Form.Item>
 
-      <Form.Item name="phone" label={t('form.phone')} rules={[{ max: 40 }]}>
-        <Input placeholder={t('form.phonePlaceholder')} />
+      <Form.Item name="phone" label={<FieldLabel title={t('form.phone')} />} rules={[{ max: 40 }]}>
+        <PhoneInput placeholder={t('form.phonePlaceholder')} />
       </Form.Item>
 
-      <Form.Item name="isActive" label={t('form.isActive')} valuePropName="checked">
+      <Form.Item
+        name="isActive"
+        label={<FieldLabel title={t('form.isActive')} />}
+        valuePropName="checked"
+      >
         <Switch />
       </Form.Item>
 

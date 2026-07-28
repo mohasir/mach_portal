@@ -6,10 +6,13 @@ import { useLayoutStore } from '@/lib/stores/layout.store';
 
 export function AdminLayoutMobile({ children }: { children: React.ReactNode }) {
   const fillViewport = useLayoutStore((s) => s.fillViewport);
+  const contentBg = useLayoutStore((s) => s.contentBg);
 
   return (
-    <Layout className="bg-white h-dvh overflow-hidden">
-      <Layout.Header className="shadow-xs flex h-auto min-h-16 items-center pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] leading-normal">
+    <Layout
+      className={`h-dvh overflow-hidden ${contentBg === 'grey' ? 'bg-background' : 'bg-white'}`}
+    >
+      <Layout.Header className="shadow-xs flex h-auto min-h-16 items-center pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] leading-normal bg-white">
         <MobileTopbar />
       </Layout.Header>
 

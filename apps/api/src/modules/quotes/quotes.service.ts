@@ -135,6 +135,7 @@ export class QuotesService {
       lines: input.lines.map((l) => ({ subtotal: l.subtotal })),
       discountType: input.discountType,
       discountValue: input.discountValue,
+      longDistanceAmount: input.longDistanceAmount,
       taxRate,
       depositRate,
     });
@@ -153,6 +154,7 @@ export class QuotesService {
         eventTime: input.eventTime ?? null,
         state: input.state ?? null,
         address: input.address ?? null,
+        city: input.city ?? null,
         notes: input.notes ?? null,
         discountType: input.discountType ?? null,
         discountValue: input.discountValue ?? null,
@@ -189,6 +191,7 @@ export class QuotesService {
         eventTime: input.eventTime ?? null,
         state: input.state ?? null,
         address: input.address ?? null,
+        city: input.city ?? null,
         notes: input.notes ?? null,
         discountType: input.discountType ?? null,
         discountValue: input.discountValue ?? null,
@@ -212,6 +215,7 @@ export class QuotesService {
         ...lines,
         discountType: input.discountType,
         discountValue: input.discountValue,
+        longDistanceAmount: input.longDistanceAmount,
         taxRate: current.taxRate,
         depositRate: current.depositRate,
       });
@@ -230,6 +234,7 @@ export class QuotesService {
       ...lines,
       discountType: input.discountType,
       discountValue: input.discountValue,
+      longDistanceAmount: input.longDistanceAmount,
       taxRate,
       depositRate,
     });
@@ -260,6 +265,7 @@ export class QuotesService {
       eventTime: current.eventTime,
       state: current.state,
       address: current.address,
+      city: current.city,
       totalAmount: current.total,
     });
     if (!updated) throw notFound();
@@ -293,7 +299,7 @@ export class QuotesService {
 
   private async assertReadyToSend(current: PublicQuote, id: string) {
     const linesCount = await this.repo.countLines(id);
-    if (!current.state || !current.address || linesCount === 0) {
+    if (!current.state || !current.address || !current.city || linesCount === 0) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         cause: new AppError(ErrorCodes.quote.INCOMPLETE),
@@ -313,10 +319,8 @@ export class QuotesService {
     const product = ctx.products.find((p) => p.id === line.productId);
     if (!product?.isActive) throw invalidLines();
 
-    const hasTier = ctx.tiers.some(
-      (t) => t.productId === line.productId && t.numPersons === line.numPersons,
-    );
-    if (!hasTier) throw invalidLines();
+    // numPersons doesn't have to match a catalog tier — the builder also allows a custom
+    // quantity/price override per line; numPersons/subtotal bounds are enforced by the schema.
 
     for (const selection of line.selections) {
       const group = ctx.groups.find(

@@ -4,7 +4,8 @@ import { DEFAULT_STATION_ICON, STATION_ICON_RULES } from './constants';
 import type { LineDraft, QuoteBuilderState } from './hooks/useQuoteBuilder';
 import type { QuoteDetail } from './types';
 
-export const nextLineKey = (): string => crypto.randomUUID();
+export const nextLineKey = (): string =>
+  `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
 export function getStationIcon(stationName: string): LucideIcon {
   const lower = stationName.toLowerCase();
@@ -41,9 +42,11 @@ export function toCreateInput(state: QuoteBuilderState, isDraft: boolean): Creat
     eventTime: state.eventTime ?? undefined,
     state: state.state ?? undefined,
     address: state.address.trim() || undefined,
+    city: state.city.trim() || undefined,
     notes: state.notes.trim() || undefined,
     discountType: state.discountType ?? undefined,
     discountValue: state.discountValue ?? undefined,
+    longDistanceAmount: state.longDistanceAmount,
     depositRate: state.depositRate,
     lines: toQuoteLineInputs(state.lines),
   };
@@ -59,9 +62,11 @@ export function toBuilderState(detail: QuoteDetail): QuoteBuilderState {
     eventTime: detail.eventTime,
     state: detail.state,
     address: detail.address ?? '',
+    city: detail.city ?? '',
     notes: detail.notes ?? '',
     discountType: detail.discountType,
     discountValue: detail.discountValue,
+    longDistanceAmount: detail.longDistanceAmount,
     depositRate: detail.depositRate,
     lines: detail.lines.map((line) => ({
       key: nextLineKey(),
@@ -80,6 +85,10 @@ export function hasClient(state: QuoteBuilderState): boolean {
 /** Enables "Enviar" — "Guardar borrador" only needs a client. */
 export function isQuoteReadyToSend(state: QuoteBuilderState): boolean {
   return (
-    hasClient(state) && !!state.state && state.address.trim().length > 0 && state.lines.length > 0
+    hasClient(state) &&
+    !!state.state &&
+    state.address.trim().length > 0 &&
+    state.city.trim().length > 0 &&
+    state.lines.length > 0
   );
 }

@@ -62,8 +62,7 @@ export function EventHeader({ event }: EventHeaderProps) {
           </div>
           {event.address && (
             <div className="mt-1 text-sm text-gray-500">
-              {event.address}
-              {event.state ? `, ${event.state}` : ''}
+              {[event.address, event.city, event.state].filter(Boolean).join(', ')}
             </div>
           )}
         </div>

@@ -4,19 +4,26 @@ import { usePageHeaderStore, type MobilePageHeaderAction } from '@/lib/stores/pa
 
 interface PageHeaderMobileProps {
   title: ReactNode;
+  titleSuffix?: ReactNode;
   onBack?: () => void;
   showLogout?: boolean;
   action?: MobilePageHeaderAction;
 }
 
-export function PageHeaderMobile({ title, onBack, showLogout, action }: PageHeaderMobileProps) {
+export function PageHeaderMobile({
+  title,
+  titleSuffix,
+  onBack,
+  showLogout,
+  action,
+}: PageHeaderMobileProps) {
   const setHeader = usePageHeaderStore((s) => s.setHeader);
   const clearHeader = usePageHeaderStore((s) => s.clearHeader);
 
   useEffect(() => {
-    setHeader({ title, onBack, showLogout, action });
+    setHeader({ title, titleSuffix, onBack, showLogout, action });
     return () => clearHeader();
-  }, [title, onBack, showLogout, action, setHeader, clearHeader]);
+  }, [title, titleSuffix, onBack, showLogout, action, setHeader, clearHeader]);
 
   return null;
 }

@@ -2,6 +2,8 @@
 import { Button, Form, Input, Select, type FormInstance } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { stateSchema, type CreateClientInput } from '@repo/schemas';
+import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { PhoneInput } from '@/components/shared/Inputs/PhoneInput';
 
 interface ClientFormProps {
   form: FormInstance<CreateClientInput>;
@@ -25,7 +27,7 @@ export function ClientForm({ form, initialValues, onSubmit, isPending }: ClientF
     >
       <Form.Item
         name="name"
-        label={t('form.name')}
+        label={<FieldLabel title={t('form.name')} required />}
         rules={[{ required: true, message: t('validation.nameRequired') }, { max: 120 }]}
       >
         <Input placeholder={t('form.namePlaceholder')} />
@@ -33,32 +35,36 @@ export function ClientForm({ form, initialValues, onSubmit, isPending }: ClientF
 
       <Form.Item
         name="email"
-        label={t('form.email')}
+        label={<FieldLabel title={t('form.email')} />}
         rules={[{ type: 'email', message: t('validation.emailInvalid') }]}
       >
         <Input placeholder={t('form.emailPlaceholder')} />
       </Form.Item>
 
-      <Form.Item name="phone" label={t('form.phone')} rules={[{ max: 40 }]}>
-        <Input placeholder={t('form.phonePlaceholder')} />
+      <Form.Item name="phone" label={<FieldLabel title={t('form.phone')} />} rules={[{ max: 40 }]}>
+        <PhoneInput placeholder={t('form.phonePlaceholder')} />
       </Form.Item>
 
-      <Form.Item name="city" label={t('form.city')} rules={[{ max: 120 }]}>
+      <Form.Item name="city" label={<FieldLabel title={t('form.city')} />} rules={[{ max: 120 }]}>
         <Input placeholder={t('form.cityPlaceholder')} />
       </Form.Item>
 
-      <Form.Item name="state" label={t('form.state')}>
+      <Form.Item name="state" label={<FieldLabel title={t('form.state')} />}>
         <Select options={stateOptions} placeholder={t('form.statePlaceholder')} allowClear />
       </Form.Item>
 
-      <Form.Item name="address" label={t('form.address')} rules={[{ max: 240 }]}>
+      <Form.Item
+        name="address"
+        label={<FieldLabel title={t('form.address')} />}
+        rules={[{ max: 240 }]}
+      >
         <Input.TextArea
           placeholder={t('form.addressPlaceholder')}
           autoSize={{ minRows: 1, maxRows: 3 }}
         />
       </Form.Item>
 
-      <Form.Item name="notes" label={t('form.notes')} rules={[{ max: 2000 }]}>
+      <Form.Item name="notes" label={<FieldLabel title={t('form.notes')} />} rules={[{ max: 2000 }]}>
         <Input.TextArea
           placeholder={t('form.notesPlaceholder')}
           autoSize={{ minRows: 2, maxRows: 5 }}

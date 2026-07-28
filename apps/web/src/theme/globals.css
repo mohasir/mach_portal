@@ -116,4 +116,15 @@
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
   }
+
+  /* Quote builder's quantity stepper (-/+ around a borderless InputNumber): the borderless
+     variant draws its own focus ring as an `outline` via :focus-visible/:has(input:focus-
+     visible) (antd/es/input/style/variants.js), not a `-focused` class — so it hugs just the
+     input instead of the whole pill. The pill's own focus-within border color is a Tailwind
+     class on the component (focus-within:border-primary), not here — a utilities-layer class
+     always wins over a components-layer rule for the same property regardless of specificity. */
+  .quantity-stepper .ant-input-number-borderless:focus-visible,
+  .quantity-stepper .ant-input-number-borderless:has(input:focus-visible) {
+    outline: none;
+  }
 }

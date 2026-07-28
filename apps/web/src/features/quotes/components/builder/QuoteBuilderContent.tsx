@@ -1,7 +1,7 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { App, Button, Card, Divider, Drawer } from 'antd';
+import { App, Button, Card, Divider } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { TRPCClientError } from '@trpc/client';
 import { computeQuoteTotals, QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
@@ -15,11 +15,13 @@ import { useApiError } from '@/lib/error/useApiError';
 import { hasClient, isQuoteReadyToSend, toCreateInput } from '../../helpers';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { useCreateQuote, useUpdateQuote } from '../../hooks/useQuotes';
+import { QuoteSummary } from '../QuoteSummary';
 import { ClientSection, type ApiFieldError, type ClientSectionHandle } from './ClientSection';
 import { EventSection } from './EventSection';
-import { LineBuilder } from './LineBuilder';
+import { ExtraChargesSection } from './ExtraChargesSection';
 import { NotesSection } from './NotesSection';
 import { QuotePreview } from './QuotePreview';
+import { QuickLineBuilder } from './QuickLineBuilder';
 
 interface QuoteBuilderContentProps {
   quoteId?: string;
@@ -38,7 +40,6 @@ export function QuoteBuilderContent({
   const { message } = App.useApp();
   const router = useRouter();
   const isDesktop = useIsDesktop();
-  const [previewOpen, setPreviewOpen] = useState(false);
   const { state } = useQuoteBuilder();
   const { data: config } = useConfig();
   const { money } = useMoneyFormatter();
@@ -59,6 +60,7 @@ export function QuoteBuilderContent({
     lines: state.lines.map((l) => ({ subtotal: l.subtotal })),
     discountType: state.discountType,
     discountValue: state.discountValue,
+    longDistanceAmount: state.longDistanceAmount,
     taxRate,
     depositRate: state.depositRate,
   });
@@ -131,24 +133,42 @@ export function QuoteBuilderContent({
   };
 
   const formFields = (
-    <div className="flex flex-col">
+    <div className={`flex flex-col ${isDesktop ? '' : 'gap-4'}`}>
       <ClientSection ref={clientSectionRef} readOnly={readOnly} />
+      {!isDesktop && (
+        <>
+          <Card size="small">
+            <QuickLineBuilder catalog={catalog} readOnly={readOnly} />
+          </Card>
+          <ExtraChargesSection readOnly={readOnly} />
+          <Card className="border-line border-2">
+            <QuoteSummary
+              subtotal={totals.subtotal}
+              discountAmount={totals.discountAmount}
+              longDistanceAmount={totals.longDistanceAmount}
+              taxAmount={totals.taxAmount}
+              total={totals.total}
+              depositRate={totals.depositRate}
+              depositAmount={totals.depositAmount}
+            />
+          </Card>
+        </>
+      )}
+      {isDesktop && <Divider />}
       <EventSection eventTypes={eventTypes} readOnly={readOnly} />
-      <Divider className="mt-2 mb-6" />
-      <LineBuilder catalog={catalog} readOnly={readOnly} />
-      <Divider className="my-4" />
+      {isDesktop && (
+        <>
+          <Divider className="mt-2 mb-6" />
+          <QuickLineBuilder catalog={catalog} readOnly={readOnly} />
+        </>
+      )}
+      {isDesktop && <Divider className="my-4" />}
       <NotesSection readOnly={readOnly} />
     </div>
   );
 
   const previewContent = (
     <div className="flex h-full min-h-0 flex-col gap-6">
-      {/* {!readOnly && (
-        <>
-          <PricingPanel totals={totals} />
-          <Divider className="my-1" />
-        </>
-      )} */}
       <QuotePreview catalog={catalog} eventTypes={eventTypes} totals={totals} readOnly={readOnly} />
     </div>
   );
@@ -192,14 +212,9 @@ export function QuoteBuilderContent({
         <>
           {formFields}
           <div className="border-line fixed inset-x-0 bottom-0 z-10 flex flex-col gap-2 border-t bg-white p-3">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-xs text-gray-500">{t('builder.pricing.total')}</span>
-                <span className="font-semibold">{money(totals.total)}</span>
-              </div>
-              <Button size="small" onClick={() => setPreviewOpen(true)}>
-                {t('builder.preview.open')}
-              </Button>
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-500">{t('builder.pricing.total')}</span>
+              <span className="font-semibold">{money(totals.total)}</span>
             </div>
             {!readOnly && (
               <div className="flex mb-4 gap-2">
@@ -220,15 +235,6 @@ export function QuoteBuilderContent({
               </div>
             )}
           </div>
-          <Drawer
-            title={t('builder.preview.title')}
-            placement="bottom"
-            styles={{ wrapper: { height: '85%' } }}
-            open={previewOpen}
-            onClose={() => setPreviewOpen(false)}
-          >
-            {previewContent}
-          </Drawer>
         </>
       )}
     </div>

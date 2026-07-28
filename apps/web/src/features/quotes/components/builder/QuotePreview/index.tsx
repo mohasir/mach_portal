@@ -47,7 +47,7 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
         {state.address && (
           <div className="flex justify-between">
             <span className="text-gray-500">{t('builder.preview.address')}</span>
-            <span>{state.address}</span>
+            <span>{[state.address, state.city].filter(Boolean).join(', ')}</span>
           </div>
         )}
       </div>
@@ -103,6 +103,7 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
         className="shrink-0"
         subtotal={totals.subtotal}
         discountAmount={totals.discountAmount}
+        longDistanceAmount={totals.longDistanceAmount}
         taxAmount={totals.taxAmount}
         total={totals.total}
         depositRate={totals.depositRate}

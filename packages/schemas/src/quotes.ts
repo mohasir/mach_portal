@@ -97,9 +97,11 @@ const quoteMutationFields = {
   eventTime: optionalText(20),
   state: z.preprocess(blankToUndefined, stateSchema.optional()),
   address: optionalText(240),
+  city: optionalText(120),
   notes: optionalText(2000),
   discountType: z.preprocess(blankToUndefined, discountTypeSchema.optional()),
   discountValue: z.number().min(0).optional(),
+  longDistanceAmount: z.number().int().min(0).optional(),
   depositRate: z.number().min(0).max(1).optional(),
   lines: z.array(quoteLineInputSchema).default([]),
 } as const;
@@ -145,6 +147,7 @@ export interface QuoteTotalsInput {
   lines: { subtotal: number }[];
   discountType?: DiscountType | null;
   discountValue?: number | null;
+  longDistanceAmount?: number | null;
   taxRate: number;
   depositRate: number;
 }
@@ -152,6 +155,7 @@ export interface QuoteTotalsInput {
 export interface QuoteTotals {
   subtotal: number;
   discountAmount: number;
+  longDistanceAmount: number;
   taxRate: number;
   taxAmount: number;
   total: number;
@@ -169,7 +173,9 @@ export function computeQuoteTotals(input: QuoteTotalsInput): QuoteTotals {
         ? Math.round(subtotal * (input.discountValue ?? 0))
         : 0;
 
-  const base = subtotal - discountAmount;
+  const longDistanceAmount = Math.round(input.longDistanceAmount ?? 0);
+
+  const base = subtotal - discountAmount + longDistanceAmount;
   const taxAmount = Math.round(base * input.taxRate);
   const total = base + taxAmount;
   const depositAmount = Math.round(total * input.depositRate);
@@ -177,6 +183,7 @@ export function computeQuoteTotals(input: QuoteTotalsInput): QuoteTotals {
   return {
     subtotal,
     discountAmount,
+    longDistanceAmount,
     taxRate: input.taxRate,
     taxAmount,
     total,

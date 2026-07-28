@@ -26,7 +26,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
         </div>
       }
     >
-      <div className="mx-2">{children}</div>
+      <div className="mx-2 min-h-50 mb-6">{children}</div>
     </Drawer>
   );
 }
