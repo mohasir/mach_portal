@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { AssignStaffInput } from '@repo/schemas';
 import { useStaffAvailability } from '@/features/staff';
 import { useAssignStaff } from '@/features/events';
+import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 
 interface AssignStaffModalProps {
   eventId: string | null;
@@ -52,7 +53,7 @@ export function AssignStaffModal({ eventId, eventDate, open, onClose }: AssignSt
         <Form form={form} layout="vertical" onFinish={onSubmit} requiredMark={false}>
           <Form.Item
             name="staffId"
-            label={t('assignStaff.staffLabel')}
+            label={<FieldLabel title={t('assignStaff.staffLabel')} required />}
             rules={[{ required: true }]}
           >
             <Select
@@ -63,7 +64,11 @@ export function AssignStaffModal({ eventId, eventDate, open, onClose }: AssignSt
             />
           </Form.Item>
 
-          <Form.Item name="role" label={t('assignStaff.roleLabel')} rules={[{ max: 100 }]}>
+          <Form.Item
+            name="role"
+            label={<FieldLabel title={t('assignStaff.roleLabel')} />}
+            rules={[{ max: 100 }]}
+          >
             <Input placeholder={t('assignStaff.rolePlaceholder')} />
           </Form.Item>
 

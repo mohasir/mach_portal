@@ -20,6 +20,10 @@ export const MB = {
   border: 'rgba(145,146,42,0.18)',
 } as const;
 
+const GlobalProperties = {
+  ControlHeight: 38,
+};
+
 export const machBarTheme: ThemeConfig = {
   cssVar: { key: '_,:root,mb-theme' },
   token: {
@@ -76,16 +80,27 @@ export const machBarTheme: ThemeConfig = {
       defaultBorderColor: MB.border,
       defaultColor: MB.muted,
       fontWeight: 500,
+      controlHeight: GlobalProperties.ControlHeight,
     },
     Input: {
       activeBorderColor: MB.olive,
       hoverBorderColor: MB.oliveDark,
       paddingBlock: 7,
       paddingInline: 11,
+      controlHeight: GlobalProperties.ControlHeight,
     },
     Select: {
       optionSelectedBg: MB.oliveFaint,
       optionSelectedColor: MB.olive,
+    },
+    Form: {
+      verticalLabelPadding: 0,
+    },
+    InputNumber: {
+      controlHeight: GlobalProperties.ControlHeight,
+    },
+    DatePicker: {
+      controlHeight: GlobalProperties.ControlHeight,
     },
     Table: {
       headerBg: MB.ivory,

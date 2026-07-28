@@ -10,6 +10,7 @@ export interface MobilePageHeaderAction {
 
 interface MobilePageHeader {
   title: ReactNode;
+  titleSuffix?: ReactNode;
   onBack?: () => void;
   showLogout?: boolean;
   action?: MobilePageHeaderAction;

@@ -18,6 +18,13 @@
     "search": "Search",
     "total": "{{total}} records"
   },
+  "share": {
+    "action": "Share",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied to clipboard"
+  },
   "confirm": {
     "title": "Warning",
     "irreversible": "This action cannot be undone"

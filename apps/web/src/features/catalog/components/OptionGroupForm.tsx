@@ -2,6 +2,7 @@
 import { Button, Form, Input, InputNumber, Segmented } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { UpdateOptionGroupInput } from '@repo/schemas';
+import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 
 interface OptionGroupFormProps {
   initialValues?: Partial<UpdateOptionGroupInput>;
@@ -24,13 +25,13 @@ export function OptionGroupForm({ initialValues, onSubmit, isPending }: OptionGr
     >
       <Form.Item
         name="label"
-        label={t('optionGroup.form.label')}
+        label={<FieldLabel title={t('optionGroup.form.label')} required />}
         rules={[{ required: true, message: t('validation.labelRequired') }, { max: 120 }]}
       >
         <Input placeholder={t('optionGroup.form.labelPlaceholder')} />
       </Form.Item>
 
-      <Form.Item name="selectionType" label={t('optionGroup.form.selectionType')}>
+      <Form.Item name="selectionType" label={<FieldLabel title={t('optionGroup.form.selectionType')} />}>
         <Segmented
           block
           options={[
@@ -43,7 +44,7 @@ export function OptionGroupForm({ initialValues, onSubmit, isPending }: OptionGr
       {selectionType === 'select' && (
         <Form.Item
           name="maxSelect"
-          label={t('optionGroup.form.maxSelect')}
+          label={<FieldLabel title={t('optionGroup.form.maxSelect')} />}
           help={t('optionGroup.form.maxSelectHelp')}
           preserve={false}
         >

@@ -4,6 +4,7 @@ import { App, Button, Card, Flex, Form, Input, Typography } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { signIn, signUp } from '@/lib/auth/client';
+import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 
 type AuthInput = { name?: string; email: string; password: string };
 
@@ -20,11 +21,17 @@ export function AuthPage() {
     try {
       const res =
         mode === 'signup'
-          ? await signUp.email({ name: values.name ?? values.email, email: values.email, password: values.password })
+          ? await signUp.email({
+              name: values.name ?? values.email,
+              email: values.email,
+              password: values.password,
+            })
           : await signIn.email({ email: values.email, password: values.password });
 
       if (res.error) {
-        message.error(res.error.message ?? t(mode === 'signup' ? 'errors.signupFailed' : 'errors.signinFailed'));
+        message.error(
+          res.error.message ?? t(mode === 'signup' ? 'errors.signupFailed' : 'errors.signinFailed'),
+        );
         return;
       }
       message.success(t(mode === 'signup' ? 'signupSuccess' : 'signinSuccess'));
@@ -51,14 +58,18 @@ export function AuthPage() {
 
         <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false}>
           {mode === 'signup' && (
-            <Form.Item name="name" label={t('name')} rules={[{ required: true, message: t('validation.nameRequired') }]}>
+            <Form.Item
+              name="name"
+              label={<FieldLabel title={t('name')} required />}
+              rules={[{ required: true, message: t('validation.nameRequired') }]}
+            >
               <Input placeholder={t('namePlaceholder')} />
             </Form.Item>
           )}
 
           <Form.Item
             name="email"
-            label={t('email')}
+            label={<FieldLabel title={t('email')} required />}
             rules={[
               { required: true, message: t('validation.required') },
               { type: 'email', message: t('validation.email') },
@@ -69,7 +80,7 @@ export function AuthPage() {
 
           <Form.Item
             name="password"
-            label={t('password')}
+            label={<FieldLabel title={t('password')} required />}
             rules={[
               { required: true, message: t('validation.required') },
               { min: 8, message: t('validation.passwordMin') },

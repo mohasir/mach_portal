@@ -9,19 +9,18 @@ import { PageHeaderMobile } from './PageHeaderMobile';
 
 interface PageHeaderProps {
   title: ReactNode;
+  titleSuffix?: ReactNode;
   onBack?: () => void;
   actionLabel?: string;
   onAction?: () => void;
-  /** Custom action area (e.g. a button with an icon/loading state) — takes over the actionLabel/onAction slot when given. */
   actions?: ReactNode;
-  /** Mobile-only: shows a logout button in the fixed topbar (see MobileTopbar). */
   showLogout?: boolean;
-  /** Mobile-only: shows an icon action button in the fixed topbar (see MobileTopbar). */
   mobileAction?: MobilePageHeaderAction;
 }
 
 export function PageHeader({
   title,
+  titleSuffix,
   onBack,
   actionLabel,
   onAction,
@@ -45,6 +44,7 @@ export function PageHeader({
       <>
         <PageHeaderMobile
           title={title}
+          titleSuffix={titleSuffix}
           onBack={onBack}
           showLogout={showLogout}
           action={mobileAction}
@@ -69,6 +69,7 @@ export function PageHeader({
         <Typography.Title level={1} className="font-heading text-brown m-0 min-w-0">
           {title}
         </Typography.Title>
+        {titleSuffix}
       </div>
       {actionArea}
     </div>

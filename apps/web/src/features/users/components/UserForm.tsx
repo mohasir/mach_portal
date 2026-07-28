@@ -3,6 +3,7 @@ import { Button, Form, Input, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ROLES } from '@repo/guards';
 import type { CreateUserInput } from '@repo/schemas';
+import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 
 interface UserFormProps {
   mode: 'create' | 'edit';
@@ -29,7 +30,7 @@ export function UserForm({ mode, initialValues, onSubmit, isPending }: UserFormP
     >
       <Form.Item
         name="name"
-        label={t('form.name')}
+        label={<FieldLabel title={t('form.name')} required />}
         rules={[{ required: true, message: t('validation.nameRequired') }, { max: 120 }]}
       >
         <Input placeholder={t('form.namePlaceholder')} />
@@ -39,7 +40,7 @@ export function UserForm({ mode, initialValues, onSubmit, isPending }: UserFormP
         <>
           <Form.Item
             name="email"
-            label={t('form.email')}
+            label={<FieldLabel title={t('form.email')} required />}
             rules={[
               { required: true, message: t('validation.emailInvalid') },
               { type: 'email', message: t('validation.emailInvalid') },
@@ -50,7 +51,7 @@ export function UserForm({ mode, initialValues, onSubmit, isPending }: UserFormP
 
           <Form.Item
             name="password"
-            label={t('form.password')}
+            label={<FieldLabel title={t('form.password')} required />}
             rules={[
               { required: true, message: t('validation.passwordMin') },
               { min: 8, message: t('validation.passwordMin') },
@@ -63,7 +64,7 @@ export function UserForm({ mode, initialValues, onSubmit, isPending }: UserFormP
 
       <Form.Item
         name="role"
-        label={t('form.role')}
+        label={<FieldLabel title={t('form.role')} required />}
         rules={[{ required: true, message: t('validation.roleRequired') }]}
       >
         <Select options={roleOptions} placeholder={t('form.rolePlaceholder')} />

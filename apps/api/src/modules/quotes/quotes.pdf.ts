@@ -41,14 +41,24 @@ function buildItems(lines: QuoteLineDetail[], catalog: ProductWithGroups[]): Quo
 }
 
 function buildFees(quoteRow: QuoteDetailRow): QuotePdfFee[] | undefined {
-  if (quoteRow.taxAmount <= 0) return undefined;
-  const rate = Math.round(quoteRow.taxRate * 10000) / 100;
-  return [
-    {
-      description: `Long Distance Travel Fee (${rate}%)`,
+  const fees: QuotePdfFee[] = [];
+
+  if (quoteRow.longDistanceAmount > 0) {
+    fees.push({
+      description: 'Long Distance Travel Fee',
+      amount: quoteRow.longDistanceAmount / 100,
+    });
+  }
+
+  if (quoteRow.taxAmount > 0) {
+    const rate = Math.round(quoteRow.taxRate * 10000) / 100;
+    fees.push({
+      description: `Tax (${rate}%)`,
       amount: quoteRow.taxAmount / 100,
-    },
-  ];
+    });
+  }
+
+  return fees.length > 0 ? fees : undefined;
 }
 
 export function buildQuotePdfPayload(

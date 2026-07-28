@@ -29,6 +29,7 @@ export const events = pgTable('events', {
   eventTime: text('event_time'),
   state: stateEnum('state'),
   address: text('address'),
+  city: text('city'),
   totalAmount: integer('total_amount').notNull(),
   depositPaid: boolean('deposit_paid').default(false).notNull(),
   balancePaid: boolean('balance_paid').default(false).notNull(),

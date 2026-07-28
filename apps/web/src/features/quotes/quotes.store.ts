@@ -24,10 +24,12 @@ export interface QuoteBuilderState {
   eventTime: string | null;
   state: StateValue | null;
   address: string;
+  city: string;
   notes: string;
   lines: LineDraft[];
   discountType: DiscountType | null;
   discountValue: number | null;
+  longDistanceAmount: number;
   depositRate: number;
 }
 
@@ -45,10 +47,12 @@ export function emptyBuilderState(
     eventTime: null,
     state: null,
     address: '',
+    city: '',
     notes: '',
     lines: [],
     discountType: null,
     discountValue: null,
+    longDistanceAmount: 0,
     depositRate,
   };
 }

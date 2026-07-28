@@ -2,6 +2,7 @@
 import { Button, Form, Input } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { UpdateOptionInput } from '@repo/schemas';
+import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 
 interface OptionFormProps {
   initialValues?: Partial<UpdateOptionInput>;
@@ -14,16 +15,26 @@ export function OptionForm({ initialValues, onSubmit, isPending }: OptionFormPro
   const [form] = Form.useForm<UpdateOptionInput>();
 
   return (
-    <Form form={form} layout="vertical" initialValues={initialValues} onFinish={onSubmit} requiredMark={false}>
+    <Form
+      form={form}
+      layout="vertical"
+      initialValues={initialValues}
+      onFinish={onSubmit}
+      requiredMark={false}
+    >
       <Form.Item
         name="name"
-        label={t('option.form.name')}
+        label={<FieldLabel title={t('option.form.name')} required />}
         rules={[{ required: true, message: t('validation.nameRequired') }, { max: 120 }]}
       >
         <Input placeholder={t('option.form.namePlaceholder')} />
       </Form.Item>
 
-      <Form.Item name="description" label={t('option.form.description')} rules={[{ max: 300 }]}>
+      <Form.Item
+        name="description"
+        label={<FieldLabel title={t('option.form.description')} />}
+        rules={[{ max: 300 }]}
+      >
         <Input.TextArea
           placeholder={t('option.form.descriptionPlaceholder')}
           autoSize={{ minRows: 1, maxRows: 3 }}

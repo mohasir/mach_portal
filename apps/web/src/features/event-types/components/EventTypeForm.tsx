@@ -2,6 +2,7 @@
 import { Button, Form, Input } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CreateEventTypeInput } from '@repo/schemas';
+import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 
 interface EventTypeFormProps {
   initialValues?: Partial<CreateEventTypeInput>;
@@ -17,7 +18,7 @@ export function EventTypeForm({ initialValues, onSubmit, isPending }: EventTypeF
     <Form form={form} layout="vertical" initialValues={initialValues} onFinish={onSubmit} requiredMark={false}>
       <Form.Item
         name="name"
-        label={t('form.name')}
+        label={<FieldLabel title={t('form.name')} required />}
         rules={[{ required: true, message: t('validation.nameRequired') }, { max: 120 }]}
       >
         <Input placeholder={t('form.namePlaceholder')} />

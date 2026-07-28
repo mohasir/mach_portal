@@ -1,14 +1,16 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Button, Card, Skeleton, Typography } from 'antd';
-import { Download } from 'lucide-react';
+import { App, Button, Card, Skeleton, Tooltip, Typography } from 'antd';
+import { Copy, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE } from '@repo/schemas';
 import { useProductCatalog } from '@/features/catalog';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { ShareButton } from '@/components/shared/ShareButton';
 import { isAfter } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
+import { copyToClipboard } from '@/lib/utils/clipboard';
 import { useGenerateQuotePdf, useQuote } from '../../hooks/useQuotes';
 import { QuoteHistoryCard } from '../builder/QuoteHistoryCard';
 import { QuoteDetailCard } from './QuoteDetailCard';
@@ -20,6 +22,8 @@ interface QuoteDetailPageProps {
 
 export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
   const { t } = useTranslation('quotes');
+  const { t: tc } = useTranslation('common');
+  const { message } = App.useApp();
   const router = useRouter();
   const isDesktop = useIsDesktop();
   const { dateTime } = useDateFormatter();
@@ -53,24 +57,42 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
 
   const showPdfAction = hasPdf || canGeneratePdf;
 
+  const handleCopyLink = async () => {
+    const ok = await copyToClipboard(window.location.href);
+    if (ok) message.success(tc('share.linkCopied'));
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
         title={detail.number}
+        titleSuffix={
+          <Tooltip title={tc('share.copyLink')}>
+            <Button
+              type="text"
+              size="small"
+              icon={<Copy size={16} />}
+              onClick={() => void handleCopyLink()}
+            />
+          </Tooltip>
+        }
         onBack={onBack}
         actions={
           isDesktop &&
           showPdfAction && (
             <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
-              <Button
-                type="primary"
-                icon={<Download size={16} />}
-                loading={isGeneratingPdf}
-                className="w-full sm:w-auto"
-                onClick={handleClick}
-              >
-                {t('detail.generatePdf')}
-              </Button>
+              <div className="flex w-full gap-2 sm:w-auto">
+                <Button
+                  type="primary"
+                  icon={<Download size={16} />}
+                  loading={isGeneratingPdf}
+                  className="w-full sm:w-auto"
+                  onClick={handleClick}
+                >
+                  {t('detail.generatePdf')}
+                </Button>
+                {hasPdf && <ShareButton url={detail.pdfUrl!} title={detail.number} />}
+              </div>
               {detail.pdfGeneratedAt && (
                 <Typography.Text type="secondary" className="text-xs">
                   {t('detail.pdfGeneratedAt', { date: dateTime(detail.pdfGeneratedAt) })}

@@ -2,6 +2,7 @@
 import { Divider, Form, InputNumber, Select, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { DiscountType, QuoteTotals } from '@repo/schemas';
+import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { fromPercent, toPercent } from '@/lib/utils/percent';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
@@ -33,7 +34,10 @@ export function PricingPanel({ totals }: PricingPanelProps) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         <div className="flex items-end gap-2">
-          <Form.Item label={t('builder.pricing.discountType')} className="mb-0 flex-1">
+          <Form.Item
+            label={<FieldLabel title={t('builder.pricing.discountType')} />}
+            className="mb-0 flex-1"
+          >
             <Select
               allowClear
               value={state.discountType ?? undefined}
@@ -51,7 +55,10 @@ export function PricingPanel({ totals }: PricingPanelProps) {
             />
           </Form.Item>
           {state.discountType && (
-            <Form.Item label={t('builder.pricing.discountValue')} className="mb-0 flex-1">
+            <Form.Item
+              label={<FieldLabel title={t('builder.pricing.discountValue')} />}
+              className="mb-0 flex-1"
+            >
               {state.discountType === 'fixed' ? (
                 <InputNumber
                   className="w-full"
@@ -76,7 +83,7 @@ export function PricingPanel({ totals }: PricingPanelProps) {
           )}
         </div>
 
-        <Form.Item label={t('builder.pricing.depositRate')} className="mb-0">
+        <Form.Item label={<FieldLabel title={t('builder.pricing.depositRate')} />} className="mb-0">
           <InputNumber
             className="w-full max-w-40"
             min={0}
@@ -95,6 +102,9 @@ export function PricingPanel({ totals }: PricingPanelProps) {
         <Row label={t('builder.pricing.subtotal')} value={money(totals.subtotal)} />
         {totals.discountAmount > 0 && (
           <Row label={t('builder.pricing.discount')} value={`- ${money(totals.discountAmount)}`} />
+        )}
+        {totals.longDistanceAmount > 0 && (
+          <Row label={t('builder.pricing.longDistance')} value={money(totals.longDistanceAmount)} />
         )}
         <Row
           label={t('builder.pricing.tax', { rate: Math.round(totals.taxRate * 1000) / 10 })}
