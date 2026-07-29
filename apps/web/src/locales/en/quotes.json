@@ -34,6 +34,12 @@
     "send": "Create quote",
     "saved": "Quote saved",
     "created": "Quote created",
+    "exitConfirm": {
+      "title": "Exit without saving?",
+      "content": "You have unsaved changes. If you leave now, they will be lost.",
+      "ok": "Exit without saving",
+      "cancel": "Keep editing"
+    },
     "errors": {
       "clientRequired": "Pick a client to save the draft"
     },

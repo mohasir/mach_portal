@@ -2,6 +2,7 @@
 import type { ReactNode } from 'react';
 import { Button, Typography } from 'antd';
 import { ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import type { MobilePageHeaderAction } from '@/lib/stores/pageHeader.store';
@@ -10,7 +11,8 @@ import { PageHeaderMobile } from './PageHeaderMobile';
 interface PageHeaderProps {
   title: ReactNode;
   titleSuffix?: ReactNode;
-  onBack?: () => void;
+  onBack?: boolean | (() => void);
+  backHref?: string;
   actionLabel?: string;
   onAction?: () => void;
   actions?: ReactNode;
@@ -22,6 +24,7 @@ export function PageHeader({
   title,
   titleSuffix,
   onBack,
+  backHref,
   actionLabel,
   onAction,
   actions,
@@ -30,6 +33,13 @@ export function PageHeader({
 }: PageHeaderProps) {
   const { t } = useTranslation('common');
   const isDesktop = useIsDesktop();
+  const router = useRouter();
+
+  const handleBack = backHref
+    ? () => router.push(backHref)
+    : onBack === true
+      ? () => router.back()
+      : onBack || undefined;
 
   const actionArea =
     actions ??
@@ -45,7 +55,7 @@ export function PageHeader({
         <PageHeaderMobile
           title={title}
           titleSuffix={titleSuffix}
-          onBack={onBack}
+          onBack={handleBack}
           showLogout={showLogout}
           action={mobileAction}
         />
@@ -58,11 +68,11 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-center gap-2">
-        {onBack && (
+        {handleBack && (
           <Button
             type="text"
             icon={<ArrowLeft size={18} />}
-            onClick={onBack}
+            onClick={handleBack}
             aria-label={t('back')}
           />
         )}

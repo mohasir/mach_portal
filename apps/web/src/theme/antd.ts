@@ -17,7 +17,7 @@ export const MB = {
   bg: '#FDFAF2',
   text: '#2e2018',
   muted: '#7a6a55',
-  border: 'rgba(145,146,42,0.18)',
+  border: 'rgba(0,0,0,0.25)',
 } as const;
 
 const GlobalProperties = {

@@ -82,6 +82,13 @@ export function hasClient(state: QuoteBuilderState): boolean {
   return !!state.clientId || !!state.newClient?.name.trim();
 }
 
+export function hasBuilderChanges(
+  state: QuoteBuilderState,
+  initialState: QuoteBuilderState,
+): boolean {
+  return JSON.stringify(state) !== JSON.stringify(initialState);
+}
+
 /** Enables "Enviar" — "Guardar borrador" only needs a client. */
 export function isQuoteReadyToSend(state: QuoteBuilderState): boolean {
   return (

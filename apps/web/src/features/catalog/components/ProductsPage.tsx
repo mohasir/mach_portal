@@ -39,6 +39,7 @@ export function ProductsPage() {
             </span>
           </span>
         }
+        backHref="/admin/options"
         actionLabel={showCreateAction ? t('product.add') : undefined}
         onAction={showCreateAction ? () => setCreateOpen(true) : undefined}
         mobileAction={

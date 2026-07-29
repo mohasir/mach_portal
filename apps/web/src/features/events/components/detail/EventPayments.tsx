@@ -19,8 +19,10 @@ import { FileText, Paperclip, User, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { paymentMethodSchema, type PaymentMethod } from '@repo/schemas';
 import { AttachmentUploadModal } from '@/components/shared/Attachment';
+import { useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
+import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { PAYMENT_METHOD_ICONS, PAYMENT_STATUS_COLORS } from '../../helpers';
 import {
@@ -50,6 +52,8 @@ export function EventPayments({ event }: EventPaymentsProps) {
   const { date } = useDateFormatter();
   const { money } = useMoneyFormatter();
   const { modal } = App.useApp();
+  const isDesktop = useIsDesktop();
+  const [confirmDelete, deleteContextHolder] = useDeleteConfirm();
   const [form] = Form.useForm<PaymentFormValues>();
   const { registerPayment, isPending } = useRegisterEventPayment();
   const { uploadUrl, onUploaded, onUploadError } = useUploadEventPaymentAttachment();
@@ -75,12 +79,13 @@ export function EventPayments({ event }: EventPaymentsProps) {
   };
 
   const onRemoveAttachment = (attachmentId: string) => {
-    modal.confirm({
+    const options = {
       title: t('detail.payments.attachments.removeConfirmTitle'),
       content: t('detail.payments.attachments.removeConfirmContent'),
-      okButtonProps: { danger: true },
       onOk: () => removeAttachment(event.id, attachmentId),
-    });
+    };
+    if (!isDesktop) return confirmDelete(options);
+    modal.confirm({ ...options, okButtonProps: { danger: true } });
   };
 
   return (
@@ -296,6 +301,7 @@ export function EventPayments({ event }: EventPaymentsProps) {
         onUploaded={onUploaded}
         onUploadError={onUploadError}
       />
+      {deleteContextHolder}
     </Card>
   );
 }

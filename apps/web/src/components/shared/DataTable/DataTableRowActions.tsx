@@ -2,7 +2,9 @@
 import { App, Button, Dropdown, Typography, type MenuProps } from 'antd';
 import { MoreHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useConfirmModal, useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { useCan } from '@/lib/auth/useCan';
+import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { ACTION_PRESETS, isDivider, stripDividers } from './helpers';
 import type { ActionPreset, RowAction, RowActionItem, RowActionKey } from './types';
 
@@ -15,6 +17,9 @@ export function DataTableRowActions({ actions, label }: DataTableRowActionsProps
   const { modal } = App.useApp();
   const { t: tc } = useTranslation('common');
   const can = useCan();
+  const isDesktop = useIsDesktop();
+  const [confirmDelete, deleteContextHolder] = useDeleteConfirm();
+  const [confirmAction, actionContextHolder] = useConfirmModal();
 
   const run = (
     action: RowAction,
@@ -28,19 +33,33 @@ export function DataTableRowActions({ actions, label }: DataTableRowActionsProps
 
     const caption = c?.caption ?? (pc?.captionKey ? tc(pc.captionKey) : undefined);
     const body = c?.content;
+    const title = c?.title ?? (pc?.titleKey ? tc(pc.titleKey) : undefined);
+    const content =
+      body || caption ? (
+        <div className="flex flex-col gap-1">
+          {body ? <span>{body}</span> : null}
+          {caption ? (
+            <Typography.Text type="secondary" className="text-xs mt-2 font-normal">
+              {caption}
+            </Typography.Text>
+          ) : null}
+        </div>
+      ) : undefined;
+
+    if (!isDesktop) {
+      const options = {
+        title,
+        content,
+        okText: c?.okText ?? okLabel,
+        cancelText: c?.cancelText ?? tc('cancel'),
+        onOk: action.onClick,
+      };
+      return danger ? confirmDelete(options) : confirmAction({ ...options, danger });
+    }
+
     modal.confirm({
-      title: c?.title ?? (pc?.titleKey ? tc(pc.titleKey) : undefined),
-      content:
-        body || caption ? (
-          <div className="flex flex-col gap-1">
-            {body ? <span>{body}</span> : null}
-            {caption ? (
-              <Typography.Text type="secondary" className="text-xs mt-2">
-                {caption}
-              </Typography.Text>
-            ) : null}
-          </div>
-        ) : undefined,
+      title,
+      content,
       okText: c?.okText ?? okLabel,
       cancelText: c?.cancelText ?? tc('cancel'),
       okButtonProps: danger ? { danger: true } : undefined,
@@ -67,8 +86,12 @@ export function DataTableRowActions({ actions, label }: DataTableRowActionsProps
   });
 
   return (
-    <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
-      <Button type="text" size="small" aria-label={label} icon={<MoreHorizontal size={16} />} />
-    </Dropdown>
+    <>
+      <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
+        <Button type="text" size="small" aria-label={label} icon={<MoreHorizontal size={16} />} />
+      </Dropdown>
+      {deleteContextHolder}
+      {actionContextHolder}
+    </>
   );
 }

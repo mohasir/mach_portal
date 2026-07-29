@@ -8,13 +8,14 @@ import { TRPCClientError } from '@trpc/client';
 import { computeQuoteTotals, QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
+import { useConfirmModal, type ConfirmModalType } from '@/components/shared/ConfirmDialogs';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useConfig, useQuoteStages } from '@/features/settings';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useApiError } from '@/lib/error/useApiError';
 import { copyToClipboard } from '@/lib/utils/clipboard';
-import { hasClient, isQuoteReadyToSend, toCreateInput } from '../../helpers';
+import { hasBuilderChanges, hasClient, isQuoteReadyToSend, toCreateInput } from '../../helpers';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { useCreateQuote, useUpdateQuote } from '../../hooks/useQuotes';
 import { QuoteSummary } from '../QuoteSummary';
@@ -42,16 +43,18 @@ export function QuoteBuilderContent({
 }: QuoteBuilderContentProps) {
   const { t } = useTranslation('quotes');
   const { t: tc } = useTranslation('common');
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const router = useRouter();
   const isDesktop = useIsDesktop();
-  const { state } = useQuoteBuilder();
+  const { state, initialState } = useQuoteBuilder();
   const { data: config } = useConfig();
   const { stageMap } = useQuoteStages();
   const { money } = useMoneyFormatter();
   const clientSectionRef = useRef<ClientSectionHandle>(null);
   const onApiError = useApiError();
+  const [confirmExit, exitContextHolder] = useConfirmModal();
   const stage = stageId ? stageMap.get(stageId) : undefined;
+  const isDirty = hasBuilderChanges(state, initialState);
 
   const { createQuote, isPending: isCreating } = useCreateQuote();
   const { updateQuote, isPending: isUpdating } = useUpdateQuote();
@@ -144,6 +147,23 @@ export function QuoteBuilderContent({
     if (ok) message.success(tc('share.linkCopied'));
   };
 
+  const handleBack = () => {
+    if (!isDirty) {
+      router.back();
+      return;
+    }
+    const options = {
+      title: t('builder.exitConfirm.title'),
+      content: t('builder.exitConfirm.content'),
+      okText: t('builder.exitConfirm.ok'),
+      cancelText: t('builder.exitConfirm.cancel'),
+      danger: false,
+      onOk: () => router.back(),
+    };
+    if (!isDesktop) return confirmExit({ ...options, type: 'warning' as ConfirmModalType });
+    modal.confirm({ ...options, okButtonProps: { danger: true } });
+  };
+
   const formFields = (
     <div className={`flex flex-col ${isDesktop ? '' : 'gap-4'}`}>
       {!isDesktop && quoteId && (
@@ -217,7 +237,7 @@ export function QuoteBuilderContent({
             </Tooltip>
           ) : undefined
         }
-        onBack={() => router.back()}
+        onBack={handleBack}
       />
       {isDesktop ? (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_480px]">
@@ -277,6 +297,7 @@ export function QuoteBuilderContent({
           </div>
         </>
       )}
+      {exitContextHolder}
     </div>
   );
 }

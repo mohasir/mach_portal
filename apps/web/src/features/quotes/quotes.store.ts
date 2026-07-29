@@ -59,6 +59,7 @@ export function emptyBuilderState(
 
 export interface QuoteBuilderStore {
   state: QuoteBuilderState;
+  initialState: QuoteBuilderState;
   setFields: (payload: Partial<QuoteBuilderState>) => void;
   addLine: (line: LineDraft) => void;
   removeLine: (key: string) => void;
@@ -70,6 +71,7 @@ export interface QuoteBuilderStore {
 export function createQuoteBuilderStore(initialState: QuoteBuilderState) {
   return createStore<QuoteBuilderStore>((set) => ({
     state: initialState,
+    initialState,
     setFields: (payload) => set((s) => ({ state: { ...s.state, ...payload } })),
     addLine: (line) => set((s) => ({ state: { ...s.state, lines: [...s.state.lines, line] } })),
     removeLine: (key) =>

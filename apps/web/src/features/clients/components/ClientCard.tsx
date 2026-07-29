@@ -49,10 +49,6 @@ export function ClientCard({ client, onEdit, onDelete, onClick }: ClientCardProp
           {client.phone}
         </Typography.Text>
       ) : null}
-
-      <Typography.Text type="secondary" className="mt-3 block text-xs">
-        {t('columns.createdAt')}: {date(client.createdAt)}
-      </Typography.Text>
     </Card>
   );
 }

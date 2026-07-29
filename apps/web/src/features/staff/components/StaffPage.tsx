@@ -21,6 +21,7 @@ export function StaffPage() {
     <div>
       <PageHeader
         title={t('title')}
+        backHref="/admin/options"
         actionLabel={canCreate ? t('index.add') : undefined}
         onAction={canCreate ? () => setCreateOpen(true) : undefined}
         mobileAction={

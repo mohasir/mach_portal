@@ -28,20 +28,18 @@ export function StaffCard({ member, onEdit, onDelete }: StaffCardProps) {
       </div>
 
       <Flex wrap gap={8} align="center" className="mt-3">
-        <Tag color={member.isActive ? 'green' : 'default'}>
-          {t(member.isActive ? 'status.active' : 'status.inactive')}
-        </Tag>
-        {member.phone ? (
-          <Typography.Text type="secondary" className="flex items-center gap-1 text-xs">
-            <Phone size={14} />
-            {member.phone}
-          </Typography.Text>
-        ) : null}
+        <div className="flex flex-col gap-2">
+          <Tag color={member.isActive ? 'green' : 'default'}>
+            {t(member.isActive ? 'status.active' : 'status.inactive')}
+          </Tag>
+          {member.phone ? (
+            <Typography.Text type="secondary" className="flex items-center gap-1 text-xs">
+              <Phone size={14} />
+              {member.phone}
+            </Typography.Text>
+          ) : null}
+        </div>
       </Flex>
-
-      <Typography.Text type="secondary" className="mt-3 block text-xs">
-        {t('columns.createdAt')}: {date(member.createdAt)}
-      </Typography.Text>
     </Card>
   );
 }

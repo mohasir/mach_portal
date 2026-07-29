@@ -8,7 +8,7 @@ export function EventsPage() {
 
   return (
     <div>
-      <PageHeader title={t('nav.events')} />
+      <PageHeader title={t('nav.events')} backHref="/admin/options" />
       <EventsTable />
     </div>
   );

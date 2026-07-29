@@ -34,6 +34,12 @@
     "send": "Crear cotización",
     "saved": "Cotización guardada",
     "created": "Cotización creada",
+    "exitConfirm": {
+      "title": "¿Salir sin guardar?",
+      "content": "Tenés cambios sin guardar. Si salís ahora, se perderán.",
+      "ok": "Salir sin guardar",
+      "cancel": "Seguir editando"
+    },
     "errors": {
       "clientRequired": "Elegí un cliente para guardar el borrador"
     },
