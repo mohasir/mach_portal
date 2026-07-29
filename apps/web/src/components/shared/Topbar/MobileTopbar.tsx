@@ -23,11 +23,11 @@ export function MobileTopbar() {
     <>
       <Flex align="center" justify="space-between" gap={16} className="w-full">
         {header ? (
-          <Flex align="center" gap={4} className="min-w-0">
+          <Flex align="center" gap={8} className="min-w-0">
             {header.onBack && (
               <Button
                 type="text"
-                icon={<ArrowLeft size={18} />}
+                icon={<IconBadge icon={ArrowLeft} />}
                 onClick={header.onBack}
                 aria-label={tc('back')}
               />

@@ -112,8 +112,8 @@ export const machBarTheme: ThemeConfig = {
       colorSuccessBg: '#e8f5e9',
     },
     Tag: {
-      defaultBg: '#fff',
-      defaultColor: MB.text,
+      defaultBg: MB.oliveFaint,
+      defaultColor: MB.brown,
     },
     Card: {
       headerBg: MB.ivory,

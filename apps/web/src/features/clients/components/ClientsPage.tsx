@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -22,6 +23,11 @@ export function ClientsPage() {
         title={t('title')}
         actionLabel={canCreate ? t('index.add') : undefined}
         onAction={canCreate ? () => setCreateOpen(true) : undefined}
+        mobileAction={
+          canCreate
+            ? { icon: Plus, onClick: () => setCreateOpen(true), ariaLabel: t('index.add') }
+            : undefined
+        }
       />
       <ClientsTable onEdit={setEditing} />
       <CreateClientModal open={isCreateOpen} onClose={() => setCreateOpen(false)} />
