@@ -4,7 +4,6 @@ import { Phone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { AvatarUser } from '@/components/shared/AvatarUser';
-import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useStaffRowActions } from '../hooks/useStaffRowActions';
 import type { Staff } from '../types';
 
@@ -17,7 +16,6 @@ interface StaffCardProps {
 export function StaffCard({ member, onEdit, onDelete }: StaffCardProps) {
   const { t } = useTranslation('staff');
   const { t: tc } = useTranslation('common');
-  const { date } = useDateFormatter();
   const rowActions = useStaffRowActions({ onEdit, onDelete });
 
   return (

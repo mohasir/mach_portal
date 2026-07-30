@@ -14,7 +14,6 @@ interface DeleteConfirmOptions {
 
 interface DeleteConfirmModalProps {
   open: boolean;
-  title?: ReactNode;
   content?: ReactNode;
   okText?: string;
   cancelText?: string;
@@ -24,7 +23,6 @@ interface DeleteConfirmModalProps {
 
 export function DeleteConfirmModal({
   open,
-  title,
   content,
   okText,
   cancelText,
@@ -85,7 +83,6 @@ export function useDeleteConfirm() {
   const contextHolder = (
     <DeleteConfirmModal
       open={state.open}
-      title={state.title}
       content={state.content}
       okText={state.okText}
       cancelText={state.cancelText}

@@ -4,7 +4,6 @@ import { Phone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { AvatarUser } from '@/components/shared/AvatarUser';
-import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { CLIENT_STATUS_COLORS } from '../helpers';
 import { useClientRowActions } from '../hooks/useClientRowActions';
 import type { Client } from '../types';
@@ -19,7 +18,6 @@ interface ClientCardProps {
 export function ClientCard({ client, onEdit, onDelete, onClick }: ClientCardProps) {
   const { t } = useTranslation('clients');
   const { t: tc } = useTranslation('common');
-  const { date } = useDateFormatter();
   const rowActions = useClientRowActions({ onEdit, onDelete });
 
   return (
