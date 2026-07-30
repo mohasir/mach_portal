@@ -2,12 +2,13 @@
 import { Button, Form, InputNumber, Space } from 'antd';
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { useUpdatePriceTiers } from '../../hooks/usePrices';
 import type { PriceItem } from '../../types';
 
 interface TierFormValue {
   numPersons: number;
-  priceUsd: number;
+  price: number;
 }
 
 interface PriceTiersFormValues {
@@ -26,9 +27,7 @@ export function PriceTiersForm({ product, canEdit }: PriceTiersFormProps) {
 
   const handleFinish = (values: PriceTiersFormValues) =>
     updateTiers(product.id, {
-      tiers: values.tiers
-        .map((tier) => ({ numPersons: tier.numPersons, price: Math.round(tier.priceUsd * 100) }))
-        .sort((a, b) => a.numPersons - b.numPersons),
+      tiers: [...values.tiers].sort((a, b) => a.numPersons - b.numPersons),
     });
 
   return (
@@ -39,7 +38,7 @@ export function PriceTiersForm({ product, canEdit }: PriceTiersFormProps) {
       initialValues={{
         tiers: product.priceTiers.map((tier) => ({
           numPersons: tier.numPersons,
-          priceUsd: tier.price / 100,
+          price: tier.price,
         })),
       }}
       onFinish={handleFinish}
@@ -61,18 +60,11 @@ export function PriceTiersForm({ product, canEdit }: PriceTiersFormProps) {
                   </Form.Item>
                 </Space.Compact>
                 <Form.Item
-                  name={[field.name, 'priceUsd']}
+                  name={[field.name, 'price']}
                   className="mb-0 flex-1"
                   rules={[{ required: true, message: t('validation.priceInvalid') }]}
                 >
-                  <InputNumber
-                    min={0}
-                    step={5}
-                    precision={2}
-                    prefix="$"
-                    className="w-full"
-                    placeholder="0.00"
-                  />
+                  <MoneyInput min={0} step={5} className="w-full" placeholder="0.00" />
                 </Form.Item>
                 <Button
                   type="text"

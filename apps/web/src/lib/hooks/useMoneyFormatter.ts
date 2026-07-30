@@ -1,7 +1,7 @@
 'use client';
 import { useMemo } from 'react';
 import { useConfig } from '@/features/settings';
-import { formatMoney } from '@/lib/utils/money';
+import { formatMoney, getCurrencySymbol } from '@/lib/utils/money';
 import { useLocaleStore } from '@/lib/stores/locale.store';
 import type { Locale as AppLocale } from '@/lib/i18n/config';
 
@@ -15,6 +15,7 @@ export function useMoneyFormatter() {
   return useMemo(
     () => ({
       money: (cents: number) => formatMoney(cents, locale, currency),
+      currencySymbol: getCurrencySymbol(locale, currency),
     }),
     [locale, currency],
   );

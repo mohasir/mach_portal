@@ -9,7 +9,6 @@ import {
   Form,
   Image,
   Input,
-  InputNumber,
   Select,
   Tag,
   Typography,
@@ -21,6 +20,7 @@ import { paymentMethodSchema, type PaymentMethod } from '@repo/schemas';
 import { AttachmentUploadModal } from '@/components/shared/Attachment';
 import { useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
@@ -65,7 +65,7 @@ export function EventPayments({ event }: EventPaymentsProps) {
   const onFinish = async (values: PaymentFormValues) => {
     await registerPayment(event.id, {
       method: values.method!,
-      amount: Math.round((values.amount ?? 0) * 100),
+      amount: values.amount ?? 0,
       paidAt: values.paidAt.format('YYYY-MM-DD'),
       reference: values.reference,
       notes: values.notes,
@@ -75,7 +75,7 @@ export function EventPayments({ event }: EventPaymentsProps) {
 
   const onPercentChange = (percent: number) => {
     const amountCents = Math.min(balance, Math.round((event.totalAmount * percent) / 100));
-    form.setFieldValue('amount', amountCents / 100);
+    form.setFieldValue('amount', amountCents);
   };
 
   const onRemoveAttachment = (attachmentId: string) => {
@@ -163,12 +163,10 @@ export function EventPayments({ event }: EventPaymentsProps) {
                   rules={[{ required: true }]}
                   className="mb-0"
                 >
-                  <InputNumber
+                  <MoneyInput
                     className="w-full"
-                    min={0.01}
-                    max={balance > 0 ? balance / 100 : undefined}
-                    precision={2}
-                    prefix="$"
+                    min={1}
+                    max={balance > 0 ? balance : undefined}
                   />
                 </Form.Item>
               </div>

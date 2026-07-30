@@ -1,7 +1,8 @@
 'use client';
-import { Card, Form, InputNumber, Typography } from 'antd';
+import { Card, Form, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { useConfig } from '@/features/settings';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 
@@ -37,15 +38,11 @@ export function ExtraChargesSection({ readOnly }: ExtraChargesSectionProps) {
             }
             className="mb-0"
           >
-            <InputNumber
+            <MoneyInput
               className="w-full"
               min={0}
-              precision={2}
-              prefix="$"
-              value={state.longDistanceAmount / 100}
-              onChange={(value) =>
-                setFields({ longDistanceAmount: Math.round((value ?? 0) * 100) })
-              }
+              value={state.longDistanceAmount}
+              onChange={(cents) => setFields({ longDistanceAmount: cents ?? 0 })}
             />
           </Form.Item>
         </Form>

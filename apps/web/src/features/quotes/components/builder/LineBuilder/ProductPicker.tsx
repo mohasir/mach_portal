@@ -2,6 +2,7 @@
 import { Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
+import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 
 interface ProductPickerProps {
   catalog: Product[];
@@ -20,6 +21,7 @@ export function ProductPicker({ catalog, onAdd }: ProductPickerProps) {
         placeholder={t('builder.lines.addPlaceholder')}
         className="w-full"
         options={catalog.map((p) => ({ value: p.id, label: p.name }))}
+        onSelect={blurActiveElementOnTouch}
         onChange={(productId: string) => {
           const product = catalog.find((p) => p.id === productId);
           if (product) onAdd(product);

@@ -9,6 +9,7 @@ import { BottomSheet } from '@/components/shared/BottomSheet';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { PhoneInput } from '@/components/shared/Inputs/PhoneInput';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
+import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 import {
   useQuoteBuilder,
   type NewClientDraft,
@@ -214,6 +215,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
                     )
                   }
                   options={options}
+                  onSelect={blurActiveElementOnTouch}
                   onChange={(value, option) => {
                     const label = Array.isArray(option)
                       ? undefined
@@ -374,6 +376,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
             )
           }
           options={options}
+          onSelect={blurActiveElementOnTouch}
           onChange={(value, option) => {
             const label = Array.isArray(option) ? undefined : (option?.label as string | undefined);
             setFields({

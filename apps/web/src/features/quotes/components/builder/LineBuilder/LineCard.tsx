@@ -1,8 +1,9 @@
 'use client';
-import { Button, Collapse, InputNumber, Select } from 'antd';
+import { Button, Collapse, Select } from 'antd';
 import { Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
+import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import type { LineDraft } from '../../../hooks/useQuoteBuilder';
 import { OptionGroupChips } from './OptionGroupChips';
@@ -70,14 +71,12 @@ export function LineCard({
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-xs text-gray-500">{t('builder.lines.price')}</span>
-                  <InputNumber
+                  <MoneyInput
                     disabled={readOnly}
                     className="w-full"
                     min={0}
-                    precision={2}
-                    prefix="$"
-                    value={line.subtotal / 100}
-                    onChange={(value) => onChange({ subtotal: Math.round((value ?? 0) * 100) })}
+                    value={line.subtotal}
+                    onChange={(cents) => onChange({ subtotal: cents ?? 0 })}
                   />
                 </div>
               </div>
