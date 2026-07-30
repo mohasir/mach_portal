@@ -2,6 +2,7 @@
 import { App, Skeleton, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { canTransition, QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
+import { useConfirmModal } from '@/components/shared/ConfirmDialogs';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useQuoteStages } from '@/features/settings';
 import { usePipelineBoard, usePipelineTransitions } from '../../hooks/usePipelineBoard';
@@ -19,6 +20,7 @@ export function PipelineBoard() {
   const { t } = useTranslation('quotes');
   const { modal } = App.useApp();
   const isDesktop = useIsDesktop();
+  const [confirmAction, actionContextHolder] = useConfirmModal();
   const { orderedIds } = useQuoteStages();
   const boardQuery = {};
   const { data, isLoading } = usePipelineBoard(boardQuery);
@@ -36,13 +38,15 @@ export function PipelineBoard() {
     const proceed = () => {
       if (CONFIRM_STAGES.includes(to)) {
         const stageKey = CONFIRM_STAGE_KEYS[to];
-        modal.confirm({
+        const options = {
           title: t(`pipeline.confirm.${stageKey}.title`),
           content: t(`pipeline.confirm.${stageKey}.content`),
           okText: t(`pipeline.confirm.${stageKey}.ok`),
-          okButtonProps: to === QUOTE_STAGE.CANCELLED ? { danger: true } : undefined,
           onOk: () => commitTransition(id, to),
-        });
+        };
+        const danger = to === QUOTE_STAGE.CANCELLED;
+        if (!isDesktop) return confirmAction({ ...options, danger });
+        modal.confirm({ ...options, okButtonProps: danger ? { danger: true } : undefined });
       } else {
         void commitTransition(id, to);
       }
@@ -51,7 +55,7 @@ export function PipelineBoard() {
     // Leaving Pending while still a draft needs an extra heads-up — clearing `isDraft` on
     // the transition (QuotesRepository.updateStage) is otherwise silent.
     if (from === QUOTE_STAGE.PENDING && isDraft) {
-      modal.confirm({
+      const draftOptions = {
         title: t('pipeline.confirm.draft.title'),
         content: (
           <div className="flex flex-col gap-1">
@@ -63,7 +67,9 @@ export function PipelineBoard() {
         ),
         okText: t('pipeline.confirm.draft.ok'),
         onOk: proceed,
-      });
+      };
+      if (!isDesktop) return confirmAction(draftOptions);
+      modal.confirm(draftOptions);
       return;
     }
     proceed();
@@ -82,6 +88,7 @@ export function PipelineBoard() {
       ) : (
         <PipelineBoardMobile data={data} orderedIds={orderedIds} onMove={runTransition} />
       )}
+      {actionContextHolder}
     </div>
   );
 }

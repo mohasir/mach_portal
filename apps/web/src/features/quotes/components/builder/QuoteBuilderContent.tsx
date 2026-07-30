@@ -1,18 +1,21 @@
 'use client';
 import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { App, Button, Card, Divider } from 'antd';
+import { App, Button, Card, Divider, Tag, Tooltip, Typography } from 'antd';
+import { Copy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TRPCClientError } from '@trpc/client';
 import { computeQuoteTotals, QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
+import { useConfirmModal, type ConfirmModalType } from '@/components/shared/ConfirmDialogs';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { useConfig } from '@/features/settings';
+import { useConfig, useQuoteStages } from '@/features/settings';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useApiError } from '@/lib/error/useApiError';
-import { hasClient, isQuoteReadyToSend, toCreateInput } from '../../helpers';
+import { copyToClipboard } from '@/lib/utils/clipboard';
+import { hasBuilderChanges, hasClient, isQuoteReadyToSend, toCreateInput } from '../../helpers';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { useCreateQuote, useUpdateQuote } from '../../hooks/useQuotes';
 import { QuoteSummary } from '../QuoteSummary';
@@ -25,6 +28,7 @@ import { QuickLineBuilder } from './QuickLineBuilder';
 
 interface QuoteBuilderContentProps {
   quoteId?: string;
+  number?: string;
   stageId?: QuoteStageId;
   catalog: Product[];
   eventTypes: EventType[];
@@ -32,19 +36,25 @@ interface QuoteBuilderContentProps {
 
 export function QuoteBuilderContent({
   quoteId,
+  number,
   stageId,
   catalog,
   eventTypes,
 }: QuoteBuilderContentProps) {
   const { t } = useTranslation('quotes');
-  const { message } = App.useApp();
+  const { t: tc } = useTranslation('common');
+  const { message, modal } = App.useApp();
   const router = useRouter();
   const isDesktop = useIsDesktop();
-  const { state } = useQuoteBuilder();
+  const { state, initialState } = useQuoteBuilder();
   const { data: config } = useConfig();
+  const { stageMap } = useQuoteStages();
   const { money } = useMoneyFormatter();
   const clientSectionRef = useRef<ClientSectionHandle>(null);
   const onApiError = useApiError();
+  const [confirmExit, exitContextHolder] = useConfirmModal();
+  const stage = stageId ? stageMap.get(stageId) : undefined;
+  const isDirty = hasBuilderChanges(state, initialState);
 
   const { createQuote, isPending: isCreating } = useCreateQuote();
   const { updateQuote, isPending: isUpdating } = useUpdateQuote();
@@ -132,8 +142,44 @@ export function QuoteBuilderContent({
     router.push(isNew ? '/admin/events?view=pipeline' : `/admin/quotes/${id}`);
   };
 
+  const handleCopyLink = async () => {
+    const ok = await copyToClipboard(window.location.href);
+    if (ok) message.success(tc('share.linkCopied'));
+  };
+
+  const handleBack = () => {
+    if (!isDirty) {
+      router.back();
+      return;
+    }
+    const options = {
+      title: t('builder.exitConfirm.title'),
+      content: t('builder.exitConfirm.content'),
+      okText: t('builder.exitConfirm.ok'),
+      cancelText: t('builder.exitConfirm.cancel'),
+      danger: false,
+      onOk: () => router.back(),
+    };
+    if (!isDesktop) return confirmExit({ ...options, type: 'warning' as ConfirmModalType });
+    modal.confirm({ ...options, okButtonProps: { danger: true } });
+  };
+
   const formFields = (
     <div className={`flex flex-col ${isDesktop ? '' : 'gap-4'}`}>
+      {!isDesktop && quoteId && (
+        <Card size="small">
+          <div className="flex items-center justify-between gap-2">
+            <Typography.Title level={4} className="font-heading text-brown m-0!">
+              {t('builder.editTitle')}
+            </Typography.Title>
+            {stage && (
+              <Tag color={stage.color} className="m-0 px-3 py-1 text-sm">
+                {stage.label}
+              </Tag>
+            )}
+          </div>
+        </Card>
+      )}
       <ClientSection ref={clientSectionRef} readOnly={readOnly} />
       {!isDesktop && (
         <>
@@ -176,8 +222,22 @@ export function QuoteBuilderContent({
   return (
     <div className="pb-24 lg:pb-0">
       <PageHeader
-        title={quoteId ? t('builder.editTitle') : t('builder.newTitle')}
-        onBack={() => router.back()}
+        title={
+          quoteId && number ? number : quoteId ? t('builder.editTitle') : t('builder.newTitle')
+        }
+        titleSuffix={
+          quoteId && number ? (
+            <Tooltip title={tc('share.copyLink')}>
+              <Button
+                type="text"
+                size="small"
+                icon={<Copy size={16} />}
+                onClick={() => void handleCopyLink()}
+              />
+            </Tooltip>
+          ) : undefined
+        }
+        onBack={handleBack}
       />
       {isDesktop ? (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_480px]">
@@ -237,6 +297,7 @@ export function QuoteBuilderContent({
           </div>
         </>
       )}
+      {exitContextHolder}
     </div>
   );
 }

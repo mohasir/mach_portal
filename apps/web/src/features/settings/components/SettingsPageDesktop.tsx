@@ -40,6 +40,7 @@ export function SettingsPageDesktop({
             </span>
           </span>
         }
+        backHref="/admin/options"
       />
 
       <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-6">

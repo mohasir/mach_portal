@@ -27,17 +27,6 @@ interface SeedProduct {
   groups: SeedGroup[];
 }
 
-const PLACEHOLDER_TIERS: SeedTier[] = [
-  { numPersons: 30, price: 50000 },
-  { numPersons: 40, price: 55000 },
-  { numPersons: 50, price: 60000 },
-  { numPersons: 60, price: 65000 },
-  { numPersons: 80, price: 75000 },
-  { numPersons: 100, price: 85000 },
-  { numPersons: 150, price: 110000 },
-  { numPersons: 200, price: 135000 },
-];
-
 const SWEET_TOPPINGS: SeedGroup = {
   label: 'Premium Toppings',
   selectionType: 'select',
@@ -82,7 +71,19 @@ const SEED_CATALOG: SeedProduct[] = [
   {
     name: 'Crepes',
     description: 'Crepes preparados en vivo con toppings, frutas y jarabes premium.',
-    tiers: PLACEHOLDER_TIERS,
+    tiers: [
+      { numPersons: 30, price: 63000 },
+      { numPersons: 40, price: 67000 },
+      { numPersons: 50, price: 71000 },
+      { numPersons: 60, price: 75000 },
+      { numPersons: 70, price: 79000 },
+      { numPersons: 80, price: 83000 },
+      { numPersons: 90, price: 87000 },
+      { numPersons: 100, price: 91000 },
+      { numPersons: 120, price: 99000 },
+      { numPersons: 150, price: 112000 },
+      { numPersons: 250, price: 169000 },
+    ],
     groups: [SWEET_TOPPINGS, SWEET_FRUITS, SWEET_SYRUPS],
   },
   {
@@ -112,6 +113,14 @@ const SEED_CATALOG: SeedProduct[] = [
       { numPersons: 40, price: 53000 },
       { numPersons: 50, price: 57500 },
       { numPersons: 60, price: 62000 },
+      { numPersons: 70, price: 68000 },
+      { numPersons: 80, price: 70500 },
+      { numPersons: 90, price: 75000 },
+      { numPersons: 100, price: 79500 },
+      { numPersons: 120, price: 88500 },
+      { numPersons: 150, price: 102000 },
+      { numPersons: 200, price: 134000 },
+      { numPersons: 250, price: 156000 },
     ],
     groups: [SWEET_TOPPINGS, SWEET_FRUITS, SWEET_SYRUPS],
   },
@@ -173,13 +182,21 @@ const SEED_CATALOG: SeedProduct[] = [
   {
     name: 'Nachos',
     description: 'Estación de nachos con base a elección y guarniciones incluidas.',
-    tiers: PLACEHOLDER_TIERS,
+    tiers: [
+      { numPersons: 30, price: 50000 },
+      { numPersons: 40, price: 55000 },
+      { numPersons: 50, price: 60000 },
+      { numPersons: 60, price: 65000 },
+      { numPersons: 80, price: 75000 },
+      { numPersons: 100, price: 85000 },
+      { numPersons: 150, price: 110000 },
+      { numPersons: 200, price: 135000 },
+    ],
     groups: [
       {
-        // TODO(client): confirm how many bases the client picks (assumed 1).
         label: 'Choose Your Base',
         selectionType: 'select',
-        maxSelect: 1,
+        maxSelect: 5,
         options: [
           { name: 'Tortilla Chips' },
           { name: 'Nacho Cheese Doritos' },
@@ -214,7 +231,19 @@ const SEED_CATALOG: SeedProduct[] = [
   {
     name: 'Fruit Station',
     description: 'Selección de fruta fresca con yogurt y toppings crocantes.',
-    tiers: PLACEHOLDER_TIERS,
+    tiers: [
+      { numPersons: 30, price: 46000 },
+      { numPersons: 40, price: 51000 },
+      { numPersons: 50, price: 56500 },
+      { numPersons: 60, price: 62000 },
+      { numPersons: 70, price: 67500 },
+      { numPersons: 80, price: 73000 },
+      { numPersons: 90, price: 78000 },
+      { numPersons: 100, price: 83500 },
+      { numPersons: 120, price: 94500 },
+      { numPersons: 150, price: 110500 },
+      { numPersons: 200, price: 137500 },
+    ],
     groups: [
       {
         label: 'Fresh Fruits',
@@ -266,10 +295,22 @@ const SEED_CATALOG: SeedProduct[] = [
   {
     name: 'Snack Station',
     description: 'Botanas saladas y dulces con chips base, toppings y frutas.',
-    tiers: PLACEHOLDER_TIERS,
+    tiers: [
+      { numPersons: 30, price: 43500 },
+      { numPersons: 40, price: 48500 },
+      { numPersons: 50, price: 53000 },
+      { numPersons: 60, price: 58000 },
+      { numPersons: 70, price: 62500 },
+      { numPersons: 80, price: 67000 },
+      { numPersons: 90, price: 72000 },
+      { numPersons: 100, price: 76500 },
+      { numPersons: 120, price: 86000 },
+      { numPersons: 150, price: 100000 },
+      { numPersons: 180, price: 114000 },
+      { numPersons: 200, price: 123500 },
+    ],
     groups: [
       {
-        // TODO(client): "3 Base Chips Included" — assumed choose 3 of 5.
         label: 'Base Chips',
         selectionType: 'select',
         maxSelect: 3,
@@ -327,7 +368,20 @@ const SEED_CATALOG: SeedProduct[] = [
   {
     name: 'Popsicles',
     description: 'Paletas heladas artesanales con toppings, frutas y jarabes.',
-    tiers: PLACEHOLDER_TIERS,
+    tiers: [
+      { numPersons: 30, price: 47000 },
+      { numPersons: 40, price: 52500 },
+      { numPersons: 50, price: 57500 },
+      { numPersons: 60, price: 62500 },
+      { numPersons: 70, price: 67500 },
+      { numPersons: 80, price: 72500 },
+      { numPersons: 90, price: 77500 },
+      { numPersons: 100, price: 82300 },
+      { numPersons: 120, price: 92500 },
+      { numPersons: 150, price: 107500 },
+      { numPersons: 200, price: 134000 },
+      { numPersons: 400, price: 233500 },
+    ],
     groups: [
       {
         label: 'Toppings',
@@ -383,7 +437,19 @@ const SEED_CATALOG: SeedProduct[] = [
   {
     name: 'Hot Chocolate',
     description: 'Chocolate caliente premium con toppings, salsas y galleta a elección.',
-    tiers: PLACEHOLDER_TIERS,
+    tiers: [
+      { numPersons: 30, price: 42000 },
+      { numPersons: 40, price: 46000 },
+      { numPersons: 50, price: 51000 },
+      { numPersons: 60, price: 55000 },
+      { numPersons: 70, price: 60000 },
+      { numPersons: 80, price: 64000 },
+      { numPersons: 90, price: 68000 },
+      { numPersons: 100, price: 72000 },
+      { numPersons: 120, price: 81000 },
+      { numPersons: 150, price: 94000 },
+      { numPersons: 200, price: 116000 },
+    ],
     groups: [
       {
         label: 'Premium Toppings',
@@ -436,7 +502,14 @@ const SEED_CATALOG: SeedProduct[] = [
     description:
       'Barra de cócteles de autor con bartender profesional. El alcohol lo provee el cliente; el bartender entrega una lista de compras personalizada antes del evento.',
     isPremium: true,
-    tiers: PLACEHOLDER_TIERS,
+    tiers: [
+      { numPersons: 35, price: 93000 },
+      { numPersons: 60, price: 142000 },
+      { numPersons: 70, price: 149000 },
+      { numPersons: 100, price: 189500 },
+      { numPersons: 130, price: 279000 },
+      { numPersons: 150, price: 284000 },
+    ],
     groups: [
       {
         label: 'Signature Cocktails',

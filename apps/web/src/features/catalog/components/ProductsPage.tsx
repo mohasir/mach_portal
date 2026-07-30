@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Card } from 'antd';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -39,8 +39,14 @@ export function ProductsPage() {
             </span>
           </span>
         }
+        backHref="/admin/options"
         actionLabel={showCreateAction ? t('product.add') : undefined}
         onAction={showCreateAction ? () => setCreateOpen(true) : undefined}
+        mobileAction={
+          showCreateAction
+            ? { icon: Plus, onClick: () => setCreateOpen(true), ariaLabel: t('product.add') }
+            : undefined
+        }
       />
 
       <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-6">

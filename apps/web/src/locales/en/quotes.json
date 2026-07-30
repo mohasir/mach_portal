@@ -34,6 +34,12 @@
     "send": "Create quote",
     "saved": "Quote saved",
     "created": "Quote created",
+    "exitConfirm": {
+      "title": "Exit without saving?",
+      "content": "You have unsaved changes. If you leave now, they will be lost.",
+      "ok": "Exit without saving",
+      "cancel": "Keep editing"
+    },
     "errors": {
       "clientRequired": "Pick a client to save the draft"
     },
@@ -168,6 +174,9 @@
     "quantity": "Quantity",
     "validUntil_one": "Prices valid until {{date}} ({{count}} month)",
     "validUntil_other": "Prices valid until {{date}} ({{count}} months)",
+    "dateLabel": "Date",
+    "typeLabel": "Type",
+    "addressLabel": "Address",
     "pastDue": "This event's date has already passed. Do you want to confirm the event anyway?",
     "includedServices": "Included services",
     "includedLabel": "Included",

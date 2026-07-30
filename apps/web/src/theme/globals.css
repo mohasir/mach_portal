@@ -80,6 +80,15 @@
     .mach-datatable--mobile-card .ant-table-cell {
       padding-inline: 0;
     }
+
+    /* AntD toggles this row/cell hover highlight via JS mouseenter/mouseleave,
+       not a CSS :hover — on touch that fires on tap and stays until another
+       tap elsewhere, so a row reads as "stuck" selected. No hover concept on
+       mobile, so drop the highlight entirely. */
+    .mach-datatable .ant-table-tbody > tr > td.ant-table-cell-row-hover,
+    .mach-datatable .ant-table-tbody > tr.ant-table-row:hover > td {
+      background: inherit;
+    }
   }
 
   /* Main sidebar's active nav item: light tint "pill" (matches the settings

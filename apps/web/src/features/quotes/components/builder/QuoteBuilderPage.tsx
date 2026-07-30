@@ -75,6 +75,7 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
     <QuoteBuilderProvider key={detail?.id ?? 'new'} initialState={initialState}>
       <QuoteBuilderContent
         quoteId={quoteId}
+        number={detail?.number}
         stageId={stageId}
         catalog={catalog}
         eventTypes={eventTypesData.items}

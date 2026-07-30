@@ -61,7 +61,7 @@ export function SettingsPageMobile({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t('profile.title')} showLogout />
+      <PageHeader title={t('profile.title')} backHref="/admin/options" showLogout />
       <ProfileSummaryCardMobile />
       <SettingsMenuMobile
         title={t('title')}

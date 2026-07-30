@@ -4,7 +4,9 @@ import { App, Button, Card, Empty, Typography } from 'antd';
 import { UserPlus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AvatarUser } from '@/components/shared/AvatarUser';
+import { useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { AssignStaffModal } from '@/features/quotes/components/pipeline/AssignStaffModal';
+import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useRemoveStaff } from '../../hooks/useEventStaff';
 import type { EventDetail } from '../../types';
 
@@ -15,16 +17,19 @@ interface EventStaffPanelProps {
 export function EventStaffPanel({ event }: EventStaffPanelProps) {
   const { t } = useTranslation('events');
   const { modal } = App.useApp();
+  const isDesktop = useIsDesktop();
+  const [confirmDelete, deleteContextHolder] = useDeleteConfirm();
   const [assignOpen, setAssignOpen] = useState(false);
   const { removeStaff, isPending } = useRemoveStaff();
 
   const onRemove = (staffId: string, name: string) => {
-    modal.confirm({
+    const options = {
       title: t('detail.staff.removeConfirmTitle'),
       content: t('detail.staff.removeConfirmContent', { name }),
-      okButtonProps: { danger: true },
       onOk: () => removeStaff({ eventId: event.id, staffId }),
-    });
+    };
+    if (!isDesktop) return confirmDelete(options);
+    modal.confirm({ ...options, okButtonProps: { danger: true } });
   };
 
   const canAssign = event.status !== 'completed';
@@ -82,6 +87,7 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
         open={assignOpen}
         onClose={() => setAssignOpen(false)}
       />
+      {deleteContextHolder}
     </Card>
   );
 }

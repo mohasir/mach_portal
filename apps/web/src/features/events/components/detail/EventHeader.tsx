@@ -3,9 +3,11 @@ import { useRouter } from 'next/navigation';
 import { Alert, App, Button, Card, Space, Tag, Typography } from 'antd';
 import { CheckCircle, ExternalLink, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useConfirmModal, useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { useCancelQuote } from '@/features/quotes';
 import { isPastDate } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
+import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { EVENT_STATUS_COLORS } from '../../helpers';
 import { useMarkEventCompleted } from '../../hooks/useEventPayments';
 import type { EventDetail } from '../../types';
@@ -19,6 +21,9 @@ export function EventHeader({ event }: EventHeaderProps) {
   const { t: tc } = useTranslation('common');
   const router = useRouter();
   const { modal } = App.useApp();
+  const isDesktop = useIsDesktop();
+  const [confirmAction, actionContextHolder] = useConfirmModal();
+  const [confirmDelete, deleteContextHolder] = useDeleteConfirm();
   const { date } = useDateFormatter();
   const { markCompleted, isPending: isCompleting } = useMarkEventCompleted();
   const { cancelQuote, isPending: isCancelling } = useCancelQuote();
@@ -27,22 +32,25 @@ export function EventHeader({ event }: EventHeaderProps) {
   const isPastDue = isUpcoming && isPastDate(event.eventDate);
 
   const onMarkCompleted = () => {
-    modal.confirm({
+    const options = {
       title: t('detail.markCompletedConfirm.title'),
       content: t('detail.markCompletedConfirm.content'),
       okText: t('detail.markCompletedConfirm.ok'),
       onOk: () => markCompleted(event.id),
-    });
+    };
+    if (!isDesktop) return confirmAction(options);
+    modal.confirm(options);
   };
 
   const onCancel = () => {
-    modal.confirm({
+    const options = {
       title: t('detail.cancelConfirm.title'),
       content: t('detail.cancelConfirm.content'),
       okText: t('detail.cancelConfirm.ok'),
-      okButtonProps: { danger: true },
       onOk: () => cancelQuote(event.quoteId),
-    });
+    };
+    if (!isDesktop) return confirmDelete(options);
+    modal.confirm({ ...options, okButtonProps: { danger: true } });
   };
 
   return (
@@ -104,6 +112,8 @@ export function EventHeader({ event }: EventHeaderProps) {
           }
         />
       )}
+      {actionContextHolder}
+      {deleteContextHolder}
     </Card>
   );
 }

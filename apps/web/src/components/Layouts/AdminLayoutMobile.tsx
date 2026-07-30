@@ -12,7 +12,7 @@ export function AdminLayoutMobile({ children }: { children: React.ReactNode }) {
     <Layout
       className={`h-dvh overflow-hidden ${contentBg === 'grey' ? 'bg-background' : 'bg-white'}`}
     >
-      <Layout.Header className="shadow-xs flex h-auto min-h-16 items-center pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] leading-normal bg-white">
+      <Layout.Header className="shadow-xs flex h-auto min-h-16 items-center pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] px-4 leading-normal bg-white">
         <MobileTopbar />
       </Layout.Header>
 

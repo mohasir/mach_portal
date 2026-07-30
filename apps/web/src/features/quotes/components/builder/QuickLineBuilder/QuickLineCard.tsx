@@ -61,16 +61,21 @@ export function QuickLineCard({ line, product, readOnly, onRemove, onChange }: Q
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <Select
-            disabled={readOnly}
-            className="w-36"
-            value={line.numPersons}
-            onChange={handleTierChange}
-            options={product.priceTiers.map((tier) => ({
-              value: tier.numPersons,
-              label: t('builder.lines.numPersonsCount', { count: tier.numPersons }),
-            }))}
-          />
+          {readOnly ? (
+            <span className="text-sm text-gray-500">
+              {t('builder.lines.numPersonsCount', { count: line.numPersons })}
+            </span>
+          ) : (
+            <Select
+              className="w-36"
+              value={line.numPersons}
+              onChange={handleTierChange}
+              options={product.priceTiers.map((tier) => ({
+                value: tier.numPersons,
+                label: t('builder.lines.numPersonsCount', { count: tier.numPersons }),
+              }))}
+            />
+          )}
           <div className="flex items-center gap-2">
             {!readOnly && (
               <Button

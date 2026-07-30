@@ -12,10 +12,14 @@ interface SeedUser {
   role: Role;
 }
 
-const SEED_USERS: SeedUser[] = [
+// Cuentas reales de acceso al panel — se siembran en cualquier entorno (prod y local).
+const SEED_ADMIN_USERS: SeedUser[] = [
   { name: 'Samuel', email: 'samuel@admin.com', role: 'superadmin' },
   { name: 'Lucia', email: 'lucia@admin.com', role: 'admin' },
+];
 
+// Cuentas de prueba para desarrollo/demo — nunca en prod.
+const SEED_DEMO_USERS: SeedUser[] = [
   { name: 'Carlos', email: 'carlos@demo.com', role: 'member' },
   { name: 'Ana', email: 'ana@demo.com', role: 'member' },
   { name: 'Luis', email: 'luis@demo.com', role: 'member' },
@@ -33,10 +37,8 @@ const SEED_USERS: SeedUser[] = [
   { name: 'Fernando', email: 'fernando@demo.com', role: 'member' },
 ];
 
-export async function seedUsers() {
-  console.log('👤 Seeding usuarios...');
-
-  for (const u of SEED_USERS) {
+async function seedUserList(users: SeedUser[]) {
+  for (const u of users) {
     const [existing] = await db.select().from(user).where(eq(user.email, u.email)).limit(1);
     if (existing) {
       console.log(`  ⏭️  ${u.email} ya existe, salteando`);
@@ -52,4 +54,14 @@ export async function seedUsers() {
 
     console.log(`  ✅ ${u.email} (${u.role})`);
   }
+}
+
+export async function seedAdminUsers() {
+  console.log('👤 Seeding usuarios admin...');
+  await seedUserList(SEED_ADMIN_USERS);
+}
+
+export async function seedDemoUsers() {
+  console.log('👤 Seeding usuarios demo...');
+  await seedUserList(SEED_DEMO_USERS);
 }

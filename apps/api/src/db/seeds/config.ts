@@ -4,9 +4,9 @@ import { db } from '../index';
 import { appSettings, stateSettings } from '../schema';
 
 const SEED_STATE_SETTINGS: { state: StateValue; taxRate: number }[] = [
-  { state: 'NY', taxRate: 0.08875 },
-  { state: 'NJ', taxRate: 0.06625 },
-  { state: 'CT', taxRate: 0.0635 },
+  { state: 'NY', taxRate: 0 }, // .08875
+  { state: 'NJ', taxRate: 0 }, // .06625
+  { state: 'CT', taxRate: 0 }, // .0635
 ];
 
 export async function seedConfig() {

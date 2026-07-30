@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button, Input, Popover } from 'antd';
 import { Check, Copy, Link2, Share2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { IconBadge } from '@/components/shared/IconBadge';
 import { copyToClipboard } from '@/lib/utils/clipboard';
 
 interface ShareButtonProps {
@@ -87,7 +88,12 @@ export function ShareButton({
         </div>
       }
     >
-      <Button size={size} icon={<Share2 size={iconOnly ? 14 : 16} />} className={className}>
+      <Button
+        type={iconOnly ? 'text' : undefined}
+        size={size}
+        icon={iconOnly ? <IconBadge icon={Share2} shape="square" /> : <Share2 size={16} />}
+        className={className}
+      >
         {!iconOnly && t('share.action')}
       </Button>
     </Popover>
