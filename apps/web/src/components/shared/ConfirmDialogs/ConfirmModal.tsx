@@ -11,9 +11,22 @@ import { useTranslation } from 'react-i18next';
 
 export type ConfirmModalType = 'info' | 'help' | 'warning';
 
-const TYPE_STYLES: Record<ConfirmModalType, { icon: IconType; bg: string; bgStrong: string; text: string }> = {
-  info: { icon: TbInfoSquareRoundedFilled, bg: 'bg-blue-500/10', bgStrong: 'bg-blue-500/20', text: 'text-blue-500' },
-  help: { icon: TbHelpSquareRoundedFilled, bg: 'bg-primary/10', bgStrong: 'bg-primary/20', text: 'text-primary' },
+const TYPE_STYLES: Record<
+  ConfirmModalType,
+  { icon: IconType; bg: string; bgStrong: string; text: string }
+> = {
+  info: {
+    icon: TbInfoSquareRoundedFilled,
+    bg: 'bg-blue-500/10',
+    bgStrong: 'bg-blue-500/20',
+    text: 'text-blue-500',
+  },
+  help: {
+    icon: TbHelpSquareRoundedFilled,
+    bg: 'bg-primary/10',
+    bgStrong: 'bg-primary/20',
+    text: 'text-primary',
+  },
   warning: {
     icon: TbAlertTriangleFilled,
     bg: 'bg-amber-500/10',
@@ -77,7 +90,7 @@ export function ConfirmModal({
           {title}
         </Typography.Title>
         {content && (
-          <Typography.Text type="secondary" className="text-sm">
+          <Typography.Text type="secondary" className="text-base">
             {content}
           </Typography.Text>
         )}

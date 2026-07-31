@@ -1,13 +1,16 @@
 'use client';
 import { Tag, type TableColumnsType } from 'antd';
+import { AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { QuoteStageId } from '@repo/schemas';
 import { DataTableRowActions } from '@/components/shared/DataTable';
+import { IconTag } from '@/components/shared/IconTag';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useQuoteStages } from '@/features/settings';
 import { useQuoteRowActions } from '../../hooks/useQuoteRowActions';
 import type { Quote } from '../../types';
+import { CopyableQuoteNumber } from '../CopyableQuoteNumber';
 
 export function useQuotesColumns(): TableColumnsType<Quote> {
   const { t } = useTranslation('quotes');
@@ -18,7 +21,12 @@ export function useQuotesColumns(): TableColumnsType<Quote> {
   const rowActions = useQuoteRowActions();
 
   return [
-    { title: t('columns.number'), dataIndex: 'number', key: 'number' },
+    {
+      title: t('columns.number'),
+      dataIndex: 'number',
+      key: 'number',
+      render: (value: Quote['number']) => <CopyableQuoteNumber number={value} />,
+    },
     { title: t('columns.client'), dataIndex: 'clientName', key: 'clientName' },
     {
       title: t('columns.eventDate'),
@@ -31,9 +39,21 @@ export function useQuotesColumns(): TableColumnsType<Quote> {
       title: t('columns.stage'),
       dataIndex: 'stageId',
       key: 'stageId',
-      render: (stageId: Quote['stageId']) => {
-        const stage = stageMap.get(stageId as QuoteStageId);
-        return <Tag color={stage?.color}>{stage?.label}</Tag>;
+      render: (_, row) => {
+        const stage = stageMap.get(row.stageId as QuoteStageId);
+        return (
+          <div className="flex items-center gap-1">
+            <Tag color={stage?.color}>{stage?.label}</Tag>
+            {row.isDraft && (
+              <IconTag
+                color={row.isComplete ? undefined : 'error'}
+                icon={row.isComplete ? undefined : AlertCircle}
+              >
+                {t('pipeline.draftTag')}
+              </IconTag>
+            )}
+          </div>
+        );
       },
     },
     {

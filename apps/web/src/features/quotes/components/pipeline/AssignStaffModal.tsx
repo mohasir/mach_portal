@@ -5,6 +5,7 @@ import type { AssignStaffInput } from '@repo/schemas';
 import { useStaffAvailability } from '@/features/staff';
 import { useAssignStaff } from '@/features/events';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 
 interface AssignStaffModalProps {
   eventId: string | null;
@@ -61,6 +62,7 @@ export function AssignStaffModal({ eventId, eventDate, open, onClose }: AssignSt
               loading={isLoading}
               placeholder={t('assignStaff.staffPlaceholder')}
               options={available?.map((member) => ({ value: member.id, label: member.name }))}
+              onSelect={blurActiveElementOnTouch}
             />
           </Form.Item>
 

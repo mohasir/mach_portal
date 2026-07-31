@@ -8,6 +8,7 @@ interface PageHeaderMobileProps {
   onBack?: () => void;
   showLogout?: boolean;
   action?: MobilePageHeaderAction;
+  titleSize?: 'default' | 'sm';
 }
 
 export function PageHeaderMobile({
@@ -16,14 +17,15 @@ export function PageHeaderMobile({
   onBack,
   showLogout,
   action,
+  titleSize,
 }: PageHeaderMobileProps) {
   const setHeader = usePageHeaderStore((s) => s.setHeader);
   const clearHeader = usePageHeaderStore((s) => s.clearHeader);
 
   useEffect(() => {
-    setHeader({ title, titleSuffix, onBack, showLogout, action });
+    setHeader({ title, titleSuffix, onBack, showLogout, action, titleSize });
     return () => clearHeader();
-  }, [title, titleSuffix, onBack, showLogout, action, setHeader, clearHeader]);
+  }, [title, titleSuffix, onBack, showLogout, action, titleSize, setHeader, clearHeader]);
 
   return null;
 }

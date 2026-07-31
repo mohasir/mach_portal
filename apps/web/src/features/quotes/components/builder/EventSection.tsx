@@ -1,12 +1,15 @@
 'use client';
-import { Card, DatePicker, Form, Input, InputNumber, Select, TimePicker, Typography } from 'antd';
+import { Card, DatePicker, Form, Input, Select, Typography } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { STATE_NAMES, stateSchema, type StateValue } from '@repo/schemas';
 import type { EventType } from '@/features/event-types';
+import { AutoCloseTimePicker } from '@/components/shared/Inputs/AutoCloseTimePicker';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { useConfig } from '@/features/settings';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
+import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 import CITIES_BY_STATE from '../../citiesByState.json';
 import { useQuoteBuilder, type QuoteBuilderState } from '../../hooks/useQuoteBuilder';
 
@@ -63,7 +66,7 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
     state: state.state ?? undefined,
     city: state.city,
     address: state.address,
-    longDistanceAmount: state.longDistanceAmount / 100,
+    longDistanceAmount: state.longDistanceAmount,
   };
 
   const handleValuesChange = (changed: Partial<EventFormValues>) => {
@@ -90,12 +93,12 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
       const subtotal = state.lines.reduce((sum, line) => sum + line.subtotal, 0);
       const suggestedLongDistance = Math.round(subtotal * nextTaxRate);
       patch.longDistanceAmount = suggestedLongDistance;
-      form.setFieldValue('longDistanceAmount', suggestedLongDistance / 100);
+      form.setFieldValue('longDistanceAmount', suggestedLongDistance);
     }
     if ('city' in changed) patch.city = changed.city ?? '';
     if ('address' in changed) patch.address = changed.address ?? '';
     if ('longDistanceAmount' in changed) {
-      patch.longDistanceAmount = Math.round((changed.longDistanceAmount ?? 0) * 100);
+      patch.longDistanceAmount = changed.longDistanceAmount ?? 0;
     }
     setFields(patch);
   };
@@ -118,12 +121,10 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
 
   const eventTimeField = (
     <Form.Item name="eventTime" label={<FieldLabel title={t('builder.event.time')} />}>
-      <TimePicker
+      <AutoCloseTimePicker
         className="w-full"
         format="HH:mm"
         minuteStep={15}
-        needConfirm={false}
-        showNow={false}
         classNames={{ popup: { content: 'min-w-[150px]' } }}
         disabledTime={disabledTime}
       />
@@ -152,6 +153,7 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
         disabled={!selectedState}
         placeholder={t('builder.event.cityPlaceholder')}
         options={cityOptions}
+        onSelect={blurActiveElementOnTouch}
       />
     </Form.Item>
   );
@@ -180,7 +182,7 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
       }
       className="sm:max-w-56"
     >
-      <InputNumber className="w-full" min={0} precision={2} prefix="$" />
+      <MoneyInput className="w-full" min={0} />
     </Form.Item>
   );
 

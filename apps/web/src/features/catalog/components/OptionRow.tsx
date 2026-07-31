@@ -45,7 +45,7 @@ export function OptionRow({ option, onEdit }: OptionRowProps) {
     >
       <ReorderControl dragHandleProps={dragHandleProps} />
       <div className="min-w-0 flex-1">
-        <div className={`truncate text-sm ${option.isActive ? '' : 'text-muted'}`}>
+        <div className={`truncate text-base ${option.isActive ? '' : 'text-muted'}`}>
           {option.name}
         </div>
         {option.description && (

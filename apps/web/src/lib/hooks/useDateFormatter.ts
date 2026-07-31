@@ -1,6 +1,15 @@
 'use client';
 import { useMemo } from 'react';
-import { formatDate, formatDateLong, formatDateTime, formatRelative, type DateInput } from '@/lib/date';
+import {
+  formatDate,
+  formatDateLong,
+  formatDateTime,
+  formatDayOfMonth,
+  formatMonthShort,
+  formatRelative,
+  formatTime,
+  type DateInput,
+} from '@/lib/date';
 import { useLocaleStore } from '@/lib/stores/locale.store';
 import type { Locale as AppLocale } from '@/lib/i18n/config';
 
@@ -17,6 +26,12 @@ export function useDateFormatter() {
       dateTime: (value: DateInput) => formatDateTime(value, locale),
       /** "hace 3 días" */
       relative: (value: DateInput) => formatRelative(value, locale),
+      /** "12:30 pm" */
+      time: (value: string) => formatTime(value),
+      /** "12" */
+      dayOfMonth: (value: DateInput) => formatDayOfMonth(value, locale),
+      /** "Jan" */
+      monthShort: (value: DateInput) => formatMonthShort(value, locale),
     }),
     [locale],
   );

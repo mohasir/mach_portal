@@ -49,7 +49,7 @@ export function PipelineBoardDesktop({ data, orderedIds, onMove }: PipelineBoard
     >
       <div className="grid h-full auto-rows-fr grid-cols-1 gap-4 lg:grid-cols-4">
         {orderedIds.map((stageId) => (
-          <PipelineColumn key={stageId} stageId={stageId} cards={data[stageId]} onMove={onMove} />
+          <PipelineColumn key={stageId} stageId={stageId} cards={data[stageId]} />
         ))}
       </div>
       <DragOverlay>{activeCard ? <QuoteCardPreview card={activeCard} /> : null}</DragOverlay>

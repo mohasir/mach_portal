@@ -43,7 +43,7 @@ export async function seedConfig() {
     minPersonsPerLine: 30,
     quoteSeqStart: 1,
     currency: 'USD',
-    catalogSortable: true,
+    catalogSortable: false,
   });
   console.log(
     '  ✅ app_settings (deposit 50%, validez 3 meses, min 30 personas, seq desde 1, USD, catálogo ordenable)',

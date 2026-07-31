@@ -15,6 +15,7 @@
   --color-background: var(--ant-color-bg-layout);
   --color-surface: var(--ant-color-bg-container);
   --color-line: var(--ant-color-border);
+  --color-line-strong: rgba(0, 0, 0, 0.1);
 
   /* ── Brand colors ── */
   --color-brown: #4a2c2a;
@@ -124,6 +125,21 @@
   body {
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* iOS Safari auto-zooms the viewport on focus when an input's font-size is
+     below 16px — the theme's base fontSize (theme/antd.ts) is 13px, so every
+     AntD text field triggered it on iPhone. Bump to 16px only on mobile;
+     desktop keeps the 13px design size. */
+  @media (max-width: 575px) {
+    .ant-input,
+    textarea.ant-input,
+    .ant-input-number-input,
+    .ant-select-selector,
+    .ant-select-input,
+    .ant-picker-input > input {
+      font-size: 16px;
+    }
   }
 
   /* Quote builder's quantity stepper (-/+ around a borderless InputNumber): the borderless

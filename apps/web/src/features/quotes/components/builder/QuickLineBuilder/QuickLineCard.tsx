@@ -5,6 +5,7 @@ import { Minus, Plus, SquarePen, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
 import { BottomSheet } from '@/components/shared/BottomSheet';
+import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { getStationIcon } from '../../../helpers';
 import type { LineDraft } from '../../../hooks/useQuoteBuilder';
@@ -62,7 +63,7 @@ export function QuickLineCard({ line, product, readOnly, onRemove, onChange }: Q
 
         <div className="flex items-center justify-between gap-2">
           {readOnly ? (
-            <span className="text-sm text-gray-500">
+            <span className="text-base text-gray-500">
               {t('builder.lines.numPersonsCount', { count: line.numPersons })}
             </span>
           ) : (
@@ -128,13 +129,11 @@ export function QuickLineCard({ line, product, readOnly, onRemove, onChange }: Q
 
           <div className="flex flex-col gap-1">
             <span className="text-xs text-gray-500">{t('builder.lines.price')}</span>
-            <InputNumber
+            <MoneyInput
               className="h-10 w-full"
               min={0}
-              precision={2}
-              prefix="$"
-              value={line.subtotal / 100}
-              onChange={(value) => onChange({ subtotal: Math.round((value ?? 0) * 100) })}
+              value={line.subtotal}
+              onChange={(cents) => onChange({ subtotal: cents ?? 0 })}
             />
           </div>
 

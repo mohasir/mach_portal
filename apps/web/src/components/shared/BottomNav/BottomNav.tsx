@@ -22,16 +22,16 @@ export function BottomNav() {
       <button
         key={item.href}
         onClick={() => router.push(item.href!)}
-        className={`flex flex-1 flex-col items-center gap-0.5 py-2 ${isActive(item.href!) ? 'text-primary' : 'text-muted'}`}
+        className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-4 ${isActive(item.href!) ? 'text-primary' : 'text-muted'}`}
       >
         {IconMap[item.icon!]}
-        <span className="text-caption">{t(item.label)}</span>
+        <span className="text-xs">{t(item.label)}</span>
       </button>
     );
   };
 
   return (
-    <nav className="border-line bg-surface flex border-t pb-[env(safe-area-inset-bottom)]">
+    <nav className="border-line bg-surface flex border-t px-4 pb-[env(safe-area-inset-bottom)]">
       {NAV_BOTTOM_MENU.leftItems.map(renderTab)}
 
       {canCreateQuote && (
@@ -40,7 +40,7 @@ export function BottomNav() {
             type="primary"
             shape="circle"
             size="large"
-            icon={<Plus size={22} />}
+            icon={<Plus size={28} />}
             onClick={() => router.push('/admin/quotes/new')}
             aria-label={t('nav.newQuote')}
             className="shadow-lg"

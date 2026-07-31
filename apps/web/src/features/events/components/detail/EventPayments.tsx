@@ -9,7 +9,6 @@ import {
   Form,
   Image,
   Input,
-  InputNumber,
   Select,
   Tag,
   Typography,
@@ -21,6 +20,7 @@ import { paymentMethodSchema, type PaymentMethod } from '@repo/schemas';
 import { AttachmentUploadModal } from '@/components/shared/Attachment';
 import { useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
@@ -65,7 +65,7 @@ export function EventPayments({ event }: EventPaymentsProps) {
   const onFinish = async (values: PaymentFormValues) => {
     await registerPayment(event.id, {
       method: values.method!,
-      amount: Math.round((values.amount ?? 0) * 100),
+      amount: values.amount ?? 0,
       paidAt: values.paidAt.format('YYYY-MM-DD'),
       reference: values.reference,
       notes: values.notes,
@@ -75,7 +75,7 @@ export function EventPayments({ event }: EventPaymentsProps) {
 
   const onPercentChange = (percent: number) => {
     const amountCents = Math.min(balance, Math.round((event.totalAmount * percent) / 100));
-    form.setFieldValue('amount', amountCents / 100);
+    form.setFieldValue('amount', amountCents);
   };
 
   const onRemoveAttachment = (attachmentId: string) => {
@@ -97,7 +97,7 @@ export function EventPayments({ event }: EventPaymentsProps) {
         </Tag>
       }
     >
-      <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm">
+      <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 text-base">
         <span>
           <span className="text-gray-500">{t('detail.payments.total')}: </span>
           <span className="font-semibold">{money(event.totalAmount)}</span>
@@ -163,13 +163,7 @@ export function EventPayments({ event }: EventPaymentsProps) {
                   rules={[{ required: true }]}
                   className="mb-0"
                 >
-                  <InputNumber
-                    className="w-full"
-                    min={0.01}
-                    max={balance > 0 ? balance / 100 : undefined}
-                    precision={2}
-                    prefix="$"
-                  />
+                  <MoneyInput className="w-full" min={1} max={balance > 0 ? balance : undefined} />
                 </Form.Item>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -220,7 +214,7 @@ export function EventPayments({ event }: EventPaymentsProps) {
                 return (
                   <div
                     key={payment.id}
-                    className={`flex flex-col gap-1 py-2 text-sm ${index > 0 ? 'border-line border-t' : ''}`}
+                    className={`flex flex-col gap-1 py-2 text-base ${index > 0 ? 'border-line border-t' : ''}`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{money(payment.amount)}</span>

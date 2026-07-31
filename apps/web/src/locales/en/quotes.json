@@ -31,7 +31,8 @@
     "editTitle": "Edit quote",
     "saveDraft": "Save draft",
     "saveChanges": "Save changes",
-    "send": "Create quote",
+    "update": "Update",
+    "createQuote": "Create quote",
     "saved": "Quote saved",
     "created": "Quote created",
     "exitConfirm": {
@@ -138,6 +139,9 @@
     "noStaff": "Unassigned",
     "linesCount": "{{count}} lines",
     "draftTag": "Draft",
+    "cloneNumber": "Clone quote number",
+    "numberCopied": "Number copied to clipboard",
+    "moveSuccess": "Quote moved successfully",
     "confirm": {
       "confirmed": {
         "title": "Approve quote?",

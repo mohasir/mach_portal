@@ -74,8 +74,14 @@ export class QuotesRepository {
       .limit(limit)
       .offset(offset);
 
+    const lineCounts = await this.countLinesByQuote(items.map((r) => r.id));
+    const itemsWithLines = items.map((row) => ({
+      ...row,
+      linesCount: lineCounts.get(row.id) ?? 0,
+    }));
+
     const total = paginate ? await this.countAll(where) : items.length;
-    return { items, total, paginate, page, pageSize };
+    return { items: itemsWithLines, total, paginate, page, pageSize };
   }
 
   private async countAll(where: SQL | undefined) {

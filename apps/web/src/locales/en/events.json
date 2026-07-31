@@ -16,6 +16,15 @@
     "completed": "Completed",
     "cancelled": "Cancelled"
   },
+  "segment": {
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "all": "All"
+  },
+  "dashboard": {
+    "upcomingTitle": "Upcoming events",
+    "seeMore": "See more"
+  },
   "calendar": {
     "moreEvents": "+{{count}} more",
     "today": "Today",

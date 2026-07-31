@@ -1,7 +1,14 @@
 'use client';
 import { Input, Space } from 'antd';
-import { CountrySelector, defaultCountries, usePhoneInput } from 'react-international-phone';
+import {
+  CountrySelector,
+  defaultCountries,
+  parseCountry,
+  usePhoneInput,
+} from 'react-international-phone';
 import 'react-international-phone/style.css';
+
+const US_COUNTRIES = defaultCountries.filter((country) => parseCountry(country).iso2 === 'us');
 
 interface PhoneInputProps {
   value?: string;
@@ -11,10 +18,11 @@ interface PhoneInputProps {
 }
 
 export function PhoneInput({ value, onChange, disabled, placeholder }: PhoneInputProps) {
-  const { inputValue, country, setCountry, handlePhoneValueChange } = usePhoneInput({
+  const { inputValue, country, handlePhoneValueChange } = usePhoneInput({
     defaultCountry: 'us',
     value,
-    countries: defaultCountries,
+    countries: US_COUNTRIES,
+    forceDialCode: true,
     onChange: (data) => onChange?.(data.phone),
   });
 
@@ -23,9 +31,10 @@ export function PhoneInput({ value, onChange, disabled, placeholder }: PhoneInpu
       <Space.Addon>
         <CountrySelector
           selectedCountry={country.iso2}
-          onSelect={(c) => setCountry(c.iso2)}
+          countries={US_COUNTRIES}
+          hideDropdown
           disabled={disabled}
-          buttonStyle={{ border: 'none', background: 'transparent', padding: 0 }}
+          buttonStyle={{ border: 'none', background: 'transparent', padding: 0, cursor: 'default' }}
         />
       </Space.Addon>
       <Input

@@ -30,7 +30,7 @@ export function OptionGroupChips({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium">{group.label}</span>
+        <span className="text-base font-medium">{group.label}</span>
         <span className="text-xs text-gray-500">
           {isIncluded
             ? t('builder.lines.included')

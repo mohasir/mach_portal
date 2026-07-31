@@ -19,7 +19,7 @@ export function AdminLayoutMobile({ children }: { children: React.ReactNode }) {
       <Layout.Content
         className={`flex-1 px-4 pt-4 ${fillViewport ? 'overflow-hidden pb-0' : 'overflow-y-auto pb-6'}`}
       >
-        <div>{children}</div>
+        <div className={fillViewport ? 'flex h-full min-h-0 flex-col' : undefined}>{children}</div>
       </Layout.Content>
 
       <BottomNav />

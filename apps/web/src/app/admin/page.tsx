@@ -2,6 +2,7 @@
 import { Col, Row, Typography } from 'antd';
 import { ArrowUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { UpcomingEventsCard } from '@/features/events';
 
 const STATS = [
   { key: 'new', value: 245, delta: '20%', bg: 'bg-olive-faint' },
@@ -18,7 +19,9 @@ export default function DashboardPage() {
         {STATS.map((s) => (
           <Col xs={24} md={8} key={s.key}>
             <div className={`rounded-2xl p-5 ${s.bg}`}>
-              <Typography.Text className="text-muted">{t(`dashboard.stats.${s.key}`)}</Typography.Text>
+              <Typography.Text className="text-muted">
+                {t(`dashboard.stats.${s.key}`)}
+              </Typography.Text>
               <div className="mt-2 flex items-end gap-3">
                 <Typography.Title level={2} className="text-brown m-0!">
                   {s.value}
@@ -31,6 +34,12 @@ export default function DashboardPage() {
             </div>
           </Col>
         ))}
+      </Row>
+
+      <Row className="mt-4">
+        <Col xs={24} lg={12}>
+          <UpcomingEventsCard />
+        </Col>
       </Row>
     </div>
   );

@@ -1,4 +1,7 @@
+'use client';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { App } from 'antd';
+import { useTranslation } from 'react-i18next';
 import type {
   CreateQuoteInput,
   QuoteStageId,
@@ -53,9 +56,14 @@ export function useUpdateQuoteStage() {
   const trpc = useTRPC();
   const qc = useQueryClient();
   const onError = useApiError();
+  const { message } = App.useApp();
+  const { t } = useTranslation('quotes');
   const mutation = useMutation(
     trpc.quotes.updateStage.mutationOptions({
-      onSuccess: () => qc.invalidateQueries(trpc.quotes.pathFilter()),
+      onSuccess: () => {
+        message.success(t('pipeline.moveSuccess'));
+        return qc.invalidateQueries(trpc.quotes.pathFilter());
+      },
       onError,
     }),
   );
@@ -69,9 +77,14 @@ export function useApproveQuote() {
   const trpc = useTRPC();
   const qc = useQueryClient();
   const onError = useApiError();
+  const { message } = App.useApp();
+  const { t } = useTranslation('quotes');
   const mutation = useMutation(
     trpc.quotes.approve.mutationOptions({
-      onSuccess: () => qc.invalidateQueries(trpc.quotes.pathFilter()),
+      onSuccess: () => {
+        message.success(t('pipeline.moveSuccess'));
+        return qc.invalidateQueries(trpc.quotes.pathFilter());
+      },
       onError,
     }),
   );
@@ -85,13 +98,17 @@ export function useCancelQuote() {
   const trpc = useTRPC();
   const qc = useQueryClient();
   const onError = useApiError();
+  const { message } = App.useApp();
+  const { t } = useTranslation('quotes');
   const mutation = useMutation(
     trpc.quotes.cancel.mutationOptions({
-      onSuccess: () =>
-        Promise.all([
+      onSuccess: () => {
+        message.success(t('pipeline.moveSuccess'));
+        return Promise.all([
           qc.invalidateQueries(trpc.quotes.pathFilter()),
           qc.invalidateQueries(trpc.events.pathFilter()),
-        ]),
+        ]);
+      },
       onError,
     }),
   );

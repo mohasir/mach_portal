@@ -28,7 +28,7 @@ export function SettingsMenuMobile({ title, items, onSelect }: SettingsMenuMobil
             key={key}
             type="button"
             onClick={() => onSelect(key)}
-            className={`flex w-full items-center gap-3 px-1 py-3 text-left text-sm ${
+            className={`flex w-full items-center gap-3 px-1 py-3 text-left text-base ${
               index > 0 ? 'border-line/50 border-t' : ''
             }`}
           >

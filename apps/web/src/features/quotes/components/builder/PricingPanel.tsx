@@ -1,10 +1,11 @@
 'use client';
-import { Divider, Form, InputNumber, Select, Typography } from 'antd';
+import { Divider, Form, Select, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { DiscountType, QuoteTotals } from '@repo/schemas';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
+import { PercentInput } from '@/components/shared/Inputs/PercentInput';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
-import { fromPercent, toPercent } from '@/lib/utils/percent';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 
 interface PricingPanelProps {
@@ -60,23 +61,17 @@ export function PricingPanel({ totals }: PricingPanelProps) {
               className="mb-0 flex-1"
             >
               {state.discountType === 'fixed' ? (
-                <InputNumber
+                <MoneyInput
                   className="w-full"
                   min={0}
-                  precision={2}
-                  prefix="$"
-                  value={(state.discountValue ?? 0) / 100}
-                  onChange={(value) => setFields({ discountValue: Math.round((value ?? 0) * 100) })}
+                  value={state.discountValue ?? 0}
+                  onChange={(cents) => setFields({ discountValue: cents ?? 0 })}
                 />
               ) : (
-                <InputNumber
+                <PercentInput
                   className="w-full"
-                  min={0}
-                  max={100}
-                  precision={0}
-                  suffix="%"
-                  value={toPercent(state.discountValue ?? 0)}
-                  onChange={(value) => setFields({ discountValue: fromPercent(value ?? 0) })}
+                  value={state.discountValue ?? 0}
+                  onChange={(rate) => setFields({ discountValue: rate ?? 0 })}
                 />
               )}
             </Form.Item>
@@ -84,21 +79,17 @@ export function PricingPanel({ totals }: PricingPanelProps) {
         </div>
 
         <Form.Item label={<FieldLabel title={t('builder.pricing.depositRate')} />} className="mb-0">
-          <InputNumber
+          <PercentInput
             className="w-full max-w-40"
-            min={0}
-            max={100}
-            precision={0}
-            suffix="%"
-            value={toPercent(state.depositRate)}
-            onChange={(value) => setFields({ depositRate: fromPercent(value ?? 0) })}
+            value={state.depositRate}
+            onChange={(rate) => setFields({ depositRate: rate ?? 0 })}
           />
         </Form.Item>
       </div>
 
       <Divider className="my-1" />
 
-      <div className="flex flex-col gap-1.5 text-sm">
+      <div className="flex flex-col gap-1.5 text-base">
         <Row label={t('builder.pricing.subtotal')} value={money(totals.subtotal)} />
         {totals.discountAmount > 0 && (
           <Row label={t('builder.pricing.discount')} value={`- ${money(totals.discountAmount)}`} />

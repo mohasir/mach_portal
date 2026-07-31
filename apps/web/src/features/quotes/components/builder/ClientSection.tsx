@@ -9,6 +9,7 @@ import { BottomSheet } from '@/components/shared/BottomSheet';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { PhoneInput } from '@/components/shared/Inputs/PhoneInput';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
+import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 import {
   useQuoteBuilder,
   type NewClientDraft,
@@ -176,7 +177,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
                   className="border-line flex items-center justify-center gap-2 rounded-xl border border-dashed p-2.5 text-gray-400"
                 >
                   <Users size={16} />
-                  <span className="text-sm">{t('builder.client.selectExisting')}</span>
+                  <span className="text-base">{t('builder.client.selectExisting')}</span>
                 </button>
                 <button
                   type="button"
@@ -185,7 +186,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
                   className="border-line flex items-center justify-center gap-2 rounded-xl border border-dashed p-2.5 text-gray-400"
                 >
                   <Plus size={16} />
-                  <span className="text-sm">{t('builder.client.addNew')}</span>
+                  <span className="text-base">{t('builder.client.addNew')}</span>
                 </button>
               </div>
             )}
@@ -206,7 +207,9 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
                       <Spin size="small" />
                     ) : (
                       <div className="flex flex-col items-center gap-2 py-2">
-                        <span className="text-muted text-sm">{t('builder.client.noResults')}</span>
+                        <span className="text-muted text-base">
+                          {t('builder.client.noResults')}
+                        </span>
                         <Button size="small" icon={<Plus size={14} />} onClick={startCreate}>
                           {t('builder.client.addNew')}
                         </Button>
@@ -214,6 +217,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
                     )
                   }
                   options={options}
+                  onSelect={blurActiveElementOnTouch}
                   onChange={(value, option) => {
                     const label = Array.isArray(option)
                       ? undefined
@@ -366,7 +370,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
               <Spin size="small" />
             ) : (
               <div className="flex flex-col items-center gap-2 py-2">
-                <span className="text-muted text-sm">{t('builder.client.noResults')}</span>
+                <span className="text-muted text-base">{t('builder.client.noResults')}</span>
                 <Button size="small" icon={<Plus size={14} />} onClick={startCreate}>
                   {t('builder.client.addNew')}
                 </Button>
@@ -374,6 +378,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
             )
           }
           options={options}
+          onSelect={blurActiveElementOnTouch}
           onChange={(value, option) => {
             const label = Array.isArray(option) ? undefined : (option?.label as string | undefined);
             setFields({

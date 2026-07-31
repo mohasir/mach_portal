@@ -14,6 +14,7 @@ interface MobilePageHeader {
   onBack?: () => void;
   showLogout?: boolean;
   action?: MobilePageHeaderAction;
+  titleSize?: 'default' | 'sm';
 }
 
 interface PageHeaderState {

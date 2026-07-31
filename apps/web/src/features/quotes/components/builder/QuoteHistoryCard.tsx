@@ -60,7 +60,7 @@ export function QuoteHistoryCard({
           key: event.key,
           color: event.color ?? 'gray',
           content: (
-            <div className="flex flex-col gap-0.5 text-sm">
+            <div className="flex flex-col gap-0.5 text-base">
               <span>{event.content}</span>
               <span className="text-xs text-gray-500">{dateTime(event.date)}</span>
             </div>
