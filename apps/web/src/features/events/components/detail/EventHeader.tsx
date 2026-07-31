@@ -64,12 +64,12 @@ export function EventHeader({ event }: EventHeaderProps) {
             <Tag color={EVENT_STATUS_COLORS[event.status]}>{t(`status.${event.status}`)}</Tag>
             {event.eventTypeName && <Tag>{event.eventTypeName}</Tag>}
           </div>
-          <div className="mt-1 text-sm text-gray-500">
+          <div className="mt-1 text-base text-gray-500">
             {event.eventDate ? date(event.eventDate) : '—'}
             {event.eventTime ? ` · ${event.eventTime}` : ''}
           </div>
           {event.address && (
-            <div className="mt-1 text-sm text-gray-500">
+            <div className="mt-1 text-base text-gray-500">
               {[event.address, event.city, event.state].filter(Boolean).join(', ')}
             </div>
           )}

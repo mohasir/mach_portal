@@ -63,7 +63,7 @@ export function QuickLineCard({ line, product, readOnly, onRemove, onChange }: Q
 
         <div className="flex items-center justify-between gap-2">
           {readOnly ? (
-            <span className="text-sm text-gray-500">
+            <span className="text-base text-gray-500">
               {t('builder.lines.numPersonsCount', { count: line.numPersons })}
             </span>
           ) : (

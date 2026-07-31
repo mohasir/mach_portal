@@ -3,9 +3,15 @@ import { listQuerySchema } from './pagination';
 import { paymentMethodSchema } from './enums';
 import { optionalText } from './fields';
 
+// "upcoming"/"past" bucket by eventDate vs. today — a separate axis from the derived
+// upcoming/completed/cancelled `status` (events.resource.ts), which tracks completion, not time.
+export const eventsSegmentSchema = z.enum(['upcoming', 'past', 'all']);
+export type EventsSegment = z.infer<typeof eventsSegmentSchema>;
+
 export const eventsListQuerySchema = listQuerySchema.extend({
   sortBy: z.enum(['eventDate', 'totalAmount', 'createdAt']).default('eventDate'),
   clientId: z.uuid().optional(),
+  segment: eventsSegmentSchema.default('upcoming'),
 });
 export type EventsListQuery = z.infer<typeof eventsListQuerySchema>;
 

@@ -33,6 +33,16 @@ export const formatDateLong = (value: DateInput, locale: AppLocale) =>
 export const formatDateTime = (value: DateInput, locale: AppLocale) =>
   toDayjs(value, locale).format(MEDIUM_DATE_TIME_FORMAT[locale]);
 
+// `eventTime` is stored/displayed elsewhere as a plain "HH:mm" string, not a full date —
+// 12h/am-pm is a fixed display choice here (not locale-dependent like the formatters above).
+export const formatTime = (value: string) => dayjs(value, 'HH:mm').format('h:mm a');
+
+export const formatDayOfMonth = (value: DateInput, locale: AppLocale) =>
+  toDayjs(value, locale).format('D');
+
+export const formatMonthShort = (value: DateInput, locale: AppLocale) =>
+  toDayjs(value, locale).format('MMM');
+
 export const formatRelative = (value: DateInput, locale: AppLocale) =>
   toDayjs(value, locale).fromNow();
 

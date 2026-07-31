@@ -49,14 +49,14 @@ export function QuoteLineItem({
               <ChevronRight size={14} className="shrink-0 text-gray-500" />
             )}
             <Icon size={16} className="text-brown shrink-0" />
-            <Typography.Text strong className="truncate text-sm">
+            <Typography.Text strong className="truncate text-base">
               {name}
             </Typography.Text>
           </button>
         ) : (
           <div className="flex min-w-0 flex-1 items-center gap-2 pl-5.5">
             <Icon size={16} className="text-brown shrink-0" />
-            <Typography.Text strong className="truncate text-sm">
+            <Typography.Text strong className="truncate text-base">
               {name}
             </Typography.Text>
           </div>
@@ -65,7 +65,7 @@ export function QuoteLineItem({
           <span className="shrink-0 text-right text-xs text-gray-500">{numPersons}</span>
         )}
         {total !== undefined && (
-          <span className="shrink-0 text-right text-sm font-medium">{money(total)}</span>
+          <span className="shrink-0 text-right text-base font-medium">{money(total)}</span>
         )}
         {onRemove && (
           <Button

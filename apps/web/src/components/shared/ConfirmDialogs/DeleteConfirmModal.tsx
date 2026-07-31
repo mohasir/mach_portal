@@ -47,7 +47,7 @@ export function DeleteConfirmModal({
           </div>
         </div>
         {content && (
-          <Typography.Text type="secondary" className="text-sm text-brown font-medium">
+          <Typography.Text type="secondary" className="text-base text-brown font-medium">
             {content}
           </Typography.Text>
         )}

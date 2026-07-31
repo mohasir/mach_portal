@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
-import { paginationOf, type EventsListQuery } from '@repo/schemas';
+import { paginationOf, type EventsListQuery, type EventsSegment } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { AssignStaffModal } from '@/features/quotes/components/pipeline/AssignStaffModal';
 import { useEventsList } from '../hooks/useEvents';
@@ -12,14 +12,15 @@ import type { Event } from '../types';
 
 interface EventsTableProps {
   clientId?: string;
+  segment?: EventsSegment;
 }
 
-export function EventsTable({ clientId }: EventsTableProps) {
+export function EventsTable({ clientId, segment = 'all' }: EventsTableProps) {
   const { t } = useTranslation('events');
   const { t: tc } = useTranslation('common');
   const router = useRouter();
   const table = useDataTable<EventsListQuery['sortBy']>({ defaultSortBy: 'eventDate' });
-  const { data, isLoading } = useEventsList({ ...table.query, clientId });
+  const { data, isLoading } = useEventsList({ ...table.query, clientId, segment });
   const [assigningEvent, setAssigningEvent] = useState<Event | null>(null);
   const columns = useEventsColumns({ onAssignStaff: setAssigningEvent });
 
@@ -32,8 +33,13 @@ export function EventsTable({ clientId }: EventsTableProps) {
         rowKey="id"
         columns={columns}
         mobileRenderType="card"
-        renderCard={(row) => (
-          <EventCard row={row} onClick={() => onRowClick(row)} onAssignStaff={setAssigningEvent} />
+        renderCard={(row, index) => (
+          <EventCard
+            row={row}
+            index={index}
+            onClick={() => onRowClick(row)}
+            onAssignStaff={setAssigningEvent}
+          />
         )}
         onRow={(row) => ({ onClick: () => onRowClick(row), className: 'cursor-pointer' })}
         dataSource={data?.items}

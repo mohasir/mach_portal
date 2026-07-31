@@ -94,10 +94,20 @@ export type QuoteResource = ReturnType<typeof quoteResource>;
 
 export type QuoteWithNames = PublicQuote & { clientName: string; eventTypeName: string | null };
 
-export const quoteListItemResource = (row: QuoteWithNames) => ({
+// Mirrors the "ready to send" gate enforced server-side in quotes.service.ts (assertReadyToSend) —
+// a quote can only leave PENDING/draft once it has a state, an address, a city and at least one line.
+export const isQuoteComplete = (
+  row: Pick<PublicQuote, 'state' | 'address' | 'city'>,
+  linesCount: number,
+): boolean => !!row.state && !!row.address && !!row.city && linesCount > 0;
+
+export type QuoteListItemRow = QuoteWithNames & { linesCount: number };
+
+export const quoteListItemResource = (row: QuoteListItemRow) => ({
   ...quoteResource(row),
   clientName: row.clientName,
   eventTypeName: row.eventTypeName,
+  isComplete: isQuoteComplete(row, row.linesCount),
 });
 
 export type QuoteCardStaffMember = { id: string; name: string };
@@ -118,6 +128,7 @@ export const quoteCardResource = (row: QuoteCardRow) => ({
   total: row.total,
   stageId: row.stageId,
   isDraft: row.isDraft,
+  isComplete: isQuoteComplete(row, row.linesCount),
   validUntil: row.validUntil,
   linesCount: row.linesCount,
   eventId: row.eventId,
@@ -180,6 +191,7 @@ export const buildQuoteDetail = (
   clientName: quoteRow.clientName,
   eventTypeName: quoteRow.eventTypeName,
   createdByName: quoteRow.createdByName,
+  isComplete: isQuoteComplete(quoteRow, lineRows.length),
   stageHistory: historyRows,
   lines: buildQuoteLineDetails(lineRows, optionRows),
 });

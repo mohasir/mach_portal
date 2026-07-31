@@ -36,7 +36,7 @@ export function YearView({ year, locale, onSelectDate }: YearViewProps) {
             <button
               type="button"
               onClick={() => onSelectDate(monthStart)}
-              className="mb-2 text-sm font-medium capitalize hover:underline"
+              className="mb-2 text-base font-medium capitalize hover:underline"
             >
               {monthStart.format('MMMM')}
             </button>

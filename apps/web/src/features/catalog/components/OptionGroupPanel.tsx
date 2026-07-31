@@ -57,7 +57,7 @@ export function OptionGroupPanel({ group, onEdit }: OptionGroupPanelProps) {
           className="flex min-w-0 flex-1 items-center gap-2 text-left"
         >
           {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-          <span className={`truncate text-sm font-medium ${group.isActive ? '' : 'text-muted'}`}>
+          <span className={`truncate text-base font-medium ${group.isActive ? '' : 'text-muted'}`}>
             {group.label}
           </span>
           <span className="text-muted text-xs whitespace-nowrap">({typeLabel})</span>

@@ -40,17 +40,17 @@ export function ClientInfoCard({ client }: ClientInfoCardProps) {
 
       <div className="mt-3 flex flex-col gap-1">
         {client.email && (
-          <Typography.Text type="secondary" className="flex items-center gap-2 text-sm">
+          <Typography.Text type="secondary" className="flex items-center gap-2 text-base">
             <Mail size={14} /> {client.email}
           </Typography.Text>
         )}
         {client.phone && (
-          <Typography.Text type="secondary" className="flex items-center gap-2 text-sm">
+          <Typography.Text type="secondary" className="flex items-center gap-2 text-base">
             <Phone size={14} /> {client.phone}
           </Typography.Text>
         )}
         {(client.address || client.city) && (
-          <Typography.Text type="secondary" className="flex items-center gap-2 text-sm">
+          <Typography.Text type="secondary" className="flex items-center gap-2 text-base">
             <MapPin size={14} />
             {[client.address, client.city].filter(Boolean).join(', ')}
           </Typography.Text>

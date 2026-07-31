@@ -89,7 +89,7 @@ export function PricingPanel({ totals }: PricingPanelProps) {
 
       <Divider className="my-1" />
 
-      <div className="flex flex-col gap-1.5 text-sm">
+      <div className="flex flex-col gap-1.5 text-base">
         <Row label={t('builder.pricing.subtotal')} value={money(totals.subtotal)} />
         {totals.discountAmount > 0 && (
           <Row label={t('builder.pricing.discount')} value={`- ${money(totals.discountAmount)}`} />

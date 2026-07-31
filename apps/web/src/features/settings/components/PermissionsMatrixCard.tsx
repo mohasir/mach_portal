@@ -47,7 +47,7 @@ export function PermissionsMatrixCard() {
         <div className="grid min-w-105 grid-cols-[minmax(0,1fr)_repeat(3,3rem)] items-center gap-x-1 gap-y-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,4rem)] sm:gap-x-3">
           <div></div>
           {VISIBLE_ROLES.map((role) => (
-            <div key={role} className="text-muted text-center text-sm mt-2 font-medium">
+            <div key={role} className="text-muted text-center text-base mt-2 font-medium">
               {tu(`roles.${role}`)}
             </div>
           ))}
@@ -69,7 +69,7 @@ export function PermissionsMatrixCard() {
                 )}
 
                 <div className="bg-gray-100 col-span-4 mt-3 rounded-md px-3 py-2">
-                  <div className="text-sm font-semibold">
+                  <div className="text-base font-semibold">
                     {t(`permissions.resources.${resource}.label`)}
                   </div>
                   <div className="text-muted text-xs">
@@ -79,7 +79,7 @@ export function PermissionsMatrixCard() {
 
                 {actions.map((action) => (
                   <Fragment key={`${resource}-${action}`}>
-                    <div className="pl-4 text-sm">{t(`permissions.actions.${action}`)}</div>
+                    <div className="pl-4 text-base">{t(`permissions.actions.${action}`)}</div>
                     {VISIBLE_ROLES.map((role) => (
                       <div key={role} className="flex justify-center">
                         {isGranted(role, resource, action) ? (

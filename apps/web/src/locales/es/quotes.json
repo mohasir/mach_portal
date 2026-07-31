@@ -31,7 +31,8 @@
     "editTitle": "Editar cotización",
     "saveDraft": "Guardar borrador",
     "saveChanges": "Guardar cambios",
-    "send": "Crear cotización",
+    "update": "Actualizar",
+    "createQuote": "Crear cotización",
     "saved": "Cotización guardada",
     "created": "Cotización creada",
     "exitConfirm": {
@@ -138,6 +139,8 @@
     "noStaff": "Sin asignar",
     "linesCount": "{{count}} líneas",
     "draftTag": "Borrador",
+    "cloneNumber": "Clonar número de cotización",
+    "numberCopied": "Número copiado al portapapeles",
     "confirm": {
       "confirmed": {
         "title": "¿Aprobar cotización?",

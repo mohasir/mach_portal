@@ -24,6 +24,7 @@ import { buildQuotePdfPayload } from './quotes.pdf';
 import {
   buildQuoteDetail,
   buildQuoteLineDetails,
+  isQuoteComplete,
   quoteCardResource,
   quoteListItemResource,
   quoteResource,
@@ -195,7 +196,7 @@ export class QuotesService {
         notes: input.notes ?? null,
         discountType: input.discountType ?? null,
         discountValue: input.discountValue ?? null,
-        isDraft: false,
+        isDraft: input.isDraft,
         ...totals,
       },
       input.lines,
@@ -299,7 +300,7 @@ export class QuotesService {
 
   private async assertReadyToSend(current: PublicQuote, id: string) {
     const linesCount = await this.repo.countLines(id);
-    if (!current.state || !current.address || !current.city || linesCount === 0) {
+    if (!isQuoteComplete(current, linesCount)) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         cause: new AppError(ErrorCodes.quote.INCOMPLETE),

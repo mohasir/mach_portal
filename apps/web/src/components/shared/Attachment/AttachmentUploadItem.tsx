@@ -20,7 +20,7 @@ export function AttachmentUploadItem({ file, onRemove }: AttachmentUploadItemPro
         {isImage ? <ImageIcon size={16} /> : <FileText size={16} />}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium">{file.name}</div>
+        <div className="truncate text-base font-medium">{file.name}</div>
         <div className="flex items-center gap-2">
           <Progress
             percent={percent}

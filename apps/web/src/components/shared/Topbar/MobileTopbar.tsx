@@ -32,7 +32,7 @@ export function MobileTopbar() {
                 aria-label={tc('back')}
               />
             )}
-            <Typography.Title level={3} className="font-heading text-brown m-0! min-w-0 truncate">
+            <Typography.Title level={2} className="font-heading text-brown m-0! min-w-0 truncate">
               {header.title}
             </Typography.Title>
             {header.titleSuffix && <span className="shrink-0">{header.titleSuffix}</span>}
@@ -46,7 +46,7 @@ export function MobileTopbar() {
           >
             <Avatar src={user?.image ?? undefined} icon={<User size={16} />} />
             <div className="min-w-0">
-              <Typography.Text className="text-brown block truncate text-sm font-medium">
+              <Typography.Text className="text-brown block truncate text-base font-medium">
                 {t('topbar.greeting', { name: user?.name ?? user?.email ?? '' })}
               </Typography.Text>
               <RoleTag role={role} />

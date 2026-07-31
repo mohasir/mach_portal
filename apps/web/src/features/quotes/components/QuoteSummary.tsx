@@ -28,7 +28,7 @@ export function QuoteSummary({
   const { money } = useMoneyFormatter();
 
   return (
-    <div className={`flex  flex-col gap-2 text-sm ${className ?? ''}`}>
+    <div className={`flex  flex-col gap-2 text-base ${className ?? ''}`}>
       <div className="flex justify-between">
         <span className="text-gray-500">{t('builder.pricing.subtotal')}</span>
         <span>{money(subtotal)}</span>

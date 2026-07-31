@@ -1,4 +1,18 @@
-import { and, asc, desc, count, eq, ilike, inArray, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  count,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  isNull,
+  lt,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 import {
   QUOTE_STAGE,
   type AssignStaffInput,
@@ -50,10 +64,20 @@ export class EventsRepository {
   }
 
   async findPaginated(query: EventsListQuery) {
-    const { search, sortBy, sortDir, clientId } = query;
+    const { search, sortBy, sortDir, clientId, segment } = query;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const segmentWhere =
+      segment === 'upcoming'
+        ? or(gte(events.eventDate, today), isNull(events.eventDate))
+        : segment === 'past'
+          ? lt(events.eventDate, today)
+          : undefined;
+
     const where = and(
       search ? ilike(clients.name, `%${search}%`) : undefined,
       clientId ? eq(events.clientId, clientId) : undefined,
+      segmentWhere,
     );
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
     const { limit, offset, paginate, page, pageSize } = resolvePagination(query);

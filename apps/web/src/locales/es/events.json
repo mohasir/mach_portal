@@ -16,6 +16,15 @@
     "completed": "Realizado",
     "cancelled": "Cancelado"
   },
+  "segment": {
+    "upcoming": "Próximos",
+    "past": "Pasados",
+    "all": "Todos"
+  },
+  "dashboard": {
+    "upcomingTitle": "Próximos eventos",
+    "seeMore": "Ver más"
+  },
   "calendar": {
     "moreEvents": "+{{count}} más",
     "today": "Hoy",

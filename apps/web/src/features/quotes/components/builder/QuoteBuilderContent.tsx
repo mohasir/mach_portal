@@ -1,8 +1,9 @@
 'use client';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { App, Button, Card, Divider, Tag, Tooltip, Typography } from 'antd';
+import { App, Button, Card, Divider, Tooltip } from 'antd';
 import { Copy } from 'lucide-react';
+import { TbLink } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { TRPCClientError } from '@trpc/client';
 import { computeQuoteTotals, QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
@@ -10,7 +11,7 @@ import type { Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
 import { useConfirmModal, type ConfirmModalType } from '@/components/shared/ConfirmDialogs';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { useConfig, useQuoteStages } from '@/features/settings';
+import { useConfig } from '@/features/settings';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useApiError } from '@/lib/error/useApiError';
@@ -18,6 +19,7 @@ import { copyToClipboard } from '@/lib/utils/clipboard';
 import { hasBuilderChanges, hasClient, isQuoteReadyToSend, toCreateInput } from '../../helpers';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { useCreateQuote, useUpdateQuote } from '../../hooks/useQuotes';
+import { QuoteStageTagDropdown } from '../QuoteStageTagDropdown';
 import { QuoteSummary } from '../QuoteSummary';
 import { ClientSection, type ApiFieldError, type ClientSectionHandle } from './ClientSection';
 import { EventSection } from './EventSection';
@@ -30,6 +32,7 @@ interface QuoteBuilderContentProps {
   quoteId?: string;
   number?: string;
   stageId?: QuoteStageId;
+  isDraft?: boolean;
   catalog: Product[];
   eventTypes: EventType[];
 }
@@ -38,6 +41,7 @@ export function QuoteBuilderContent({
   quoteId,
   number,
   stageId,
+  isDraft,
   catalog,
   eventTypes,
 }: QuoteBuilderContentProps) {
@@ -48,22 +52,28 @@ export function QuoteBuilderContent({
   const isDesktop = useIsDesktop();
   const { state, initialState } = useQuoteBuilder();
   const { data: config } = useConfig();
-  const { stageMap } = useQuoteStages();
   const { money } = useMoneyFormatter();
   const clientSectionRef = useRef<ClientSectionHandle>(null);
   const onApiError = useApiError();
   const [confirmExit, exitContextHolder] = useConfirmModal();
-  const stage = stageId ? stageMap.get(stageId) : undefined;
   const isDirty = hasBuilderChanges(state, initialState);
 
-  const { createQuote, isPending: isCreating } = useCreateQuote();
-  const { updateQuote, isPending: isUpdating } = useUpdateQuote();
+  const { createQuote } = useCreateQuote();
+  const { updateQuote } = useUpdateQuote();
+  const [pendingAction, setPendingAction] = useState<'draft' | 'send' | null>(null);
 
   const readOnly = !!stageId && stageId !== QUOTE_STAGE.PENDING && stageId !== QUOTE_STAGE.QUOTED;
-  const showSendButton = !readOnly && (!stageId || stageId === QUOTE_STAGE.PENDING);
+  // The "create quote" action only makes sense while there's still a draft to graduate from —
+  // once a quote is saved as non-draft, editing it only offers "Actualizar" (see saveLabel below).
+  const showSendButton =
+    !readOnly && (!stageId || stageId === QUOTE_STAGE.PENDING) && (!quoteId || !!isDraft);
+  const isUpdateAction = stageId !== QUOTE_STAGE.QUOTED && !!quoteId && !isDraft;
   const saveLabel =
-    stageId === QUOTE_STAGE.QUOTED ? t('builder.saveChanges') : t('builder.saveDraft');
-  const isPending = isCreating || isUpdating;
+    stageId === QUOTE_STAGE.QUOTED
+      ? t('builder.saveChanges')
+      : isUpdateAction
+        ? t('builder.update')
+        : t('builder.saveDraft');
 
   const taxRate = config?.stateSettings.find((s) => s.state === state.state)?.taxRate ?? 0;
   const totals = computeQuoteTotals({
@@ -107,18 +117,20 @@ export function QuoteBuilderContent({
       message.error(t('builder.errors.clientRequired'));
       return;
     }
-    const input = toCreateInput(state, true);
+    const input = toCreateInput(state, quoteId ? !!isDraft : true);
+    setPendingAction('draft');
     try {
       if (quoteId) {
         await updateQuote(quoteId, input);
-        message.success(t('builder.saved'));
       } else {
         await createQuote(input);
-        message.success(t('builder.saved'));
-        router.push('/admin/events?view=pipeline');
       }
+      message.success(t('builder.saved'));
+      router.push('/admin/quotes?view=pipeline');
     } catch (error) {
       reportSaveError(error);
+    } finally {
+      setPendingAction(null);
     }
   };
 
@@ -127,6 +139,7 @@ export function QuoteBuilderContent({
     const input = toCreateInput(state, false);
     const isNew = !quoteId;
     let id = quoteId;
+    setPendingAction('send');
     try {
       if (id) {
         await updateQuote(id, input);
@@ -137,14 +150,22 @@ export function QuoteBuilderContent({
     } catch (error) {
       reportSaveError(error);
       return;
+    } finally {
+      setPendingAction(null);
     }
     message.success(t('builder.created'));
-    router.push(isNew ? '/admin/events?view=pipeline' : `/admin/quotes/${id}`);
+    router.push(isNew ? '/admin/quotes?view=pipeline' : `/admin/quotes/${id}`);
   };
 
   const handleCopyLink = async () => {
     const ok = await copyToClipboard(window.location.href);
     if (ok) message.success(tc('share.linkCopied'));
+  };
+
+  const handleCloneNumber = async () => {
+    if (!number) return;
+    const ok = await copyToClipboard(number);
+    if (ok) message.success(t('pipeline.numberCopied'));
   };
 
   const handleBack = () => {
@@ -166,18 +187,9 @@ export function QuoteBuilderContent({
 
   const formFields = (
     <div className={`flex flex-col ${isDesktop ? '' : 'gap-4'}`}>
-      {!isDesktop && quoteId && (
+      {quoteId && stageId && (
         <Card size="small">
-          <div className="flex items-center justify-between gap-2">
-            <Typography.Title level={4} className="font-heading text-brown m-0!">
-              {t('builder.editTitle')}
-            </Typography.Title>
-            {stage && (
-              <Tag color={stage.color} className="m-0 px-3 py-1 text-sm">
-                {stage.label}
-              </Tag>
-            )}
-          </div>
+          <QuoteStageTagDropdown quoteId={quoteId} stageId={stageId} isDraft={isDraft} />
         </Card>
       )}
       <ClientSection ref={clientSectionRef} readOnly={readOnly} />
@@ -227,14 +239,24 @@ export function QuoteBuilderContent({
         }
         titleSuffix={
           quoteId && number ? (
-            <Tooltip title={tc('share.copyLink')}>
-              <Button
-                type="text"
-                size="small"
-                icon={<Copy size={16} />}
-                onClick={() => void handleCopyLink()}
-              />
-            </Tooltip>
+            <div className="flex items-center gap-1">
+              <Tooltip title={t('pipeline.cloneNumber')}>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<Copy size={16} />}
+                  onClick={() => void handleCloneNumber()}
+                />
+              </Tooltip>
+              <Tooltip title={tc('share.copyLink')}>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<TbLink size={18} />}
+                  onClick={() => void handleCopyLink()}
+                />
+              </Tooltip>
+            </div>
           ) : undefined
         }
         onBack={handleBack}
@@ -249,18 +271,25 @@ export function QuoteBuilderContent({
               </Card>
               {!readOnly && (
                 <div className="flex mb-20 shrink-0 gap-2">
-                  <Button className="flex-1" onClick={handleSaveDraft} loading={isPending}>
+                  <Button
+                    className="flex-1"
+                    color={isUpdateAction ? 'green' : undefined}
+                    variant={isUpdateAction ? 'solid' : 'outlined'}
+                    onClick={handleSaveDraft}
+                    loading={pendingAction === 'draft'}
+                    disabled={pendingAction === 'send'}
+                  >
                     {saveLabel}
                   </Button>
                   {showSendButton && (
                     <Button
                       className="flex-1"
                       type="primary"
-                      disabled={!canSend}
+                      disabled={!canSend || pendingAction === 'draft'}
                       onClick={handleSend}
-                      loading={isPending}
+                      loading={pendingAction === 'send'}
                     >
-                      {t('builder.send')}
+                      {t('builder.createQuote')}
                     </Button>
                   )}
                 </div>
@@ -273,23 +302,30 @@ export function QuoteBuilderContent({
           {formFields}
           <div className="border-line fixed inset-x-0 bottom-0 z-10 flex flex-col gap-2 border-t bg-white p-3">
             <div className="flex flex-col">
-              <span className="text-xs text-gray-500">{t('builder.pricing.total')}</span>
-              <span className="font-semibold">{money(totals.total)}</span>
+              <span className="text-gray-500">{t('builder.pricing.total')}</span>
+              <span className="font-semibold text-lg">{money(totals.total)}</span>
             </div>
             {!readOnly && (
               <div className="flex mb-4 gap-2">
-                <Button className="flex-1" onClick={handleSaveDraft} loading={isPending}>
+                <Button
+                  className="flex-1"
+                  type={isUpdateAction ? 'primary' : undefined}
+                  variant={isUpdateAction ? 'solid' : 'outlined'}
+                  onClick={handleSaveDraft}
+                  loading={pendingAction === 'draft'}
+                  disabled={pendingAction === 'send'}
+                >
                   {saveLabel}
                 </Button>
                 {showSendButton && (
                   <Button
                     className="flex-1"
                     type="primary"
-                    disabled={!canSend}
+                    disabled={!canSend || pendingAction === 'draft'}
                     onClick={handleSend}
-                    loading={isPending}
+                    loading={pendingAction === 'send'}
                   >
-                    {t('builder.send')}
+                    {t('builder.createQuote')}
                   </Button>
                 )}
               </div>

@@ -1,10 +1,11 @@
 'use client';
-import { Alert, Button, Card, Descriptions, Divider, Empty, Tag, Typography } from 'antd';
-import { Download } from 'lucide-react';
+import { Alert, Button, Card, Descriptions, Divider, Empty, Typography } from 'antd';
+import { AlertCircle, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
-import { useConfig, useQuoteStages } from '@/features/settings';
+import { useConfig } from '@/features/settings';
+import { IconTag } from '@/components/shared/IconTag';
 import { Logo } from '@/components/shared/Logo';
 import { ShareButton } from '@/components/shared/ShareButton';
 import { isPastDate } from '@/lib/date';
@@ -12,6 +13,7 @@ import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import type { QuoteDetail } from '../../types';
 import { QuickLineCard } from '../builder/QuickLineBuilder/QuickLineCard';
+import { QuoteStageTagDropdown } from '../QuoteStageTagDropdown';
 import { QuoteSummary } from '../QuoteSummary';
 import { QuoteClientCard } from './QuoteClientCard';
 import { IconBadge } from '@/components/shared/IconBadge';
@@ -36,10 +38,8 @@ export function QuoteDetailCard({
   const { t } = useTranslation('quotes');
   const { date } = useDateFormatter();
   const { data: config } = useConfig();
-  const { stageMap } = useQuoteStages();
   const isDesktop = useIsDesktop();
   const hasPdf = Boolean(detail.pdfUrl);
-  const stage = stageMap.get(detail.stageId as QuoteStageId);
 
   const lineRows = detail.lines
     .map((line) => {
@@ -55,6 +55,15 @@ export function QuoteDetailCard({
   const isPastDue =
     (detail.stageId === QUOTE_STAGE.PENDING || detail.stageId === QUOTE_STAGE.QUOTED) &&
     isPastDate(detail.eventDate);
+
+  const draftTag = detail.isDraft && (
+    <IconTag
+      color={detail.isComplete ? undefined : 'error'}
+      icon={detail.isComplete ? undefined : AlertCircle}
+    >
+      {t('pipeline.draftTag')}
+    </IconTag>
+  );
 
   const linesGrid =
     lineRows.length === 0 ? (
@@ -98,14 +107,15 @@ export function QuoteDetailCard({
         <Logo />
       </div>
 
-      {/* Mobile: the topbar already shows the quote number as the page title, so just the
-          stage + a compact PDF button here. */}
       <div className="flex items-center justify-between gap-2 sm:hidden">
-        {stage && (
-          <Tag color={stage.color} className="m-0 px-3 py-1 text-sm">
-            {stage.label}
-          </Tag>
-        )}
+        <div className="flex items-center gap-2">
+          <QuoteStageTagDropdown
+            quoteId={detail.id}
+            stageId={detail.stageId as QuoteStageId}
+            isDraft={detail.isDraft}
+          />
+          {draftTag}
+        </div>
         <div className="flex gap-2">
           {hasPdf && <ShareButton url={detail.pdfUrl!} title={detail.number} iconOnly />}
           {showPdfAction && (
@@ -119,11 +129,19 @@ export function QuoteDetailCard({
         </div>
       </div>
 
-      <div className="hidden sm:block sm:text-right">
+      <div className="hidden sm:flex sm:flex-col sm:items-end sm:text-right">
+        <div className="mb-1 flex items-center gap-2">
+          <QuoteStageTagDropdown
+            quoteId={detail.id}
+            stageId={detail.stageId as QuoteStageId}
+            isDraft={detail.isDraft}
+          />
+          {draftTag}
+        </div>
         <Typography.Text type="secondary" className="text-xs tracking-wide">
           {t('detail.title')}
         </Typography.Text>
-        <div className="text-sm mt-1">
+        <div className="text-base mt-1">
           <span className="text-gray-500">{t('detail.number')} </span>
           <span className="font-semibold">{detail.number}</span>
         </div>
