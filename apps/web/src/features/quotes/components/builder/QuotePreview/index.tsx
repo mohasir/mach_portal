@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { QuoteTotals } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
+import { AddressLines } from '@/components/shared/AddressLines';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { getStationIcon } from '../../../helpers';
 import { useQuoteBuilder } from '../../../hooks/useQuoteBuilder';
@@ -45,9 +46,9 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
           <span>{state.eventDate ? date(state.eventDate) : '—'}</span>
         </div>
         {state.address && (
-          <div className="flex justify-between">
+          <div className="flex items-start justify-between">
             <span className="text-gray-500">{t('builder.preview.address')}</span>
-            <span>{[state.address, state.city].filter(Boolean).join(', ')}</span>
+            <AddressLines address={state.address} city={state.city} className="text-right" />
           </div>
         )}
       </div>

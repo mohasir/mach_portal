@@ -19,7 +19,10 @@ export function EventsTable({ clientId, segment = 'all' }: EventsTableProps) {
   const { t } = useTranslation('events');
   const { t: tc } = useTranslation('common');
   const router = useRouter();
-  const table = useDataTable<EventsListQuery['sortBy']>({ defaultSortBy: 'eventDate' });
+  const table = useDataTable<EventsListQuery['sortBy']>({
+    defaultSortBy: 'eventDate',
+    defaultSortDir: 'asc',
+  });
   const { data, isLoading } = useEventsList({ ...table.query, clientId, segment });
   const [assigningEvent, setAssigningEvent] = useState<Event | null>(null);
   const columns = useEventsColumns({ onAssignStaff: setAssigningEvent });

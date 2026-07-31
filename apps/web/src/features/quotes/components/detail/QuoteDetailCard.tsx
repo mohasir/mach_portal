@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import { useConfig } from '@/features/settings';
+import { AddressLines } from '@/components/shared/AddressLines';
 import { IconTag } from '@/components/shared/IconTag';
 import { Logo } from '@/components/shared/Logo';
 import { ShareButton } from '@/components/shared/ShareButton';
@@ -161,7 +162,11 @@ export function QuoteDetailCard({
           {detail.eventTypeName ?? '—'}
         </Descriptions.Item>
         <Descriptions.Item label={t('detail.addressLabel')} span={{ xs: 1, sm: 2 }}>
-          {[detail.address, detail.city].filter(Boolean).join(', ') || '—'}
+          {detail.address || detail.city ? (
+            <AddressLines address={detail.address} city={detail.city} lines={1} />
+          ) : (
+            '—'
+          )}
         </Descriptions.Item>
       </Descriptions>
     </div>

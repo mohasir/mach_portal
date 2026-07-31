@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { Alert, App, Button, Card, Space, Tag, Typography } from 'antd';
 import { CheckCircle, ExternalLink, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { AddressLines } from '@/components/shared/AddressLines';
 import { useConfirmModal, useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { useCancelQuote } from '@/features/quotes';
 import { isPastDate } from '@/lib/date';
@@ -68,11 +69,12 @@ export function EventHeader({ event }: EventHeaderProps) {
             {event.eventDate ? date(event.eventDate) : '—'}
             {event.eventTime ? ` · ${event.eventTime}` : ''}
           </div>
-          {event.address && (
-            <div className="mt-1 text-base text-gray-500">
-              {[event.address, event.city, event.state].filter(Boolean).join(', ')}
-            </div>
-          )}
+          <AddressLines
+            address={event.address}
+            city={event.city}
+            state={event.state}
+            className="mt-1 text-base text-gray-500"
+          />
         </div>
 
         <Space wrap>

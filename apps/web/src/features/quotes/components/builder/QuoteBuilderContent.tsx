@@ -237,6 +237,7 @@ export function QuoteBuilderContent({
         title={
           quoteId && number ? number : quoteId ? t('builder.editTitle') : t('builder.newTitle')
         }
+        titleSize="sm"
         titleSuffix={
           quoteId && number ? (
             <div className="flex items-center gap-1">

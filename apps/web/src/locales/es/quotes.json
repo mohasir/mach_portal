@@ -141,6 +141,7 @@
     "draftTag": "Borrador",
     "cloneNumber": "Clonar número de cotización",
     "numberCopied": "Número copiado al portapapeles",
+    "moveSuccess": "Cotización movida correctamente",
     "confirm": {
       "confirmed": {
         "title": "¿Aprobar cotización?",

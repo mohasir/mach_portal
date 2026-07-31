@@ -127,6 +127,21 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* iOS Safari auto-zooms the viewport on focus when an input's font-size is
+     below 16px — the theme's base fontSize (theme/antd.ts) is 13px, so every
+     AntD text field triggered it on iPhone. Bump to 16px only on mobile;
+     desktop keeps the 13px design size. */
+  @media (max-width: 575px) {
+    .ant-input,
+    textarea.ant-input,
+    .ant-input-number-input,
+    .ant-select-selector,
+    .ant-select-input,
+    .ant-picker-input > input {
+      font-size: 16px;
+    }
+  }
+
   /* Quote builder's quantity stepper (-/+ around a borderless InputNumber): the borderless
      variant draws its own focus ring as an `outline` via :focus-visible/:has(input:focus-
      visible) (antd/es/input/style/variants.js), not a `-focused` class — so it hugs just the

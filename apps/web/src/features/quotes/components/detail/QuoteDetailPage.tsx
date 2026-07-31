@@ -44,7 +44,7 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
   if (quoteLoading || catalogLoading || !detail || !catalog) {
     return (
       <div>
-        <PageHeader title={t('detail.title')} onBack={onBack} />
+        <PageHeader title={t('detail.title')} titleSize="sm" onBack={onBack} />
         <Skeleton active paragraph={{ rows: 12 }} />
       </div>
     );
@@ -74,6 +74,7 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
     <div className="flex flex-col gap-4">
       <PageHeader
         title={detail.number}
+        titleSize="sm"
         titleSuffix={
           <Tooltip title={tc('share.copyLink')}>
             <Button

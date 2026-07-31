@@ -1,6 +1,7 @@
 'use client';
 import { Card } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { AddressLines } from '@/components/shared/AddressLines';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useEventRowActions } from '../hooks/useEventRowActions';
@@ -43,6 +44,12 @@ export function EventCard({ row, index, onClick, onAssignStaff }: EventCardProps
           {row.eventTypeName && (
             <div className="mt-0.5 truncate text-xs text-gray-500">{row.eventTypeName}</div>
           )}
+          <AddressLines
+            address={row.address}
+            city={row.city}
+            state={row.state}
+            className="mt-0.5 text-xs text-gray-500"
+          />
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {row.eventTime && (

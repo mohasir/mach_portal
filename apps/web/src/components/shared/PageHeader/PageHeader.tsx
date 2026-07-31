@@ -18,6 +18,7 @@ interface PageHeaderProps {
   actions?: ReactNode;
   showLogout?: boolean;
   mobileAction?: MobilePageHeaderAction;
+  titleSize?: 'default' | 'sm';
 }
 
 export function PageHeader({
@@ -30,6 +31,7 @@ export function PageHeader({
   actions,
   showLogout,
   mobileAction,
+  titleSize,
 }: PageHeaderProps) {
   const { t } = useTranslation('common');
   const isDesktop = useIsDesktop();
@@ -58,6 +60,7 @@ export function PageHeader({
           onBack={handleBack}
           showLogout={showLogout}
           action={mobileAction}
+          titleSize={titleSize}
         />
         {/* mobileAction takes over the action slot in the topbar — don't duplicate it here. */}
         {!mobileAction && actionArea && <div className="mb-6">{actionArea}</div>}

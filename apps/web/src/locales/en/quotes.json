@@ -141,6 +141,7 @@
     "draftTag": "Draft",
     "cloneNumber": "Clone quote number",
     "numberCopied": "Number copied to clipboard",
+    "moveSuccess": "Quote moved successfully",
     "confirm": {
       "confirmed": {
         "title": "Approve quote?",
