@@ -25,6 +25,7 @@ interface DataTableProps<TData> extends Omit<
   emptyText?: string;
   mobileRenderType?: 'card' | 'list';
   renderCard?: (record: TData, index: number) => ReactNode;
+  showTotal?: boolean;
 }
 
 export function DataTable<TData extends object>({
@@ -41,6 +42,7 @@ export function DataTable<TData extends object>({
   emptyText,
   renderCard,
   mobileRenderType = 'list',
+  showTotal = true,
   locale,
   loading,
   dataSource,
@@ -112,7 +114,7 @@ export function DataTable<TData extends object>({
                   total,
                   showSizeChanger: true,
                   responsive: true,
-                  showTotal: (n) => t('table.total', { total: n }),
+                  showTotal: showTotal ? (n) => t('table.total', { total: n }) : undefined,
                 }
               : { pageSize, hideOnSinglePage: true, responsive: true }
           }

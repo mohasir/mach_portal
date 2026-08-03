@@ -5,12 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { paymentMethodSchema, type PaymentMethod } from '@repo/schemas';
 import { useClientsList } from '@/features/clients';
 import { useEventTypesList } from '@/features/event-types';
-import { buildDateRangePresets } from '../helpers';
-
-const { RangePicker } = DatePicker;
 
 export interface PaymentsFiltersValue {
-  dateRange: [Dayjs, Dayjs] | null;
+  dateFrom?: Dayjs;
+  dateTo?: Dayjs;
   clientId?: string;
   eventTypeId?: string;
   method?: PaymentMethod;
@@ -26,19 +24,21 @@ export function PaymentsFilters({ value, onChange }: PaymentsFiltersProps) {
   const { data: clients } = useClientsList({ nameOnly: true, sortBy: 'name', sortDir: 'asc' });
   const { data: eventTypes } = useEventTypesList({ sortBy: 'name', sortDir: 'asc' });
 
-  const presets = buildDateRangePresets({
-    today: t('filters.presets.today'),
-    thisWeek: t('filters.presets.thisWeek'),
-    thisMonth: t('filters.presets.thisMonth'),
-  });
-
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-      <RangePicker
-        className="w-full sm:w-64"
-        presets={presets}
-        value={value.dateRange}
-        onChange={(dates) => onChange({ ...value, dateRange: dates as [Dayjs, Dayjs] | null })}
+      <DatePicker
+        className="w-full sm:w-40"
+        placeholder={t('filters.dateFrom')}
+        value={value.dateFrom}
+        onChange={(date) => onChange({ ...value, dateFrom: date ?? undefined })}
+        disabledDate={(date) => !!value.dateTo && date.isAfter(value.dateTo, 'day')}
+      />
+      <DatePicker
+        className="w-full sm:w-40"
+        placeholder={t('filters.dateTo')}
+        value={value.dateTo}
+        onChange={(date) => onChange({ ...value, dateTo: date ?? undefined })}
+        disabledDate={(date) => !!value.dateFrom && date.isBefore(value.dateFrom, 'day')}
       />
       <Select
         allowClear

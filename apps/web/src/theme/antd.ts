@@ -21,7 +21,7 @@ export const MB = {
 } as const;
 
 const GlobalProperties = {
-  ControlHeight: 38,
+  ControlHeight: 40,
 };
 
 export const machBarTheme: ThemeConfig = {
@@ -100,6 +100,8 @@ export const machBarTheme: ThemeConfig = {
       controlHeight: GlobalProperties.ControlHeight,
     },
     DatePicker: {
+      paddingBlock: 7,
+      paddingInline: 11,
       controlHeight: GlobalProperties.ControlHeight,
     },
     Table: {

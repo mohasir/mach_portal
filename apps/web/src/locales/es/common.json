@@ -16,7 +16,9 @@
     "copyId": "Copiar ID",
     "copied": "ID copiado",
     "search": "Buscar",
-    "total": "{{total}} registros"
+    "total": "{{total}} registros",
+    "results": "{{count}} resultados",
+    "clearFilters": "Limpiar filtros"
   },
   "share": {
     "action": "Compartir",

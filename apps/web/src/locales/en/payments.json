@@ -5,14 +5,13 @@
     "income": "Income"
   },
   "filters": {
+    "title": "Filters",
+    "apply": "Apply filters",
+    "dateFrom": "From",
+    "dateTo": "To",
     "clientPlaceholder": "All clients",
     "eventTypePlaceholder": "All event types",
-    "methodPlaceholder": "All methods",
-    "presets": {
-      "today": "Today",
-      "thisWeek": "This week",
-      "thisMonth": "This month"
-    }
+    "methodPlaceholder": "All methods"
   },
   "columns": {
     "paidAt": "Date",
