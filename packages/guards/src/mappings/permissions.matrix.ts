@@ -15,7 +15,8 @@ const VIEW_UPDATE = [VIEW, UPDATE] as const;
 
 export const permissionsMatrix = [
   { resource: RESOURCES.DASHBOARD, actions: CRUD },
-  { resource: RESOURCES.EVENT, actions: [...CRUD, ACTIONS.UPLOAD_ATTACHMENT] },
+  { resource: RESOURCES.EVENT, actions: CRUD },
+  { resource: RESOURCES.PAYMENT, actions: [CREATE, READ, DELETE, ACTIONS.UPLOAD_ATTACHMENT] },
   { resource: RESOURCES.CLIENT, actions: CRUD },
   { resource: RESOURCES.QUOTE, actions: CRUD },
   { resource: RESOURCES.PIPELINE, actions: CRUD },

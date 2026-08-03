@@ -116,6 +116,10 @@
         "label": "Events",
         "caption": "Venue events, their scheduling and details."
       },
+      "payment": {
+        "label": "Payments",
+        "caption": "Registering payments, viewing amounts, and the general payments list."
+      },
       "client": {
         "label": "Clients",
         "caption": "Client records and their contact information."

@@ -1,6 +1,7 @@
 export const RESOURCES = {
   DASHBOARD: 'dashboard',
   EVENT: 'event',
+  PAYMENT: 'payment',
   CLIENT: 'client',
   QUOTE: 'quote',
   PIPELINE: 'pipeline',

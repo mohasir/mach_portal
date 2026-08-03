@@ -1,0 +1,48 @@
+{
+  "title": "Payments",
+  "views": {
+    "list": "Payments",
+    "income": "Income"
+  },
+  "filters": {
+    "clientPlaceholder": "All clients",
+    "eventTypePlaceholder": "All event types",
+    "methodPlaceholder": "All methods",
+    "presets": {
+      "today": "Today",
+      "thisWeek": "This week",
+      "thisMonth": "This month"
+    }
+  },
+  "columns": {
+    "paidAt": "Date",
+    "client": "Client",
+    "eventType": "Event type",
+    "eventDate": "Event date",
+    "method": "Method",
+    "amount": "Amount",
+    "reference": "Reference"
+  },
+  "empty": "No payments for this filter",
+  "income": {
+    "groupBy": {
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "weekOf": "Week of {{date}}",
+    "columns": {
+      "period": "Period",
+      "total": "Total",
+      "count": "Payments"
+    },
+    "empty": "No income for this range"
+  },
+  "paymentMethods": {
+    "zelle": "Zelle",
+    "cash": "Cash",
+    "card": "Card",
+    "check": "Check",
+    "transfer": "Transfer"
+  }
+}

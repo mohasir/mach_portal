@@ -116,6 +116,10 @@
         "label": "Eventos",
         "caption": "Eventos del salón, su programación y detalles."
       },
+      "payment": {
+        "label": "Pagos",
+        "caption": "Registrar pagos, ver montos y el listado general de pagos."
+      },
       "client": {
         "label": "Clientes",
         "caption": "Registros de clientes y su información de contacto."

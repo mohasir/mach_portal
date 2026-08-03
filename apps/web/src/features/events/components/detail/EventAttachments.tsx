@@ -3,10 +3,10 @@ import { Empty, Image } from 'antd';
 import { FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
-import type { EventDetail } from '../../types';
+import type { EventDetailWithPayments } from './EventPayments';
 
 interface EventAttachmentsProps {
-  event: EventDetail;
+  event: EventDetailWithPayments;
 }
 
 export function EventAttachments({ event }: EventAttachmentsProps) {

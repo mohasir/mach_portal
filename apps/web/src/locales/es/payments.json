@@ -1,0 +1,48 @@
+{
+  "title": "Pagos",
+  "views": {
+    "list": "Pagos",
+    "income": "Ingresos"
+  },
+  "filters": {
+    "clientPlaceholder": "Todos los clientes",
+    "eventTypePlaceholder": "Todos los tipos de evento",
+    "methodPlaceholder": "Todos los métodos",
+    "presets": {
+      "today": "Hoy",
+      "thisWeek": "Esta semana",
+      "thisMonth": "Este mes"
+    }
+  },
+  "columns": {
+    "paidAt": "Fecha",
+    "client": "Cliente",
+    "eventType": "Tipo de evento",
+    "eventDate": "Fecha del evento",
+    "method": "Método",
+    "amount": "Monto",
+    "reference": "Referencia"
+  },
+  "empty": "No hay pagos para este filtro",
+  "income": {
+    "groupBy": {
+      "week": "Semana",
+      "month": "Mes",
+      "year": "Año"
+    },
+    "weekOf": "Semana del {{date}}",
+    "columns": {
+      "period": "Período",
+      "total": "Total",
+      "count": "Pagos"
+    },
+    "empty": "No hay ingresos para este rango"
+  },
+  "paymentMethods": {
+    "zelle": "Zelle",
+    "cash": "Efectivo",
+    "card": "Tarjeta",
+    "check": "Cheque",
+    "transfer": "Transferencia"
+  }
+}

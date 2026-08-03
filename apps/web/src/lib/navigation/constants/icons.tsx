@@ -15,6 +15,7 @@ import {
   Settings,
   UserCog,
   Users,
+  Wallet,
   Workflow,
 } from 'lucide-react';
 
@@ -25,6 +26,7 @@ export const IconMap: Record<string, ReactNode> = {
   calendar: <Calendar size={iconSize} />,
   events: <CalendarDays size={iconSize} />,
   clients: <Users size={iconSize} />,
+  payments: <Wallet size={iconSize} />,
   quotes: <ReceiptText size={iconSize} />,
   pipeline: <Workflow size={iconSize} />,
   staff: <ChefHat size={iconSize} />,

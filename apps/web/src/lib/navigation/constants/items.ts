@@ -32,6 +32,13 @@ export const CLIENTS_ITEM: NavItem = {
   guard: { [RESOURCES.CLIENT]: [READ] },
 };
 
+export const PAYMENTS_ITEM: NavItem = {
+  label: 'nav.payments',
+  href: '/admin/payments',
+  icon: 'payments',
+  guard: { [RESOURCES.PAYMENT]: [READ] },
+};
+
 export const QUOTES_ITEM: NavItem = {
   label: 'nav.quotes',
   href: '/admin/quotes',
@@ -112,6 +119,7 @@ export const NAV_ITEMS = {
   CALENDAR: CALENDAR_ITEM,
   EVENTS: EVENTS_ITEM,
   CLIENTS: CLIENTS_ITEM,
+  PAYMENTS: PAYMENTS_ITEM,
   QUOTES: QUOTES_ITEM,
   QUOTE_BUILDER: QUOTE_BUILDER_ITEM,
   PIPELINE: PIPELINE_ITEM,

@@ -15,7 +15,7 @@ export const EVENT_STATUS_COLORS: Record<Event['status'], string> = {
   cancelled: 'red',
 };
 
-export const PAYMENT_STATUS_COLORS: Record<EventDetail['paymentStatus'], string> = {
+export const PAYMENT_STATUS_COLORS: Record<NonNullable<EventDetail['paymentStatus']>, string> = {
   pending: 'red',
   partial: 'orange',
   paid: 'green',
