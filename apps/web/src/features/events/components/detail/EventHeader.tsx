@@ -114,6 +114,19 @@ export function EventHeader({ event }: EventHeaderProps) {
           }
         />
       )}
+      {event.selectionsPending && (
+        <Alert
+          className="mt-3"
+          type="warning"
+          showIcon
+          title={t('detail.selections.pendingAlert')}
+          description={
+            event.selectionsDeadline
+              ? t('detail.selections.deadlineNote', { date: date(event.selectionsDeadline) })
+              : undefined
+          }
+        />
+      )}
       {actionContextHolder}
       {deleteContextHolder}
     </Card>

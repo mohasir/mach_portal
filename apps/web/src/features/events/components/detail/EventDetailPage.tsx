@@ -47,7 +47,7 @@ export function EventDetailPage({ eventId }: EventDetailPageProps) {
     {
       key: 'services',
       label: t('detail.tabs.services'),
-      children: <EventComposition lines={event.lines} catalog={catalog} />,
+      children: <EventComposition event={event} lines={event.lines} catalog={catalog} />,
     },
     {
       key: 'staff',

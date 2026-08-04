@@ -21,6 +21,8 @@ export const appSettings = pgTable('app_settings', {
   quoteSeqStart: integer('quote_seq_start').notNull().default(1),
   currency: text('currency').notNull().default('USD'), // ISO 4217 currency code
   catalogSortable: boolean('catalog_sortable').notNull().default(true),
+  optionsSelectionDeadlineDays: integer('options_selection_deadline_days').notNull().default(7),
+  allowSelectOptionsAtQuote: boolean('allow_select_options_at_quote').notNull().default(true),
   updatedAt: timestamp('updated_at')
     .defaultNow()
     .$onUpdate(() => new Date())

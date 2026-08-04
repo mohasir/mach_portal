@@ -21,6 +21,10 @@ export const updateQuoteDefaultsSchema = z.object({
   minPersonsPerLine: z.number().int().min(1, 'config.validation.minPersonsInvalid'),
   quoteSeqStart: z.number().int().min(1, 'config.validation.quoteSeqStartInvalid'),
   currency: currencyCodeSchema,
+  optionsSelectionDeadlineDays: z
+    .number()
+    .int()
+    .min(0, 'config.validation.optionsSelectionDeadlineDaysInvalid'),
 });
 export type UpdateQuoteDefaultsInput = z.infer<typeof updateQuoteDefaultsSchema>;
 
@@ -28,3 +32,10 @@ export const updateCatalogPreferencesSchema = z.object({
   catalogSortable: z.boolean(),
 });
 export type UpdateCatalogPreferencesInput = z.infer<typeof updateCatalogPreferencesSchema>;
+
+export const updateQuoteBuilderPreferencesSchema = z.object({
+  allowSelectOptionsAtQuote: z.boolean(),
+});
+export type UpdateQuoteBuilderPreferencesInput = z.infer<
+  typeof updateQuoteBuilderPreferencesSchema
+>;

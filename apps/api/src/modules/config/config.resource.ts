@@ -21,6 +21,8 @@ export const publicAppSettingsColumns = {
   quoteSeqStart: appSettings.quoteSeqStart,
   currency: appSettings.currency,
   catalogSortable: appSettings.catalogSortable,
+  optionsSelectionDeadlineDays: appSettings.optionsSelectionDeadlineDays,
+  allowSelectOptionsAtQuote: appSettings.allowSelectOptionsAtQuote,
   updatedAt: appSettings.updatedAt,
 } as const;
 
@@ -50,6 +52,8 @@ export const appSettingsResource = (row: PublicAppSettings) => ({
   quoteSeqStart: row.quoteSeqStart,
   currency: row.currency,
   catalogSortable: row.catalogSortable,
+  optionsSelectionDeadlineDays: row.optionsSelectionDeadlineDays,
+  allowSelectOptionsAtQuote: row.allowSelectOptionsAtQuote,
   updatedAt: row.updatedAt,
 });
 

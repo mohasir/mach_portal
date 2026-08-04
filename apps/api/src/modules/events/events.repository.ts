@@ -16,6 +16,7 @@ import {
 import {
   QUOTE_STAGE,
   type AssignStaffInput,
+  type EventLineSelectionInput,
   type EventsCalendarQuery,
   type EventsListQuery,
   type RegisterEventPaymentInput,
@@ -293,5 +294,48 @@ export class EventsRepository {
       .where(and(eq(eventStaff.eventId, data.eventId), eq(eventStaff.staffId, data.staffId)))
       .returning({ id: eventStaff.id })
       .then((r) => r[0]);
+  }
+
+  async findForSelectionsUpdate(eventId: string) {
+    const [row] = await this.db
+      .select({ id: events.id, quoteId: events.quoteId, completedAt: events.completedAt })
+      .from(events)
+      .where(eq(events.id, eventId))
+      .limit(1);
+    return row;
+  }
+
+  // Ownership of each quoteLineId (belongs to this event's quote) and the maxSelect/active-option
+  // rules are validated in events.service.ts before this runs — this just replaces the rows.
+  updateSelections(eventId: string, selections: EventLineSelectionInput[], userId: string) {
+    return this.db.transaction(async (tx) => {
+      for (const selection of selections) {
+        await tx
+          .delete(quoteLineOptions)
+          .where(
+            and(
+              eq(quoteLineOptions.quoteLineId, selection.quoteLineId),
+              eq(quoteLineOptions.optionGroupId, selection.optionGroupId),
+            ),
+          );
+        const optionIds = [...new Set(selection.optionIds)];
+        if (optionIds.length > 0) {
+          await tx.insert(quoteLineOptions).values(
+            optionIds.map((optionId) => ({
+              quoteLineId: selection.quoteLineId,
+              optionId,
+              optionGroupId: selection.optionGroupId,
+            })),
+          );
+        }
+      }
+
+      const [updated] = await tx
+        .update(events)
+        .set({ selectionsConfirmedAt: new Date(), selectionsConfirmedById: userId })
+        .where(eq(events.id, eventId))
+        .returning(publicEventColumns);
+      return updated;
+    });
   }
 }

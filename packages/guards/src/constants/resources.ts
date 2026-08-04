@@ -13,6 +13,7 @@ export const RESOURCES = {
   QUOTE_STAGES: 'quote_stages',
   CATALOG_PREFERENCES: 'catalog_preferences',
   QUOTE_PDF_TEMPLATE: 'quote_pdf_template',
+  QUOTE_BUILDER_PREFERENCES: 'quote_builder_preferences',
 } as const;
 
 export type ResourceType = (typeof RESOURCES)[keyof typeof RESOURCES];

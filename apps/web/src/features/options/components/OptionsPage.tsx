@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useCan } from '@/lib/auth/useCan';
 import { ADMIN_MENU, IconMap, type NavItem } from '@/lib/navigation';
+import { useLayoutStore } from '@/lib/stores/layout.store';
+import { useEffect } from 'react';
 
 const PRIMARY_HREFS = new Set(['/admin', '/admin/calendar', '/admin/quotes']);
 
@@ -12,6 +14,13 @@ export function OptionsPage() {
   const { t } = useTranslation('admin');
   const can = useCan();
   const router = useRouter();
+
+  const setContentBg = useLayoutStore((s) => s.setContentBg);
+
+  useEffect(() => {
+    setContentBg('white');
+    return () => setContentBg('grey');
+  }, [setContentBg]);
 
   const groups = ADMIN_MENU.map((group, i) => ({
     key: group.group ?? String(i),

@@ -31,7 +31,6 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
     sortDir: 'asc',
   });
   const { data: detail, isLoading: quoteLoading } = useQuote(quoteId);
-  const setContentBg = useLayoutStore((s) => s.setContentBg);
 
   const stageId = detail?.stageId as QuoteStageId | undefined;
   const isEditable = !stageId || stageId === QUOTE_STAGE.PENDING || stageId === QUOTE_STAGE.QUOTED;
@@ -41,11 +40,6 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
       router.replace(`/admin/quotes/preview/${quoteId}`);
     }
   }, [quoteId, detail, isEditable, router]);
-
-  useEffect(() => {
-    setContentBg('grey');
-    return () => setContentBg('white');
-  }, [setContentBg]);
 
   const isLoading =
     configLoading || catalogLoading || eventTypesLoading || (!!quoteId && quoteLoading);

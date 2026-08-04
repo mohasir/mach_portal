@@ -80,6 +80,10 @@
       "notes": "Notes",
       "notesPlaceholder": "Internal notes"
     },
+    "selectionsMode": {
+      "label": "Choose options now",
+      "hint": "Off: only stations are added; ingredients get picked later from the event. On: pick each station's options here."
+    },
     "lines": {
       "title": "Stations",
       "empty": "No stations added yet",

@@ -40,6 +40,8 @@ export const ErrorCodes = {
   },
   event: {
     NOT_FOUND: 'EVENT_NOT_FOUND',
+    COMPLETED: 'EVENT_COMPLETED',
+    INVALID_SELECTIONS: 'EVENT_INVALID_SELECTIONS',
   },
   eventStaff: {
     ALREADY_ASSIGNED: 'EVENT_STAFF_ALREADY_ASSIGNED',

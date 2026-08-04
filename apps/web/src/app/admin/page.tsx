@@ -3,6 +3,8 @@ import { Col, Row, Typography } from 'antd';
 import { ArrowUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UpcomingEventsCard } from '@/features/events';
+import { useEffect } from 'react';
+import { useLayoutStore } from '@/lib/stores/layout.store';
 
 const STATS = [
   { key: 'new', value: 245, delta: '20%', bg: 'bg-olive-faint' },
@@ -12,6 +14,13 @@ const STATS = [
 
 export default function DashboardPage() {
   const { t } = useTranslation('admin');
+
+  const setContentBg = useLayoutStore((s) => s.setContentBg);
+
+  useEffect(() => {
+    setContentBg('white');
+    return () => setContentBg('grey');
+  }, [setContentBg]);
 
   return (
     <div>

@@ -18,6 +18,6 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   sidebarCollapsed: false,
   setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
   toggleSidebarCollapsed: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
-  contentBg: 'white',
+  contentBg: 'grey',
   setContentBg: (contentBg) => set({ contentBg }),
 }));

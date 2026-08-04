@@ -1,20 +1,45 @@
 'use client';
-import { Card, Empty } from 'antd';
+import { useState } from 'react';
+import { Button, Card, Empty } from 'antd';
+import { ListChecks } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { Product } from '@/features/catalog';
+import { useCan } from '@/lib/auth/useCan';
 import { getStationIcon, QuoteLineItem } from '@/features/quotes';
 import type { EventDetail } from '../../types';
+import { EventSelectionsSheet } from './EventSelectionsSheet';
 
 interface EventCompositionProps {
+  event: EventDetail;
   lines: EventDetail['lines'];
   catalog: Product[];
 }
 
-export function EventComposition({ lines, catalog }: EventCompositionProps) {
+export function EventComposition({ event, lines, catalog }: EventCompositionProps) {
   const { t } = useTranslation('events');
+  const can = useCan();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const canManageSelections = can({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_SELECTIONS] });
+  const hasSelectableGroups = lines.some((line) => {
+    const product = catalog.find((p) => p.id === line.productId);
+    return product?.optionGroups.some((g) => g.selectionType === 'select') ?? false;
+  });
 
   return (
-    <Card size="small" title={t('detail.composition.title')}>
+    <Card
+      size="small"
+      title={t('detail.composition.title')}
+      extra={
+        canManageSelections &&
+        hasSelectableGroups && (
+          <Button size="small" icon={<ListChecks size={14} />} onClick={() => setSheetOpen(true)}>
+            {t('detail.selections.editButton')}
+          </Button>
+        )
+      }
+    >
       {lines.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
       ) : (
@@ -50,6 +75,14 @@ export function EventComposition({ lines, catalog }: EventCompositionProps) {
             );
           })}
         </div>
+      )}
+      {canManageSelections && (
+        <EventSelectionsSheet
+          event={event}
+          catalog={catalog}
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+        />
       )}
     </Card>
   );

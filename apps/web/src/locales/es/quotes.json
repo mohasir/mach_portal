@@ -80,6 +80,10 @@
       "notes": "Notas",
       "notesPlaceholder": "Notas internas"
     },
+    "selectionsMode": {
+      "label": "Elegir opciones ahora",
+      "hint": "Apagado: solo se agregan las estaciones; los ingredientes se eligen después desde el evento. Encendido: elegí las opciones de cada estación acá."
+    },
     "lines": {
       "title": "Estaciones",
       "empty": "Todavía no agregaste ninguna estación",

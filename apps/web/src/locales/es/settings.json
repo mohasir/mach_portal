@@ -50,6 +50,11 @@
       "title": "Catálogo",
       "sortable": "Catálogo ordenable",
       "sortableCaption": "Permite reordenar estaciones, secciones e ítems arrastrando. Si se desactiva, el orden queda fijo."
+    },
+    "quoteBuilder": {
+      "title": "Armador de cotizaciones",
+      "allowSelectOptionsAtQuote": "Permitir elegir opciones al cotizar",
+      "allowSelectOptionsAtQuoteCaption": "Si se apaga, el switch \"Elegir opciones ahora\" del armador se oculta — todas las cotizaciones difieren la selección de opciones al evento. Las cotizaciones existentes conservan lo que ya tengan guardado."
     }
   },
   "taxRates": {
@@ -91,7 +96,10 @@
     "quoteSeqStartCaption": "Número desde el que arrancará el próximo consecutivo de cotización.",
     "lastUsedSeqHint": "Último usado: {{seq}}",
     "currency": "Moneda",
-    "currencyCaption": "Moneda en la que se muestran los montos de las cotizaciones."
+    "currencyCaption": "Moneda en la que se muestran los montos de las cotizaciones.",
+    "optionsSelectionDeadlineDays": "Fecha límite para elegir opciones",
+    "optionsSelectionDeadlineDaysCaption": "Días antes del evento para los que debería estar confirmada la elección de opciones del cliente.",
+    "days": "días"
   },
   "permissions": {
     "title": "Permisos",
@@ -105,7 +113,8 @@
       "update": "Editar",
       "delete": "Eliminar",
       "upload_attachment": "Subir comprobante",
-      "view": "Ver"
+      "view": "Ver",
+      "manage_selections": "Elegir opciones del evento"
     },
     "resources": {
       "dashboard": {
@@ -163,6 +172,10 @@
       "quote_pdf_template": {
         "label": "Plantilla de PDF",
         "caption": "Textos fijos y servicios que se imprimen en el PDF de cada cotización generada."
+      },
+      "quote_builder_preferences": {
+        "label": "Preferencias del armador de cotizaciones",
+        "caption": "Si el staff puede elegir opciones al momento de cotizar en vez de diferirlas al evento."
       }
     }
   },
@@ -173,6 +186,7 @@
     "minPersonsInvalid": "Mínimo inválido",
     "quoteSeqStartInvalid": "Inicio de consecutivo inválido",
     "currencyInvalid": "Moneda inválida",
+    "optionsSelectionDeadlineDaysInvalid": "Cantidad de días inválida",
     "quoteStagesLabelInvalid": "Nombre requerido",
     "serviceLabelRequired": "La estación es obligatoria",
     "serviceDurationRequired": "La duración es obligatoria"

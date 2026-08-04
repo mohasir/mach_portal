@@ -12,18 +12,6 @@ interface QuickLineBuilderProps {
   readOnly?: boolean;
 }
 
-// 'select' groups get every option they allow pre-filled (up to maxSelect) — this mode
-// skips ingredient-by-ingredient picking entirely.
-function defaultSelections(product: Product): Record<string, string[]> {
-  const selections: Record<string, string[]> = {};
-  for (const group of product.optionGroups) {
-    if (group.selectionType !== 'select') continue;
-    const ids = group.options.map((o) => o.id);
-    selections[group.id] = group.maxSelect != null ? ids.slice(0, group.maxSelect) : ids;
-  }
-  return selections;
-}
-
 export function QuickLineBuilder({ catalog, readOnly }: QuickLineBuilderProps) {
   const { t } = useTranslation('quotes');
   const { state, addLine, removeLine, updateLine } = useQuoteBuilder();
@@ -36,7 +24,7 @@ export function QuickLineBuilder({ catalog, readOnly }: QuickLineBuilderProps) {
       productId: product.id,
       numPersons: firstTier.numPersons,
       subtotal: firstTier.price,
-      selections: defaultSelections(product),
+      selections: {},
     });
   };
 

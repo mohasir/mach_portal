@@ -63,6 +63,14 @@
     "composition": {
       "title": "Composition"
     },
+    "selections": {
+      "pendingAlert": "Options selection pending",
+      "deadlineNote": "Confirm the client's choices before {{date}}",
+      "editButton": "Choose options",
+      "sheetTitle": "Choose options",
+      "save": "Save",
+      "saveSuccess": "Selections saved"
+    },
     "payments": {
       "title": "Payment Status",
       "total": "Invoice total",

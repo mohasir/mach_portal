@@ -63,6 +63,14 @@
     "composition": {
       "title": "Composición"
     },
+    "selections": {
+      "pendingAlert": "Falta elegir las opciones",
+      "deadlineNote": "Confirmá la elección del cliente antes del {{date}}",
+      "editButton": "Elegir opciones",
+      "sheetTitle": "Elegir opciones",
+      "save": "Guardar",
+      "saveSuccess": "Selecciones guardadas"
+    },
     "payments": {
       "title": "Estado de Pago",
       "total": "Total factura",

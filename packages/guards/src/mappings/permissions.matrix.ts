@@ -5,7 +5,7 @@ export type PermissionsMatrixItem = {
   actions: readonly ActionType[];
 };
 
-const { CREATE, READ, UPDATE, DELETE, VIEW } = ACTIONS;
+const { CREATE, READ, UPDATE, DELETE, VIEW, MANAGE_SELECTIONS } = ACTIONS;
 const CRUD = [CREATE, READ, UPDATE, DELETE] as const;
 // Settings resources are singleton rows or fixed catalogs — no create/delete.
 // `view` (not `read`) gates whether the section shows up in the FE — the
@@ -15,7 +15,7 @@ const VIEW_UPDATE = [VIEW, UPDATE] as const;
 
 export const permissionsMatrix = [
   { resource: RESOURCES.DASHBOARD, actions: CRUD },
-  { resource: RESOURCES.EVENT, actions: CRUD },
+  { resource: RESOURCES.EVENT, actions: [...CRUD, MANAGE_SELECTIONS] },
   { resource: RESOURCES.PAYMENT, actions: [CREATE, READ, DELETE, ACTIONS.UPLOAD_ATTACHMENT] },
   { resource: RESOURCES.CLIENT, actions: CRUD },
   { resource: RESOURCES.QUOTE, actions: CRUD },
@@ -28,4 +28,5 @@ export const permissionsMatrix = [
   { resource: RESOURCES.QUOTE_STAGES, actions: VIEW_UPDATE },
   { resource: RESOURCES.CATALOG_PREFERENCES, actions: VIEW_UPDATE },
   { resource: RESOURCES.QUOTE_PDF_TEMPLATE, actions: VIEW_UPDATE },
+  { resource: RESOURCES.QUOTE_BUILDER_PREFERENCES, actions: VIEW_UPDATE },
 ] as const satisfies readonly PermissionsMatrixItem[];

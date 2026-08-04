@@ -112,6 +112,22 @@ export function QuoteDefaultsCard() {
             <Select options={CURRENCY_OPTIONS} className="w-full" />
           </Form.Item>
         </FieldRow>
+
+        <FieldRow
+          title={t('quoteDefaults.optionsSelectionDeadlineDays')}
+          caption={t('quoteDefaults.optionsSelectionDeadlineDaysCaption')}
+          required
+        >
+          <Form.Item
+            name="optionsSelectionDeadlineDays"
+            className="mb-0"
+            rules={[
+              { required: true, message: t('validation.optionsSelectionDeadlineDaysInvalid') },
+            ]}
+          >
+            <InputNumber min={0} className="w-full" suffix={t('quoteDefaults.days')} />
+          </Form.Item>
+        </FieldRow>
       </SettingsCard>
 
       {canEdit && (

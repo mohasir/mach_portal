@@ -56,6 +56,7 @@ export const quotes = pgTable('quotes', {
     .default(1) // QUOTE_STAGE.PENDING
     .references(() => quoteStages.id),
   isDraft: boolean('is_draft').notNull().default(true),
+  selectOptionsAtQuote: boolean('select_options_at_quote').notNull().default(false),
   validUntil: date('valid_until', { mode: 'string' }),
   createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
   pdfUrl: text('pdf_url'),

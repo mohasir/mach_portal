@@ -32,10 +32,7 @@ export function MobileTopbar() {
                 aria-label={tc('back')}
               />
             )}
-            <Typography.Title
-              level={2}
-              className={`font-heading text-brown m-0! min-w-0 truncate ${header.titleSize === 'sm' ? 'text-lg!' : ''}`}
-            >
+            <Typography.Title className={`font-heading text-brown m-0! min-w-0 truncate text-lg!`}>
               {header.title}
             </Typography.Title>
             {header.titleSuffix && <span className="shrink-0">{header.titleSuffix}</span>}

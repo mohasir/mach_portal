@@ -32,12 +32,6 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
   const { data: detail, isLoading: quoteLoading } = useQuote(quoteId);
   const { data: catalog, isLoading: catalogLoading } = useProductCatalog();
   const { generatePdf, isPending: isGeneratingPdf } = useGenerateQuotePdf();
-  const setContentBg = useLayoutStore((s) => s.setContentBg);
-
-  useEffect(() => {
-    setContentBg('grey');
-    return () => setContentBg('white');
-  }, [setContentBg]);
 
   const onBack = () => router.back();
 

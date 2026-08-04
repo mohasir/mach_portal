@@ -6,14 +6,21 @@ import {
   registerEventPaymentSchema,
   removeEventPaymentAttachmentSchema,
   removeStaffSchema,
+  updateEventSelectionsSchema,
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS, hasPermission } from '@repo/guards';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { db } from '../../db';
+import { ConfigRepository } from '../config/config.repository';
+import { QuotesRepository } from '../quotes/quotes.repository';
 import { EventsRepository } from './events.repository';
 import { EventsService } from './events.service';
 
-const service = new EventsService(new EventsRepository(db));
+const service = new EventsService(
+  new EventsRepository(db),
+  new QuotesRepository(db),
+  new ConfigRepository(db),
+);
 
 export const eventsRouter = router({
   list: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.READ] })
@@ -57,4 +64,8 @@ export const eventsRouter = router({
   removePaymentAttachment: guardedProcedure({ [RESOURCES.PAYMENT]: [ACTIONS.DELETE] })
     .input(removeEventPaymentAttachmentSchema)
     .mutation(({ input }) => service.removePaymentAttachment(input)),
+
+  updateSelections: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_SELECTIONS] })
+    .input(updateEventSelectionsSchema)
+    .mutation(({ input, ctx }) => service.updateSelections(input.eventId, input, ctx.user.id)),
 });

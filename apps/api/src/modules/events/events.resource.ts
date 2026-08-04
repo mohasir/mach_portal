@@ -1,5 +1,6 @@
 import type { PaymentMethod } from '@repo/schemas';
 import { events } from '../../db/schema';
+import { subtractDays } from '../../lib/utils/date';
 import {
   buildQuoteLineDetails,
   type PublicQuoteLine,
@@ -22,6 +23,8 @@ export const publicEventColumns = {
   paymentMethod: events.paymentMethod,
   notes: events.notes,
   completedAt: events.completedAt,
+  selectionsConfirmedAt: events.selectionsConfirmedAt,
+  selectionsConfirmedById: events.selectionsConfirmedById,
   createdAt: events.createdAt,
   updatedAt: events.updatedAt,
 } as const;
@@ -155,8 +158,10 @@ export const buildEventDetail = (
   staffRows: EventStaffRow[],
   paymentRows: EventPaymentRow[],
   attachmentRows: EventPaymentAttachmentRow[],
+  optionsSelectionDeadlineDays: number,
 ) => {
   const totalPaid = paymentRows.reduce((sum, p) => sum + p.amount, 0);
+  const selectionsPending = !eventRow.selectionsConfirmedAt;
   return {
     ...eventListItemResource(eventRow),
     lines: buildQuoteLineDetails(lineRows, optionRows),
@@ -164,6 +169,11 @@ export const buildEventDetail = (
     payments: buildEventPaymentDetails(paymentRows, attachmentRows),
     totalPaid,
     paymentStatus: derivePaymentStatus(eventRow.totalAmount, totalPaid),
+    selectionsPending,
+    selectionsDeadline:
+      selectionsPending && eventRow.eventDate
+        ? subtractDays(eventRow.eventDate, optionsSelectionDeadlineDays)
+        : null,
   };
 };
 export type EventDetailResource = ReturnType<typeof buildEventDetail>;

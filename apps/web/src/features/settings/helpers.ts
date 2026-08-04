@@ -34,6 +34,7 @@ export interface QuoteDefaultsFormValues {
   minPersonsPerLine: number;
   quoteSeqStart: number;
   currency: string;
+  optionsSelectionDeadlineDays: number;
 }
 
 export function toQuoteDefaultsFormValues(config: Config): QuoteDefaultsFormValues {
@@ -43,6 +44,7 @@ export function toQuoteDefaultsFormValues(config: Config): QuoteDefaultsFormValu
     minPersonsPerLine: config.appSettings.minPersonsPerLine,
     quoteSeqStart: config.appSettings.quoteSeqStart,
     currency: config.appSettings.currency,
+    optionsSelectionDeadlineDays: config.appSettings.optionsSelectionDeadlineDays,
   };
 }
 
@@ -55,6 +57,7 @@ export function toQuoteDefaultsUpdateInput(
     minPersonsPerLine: values.minPersonsPerLine,
     quoteSeqStart: values.quoteSeqStart,
     currency: values.currency,
+    optionsSelectionDeadlineDays: values.optionsSelectionDeadlineDays,
   };
 }
 

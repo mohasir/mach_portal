@@ -21,6 +21,7 @@ import { TemplatesRepository } from '../templates/templates.repository';
 import { quotePdfTemplateResource } from '../templates/templates.resource';
 import { QuotesRepository } from './quotes.repository';
 import { buildQuotePdfPayload } from './quotes.pdf';
+import { validateLineSelections, type CatalogContext } from './quotes.validation';
 import {
   buildQuoteDetail,
   buildQuoteLineDetails,
@@ -33,8 +34,6 @@ import {
 
 const EDITABLE_STAGES: QuoteStageId[] = [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED];
 const PDF_ALLOWED_STAGES: QuoteStageId[] = [QUOTE_STAGE.QUOTED, QUOTE_STAGE.CONFIRMED];
-
-type CatalogContext = Awaited<ReturnType<QuotesRepository['loadCatalogContext']>>;
 
 function notFound() {
   return new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.quote.NOT_FOUND) });
@@ -160,6 +159,7 @@ export class QuotesService {
         discountType: input.discountType ?? null,
         discountValue: input.discountValue ?? null,
         isDraft: input.isDraft,
+        selectOptionsAtQuote: input.selectOptionsAtQuote,
         validUntil,
         createdById: userId,
         ...totals,
@@ -197,6 +197,7 @@ export class QuotesService {
         discountType: input.discountType ?? null,
         discountValue: input.discountValue ?? null,
         isDraft: input.isDraft,
+        selectOptionsAtQuote: input.selectOptionsAtQuote,
         ...totals,
       },
       input.lines,
@@ -259,6 +260,8 @@ export class QuotesService {
     const fromStageId = current.stageId as QuoteStageId;
     this.assertTransition(fromStageId, QUOTE_STAGE.CONFIRMED);
 
+    // Flow B (options already chosen at quote time) means the event is born resolved; Flow A
+    // (default) leaves it pending until someone completes it from the event screen (§events.updateSelections).
     const updated = await this.repo.approveWithEvent(id, fromStageId, userId, {
       clientId: current.clientId,
       eventTypeId: current.eventTypeId,
@@ -268,6 +271,8 @@ export class QuotesService {
       address: current.address,
       city: current.city,
       totalAmount: current.total,
+      selectionsConfirmedAt: current.selectOptionsAtQuote ? new Date() : null,
+      selectionsConfirmedById: current.selectOptionsAtQuote ? userId : null,
     });
     if (!updated) throw notFound();
     return quoteResource(updated);
@@ -323,24 +328,7 @@ export class QuotesService {
     // numPersons doesn't have to match a catalog tier — the builder also allows a custom
     // quantity/price override per line; numPersons/subtotal bounds are enforced by the schema.
 
-    for (const selection of line.selections) {
-      const group = ctx.groups.find(
-        (g) => g.id === selection.optionGroupId && g.productId === line.productId,
-      );
-      if (!group?.isActive) throw invalidLines();
-
-      if (group.selectionType === 'included') {
-        if (selection.optionIds.length > 0) throw invalidLines();
-        continue;
-      }
-      if (group.maxSelect != null && selection.optionIds.length > group.maxSelect)
-        throw invalidLines();
-
-      for (const optionId of selection.optionIds) {
-        const option = ctx.options.find((o) => o.id === optionId && o.optionGroupId === group.id);
-        if (!option?.isActive) throw invalidLines();
-      }
-    }
+    if (!validateLineSelections(line.productId, line.selections, ctx)) throw invalidLines();
   }
 }
 

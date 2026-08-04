@@ -104,6 +104,7 @@ const quoteMutationFields = {
   longDistanceAmount: z.number().int().min(0).optional(),
   depositRate: z.number().min(0).max(1).optional(),
   lines: z.array(quoteLineInputSchema).default([]),
+  selectOptionsAtQuote: z.boolean().default(false),
 } as const;
 
 const clientXor = (data: { clientId?: string; newClient?: unknown }) =>
