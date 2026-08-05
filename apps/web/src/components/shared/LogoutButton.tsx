@@ -24,6 +24,7 @@ export function LogoutButton({ collapsed = false, iconOnly = false }: LogoutButt
     return (
       <Button
         type="text"
+        shape="circle"
         danger
         icon={<IconBadge icon={LogOut} className="bg-salmon/20 text-error" />}
         onClick={onLogout}

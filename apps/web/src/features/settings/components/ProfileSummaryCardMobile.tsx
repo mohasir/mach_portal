@@ -1,5 +1,5 @@
 'use client';
-import { Avatar, Flex, Typography } from 'antd';
+import { Avatar, Card, Flex, Typography } from 'antd';
 import { useSession } from '@/lib/auth/client';
 import { RoleTag } from '@/components/shared/RoleTag';
 
@@ -13,7 +13,7 @@ export function ProfileSummaryCardMobile() {
   const initial = source ? source[0]!.toUpperCase() : '?';
 
   return (
-    <div className="flex flex-col items-center gap-1 py-2 text-center">
+    <Card className="flex flex-col items-center gap-1 py-2 text-center">
       <Avatar
         src={user?.image ?? undefined}
         size={80}
@@ -32,6 +32,6 @@ export function ProfileSummaryCardMobile() {
         )}
       </Flex>
       <RoleTag role={user?.role} className="mt-1" />
-    </div>
+    </Card>
   );
 }

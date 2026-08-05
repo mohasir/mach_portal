@@ -3,37 +3,41 @@ import type { ReactNode } from 'react';
 import { Card, Divider, Typography } from 'antd';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 
-interface SettingsCardProps {
+interface WrapperCardProps {
   title: ReactNode;
   caption?: ReactNode;
   dividerClassName?: string;
   className?: string;
   children: ReactNode;
   variant?: 'card' | 'plain';
+  showDivider?: boolean;
 }
 
-export function SettingsCard({
+export function WrapperCard({
   title,
   caption,
   dividerClassName = 'mt-3 mb-6',
   className,
   children,
-  variant,
-}: SettingsCardProps) {
+  variant = 'card',
+  showDivider = false,
+}: WrapperCardProps) {
   const isDesktop = useIsDesktop();
   const resolvedVariant = variant ?? (isDesktop ? 'card' : 'plain');
 
   const content = (
     <>
-      <Typography.Title level={3} className="font-heading text-brown m-0!">
-        {title}
-      </Typography.Title>
-      {caption && (
-        <Typography.Text type="secondary" className="mt-1 block text-xs">
-          {caption}
-        </Typography.Text>
-      )}
-      <Divider className={dividerClassName} />
+      <div className="mb-4">
+        <Typography.Title className="font-heading text-lg text-brown m-0!">
+          {title}
+        </Typography.Title>
+        {caption && (
+          <Typography.Text type="secondary" className="mt-1 block text-xs">
+            {caption}
+          </Typography.Text>
+        )}
+      </div>
+      {showDivider && <Divider className={dividerClassName} />}
       {children}
     </>
   );
@@ -42,5 +46,9 @@ export function SettingsCard({
     return <div className={className}>{content}</div>;
   }
 
-  return <Card className={className}>{content}</Card>;
+  return (
+    <Card className={className} classNames={{ body: 'p-4.5' }}>
+      {content}
+    </Card>
+  );
 }

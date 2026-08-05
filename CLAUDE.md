@@ -77,3 +77,12 @@ pnpm check-types                  # type-check monorepo
 
 > Si necesitas limpiar `apps/web/.next`, **detén antes el dev server** (borrarlo en caliente
 > corrompe su caché y provoca 500).
+
+## Workflow con Claude
+
+- **Nunca levantar servidores ni correr pruebas en vivo** (`pnpm dev`, abrir el navegador, probar
+  una feature end-to-end, etc.). Eso lo hace siempre el usuario. Tras un cambio de UI/feature,
+  describir qué probar y dejar que el usuario lo verifique — no intentar levantar el server ni
+  el browser para comprobarlo.
+- **`check-types` (`pnpm check-types` / `pnpm --filter <app> check-types`) sí se puede correr
+  libremente**, sin pedir permiso — no es una prueba en vivo, solo type-check estático.

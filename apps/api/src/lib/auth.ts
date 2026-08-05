@@ -10,7 +10,7 @@ export const auth = betterAuth({
   emailAndPassword: { enabled: true },
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: [env.WEB_ORIGIN],
+  trustedOrigins: env.WEB_ORIGIN,
   session: {
     cookieCache: { enabled: true, maxAge: 300 },
   },

@@ -1,7 +1,7 @@
 'use client';
-import { QuoteDefaultsCard } from './QuoteDefaultsCard';
-import { TaxRatesCard } from './TaxRatesCard';
-import { QuoteStagesCard } from './QuoteStagesCard';
+import { QuoteDefaultsCard } from './forms/QuoteDefaultsCard';
+import { TaxRatesCard } from './forms/TaxRatesCard';
+import { QuoteStagesCard } from './forms/QuoteStagesCard';
 
 export function GeneralSettingsForm() {
   return (

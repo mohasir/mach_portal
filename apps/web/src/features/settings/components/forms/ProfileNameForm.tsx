@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useSession } from '@/lib/auth/client';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
-import { useUpdateProfile } from '../hooks/useUpdateProfile';
+import { useUpdateProfile } from '../../hooks/useUpdateProfile';
 
 interface ProfileFormValues {
   name: string;

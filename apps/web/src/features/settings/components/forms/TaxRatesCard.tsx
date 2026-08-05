@@ -6,10 +6,14 @@ import { STATE_NAMES } from '@repo/schemas';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
 import { useCan } from '@/lib/auth/useCan';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
-import { useConfig } from '../hooks/useConfig';
-import { useUpdateTaxRates } from '../hooks/useUpdateTaxRates';
-import { toTaxRatesFormValues, toTaxRatesUpdateInput, type TaxRatesFormValues } from '../helpers';
-import { SettingsCard } from './SettingsCard';
+import { useConfig } from '../../hooks/useConfig';
+import { useUpdateTaxRates } from '../../hooks/useUpdateTaxRates';
+import {
+  toTaxRatesFormValues,
+  toTaxRatesUpdateInput,
+  type TaxRatesFormValues,
+} from '../../helpers';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 export function TaxRatesCard() {
   const { t } = useTranslation('settings');
@@ -28,15 +32,15 @@ export function TaxRatesCard() {
   };
 
   return (
-    <Form
-      key={JSON.stringify(data.stateSettings)}
-      form={form}
-      layout="vertical"
-      initialValues={toTaxRatesFormValues(data)}
-      onFinish={onFinish}
-      disabled={!canEdit}
-    >
-      <SettingsCard title={t('taxRates.title')}>
+    <WrapperCard title={t('taxRates.title')}>
+      <Form
+        key={JSON.stringify(data.stateSettings)}
+        form={form}
+        layout="vertical"
+        initialValues={toTaxRatesFormValues(data)}
+        onFinish={onFinish}
+        disabled={!canEdit}
+      >
         {data.stateSettings.map((s, index) => (
           <FieldRow key={s.state} title={STATE_NAMES[s.state]} required>
             <Form.Item
@@ -55,19 +59,19 @@ export function TaxRatesCard() {
             </Form.Item>
           </FieldRow>
         ))}
-      </SettingsCard>
 
-      {canEdit && (
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={isPending}
-          disabled={unchanged}
-          className="mt-6"
-        >
-          {t('save')}
-        </Button>
-      )}
-    </Form>
+        {canEdit && (
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={isPending}
+            disabled={unchanged}
+            className="mt-6"
+          >
+            {t('save')}
+          </Button>
+        )}
+      </Form>
+    </WrapperCard>
   );
 }

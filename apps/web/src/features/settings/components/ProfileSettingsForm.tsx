@@ -1,6 +1,6 @@
 'use client';
 import { ProfileInfoCard } from './ProfileInfoCard';
-import { ChangePasswordCard } from './ChangePasswordCard';
+import { ChangePasswordCard } from './forms/ChangePasswordCard';
 
 export function ProfileSettingsForm() {
   return (

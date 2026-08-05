@@ -6,18 +6,18 @@ import type { Color } from 'antd/es/color-picker';
 import { Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
-import { TAG_COLOR_PRESETS } from '../contants';
+import { TAG_COLOR_PRESETS } from '../../contants';
 import { useCan } from '@/lib/auth/useCan';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
-import { useConfig } from '../hooks/useConfig';
-import { useUpdateQuoteStagesConfig } from '../hooks/useUpdateQuoteStagesConfig';
+import { useConfig } from '../../hooks/useConfig';
+import { useUpdateQuoteStagesConfig } from '../../hooks/useUpdateQuoteStagesConfig';
 import {
   toQuoteStagesFormValues,
   toQuoteStagesUpdateInput,
   type QuoteStagesFormValues,
-} from '../helpers';
-import { SettingsCard } from './SettingsCard';
+} from '../../helpers';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface QuoteStageRowProps {
   index: number;
@@ -124,31 +124,30 @@ export function QuoteStagesCard() {
   };
 
   return (
-    <Form
-      key={JSON.stringify(data.quoteStages)}
-      form={form}
-      layout="vertical"
-      initialValues={toQuoteStagesFormValues(data)}
-      onFinish={onFinish}
-      disabled={!canEdit}
-    >
-      <SettingsCard title={t('quoteStages.title')}>
+    <WrapperCard title={t('quoteStages.title')}>
+      <Form
+        key={JSON.stringify(data.quoteStages)}
+        form={form}
+        layout="vertical"
+        initialValues={toQuoteStagesFormValues(data)}
+        onFinish={onFinish}
+        disabled={!canEdit}
+      >
         {data.quoteStages.map((s, index) => (
           <QuoteStageRow key={s.id} index={index} caption={s.description} canEdit={canEdit} />
         ))}
-      </SettingsCard>
-
-      {canEdit && (
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={isPending}
-          disabled={unchanged}
-          className="mt-6"
-        >
-          {t('save')}
-        </Button>
-      )}
-    </Form>
+        {canEdit && (
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={isPending}
+            disabled={unchanged}
+            className="mt-6"
+          >
+            {t('save')}
+          </Button>
+        )}
+      </Form>
+    </WrapperCard>
   );
 }

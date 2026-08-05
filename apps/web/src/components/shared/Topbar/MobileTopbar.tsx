@@ -27,6 +27,7 @@ export function MobileTopbar() {
             {header.onBack && (
               <Button
                 type="text"
+                shape="circle"
                 icon={<IconBadge icon={ArrowLeft} />}
                 onClick={header.onBack}
                 aria-label={tc('back')}
@@ -58,6 +59,7 @@ export function MobileTopbar() {
           {header?.action && (
             <Button
               type="text"
+              shape="circle"
               icon={<IconBadge icon={header.action.icon} />}
               onClick={header.action.onClick}
               aria-label={header.action.ariaLabel}

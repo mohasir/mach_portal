@@ -10,7 +10,7 @@ import { eventAttachmentsRouter } from './modules/events/events.express';
 
 const app = express();
 
-app.use(cors({ origin: env.WEB_ORIGIN, credentials: true }));
+app.use(cors({ origin: env.WEB_ORIGIN, credentials: true })); // env.WEB_ORIGIN is a string[]
 
 app.use(['/api/auth', '/trpc'], (_req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');

@@ -1,6 +1,6 @@
 'use client';
-import { CatalogPreferencesCard } from './CatalogPreferencesCard';
-import { QuoteBuilderPreferencesCard } from './QuoteBuilderPreferencesCard';
+import { CatalogPreferencesCard } from './forms/CatalogPreferencesCard';
+import { QuoteBuilderPreferencesCard } from './forms/QuoteBuilderPreferencesCard';
 
 export function PreferencesSettingsForm() {
   return (

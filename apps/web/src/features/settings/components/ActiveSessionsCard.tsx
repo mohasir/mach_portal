@@ -7,7 +7,7 @@ import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { isMobileUserAgent, parseUserAgent } from '@/lib/utils/userAgent';
 import { useActiveSessions } from '../hooks/useActiveSessions';
 import { useRevokeSession } from '../hooks/useRevokeSession';
-import { SettingsCard } from './SettingsCard';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 export function ActiveSessionsCard() {
   const { t } = useTranslation('settings');
@@ -18,7 +18,7 @@ export function ActiveSessionsCard() {
   const { revokeSession, isPending } = useRevokeSession();
 
   return (
-    <SettingsCard title={t('security.sessions.title')} caption={t('security.sessions.caption')}>
+    <WrapperCard title={t('security.sessions.title')} caption={t('security.sessions.caption')}>
       {isLoading ? (
         <Skeleton active paragraph={{ rows: 3 }} />
       ) : (
@@ -70,6 +70,6 @@ export function ActiveSessionsCard() {
           })}
         </div>
       )}
-    </SettingsCard>
+    </WrapperCard>
   );
 }

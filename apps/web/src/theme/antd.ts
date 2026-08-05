@@ -59,7 +59,7 @@ export const machBarTheme: ThemeConfig = {
 
     // Shape
     borderRadius: 6,
-    borderRadiusLG: 10,
+    borderRadiusLG: 16,
     borderRadiusSM: 4,
 
     // Spacing
