@@ -42,12 +42,14 @@ export function QuickLineBuilder({ catalog, readOnly }: QuickLineBuilderProps) {
           {state.lines.map((line) => {
             const product = catalog.find((p) => p.id === line.productId);
             if (!product) return null;
-            return (
+            return readOnly ? (
+              <QuickLineCard key={line.key} mode="readOnly" line={line} product={product} />
+            ) : (
               <QuickLineCard
                 key={line.key}
+                mode="edit"
                 line={line}
                 product={product}
-                readOnly={readOnly}
                 onRemove={() => removeLine(line.key)}
                 onChange={(payload) => updateLine(line.key, payload)}
               />

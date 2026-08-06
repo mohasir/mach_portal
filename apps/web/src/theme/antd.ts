@@ -30,7 +30,7 @@ export const machBarTheme: ThemeConfig = {
     // Brand colors
     colorPrimary: MB.olive,
     colorError: MB.red,
-    colorWarning: MB.salmon,
+    colorWarning: '#faad14',
     colorSuccess: '#4caf50',
 
     // Backgrounds & surface
@@ -119,6 +119,7 @@ export const machBarTheme: ThemeConfig = {
     },
     Card: {
       headerBg: MB.ivory,
+      bodyPadding: 18,
     },
     Menu: {
       // Sidebar claro (estilo imagen): ítem activo como "pill" olivo relleno.

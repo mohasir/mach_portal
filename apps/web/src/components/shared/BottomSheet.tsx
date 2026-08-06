@@ -18,7 +18,12 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
       onClose={onClose}
       closable={false}
       size="auto"
-      classNames={{ wrapper: 'overflow-hidden rounded-t-4xl', body: 'p-0' }}
+      classNames={{
+        wrapper: 'overflow-hidden rounded-t-4xl flex flex-col',
+        section: 'overflow-hidden h-auto min-h-0 flex-1',
+        body: 'p-0 overflow-y-auto min-h-0',
+      }}
+      styles={{ wrapper: { maxHeight: '80dvh' } }}
       title={
         <div className="flex flex-col items-center gap-2">
           <span className="bg-primary h-1 w-10 mb-2 rounded-full" />

@@ -1,14 +1,14 @@
 'use client';
 import { useState } from 'react';
-import { Button, Card, Empty } from 'antd';
-import { ListChecks } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Empty } from 'antd';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { Product } from '@/features/catalog';
 import { useCan } from '@/lib/auth/useCan';
-import { getStationIcon, QuoteLineItem } from '@/features/quotes';
+import { QuickLineCard } from '@/features/quotes';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 import type { EventDetail } from '../../types';
-import { EventSelectionsSheet } from './EventSelectionsSheet';
+import { StationSelectionDetailSheet } from './StationSelectionDetailSheet';
+import { StationSelectionsSheet } from './StationSelectionsSheet';
 
 interface EventCompositionProps {
   event: EventDetail;
@@ -16,74 +16,57 @@ interface EventCompositionProps {
   catalog: Product[];
 }
 
+type SheetLine = { line: EventDetail['lines'][number]; product: Product };
+
 export function EventComposition({ event, lines, catalog }: EventCompositionProps) {
-  const { t } = useTranslation('events');
   const can = useCan();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editing, setEditing] = useState<SheetLine | null>(null);
+  const [viewing, setViewing] = useState<SheetLine | null>(null);
 
   const canManageSelections = can({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_SELECTIONS] });
-  const hasSelectableGroups = lines.some((line) => {
-    const product = catalog.find((p) => p.id === line.productId);
-    return product?.optionGroups.some((g) => g.selectionType === 'select') ?? false;
-  });
 
   return (
-    <Card
-      size="small"
-      title={t('detail.composition.title')}
-      extra={
-        canManageSelections &&
-        hasSelectableGroups && (
-          <Button size="small" icon={<ListChecks size={14} />} onClick={() => setSheetOpen(true)}>
-            {t('detail.selections.editButton')}
-          </Button>
-        )
-      }
-    >
+    <WrapperCard>
       {lines.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
       ) : (
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-3">
           {lines.map((line) => {
             const product = catalog.find((p) => p.id === line.productId);
             if (!product) return null;
-            const groups = product.optionGroups
-              .map((group) => {
-                const isIncluded = group.selectionType === 'included';
-                const selection = line.selections.find((s) => s.optionGroupId === group.id);
-                const options = isIncluded
-                  ? group.options
-                  : group.options.filter((o) => selection?.optionIds.includes(o.id));
-                return {
-                  key: group.id,
-                  label: group.label,
-                  isIncluded,
-                  optionNames: options.map((option) => option.name),
-                };
-              })
-              .filter((group) => group.optionNames.length > 0);
 
-            return (
-              <QuoteLineItem
+            return canManageSelections ? (
+              <QuickLineCard
                 key={line.id}
-                icon={getStationIcon(product.name)}
-                name={product.name}
-                numPersons={line.numPersons}
-                total={line.subtotal}
-                groups={groups}
+                mode="selection"
+                line={line}
+                product={product}
+                onShow={() => setViewing({ line, product })}
+                onEditSelection={() => setEditing({ line, product })}
               />
+            ) : (
+              <QuickLineCard key={line.id} mode="readOnly" line={line} product={product} />
             );
           })}
         </div>
       )}
-      {canManageSelections && (
-        <EventSelectionsSheet
-          event={event}
-          catalog={catalog}
-          open={sheetOpen}
-          onClose={() => setSheetOpen(false)}
+      {editing && (
+        <StationSelectionsSheet
+          eventId={event.id}
+          line={editing.line}
+          product={editing.product}
+          open
+          onClose={() => setEditing(null)}
         />
       )}
-    </Card>
+      {viewing && (
+        <StationSelectionDetailSheet
+          line={viewing.line}
+          product={viewing.product}
+          open
+          onClose={() => setViewing(null)}
+        />
+      )}
+    </WrapperCard>
   );
 }

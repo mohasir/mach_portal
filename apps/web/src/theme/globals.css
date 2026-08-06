@@ -10,6 +10,7 @@
   --color-error: var(--ant-color-error);
   --color-warning: var(--ant-color-warning);
   --color-success: var(--ant-color-success);
+  --color-info: var(--ant-color-info);
   --color-foreground: var(--ant-color-text);
   --color-muted: var(--ant-color-text-secondary);
   --color-background: var(--ant-color-bg-layout);
@@ -164,5 +165,13 @@
      land at ~40.8px instead of the app's 40px control height. Force it exactly. */
   .ant-picker {
     height: 40px;
+  }
+
+  .ant-alert {
+    padding: 18px;
+    align-items: start;
+  }
+  .ant-alert .ant-alert-section .ant-alert-title {
+    line-height: 1;
   }
 }

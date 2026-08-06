@@ -89,6 +89,8 @@
       "empty": "Todavía no agregaste ninguna estación",
       "addPlaceholder": "+ Agregar estación",
       "remove": "Quitar línea",
+      "show": "Ver selección",
+      "editSelections": "Elegir opciones",
       "edit": "Editar cantidad y precio",
       "editTitle": "Editar cantidad y precio",
       "editDone": "Listo",
@@ -100,7 +102,9 @@
       "price": "Precio",
       "included": "Incluido",
       "selectAny": "Elegí las que quieras",
-      "maxSelect": "{{selected}}/{{max}}"
+      "maxSelect": "{{selected}}/{{max}}",
+      "selectionsPending": "Sin selección",
+      "selectionsCount": "{{done}}/{{total}} seleccionadas"
     },
     "pricing": {
       "discountType": "Descuento",

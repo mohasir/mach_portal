@@ -4,7 +4,7 @@ import { Card, Divider, Typography } from 'antd';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 
 interface WrapperCardProps {
-  title: ReactNode;
+  title?: ReactNode;
   caption?: ReactNode;
   dividerClassName?: string;
   className?: string;
@@ -27,16 +27,21 @@ export function WrapperCard({
 
   const content = (
     <>
-      <div className="mb-4">
-        <Typography.Title className="font-heading text-lg text-brown m-0!">
-          {title}
-        </Typography.Title>
-        {caption && (
-          <Typography.Text type="secondary" className="mt-1 block text-xs">
-            {caption}
-          </Typography.Text>
-        )}
-      </div>
+      {title ||
+        (caption && (
+          <div className="mb-4">
+            {title && (
+              <Typography.Title className="font-heading text-lg text-brown m-0!">
+                {title}
+              </Typography.Title>
+            )}
+            {caption && (
+              <Typography.Text type="secondary" className="mt-1 block text-xs">
+                {caption}
+              </Typography.Text>
+            )}
+          </div>
+        ))}
       {showDivider && <Divider className={dividerClassName} />}
       {children}
     </>
@@ -46,9 +51,5 @@ export function WrapperCard({
     return <div className={className}>{content}</div>;
   }
 
-  return (
-    <Card className={className} classNames={{ body: 'p-4.5' }}>
-      {content}
-    </Card>
-  );
+  return <Card className={className}>{content}</Card>;
 }

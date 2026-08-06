@@ -40,6 +40,7 @@
   },
   "detail": {
     "backToQuote": "View quote",
+    "pastDueTitle": "Past due",
     "pastDue": "This event's date has already passed. Do you want to mark it as completed?",
     "markCompleted": "Mark completed",
     "markCompletedSuccess": "Event marked as completed",
@@ -66,8 +67,8 @@
     "selections": {
       "pendingAlert": "Options selection pending",
       "deadlineNote": "Confirm the client's choices before {{date}}",
-      "editButton": "Choose options",
       "sheetTitle": "Choose options",
+      "detailTitle": "Selected options",
       "save": "Save",
       "saveSuccess": "Selections saved"
     },
