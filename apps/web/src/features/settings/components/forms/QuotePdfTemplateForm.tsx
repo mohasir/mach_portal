@@ -7,9 +7,9 @@ import { ACTIONS, RESOURCES } from '@repo/guards';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { useCan } from '@/lib/auth/useCan';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
-import { useQuotePdfTemplate } from '../hooks/useQuotePdfTemplate';
-import { useUpdateQuotePdfTemplate } from '../hooks/useUpdateQuotePdfTemplate';
-import { SettingsCard } from './SettingsCard';
+import { useQuotePdfTemplate } from '../../hooks/useQuotePdfTemplate';
+import { useUpdateQuotePdfTemplate } from '../../hooks/useUpdateQuotePdfTemplate';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface QuotePdfTemplateFormValues {
   termsAndConditionsText: string;
@@ -57,15 +57,15 @@ export function QuotePdfTemplateForm() {
     void updateQuotePdfTemplate(toContent(values));
 
   return (
-    <Form
-      key={String(data.updatedAt)}
-      form={form}
-      layout="vertical"
-      initialValues={toFormValues(data.content)}
-      onFinish={onFinish}
-      disabled={!canEdit}
-    >
-      <SettingsCard title={t('quotePdfTemplate.title')} caption={t('quotePdfTemplate.caption')}>
+    <WrapperCard title={t('quotePdfTemplate.title')} caption={t('quotePdfTemplate.caption')}>
+      <Form
+        key={String(data.updatedAt)}
+        form={form}
+        layout="vertical"
+        initialValues={toFormValues(data.content)}
+        onFinish={onFinish}
+        disabled={!canEdit}
+      >
         <Form.Item
           label={<FieldLabel title={t('quotePdfTemplate.services')} />}
           tooltip={t('quotePdfTemplate.servicesCaption')}
@@ -165,19 +165,19 @@ export function QuotePdfTemplateForm() {
         >
           <Input.TextArea rows={2} maxLength={300} showCount />
         </Form.Item>
-      </SettingsCard>
 
-      {canEdit && (
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={isPending}
-          disabled={unchanged}
-          className="mt-6"
-        >
-          {t('save')}
-        </Button>
-      )}
-    </Form>
+        {canEdit && (
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={isPending}
+            disabled={unchanged}
+            className="mt-6"
+          >
+            {t('save')}
+          </Button>
+        )}
+      </Form>
+    </WrapperCard>
   );
 }

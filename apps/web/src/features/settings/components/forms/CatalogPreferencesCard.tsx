@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { useCan } from '@/lib/auth/useCan';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
-import { useConfig } from '../hooks/useConfig';
-import { useUpdateCatalogPreferences } from '../hooks/useUpdateCatalogPreferences';
-import { SettingsCard } from './SettingsCard';
+import { useConfig } from '../../hooks/useConfig';
+import { useUpdateCatalogPreferences } from '../../hooks/useUpdateCatalogPreferences';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface CatalogPreferencesFormValues {
   catalogSortable: boolean;
@@ -32,15 +32,15 @@ export function CatalogPreferencesCard() {
   };
 
   return (
-    <Form
-      key={String(data.appSettings.updatedAt)}
-      form={form}
-      layout="vertical"
-      initialValues={{ catalogSortable: data.appSettings.catalogSortable }}
-      onFinish={onFinish}
-      disabled={!canEdit}
-    >
-      <SettingsCard title={t('preferences.catalog.title')}>
+    <WrapperCard title={t('preferences.catalog.title')}>
+      <Form
+        key={String(data.appSettings.updatedAt)}
+        form={form}
+        layout="vertical"
+        initialValues={{ catalogSortable: data.appSettings.catalogSortable }}
+        onFinish={onFinish}
+        disabled={!canEdit}
+      >
         <Flex justify="space-between" align="start" gap={16}>
           <span className="flex min-w-0 flex-1 flex-col gap-0.5 py-1">
             <span>{t('preferences.catalog.sortable')}</span>
@@ -52,19 +52,19 @@ export function CatalogPreferencesCard() {
             <Switch />
           </Form.Item>
         </Flex>
-      </SettingsCard>
 
-      {canEdit && (
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={isPending}
-          disabled={unchanged}
-          className="mt-6"
-        >
-          {t('save')}
-        </Button>
-      )}
-    </Form>
+        {canEdit && (
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={isPending}
+            disabled={unchanged}
+            className="mt-6"
+          >
+            {t('save')}
+          </Button>
+        )}
+      </Form>
+    </WrapperCard>
   );
 }

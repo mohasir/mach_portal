@@ -21,7 +21,7 @@ export const MB = {
 } as const;
 
 const GlobalProperties = {
-  ControlHeight: 38,
+  ControlHeight: 40,
 };
 
 export const machBarTheme: ThemeConfig = {
@@ -30,7 +30,7 @@ export const machBarTheme: ThemeConfig = {
     // Brand colors
     colorPrimary: MB.olive,
     colorError: MB.red,
-    colorWarning: MB.salmon,
+    colorWarning: '#faad14',
     colorSuccess: '#4caf50',
 
     // Backgrounds & surface
@@ -59,7 +59,7 @@ export const machBarTheme: ThemeConfig = {
 
     // Shape
     borderRadius: 6,
-    borderRadiusLG: 10,
+    borderRadiusLG: 16,
     borderRadiusSM: 4,
 
     // Spacing
@@ -100,6 +100,8 @@ export const machBarTheme: ThemeConfig = {
       controlHeight: GlobalProperties.ControlHeight,
     },
     DatePicker: {
+      paddingBlock: 7,
+      paddingInline: 11,
       controlHeight: GlobalProperties.ControlHeight,
     },
     Table: {
@@ -117,6 +119,7 @@ export const machBarTheme: ThemeConfig = {
     },
     Card: {
       headerBg: MB.ivory,
+      bodyPadding: 18,
     },
     Menu: {
       // Sidebar claro (estilo imagen): ítem activo como "pill" olivo relleno.
@@ -156,6 +159,7 @@ export const machBarTheme: ThemeConfig = {
     Segmented: {
       itemSelectedBg: MB.olive,
       itemSelectedColor: '#ffffff',
+      trackBg: MB.oliveFaint,
     },
   },
 };

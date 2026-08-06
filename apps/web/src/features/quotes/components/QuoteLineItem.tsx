@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Button, Typography } from 'antd';
-import { ChevronDown, ChevronRight, Trash2, type LucideIcon } from 'lucide-react';
+import { ChevronDown, ChevronRight, ListChecks, Trash2, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 
@@ -19,6 +19,7 @@ interface QuoteLineItemProps {
   total?: number;
   groups: QuoteLineItemGroup[];
   onRemove?: () => void;
+  onEdit?: () => void;
 }
 
 export function QuoteLineItem({
@@ -28,6 +29,7 @@ export function QuoteLineItem({
   total,
   groups,
   onRemove,
+  onEdit,
 }: QuoteLineItemProps) {
   const { t } = useTranslation('quotes');
   const { money } = useMoneyFormatter();
@@ -66,6 +68,15 @@ export function QuoteLineItem({
         )}
         {total !== undefined && (
           <span className="shrink-0 text-right text-base font-medium">{money(total)}</span>
+        )}
+        {onEdit && (
+          <Button
+            type="text"
+            size="small"
+            icon={<ListChecks size={14} />}
+            onClick={onEdit}
+            aria-label={t('builder.lines.editSelections')}
+          />
         )}
         {onRemove && (
           <Button

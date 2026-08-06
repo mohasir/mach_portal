@@ -25,7 +25,7 @@ export function EventCard({ row, index, onClick, onAssignStaff }: EventCardProps
   const badgeClass = DATE_BADGE_CLASSES[index % DATE_BADGE_CLASSES.length];
 
   return (
-    <Card size="small" onClick={onClick} className="cursor-pointer">
+    <Card onClick={onClick} className="cursor-pointer">
       <div className="flex items-center gap-3">
         <div
           className={`flex size-14 shrink-0 flex-col items-center justify-center rounded-2xl ${badgeClass}`}

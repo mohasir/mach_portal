@@ -139,7 +139,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
 
       return (
         <div>
-          <Card size="small">
+          <Card>
             <div className="mb-3 flex items-center justify-between gap-2">
               <Typography.Title level={4} className="font-heading text-brown m-0!">
                 {t('builder.client.label')}

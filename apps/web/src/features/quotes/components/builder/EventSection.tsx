@@ -205,7 +205,7 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
         </div>
       ) : (
         <div className="mb-4">
-          <Card size="small">
+          <Card>
             <Typography.Title level={4} className="font-heading text-brown m-0!">
               {t('builder.event.eventDetailsGroupTitle')}
             </Typography.Title>
@@ -223,7 +223,7 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
         addressField
       ) : (
         <div className="mb-4">
-          <Card size="small">
+          <Card>
             <Typography.Title level={4} className="font-heading text-brown m-0!">
               {t('builder.event.addressGroupTitle')}
             </Typography.Title>

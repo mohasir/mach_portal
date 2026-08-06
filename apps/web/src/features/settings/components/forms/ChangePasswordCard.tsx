@@ -2,8 +2,8 @@
 import { Button, Form, Input } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
-import { useChangePassword } from '../hooks/useChangePassword';
-import { SettingsCard } from './SettingsCard';
+import { useChangePassword } from '../../hooks/useChangePassword';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface ChangePasswordFormValues {
   currentPassword: string;
@@ -25,7 +25,7 @@ export function ChangePasswordCard() {
   };
 
   return (
-    <SettingsCard title={t('profile.changePassword.title')}>
+    <WrapperCard title={t('profile.changePassword.title')}>
       <Form layout="vertical" form={form} onFinish={onFinish} requiredMark={false}>
         <Form.Item
           name="currentPassword"
@@ -67,6 +67,6 @@ export function ChangePasswordCard() {
           {t('save')}
         </Button>
       </Form>
-    </SettingsCard>
+    </WrapperCard>
   );
 }

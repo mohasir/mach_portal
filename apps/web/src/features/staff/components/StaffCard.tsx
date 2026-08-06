@@ -19,7 +19,7 @@ export function StaffCard({ member, onEdit, onDelete }: StaffCardProps) {
   const rowActions = useStaffRowActions({ onEdit, onDelete });
 
   return (
-    <Card size="small">
+    <Card>
       <div className="flex items-start justify-between gap-3">
         <AvatarUser name={member.name} email={member.email} />
         <DataTableRowActions actions={rowActions(member)} label={tc('table.actions')} />

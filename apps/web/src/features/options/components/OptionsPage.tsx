@@ -1,10 +1,11 @@
 'use client';
 import { Card, Col, Row, Typography } from 'antd';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useCan } from '@/lib/auth/useCan';
-import { ADMIN_MENU, IconMap, type NavItem } from '@/lib/navigation';
+import { ADMIN_MENU, IconCardOptionsMap, type NavItem } from '@/lib/navigation';
 
 const PRIMARY_HREFS = new Set(['/admin', '/admin/calendar', '/admin/quotes']);
 
@@ -26,11 +27,17 @@ export function OptionsPage() {
       <Card
         hoverable
         onClick={() => router.push(item.href!)}
-        className="bg-olive-faint aspect-square text-center"
+        className="aspect-square text-center"
         classNames={{ body: 'flex h-full flex-col items-center justify-center gap-2' }}
       >
-        {IconMap[item.icon!]}
-        <span>{t(item.label)}</span>
+        <div className="flex h-22.5 w-9 items-center justify-center">
+          <Image
+            src={IconCardOptionsMap[item.icon!]!}
+            alt=""
+            className="h-full w-full object-contain"
+          />
+        </div>
+        <span className="text-base">{t(item.label)}</span>
       </Card>
     </Col>
   );
@@ -42,8 +49,8 @@ export function OptionsPage() {
       </div>
 
       {/* Mobile: a single flat grid, no group headers. */}
-      <Row gutter={[12, 12]} className="sm:hidden">
-        {groups.flatMap((group) => group.items).map(renderCard)}
+      <Row gutter={[20, 20]} className="sm:hidden">
+        {groups.flatMap((group) => group.items).map((item) => renderCard(item))}
       </Row>
 
       <div className="hidden sm:flex sm:flex-col sm:gap-6">
@@ -52,7 +59,7 @@ export function OptionsPage() {
             {group.label && (
               <Typography.Text className="text-muted">{t(group.label)}</Typography.Text>
             )}
-            <Row gutter={[12, 12]}>{group.items.map(renderCard)}</Row>
+            <Row gutter={[20, 20]}>{group.items.map((item) => renderCard(item))}</Row>
           </div>
         ))}
       </div>

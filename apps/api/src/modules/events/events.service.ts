@@ -8,9 +8,13 @@ import {
   type RegisterEventPaymentInput,
   type RemoveEventPaymentAttachmentInput,
   type RemoveStaffInput,
+  type UpdateEventSelectionsInput,
 } from '@repo/schemas';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import { getStorageProvider, type StorageProvider } from '../../lib/storage';
+import { ConfigRepository } from '../config/config.repository';
+import { QuotesRepository } from '../quotes/quotes.repository';
+import { validateLineSelections } from '../quotes/quotes.validation';
 import { EventsRepository } from './events.repository';
 import {
   eventCalendarItemResource,
@@ -22,6 +26,12 @@ import {
 
 function notFound() {
   return new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.event.NOT_FOUND) });
+}
+function invalidSelections() {
+  return new TRPCError({
+    code: 'BAD_REQUEST',
+    cause: new AppError(ErrorCodes.event.INVALID_SELECTIONS),
+  });
 }
 
 const EXTENSION_BY_MIME: Record<string, string> = {
@@ -44,6 +54,8 @@ export type UploadedPaymentAttachmentFile = {
 export class EventsService {
   constructor(
     private repo: EventsRepository,
+    private quotesRepo: QuotesRepository,
+    private configRepo: ConfigRepository,
     private storage: StorageProvider = getStorageProvider(),
   ) {}
 
@@ -60,7 +72,10 @@ export class EventsService {
   }
 
   async getById(id: string) {
-    const result = await this.repo.findById(id);
+    const [result, appRow] = await Promise.all([
+      this.repo.findById(id),
+      this.configRepo.findAppSettings(),
+    ]);
     if (!result) throw notFound();
     return buildEventDetail(
       result.eventRow,
@@ -69,7 +84,44 @@ export class EventsService {
       result.staffRows,
       result.paymentRows,
       result.attachmentRows,
+      appRow?.optionsSelectionDeadlineDays ?? 0,
     );
+  }
+
+  async updateSelections(eventId: string, input: UpdateEventSelectionsInput, userId: string) {
+    const event = await this.repo.findForSelectionsUpdate(eventId);
+    if (!event) throw notFound();
+    if (event.completedAt) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        cause: new AppError(ErrorCodes.event.COMPLETED),
+      });
+    }
+
+    const quoteLines = await this.quotesRepo.findLinesByQuoteId(event.quoteId);
+    const byLineId = new Map(input.selections.map((s) => [s.quoteLineId, s]));
+    const productIdByLineId = new Map(quoteLines.map((l) => [l.id, l.productId]));
+
+    // Every quoteLineId sent must actually belong to this event's quote.
+    for (const lineId of byLineId.keys()) {
+      if (!productIdByLineId.has(lineId)) throw invalidSelections();
+    }
+
+    const ctx = await this.quotesRepo.loadCatalogContext(quoteLines.map((l) => l.productId));
+    const grouped = new Map<string, typeof input.selections>();
+    for (const selection of input.selections) {
+      const arr = grouped.get(selection.quoteLineId) ?? [];
+      arr.push(selection);
+      grouped.set(selection.quoteLineId, arr);
+    }
+    for (const [lineId, selections] of grouped) {
+      const productId = productIdByLineId.get(lineId)!;
+      if (!validateLineSelections(productId, selections, ctx)) throw invalidSelections();
+    }
+
+    const updated = await this.repo.updateSelections(eventId, input.selections, userId);
+    if (!updated) throw notFound();
+    return eventResource(updated);
   }
 
   async registerPayment(id: string, input: RegisterEventPaymentInput, createdById: string | null) {

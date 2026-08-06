@@ -50,6 +50,11 @@
       "title": "Catalog",
       "sortable": "Sortable catalog",
       "sortableCaption": "Allows reordering stations, sections and items by dragging. When off, the order stays fixed."
+    },
+    "quoteBuilder": {
+      "title": "Quote builder",
+      "allowSelectOptionsAtQuote": "Allow choosing options at quote time",
+      "allowSelectOptionsAtQuoteCaption": "When off, the builder's \"Choose options now\" toggle is hidden — every quote defers option selection to the event. Existing quotes keep whatever they already saved."
     }
   },
   "taxRates": {
@@ -91,7 +96,10 @@
     "quoteSeqStartCaption": "Number the next quote sequence will start from.",
     "lastUsedSeqHint": "Last used: {{seq}}",
     "currency": "Currency",
-    "currencyCaption": "Currency used to display quote amounts."
+    "currencyCaption": "Currency used to display quote amounts.",
+    "optionsSelectionDeadlineDays": "Options selection deadline",
+    "optionsSelectionDeadlineDaysCaption": "Days before the event date by which the client's option choices should be confirmed.",
+    "days": "days"
   },
   "permissions": {
     "title": "Permissions",
@@ -105,7 +113,8 @@
       "update": "Edit",
       "delete": "Delete",
       "upload_attachment": "Upload receipt",
-      "view": "View"
+      "view": "View",
+      "manage_selections": "Choose event options"
     },
     "resources": {
       "dashboard": {
@@ -115,6 +124,10 @@
       "event": {
         "label": "Events",
         "caption": "Venue events, their scheduling and details."
+      },
+      "payment": {
+        "label": "Payments",
+        "caption": "Registering payments, viewing amounts, and the general payments list."
       },
       "client": {
         "label": "Clients",
@@ -159,6 +172,10 @@
       "quote_pdf_template": {
         "label": "Quote PDF template",
         "caption": "Fixed text and services printed on the PDF of every generated quote."
+      },
+      "quote_builder_preferences": {
+        "label": "Quote builder preferences",
+        "caption": "Whether staff can choose options at quote time instead of deferring them to the event."
       }
     }
   },
@@ -169,6 +186,7 @@
     "minPersonsInvalid": "Invalid minimum",
     "quoteSeqStartInvalid": "Invalid sequence start",
     "currencyInvalid": "Invalid currency",
+    "optionsSelectionDeadlineDaysInvalid": "Invalid number of days",
     "quoteStagesLabelInvalid": "Label required",
     "serviceLabelRequired": "Station is required",
     "serviceDurationRequired": "Duration is required"

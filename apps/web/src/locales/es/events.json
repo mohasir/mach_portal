@@ -40,6 +40,7 @@
   },
   "detail": {
     "backToQuote": "Ver cotización",
+    "pastDueTitle": "Vencido",
     "pastDue": "La fecha de este evento ya pasó. ¿Deseás marcarlo como realizado?",
     "markCompleted": "Marcar realizado",
     "markCompletedSuccess": "Evento marcado como realizado",
@@ -62,6 +63,14 @@
     },
     "composition": {
       "title": "Composición"
+    },
+    "selections": {
+      "pendingAlert": "Falta elegir las opciones",
+      "deadlineNote": "Confirmá la elección del cliente antes del {{date}}",
+      "sheetTitle": "Elegir opciones",
+      "detailTitle": "Selección de opciones",
+      "save": "Guardar",
+      "saveSuccess": "Selecciones guardadas"
     },
     "payments": {
       "title": "Estado de Pago",

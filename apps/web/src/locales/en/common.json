@@ -7,6 +7,7 @@
   "delete": "Delete",
   "edit": "Edit",
   "back": "Back",
+  "close": "Close",
   "detail": "Details",
   "logout": "Logout",
   "yes": "Yes",
@@ -16,7 +17,9 @@
     "copyId": "Copy ID",
     "copied": "ID copied",
     "search": "Search",
-    "total": "{{total}} records"
+    "total": "{{total}} records",
+    "results": "{{count}} results",
+    "clearFilters": "Clear filters"
   },
   "share": {
     "action": "Share",

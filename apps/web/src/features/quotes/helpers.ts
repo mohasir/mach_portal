@@ -49,6 +49,7 @@ export function toCreateInput(state: QuoteBuilderState, isDraft: boolean): Creat
     longDistanceAmount: state.longDistanceAmount,
     depositRate: state.depositRate,
     lines: toQuoteLineInputs(state.lines),
+    selectOptionsAtQuote: state.selectOptionsAtQuote,
   };
 }
 
@@ -68,6 +69,7 @@ export function toBuilderState(detail: QuoteDetail): QuoteBuilderState {
     discountValue: detail.discountValue,
     longDistanceAmount: detail.longDistanceAmount,
     depositRate: detail.depositRate,
+    selectOptionsAtQuote: detail.selectOptionsAtQuote,
     lines: detail.lines.map((line) => ({
       key: nextLineKey(),
       productId: line.productId,

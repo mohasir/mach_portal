@@ -21,7 +21,7 @@ export function ExtraChargesSection({ readOnly }: ExtraChargesSectionProps) {
 
   return (
     <div>
-      <Card size="small">
+      <Card>
         <Typography.Title level={4} className="font-heading text-brown m-0!">
           {t('builder.event.taxesGroupTitle')}
         </Typography.Title>

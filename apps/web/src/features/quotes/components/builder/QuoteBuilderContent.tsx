@@ -26,7 +26,7 @@ import { EventSection } from './EventSection';
 import { ExtraChargesSection } from './ExtraChargesSection';
 import { NotesSection } from './NotesSection';
 import { QuotePreview } from './QuotePreview';
-import { QuickLineBuilder } from './QuickLineBuilder';
+import { LinesBuilderSection } from './LinesBuilderSection';
 
 interface QuoteBuilderContentProps {
   quoteId?: string;
@@ -188,15 +188,15 @@ export function QuoteBuilderContent({
   const formFields = (
     <div className={`flex flex-col ${isDesktop ? '' : 'gap-4'}`}>
       {quoteId && stageId && (
-        <Card size="small">
+        <Card>
           <QuoteStageTagDropdown quoteId={quoteId} stageId={stageId} isDraft={isDraft} />
         </Card>
       )}
       <ClientSection ref={clientSectionRef} readOnly={readOnly} />
       {!isDesktop && (
         <>
-          <Card size="small">
-            <QuickLineBuilder catalog={catalog} readOnly={readOnly} />
+          <Card>
+            <LinesBuilderSection catalog={catalog} readOnly={readOnly} />
           </Card>
           <ExtraChargesSection readOnly={readOnly} />
           <Card className="border-line border-2">
@@ -217,7 +217,7 @@ export function QuoteBuilderContent({
       {isDesktop && (
         <>
           <Divider className="mt-2 mb-6" />
-          <QuickLineBuilder catalog={catalog} readOnly={readOnly} />
+          <LinesBuilderSection catalog={catalog} readOnly={readOnly} />
         </>
       )}
       {isDesktop && <Divider className="my-4" />}

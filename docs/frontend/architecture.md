@@ -1,11 +1,12 @@
 # Especificación de Arquitectura — Frontend (Web)
 
 > **Propósito de este documento**
-> Es una *especificación de arquitectura orientada a IA* (Spec-Driven Development). Describe **cómo se construye** el frontend de `mach-portal` y **las reglas estrictas que un agente de IA debe seguir** para añadir o modificar una feature de forma consistente.
+> Es una _especificación de arquitectura orientada a IA_ (Spec-Driven Development). Describe **cómo se construye** el frontend de `mach-portal` y **las reglas estrictas que un agente de IA debe seguir** para añadir o modificar una feature de forma consistente.
 >
 > Es el **patrón único** para toda feature. Los ejemplos usan un recurso genérico de placeholder: **`X`** para la entidad y los componentes (`XPage`, `XTable`, …), **`<feature>`** para el directorio/namespace/clave de router. Sustituir por el recurso real.
 >
 > Documentos hermanos:
+>
 > - `styling-guide.md` — tokens AntD ↔ Tailwind, tipografía, iconos, fechas, overrides. **Para todo lo visual, esa guía manda.**
 > - `docs/backend/architecture.md` — la API (tRPC/Drizzle/módulos). Este doc es **solo front**; asume que los endpoints tRPC ya existen.
 >
@@ -15,26 +16,26 @@
 
 ## 1. Stack y principios
 
-| Capa | Tecnología |
-| --- | --- |
-| Framework | **Next.js 15** (App Router) |
-| UI runtime | **React 19** |
-| API / RPC | **tRPC v11** (`@trpc/client`, `@trpc/tanstack-react-query`) |
-| Estado de servidor | **TanStack Query v5** (integrado con tRPC) |
-| Estado de cliente | **Zustand v5** (con `persist` cuando aplica) |
-| Auth | **Better Auth** (`better-auth/react`, sesión por cookie) |
-| Formularios | **AntD `Form`** nativo |
-| Validación / contrato | **Zod 4** compartido vía **`@repo/schemas`** |
-| Componentes | **Ant Design v6** |
-| Estilos | **Tailwind CSS v4** sobre tokens AntD (ver `styling-guide.md`) |
-| Iconos | **`lucide-react`** (prohibido `@ant-design/icons`) |
-| Fechas | **`dayjs`** vía `lib/date` (`useDateFormatter`) |
-| i18n | **i18next** + **react-i18next** (namespaces) |
-| Monorepo | **Turborepo** + **pnpm workspaces** |
+| Capa                  | Tecnología                                                     |
+| --------------------- | -------------------------------------------------------------- |
+| Framework             | **Next.js 15** (App Router)                                    |
+| UI runtime            | **React 19**                                                   |
+| API / RPC             | **tRPC v11** (`@trpc/client`, `@trpc/tanstack-react-query`)    |
+| Estado de servidor    | **TanStack Query v5** (integrado con tRPC)                     |
+| Estado de cliente     | **Zustand v5** (con `persist` cuando aplica)                   |
+| Auth                  | **Better Auth** (`better-auth/react`, sesión por cookie)       |
+| Formularios           | **AntD `Form`** nativo                                         |
+| Validación / contrato | **Zod 4** compartido vía **`@repo/schemas`**                   |
+| Componentes           | **Ant Design v6**                                              |
+| Estilos               | **Tailwind CSS v4** sobre tokens AntD (ver `styling-guide.md`) |
+| Iconos                | **`lucide-react`** (prohibido `@ant-design/icons`)             |
+| Fechas                | **`dayjs`** vía `lib/date` (`useDateFormatter`)                |
+| i18n                  | **i18next** + **react-i18next** (namespaces)                   |
+| Monorepo              | **Turborepo** + **pnpm workspaces**                            |
 
 ### Principios no negociables
 
-1. **Feature-Sliced.** El código de dominio vive en `src/features/<feature>/`. Cada feature es autónoma y expone su API pública por un barrel `index.ts`. Las páginas del App Router son *thin*: solo importan y renderizan el componente índice de la feature.
+1. **Feature-Sliced.** El código de dominio vive en `src/features/<feature>/`. Cada feature es autónoma y expone su API pública por un barrel `index.ts`. Las páginas del App Router son _thin_: solo importan y renderizan el componente índice de la feature.
 2. **Separación estricta de capas dentro de la feature:** `hooks` (datos + acciones) → `components` (UI). Un componente **nunca** llama a `useTRPC()` directamente ni arma `queryOptions()`/`queryFilter()` inline: pasa siempre por un hook de la feature.
 3. **Estado de servidor ≠ estado de cliente.** Datos de la API → **tRPC + TanStack Query**. Estado de UI/preferencias → **Zustand**. No se cachea data de servidor en Zustand.
 4. **El contrato es Zod (`@repo/schemas`).** El input de toda query/mutation se tipa/valida con un schema Zod compartido. La validación en el `<Form>` de AntD (`rules`) es solo **UX**; el backend es el límite real.
@@ -104,15 +105,15 @@ Se importa `@/features/...`, `@/lib/...`, `@/components/...`, `@/theme/...`. Paq
 
 ## 3. Anatomía de una feature
 
-| Capa | Archivo(s) | Responsabilidad | Qué NO hace |
-| --- | --- | --- | --- |
-| **Contrato (compartido)** | `@repo/schemas/src/<feature>.ts` | Tipos de input (`CreateXInput`, `UpdateXInput`) y de la query de lista (`XListQuery`). Fuente de verdad del contrato. | React, HTTP. |
-| **Types** | `types.ts` | Entidad **inferida** del router (`RouterOutputs['<feature>']['list']['items'][number]`). | Declarar formas a mano. |
-| **Data hooks** | `hooks/useX.ts` | `useXList(query)`, `useCreateX/useUpdateX/useDeleteX`. Envuelven tRPC + invalidan cache + `useApiError`. | Renderizar UI. |
-| **Row actions** | `hooks/useXRowActions.ts` | Devuelve `(row) => RowActionItem[]` (copyId/edit/delete + guards + confirm). Compartido por columnas y card. | Llamar `useTRPC()`. |
-| **Helpers** | `helpers.ts` | Constantes UI de la feature (ej. mapa de colores por estado). | Lógica de datos. |
-| **Components** | `components/*.tsx` | `XPage` orquesta; `XTable` (usa `DataTable`); `columns.tsx` (`useXColumns`); `XCard` (móvil); `Create/EditXModal`; `XForm`. | `useTRPC()` directo. |
-| **Barrel** | `index.ts` | API pública (Page, hooks, tipos). | — |
+| Capa                      | Archivo(s)                       | Responsabilidad                                                                                                             | Qué NO hace             |
+| ------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| **Contrato (compartido)** | `@repo/schemas/src/<feature>.ts` | Tipos de input (`CreateXInput`, `UpdateXInput`) y de la query de lista (`XListQuery`). Fuente de verdad del contrato.       | React, HTTP.            |
+| **Types**                 | `types.ts`                       | Entidad **inferida** del router (`RouterOutputs['<feature>']['list']['items'][number]`).                                    | Declarar formas a mano. |
+| **Data hooks**            | `hooks/useX.ts`                  | `useXList(query)`, `useCreateX/useUpdateX/useDeleteX`. Envuelven tRPC + invalidan cache + `useApiError`.                    | Renderizar UI.          |
+| **Row actions**           | `hooks/useXRowActions.ts`        | Devuelve `(row) => RowActionItem[]` (copyId/edit/delete + guards + confirm). Compartido por columnas y card.                | Llamar `useTRPC()`.     |
+| **Helpers**               | `helpers.ts`                     | Constantes UI de la feature (ej. mapa de colores por estado).                                                               | Lógica de datos.        |
+| **Components**            | `components/*.tsx`               | `XPage` orquesta; `XTable` (usa `DataTable`); `columns.tsx` (`useXColumns`); `XCard` (móvil); `Create/EditXModal`; `XForm`. | `useTRPC()` directo.    |
+| **Barrel**                | `index.ts`                       | API pública (Page, hooks, tipos).                                                                                           | —                       |
 
 ### 3.1 Contrato (`@repo/schemas`) — lo que el front consume
 
@@ -178,6 +179,7 @@ export function useDeleteX() {
 ```
 
 Convenciones:
+
 - Nombres: `useXList(query)` (lectura de lista), `useCreateX` / `useUpdateX` / `useDeleteX` (escrituras).
 - Query keys e invalidación **siempre** vía el proxy tRPC (`queryOptions`, `queryFilter`). Nunca arrays a mano.
 - Error de mutation → `useApiError` en `onError`. `try/catch` local solo para lógica extra (ej. cerrar modal).
@@ -195,7 +197,10 @@ import { RESOURCES, ACTIONS } from '@repo/guards';
 import type { RowActionItem } from '@/components/shared/DataTable';
 import type { X } from '../types';
 
-export function useXRowActions({ onEdit, onDelete }: {
+export function useXRowActions({
+  onEdit,
+  onDelete,
+}: {
   onEdit: (row: X) => void;
   onDelete: (row: X) => void;
 }) {
@@ -204,7 +209,13 @@ export function useXRowActions({ onEdit, onDelete }: {
   const { message } = App.useApp();
 
   return (row: X): RowActionItem[] => [
-    { key: 'copyId', onClick: () => { void navigator.clipboard.writeText(row.id); message.success(tc('table.copied')); } },
+    {
+      key: 'copyId',
+      onClick: () => {
+        void navigator.clipboard.writeText(row.id);
+        message.success(tc('table.copied'));
+      },
+    },
     { type: 'divider' },
     { key: 'edit', guard: { [RESOURCES.X]: [ACTIONS.UPDATE] }, onClick: () => onEdit(row) },
     {
@@ -228,7 +239,12 @@ import { Button, Form, Input, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CreateXInput } from '@repo/schemas';
 
-export function XForm({ mode, initialValues, onSubmit, isPending }: {
+export function XForm({
+  mode,
+  initialValues,
+  onSubmit,
+  isPending,
+}: {
   mode: 'create' | 'edit';
   initialValues?: Partial<CreateXInput>;
   onSubmit: (values: CreateXInput) => Promise<void> | void;
@@ -238,23 +254,43 @@ export function XForm({ mode, initialValues, onSubmit, isPending }: {
   const [form] = Form.useForm<CreateXInput>();
 
   return (
-    <Form form={form} layout="vertical" initialValues={initialValues} onFinish={onSubmit} requiredMark={false}>
-      <Form.Item name="name" label={t('form.name')} rules={[{ required: true, message: t('validation.nameRequired') }, { max: 120 }]}>
+    <Form
+      form={form}
+      layout="vertical"
+      initialValues={initialValues}
+      onFinish={onSubmit}
+      requiredMark={false}
+    >
+      <Form.Item
+        name="name"
+        label={t('form.name')}
+        rules={[{ required: true, message: t('validation.nameRequired') }, { max: 120 }]}
+      >
         <Input placeholder={t('form.namePlaceholder')} />
       </Form.Item>
 
       {mode === 'create' && (
-        <Form.Item name="code" label={t('form.code')} rules={[{ required: true, message: t('validation.codeRequired') }]}>
+        <Form.Item
+          name="code"
+          label={t('form.code')}
+          rules={[{ required: true, message: t('validation.codeRequired') }]}
+        >
           <Input placeholder={t('form.codePlaceholder')} />
         </Form.Item>
       )}
 
-      <Form.Item name="status" label={t('form.status')} rules={[{ required: true, message: t('validation.statusRequired') }]}>
+      <Form.Item
+        name="status"
+        label={t('form.status')}
+        rules={[{ required: true, message: t('validation.statusRequired') }]}
+      >
         <Select options={/* opciones i18n */ []} placeholder={t('form.statusPlaceholder')} />
       </Form.Item>
 
       <Form.Item className="mb-0">
-        <Button type="primary" htmlType="submit" loading={isPending} block>{t('form.save')}</Button>
+        <Button type="primary" htmlType="submit" loading={isPending} block>
+          {t('form.save')}
+        </Button>
       </Form.Item>
     </Form>
   );
@@ -262,6 +298,7 @@ export function XForm({ mode, initialValues, onSubmit, isPending }: {
 ```
 
 Reglas del form:
+
 - Genérico = input inferido de `@repo/schemas` (`CreateXInput`); es "create-shaped". El edit reusa el mismo form y en su `onSubmit` hace `Pick` de los campos editables hacia `UpdateXInput`.
 - El `Form` **no** conoce las mutations: recibe `onSubmit`/`isPending`. La Page/Modal los conecta al hook.
 - Los `Modal` (`CreateXModal`/`EditXModal`) envuelven el form, montándolo solo cuando `open` (`{open && <XForm/>}`) y con `key={row.id}` en edit para resetear estado por fila.
@@ -281,7 +318,11 @@ export function XPage() {
 
   return (
     <div>
-      <PageHeader title={t('title')} actionLabel={canCreate ? t('index.add') : undefined} onAction={canCreate ? () => setCreateOpen(true) : undefined} />
+      <PageHeader
+        title={t('title')}
+        actionLabel={canCreate ? t('index.add') : undefined}
+        onAction={canCreate ? () => setCreateOpen(true) : undefined}
+      />
       <XTable onEdit={setEditing} />
       <CreateXModal open={isCreateOpen} onClose={() => setCreateOpen(false)} />
       <EditXModal row={editing} open={!!editing} onClose={() => setEditing(null)} />
@@ -322,9 +363,28 @@ export function useXColumns({ onEdit, onDelete }): TableColumnsType<X> {
 
   return [
     { title: t('columns.name'), dataIndex: 'name', key: 'name' },
-    { title: t('columns.status'), dataIndex: 'status', key: 'status', render: (s) => <Tag color={STATUS_COLORS[s] ?? 'default'}>{t(`status.${s}`, s)}</Tag> },
-    { title: t('columns.createdAt'), dataIndex: 'createdAt', key: 'createdAt', responsive: ['md'], render: (v) => date(v) },
-    { title: '', key: 'actions', width: 56, align: 'right', render: (_, row) => <DataTableRowActions actions={rowActions(row)} label={tc('table.actions')} /> },
+    {
+      title: t('columns.status'),
+      dataIndex: 'status',
+      key: 'status',
+      render: (s) => <Tag color={STATUS_COLORS[s] ?? 'default'}>{t(`status.${s}`, s)}</Tag>,
+    },
+    {
+      title: t('columns.createdAt'),
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      responsive: ['md'],
+      render: (v) => date(v),
+    },
+    {
+      title: '',
+      key: 'actions',
+      width: 56,
+      align: 'right',
+      render: (_, row) => (
+        <DataTableRowActions actions={rowActions(row)} label={tc('table.actions')} />
+      ),
+    },
   ];
 }
 ```
@@ -336,7 +396,7 @@ export function useXColumns({ onEdit, onDelete }): TableColumnsType<X> {
 export function XCard({ row, onEdit, onDelete }) {
   const rowActions = useXRowActions({ onEdit, onDelete });
   return (
-    <Card size="small">
+    <Card>
       {/* header: título de la fila + <DataTableRowActions actions={rowActions(row)} /> */}
       {/* tags: campos secundarios (estado, etc.) */}
       {/* fecha: useDateFormatter().date(row.createdAt) */}
@@ -377,6 +437,7 @@ export function XTable({ onEdit }: { onEdit: (row: X) => void }) {
 ```
 
 Notas:
+
 - **Server mode se activa** al pasar `total` (viene de `data.pagination.total`). `page`/`pageSize`/`sortBy`/`sortDir`/`onTableChange`/`onSearch` salen de `table.tableProps`.
 - **`renderCard` es el estándar** para una card a medida. Si se omite (con `mobileRenderType="card"`), `DataTable` cae a `AutoRowCard` (deriva label/valor de las columnas) — aceptable solo para tablas triviales.
 - `DataTableRowActions` recibe `RowActionItem[]`; filtra por `guard` con `useCan` y aplica `confirm` con `modal.confirm`. Presets (`copyId`/`edit`/`delete`) traen icono (lucide), label i18n y confirm por defecto.
@@ -389,7 +450,9 @@ Notas:
   ```tsx
   // app/admin/<feature>/page.tsx
   import { XPage } from '@/features/<feature>';
-  export default function Page() { return <XPage />; }
+  export default function Page() {
+    return <XPage />;
+  }
   ```
 - **Rutas**: `(auth)` (route group) para páginas públicas (login); `admin/` (segmento) para el panel protegido.
 - **Layouts**: `app/layout.tsx` → fuentes + `AntdRegistry layer` + `<AppProviders>`. `app/admin/layout.tsx` → solo `<AdminLayoutContainer>` (shell responsive: Sider colapsable / Drawer móvil, en `components/Layouts` + `lib/navigation`). El guard de sesión **no** vive en este layout: es global (`AuthProvider`, ver abajo).
@@ -478,10 +541,10 @@ Para formularios complejos, un `validator` que corre el schema de `@repo/schemas
 
 Stores en `lib/stores/`. `create(persist((set) => ({...}), { name }))` cuando se persiste.
 
-| Store | Contenido | Persistencia |
-| --- | --- | --- |
-| `useLocaleStore` | idioma actual + `setLocale`. | `localStorage` |
-| `useUiStore` *(ej.)* | UI global (sidebar colapsado, etc.). | opcional |
+| Store                | Contenido                            | Persistencia   |
+| -------------------- | ------------------------------------ | -------------- |
+| `useLocaleStore`     | idioma actual + `setLocale`.         | `localStorage` |
+| `useUiStore` _(ej.)_ | UI global (sidebar colapsado, etc.). | opcional       |
 
 - **La sesión NO va en Zustand** — la maneja Better Auth (`useSession`).
 
@@ -517,7 +580,9 @@ export function useCan() {
 
 ```tsx
 <Can allowed={{ [RESOURCES.X]: [ACTIONS.CREATE] }} fallback={null}>
-  <Button type="primary" onClick={openCreate}>{t('index.add')}</Button>
+  <Button type="primary" onClick={openCreate}>
+    {t('index.add')}
+  </Button>
 </Can>
 ```
 
@@ -544,7 +609,7 @@ export function useCan() {
 - Tokens (marca MB, `machBarTheme`), AntD↔Tailwind, tipografía, **iconos (`lucide-react`)**, **fechas (`dayjs`)** y la **escala de overrides** están en **`styling-guide.md`** — lectura obligatoria y manda sobre cualquier decisión visual.
 - Reglas rápidas: AntD para componentes/layout, Tailwind para overrides; nada de CSS modules, inline styles, ni hex hardcodeados; mensajes vía `App.useApp()` (no métodos estáticos); `!` de Tailwind como **sufijo** (`m-0!`).
 - **Tablas → siempre `DataTable`** (§4). Prohibido `<Table>` de AntD armado a mano en una feature y prohibido `@tanstack/react-table`.
-- **Estados de carga → `Skeleton` vs `Spin` según el caso** (ninguno prohibido; se elige por caso): usar **`Skeleton`** en la **primera carga** de contenido con forma conocida (páginas, detalles, tablas, cards, formularios que hidratan) — preserva el layout y baja la latencia percibida; usar **`Spin`** para **acciones/mutations** en vuelo (botón `loading`, guardado) y para **refetch sobre contenido ya renderizado** (overlay). Regla: *primera carga → `Skeleton`; acción o refresco de algo ya visible → `Spin`*.
+- **Estados de carga → `Skeleton` vs `Spin` según el caso** (ninguno prohibido; se elige por caso): usar **`Skeleton`** en la **primera carga** de contenido con forma conocida (páginas, detalles, tablas, cards, formularios que hidratan) — preserva el layout y baja la latencia percibida; usar **`Spin`** para **acciones/mutations** en vuelo (botón `loading`, guardado) y para **refetch sobre contenido ya renderizado** (overlay). Regla: _primera carga → `Skeleton`; acción o refresco de algo ya visible → `Spin`_.
 - **Componentes globales:** el shell (`AdminLayoutContainer`) en `components/Layouts/`; los providers en `components/providers/`; piezas propias del shell con carpeta propia (`NotificationMenu/`, `UserProfile/`); primitivas y reutilizables (`DataTable/`, `PageHeader`, `PlaceholderPage`, `Sidebar/`, `Topbar/`, `Logo`, …) en `components/shared/`. Un patrón repetido en 2+ features → se extrae a `components/shared/`.
 - **Navegación data-driven** (`lib/navigation/`): `constants/items.ts` (`NAV_ITEMS` con `label`/`href`/`icon`/`guard`), `constants/icons.tsx` (`IconMap` string→icono lucide), `config.ts` (`ADMIN_MENU`), `useNavigation()`. `SidebarNav` la renderiza y filtra por permisos.
 - **Shell responsive (mobile-first):** `AdminLayoutContainer` usa `useIsDesktop()` (lg=992px): desktop = `Sider` colapsable a rail de iconos; móvil = `Drawer` overlay con el mismo `SidebarContent`.
@@ -555,20 +620,20 @@ export function useCan() {
 
 `X` = nombre del recurso en singular PascalCase; `<feature>` = plural kebab/camel para dir y namespace.
 
-| Elemento | Patrón |
-| --- | --- |
-| Feature dir | `features/<feature>/` (plural del dominio) |
-| Input type (de `@repo/schemas`) | `CreateXInput` / `UpdateXInput` |
-| Query de lista | `XListQuery` |
-| Entity type (de `RouterOutputs`) | `X` |
-| Query hook | `useXList(query)` |
-| Mutation hooks | `useCreateX` / `useUpdateX` / `useDeleteX` |
-| Row actions hook | `useXRowActions` |
-| Columns hook | `useXColumns` |
-| Componente Page | `XPage` |
-| Tabla / Card | `XTable` / `XCard` |
-| Modales | `CreateXModal` / `EditXModal` |
-| Store | `useXStore` |
+| Elemento                         | Patrón                                     |
+| -------------------------------- | ------------------------------------------ |
+| Feature dir                      | `features/<feature>/` (plural del dominio) |
+| Input type (de `@repo/schemas`)  | `CreateXInput` / `UpdateXInput`            |
+| Query de lista                   | `XListQuery`                               |
+| Entity type (de `RouterOutputs`) | `X`                                        |
+| Query hook                       | `useXList(query)`                          |
+| Mutation hooks                   | `useCreateX` / `useUpdateX` / `useDeleteX` |
+| Row actions hook                 | `useXRowActions`                           |
+| Columns hook                     | `useXColumns`                              |
+| Componente Page                  | `XPage`                                    |
+| Tabla / Card                     | `XTable` / `XCard`                         |
+| Modales                          | `CreateXModal` / `EditXModal`              |
+| Store                            | `useXStore`                                |
 
 ---
 
@@ -587,7 +652,7 @@ export function useCan() {
 9. **Page** (`XPage`): `PageHeader` (acción gateada con `useCan`) + tabla + modales.
 10. **Barrel** (`index.ts`): exportar `XPage`, hooks públicos, `X`.
 11. **Página** (`app/admin/<feature>/page.tsx`): `import { XPage } from '@/features/<feature>'`.
-12. **i18n**: `locales/{es,en}/<feature>.json` (title, index.add, columns.*, form.*, validation.*, delete.*, empty) + registrar el namespace en `lib/i18n/config.ts`. Nav labels en `admin` (`nav.*`).
+12. **i18n**: `locales/{es,en}/<feature>.json` (title, index.add, columns._, form._, validation._, delete._, empty) + registrar el namespace en `lib/i18n/config.ts`. Nav labels en `admin` (`nav.*`).
 13. **Navegación**: ítem en `lib/navigation/constants/items.ts` (+ `guard` con `RESOURCES`/`ACTIONS`), grupo en `config.ts`, icono lucide en `constants/icons.tsx`.
 14. **Acceso a la ruta**: registrar el permiso en `lib/auth/route-access.ts` (`ROUTE_ACCESS`: `/admin/<feature>` → `{ [RESOURCES.X]: [ACTIONS.READ] }`, o `null` si es pública para logueados). Habilita el RBAC por ruta del middleware.
 15. **Autorización de acciones**: envolver create/edit/delete con `<Can>` / gatear con `useCan` usando `RESOURCES`/`ACTIONS`.
@@ -613,4 +678,7 @@ Siguiendo estos pasos, la feature será **consistente con el patrón** y con el 
 - ❌ Usar `@ant-design/icons` (la librería es `lucide-react`), métodos estáticos de AntD (`message.xxx`), hex hardcodeados, CSS modules o inline styles — ver `styling-guide.md`.
 - ❌ Hidratar o duplicar la sesión/token en estado propio: Better Auth la maneja por cookie (`useSession`). El `AuthProvider` del proyecto solo **guarda rutas** con `useSession`; no hidrata nada.
 - ❌ Volver a poner el guard de sesión en `app/admin/layout.tsx`: el guard es global (`AuthProvider`) y el acceso por ruta lo maneja el middleware + `route-access.ts`.
+
+```
+
 ```

@@ -36,6 +36,10 @@ export const events = pgTable('events', {
   paymentMethod: paymentMethodEnum('payment_method'),
   notes: text('notes'),
   completedAt: timestamp('completed_at'),
+  selectionsConfirmedAt: timestamp('selections_confirmed_at'),
+  selectionsConfirmedById: text('selections_confirmed_by_id').references(() => user.id, {
+    onDelete: 'set null',
+  }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
     .defaultNow()

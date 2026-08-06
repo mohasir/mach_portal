@@ -80,11 +80,17 @@
       "notes": "Notes",
       "notesPlaceholder": "Internal notes"
     },
+    "selectionsMode": {
+      "label": "Choose options now",
+      "hint": "Off: only stations are added; ingredients get picked later from the event. On: pick each station's options here."
+    },
     "lines": {
       "title": "Stations",
       "empty": "No stations added yet",
       "addPlaceholder": "+ Add station",
       "remove": "Remove line",
+      "show": "View selection",
+      "editSelections": "Choose options",
       "edit": "Edit quantity and price",
       "editTitle": "Edit quantity and price",
       "editDone": "Done",
@@ -96,7 +102,9 @@
       "price": "Price",
       "included": "Included",
       "selectAny": "Pick as many as you like",
-      "maxSelect": "{{selected}}/{{max}}"
+      "maxSelect": "{{selected}}/{{max}}",
+      "selectionsPending": "No selections yet",
+      "selectionsCount": "{{done}}/{{total}} selected"
     },
     "pricing": {
       "discountType": "Discount",

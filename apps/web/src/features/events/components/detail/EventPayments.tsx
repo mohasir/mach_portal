@@ -16,11 +16,13 @@ import {
 import dayjs, { type Dayjs } from 'dayjs';
 import { FileText, Paperclip, User, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ACTIONS, RESOURCES } from '@repo/guards';
 import { paymentMethodSchema, type PaymentMethod } from '@repo/schemas';
 import { AttachmentUploadModal } from '@/components/shared/Attachment';
 import { useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
+import { useCan } from '@/lib/auth/useCan';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
@@ -32,8 +34,17 @@ import {
 } from '../../hooks/useEventPayments';
 import type { EventDetail } from '../../types';
 
+export type EventDetailWithPayments = Omit<
+  EventDetail,
+  'payments' | 'totalPaid' | 'paymentStatus'
+> & {
+  payments: NonNullable<EventDetail['payments']>;
+  totalPaid: NonNullable<EventDetail['totalPaid']>;
+  paymentStatus: NonNullable<EventDetail['paymentStatus']>;
+};
+
 interface EventPaymentsProps {
-  event: EventDetail;
+  event: EventDetailWithPayments;
 }
 
 interface PaymentFormValues {
@@ -53,6 +64,10 @@ export function EventPayments({ event }: EventPaymentsProps) {
   const { money } = useMoneyFormatter();
   const { modal } = App.useApp();
   const isDesktop = useIsDesktop();
+  const can = useCan();
+  const canRegister = can({ [RESOURCES.PAYMENT]: [ACTIONS.CREATE] });
+  const canUploadAttachment = can({ [RESOURCES.PAYMENT]: [ACTIONS.UPLOAD_ATTACHMENT] });
+  const canRemoveAttachment = can({ [RESOURCES.PAYMENT]: [ACTIONS.DELETE] });
   const [confirmDelete, deleteContextHolder] = useDeleteConfirm();
   const [form] = Form.useForm<PaymentFormValues>();
   const { registerPayment, isPending } = useRegisterEventPayment();
@@ -113,89 +128,95 @@ export function EventPayments({ event }: EventPaymentsProps) {
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
-        <div>
-          <Typography.Text strong className="block">
-            {t('detail.payments.register.title')}
-          </Typography.Text>
-          <Form<PaymentFormValues>
-            form={form}
-            layout="vertical"
-            onFinish={onFinish}
-            initialValues={{ paidAt: dayjs() }}
-            disabled={balance <= 0}
-            requiredMark={false}
-            className="mt-2"
-          >
-            <div className="flex flex-col gap-3">
-              <Form.Item
-                name="method"
-                label={<FieldLabel title={t('detail.payments.register.method')} required />}
-                rules={[{ required: true }]}
-                className="mb-0"
-              >
-                <Select
-                  placeholder={t('detail.payments.register.methodPlaceholder')}
-                  options={paymentMethodSchema.options.map((method) => ({
-                    value: method,
-                    label: t(`paymentMethods.${method}`),
-                  }))}
-                />
-              </Form.Item>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {canRegister && (
+          <div>
+            <Typography.Text strong className="block">
+              {t('detail.payments.register.title')}
+            </Typography.Text>
+            <Form<PaymentFormValues>
+              form={form}
+              layout="vertical"
+              onFinish={onFinish}
+              initialValues={{ paidAt: dayjs() }}
+              disabled={balance <= 0}
+              requiredMark={false}
+              className="mt-2"
+            >
+              <div className="flex flex-col gap-3">
                 <Form.Item
-                  name="percent"
-                  label={<FieldLabel title={t('detail.payments.register.percent')} />}
+                  name="method"
+                  label={<FieldLabel title={t('detail.payments.register.method')} required />}
+                  rules={[{ required: true }]}
                   className="mb-0"
                 >
                   <Select
-                    allowClear
-                    placeholder={t('detail.payments.register.percentPlaceholder')}
-                    options={PERCENT_OPTIONS.map((percent) => ({
-                      value: percent,
-                      label: `${percent}%`,
+                    placeholder={t('detail.payments.register.methodPlaceholder')}
+                    options={paymentMethodSchema.options.map((method) => ({
+                      value: method,
+                      label: t(`paymentMethods.${method}`),
                     }))}
-                    onChange={onPercentChange}
                   />
                 </Form.Item>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <Form.Item
+                    name="percent"
+                    label={<FieldLabel title={t('detail.payments.register.percent')} />}
+                    className="mb-0"
+                  >
+                    <Select
+                      allowClear
+                      placeholder={t('detail.payments.register.percentPlaceholder')}
+                      options={PERCENT_OPTIONS.map((percent) => ({
+                        value: percent,
+                        label: `${percent}%`,
+                      }))}
+                      onChange={onPercentChange}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    name="amount"
+                    label={<FieldLabel title={t('detail.payments.register.amount')} required />}
+                    rules={[{ required: true }]}
+                    className="mb-0"
+                  >
+                    <MoneyInput
+                      className="w-full"
+                      min={1}
+                      max={balance > 0 ? balance : undefined}
+                    />
+                  </Form.Item>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <Form.Item
+                    name="paidAt"
+                    label={<FieldLabel title={t('detail.payments.register.date')} required />}
+                    rules={[{ required: true }]}
+                    className="mb-0"
+                  >
+                    <DatePicker className="w-full" />
+                  </Form.Item>
+                  <Form.Item
+                    name="reference"
+                    label={<FieldLabel title={t('detail.payments.register.reference')} />}
+                    className="mb-0"
+                  >
+                    <Input placeholder={t('detail.payments.register.referencePlaceholder')} />
+                  </Form.Item>
+                </div>
                 <Form.Item
-                  name="amount"
-                  label={<FieldLabel title={t('detail.payments.register.amount')} required />}
-                  rules={[{ required: true }]}
+                  name="notes"
+                  label={<FieldLabel title={t('detail.payments.register.notes')} />}
                   className="mb-0"
                 >
-                  <MoneyInput className="w-full" min={1} max={balance > 0 ? balance : undefined} />
+                  <Input />
                 </Form.Item>
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Form.Item
-                  name="paidAt"
-                  label={<FieldLabel title={t('detail.payments.register.date')} required />}
-                  rules={[{ required: true }]}
-                  className="mb-0"
-                >
-                  <DatePicker className="w-full" />
-                </Form.Item>
-                <Form.Item
-                  name="reference"
-                  label={<FieldLabel title={t('detail.payments.register.reference')} />}
-                  className="mb-0"
-                >
-                  <Input placeholder={t('detail.payments.register.referencePlaceholder')} />
-                </Form.Item>
-              </div>
-              <Form.Item
-                name="notes"
-                label={<FieldLabel title={t('detail.payments.register.notes')} />}
-                className="mb-0"
-              >
-                <Input />
-              </Form.Item>
-            </div>
-            <Button className="mt-3" type="primary" htmlType="submit" loading={isPending}>
-              {t('detail.payments.register.submit')}
-            </Button>
-          </Form>
-        </div>
+              <Button className="mt-3" type="primary" htmlType="submit" loading={isPending}>
+                {t('detail.payments.register.submit')}
+              </Button>
+            </Form>
+          </div>
+        )}
 
         <div>
           <Typography.Text strong className="block">
@@ -256,24 +277,28 @@ export function EventPayments({ event }: EventPaymentsProps) {
                               <FileText size={16} />
                             </a>
                           )}
-                          <button
-                            type="button"
-                            onClick={() => onRemoveAttachment(attachment.id)}
-                            aria-label={t('detail.payments.attachments.remove')}
-                            className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-gray-500 opacity-0 shadow transition-opacity group-hover:opacity-100 hover:text-red-600"
-                          >
-                            <X size={10} />
-                          </button>
+                          {canRemoveAttachment && (
+                            <button
+                              type="button"
+                              onClick={() => onRemoveAttachment(attachment.id)}
+                              aria-label={t('detail.payments.attachments.remove')}
+                              className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-gray-500 opacity-0 shadow transition-opacity group-hover:opacity-100 hover:text-red-600"
+                            >
+                              <X size={10} />
+                            </button>
+                          )}
                         </div>
                       ))}
-                      <Button
-                        size="small"
-                        type="dashed"
-                        icon={<Paperclip size={12} />}
-                        onClick={() => setUploadPaymentId(payment.id)}
-                      >
-                        {t('detail.payments.attachments.upload')}
-                      </Button>
+                      {canUploadAttachment && (
+                        <Button
+                          size="small"
+                          type="dashed"
+                          icon={<Paperclip size={12} />}
+                          onClick={() => setUploadPaymentId(payment.id)}
+                        >
+                          {t('detail.payments.attachments.upload')}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );

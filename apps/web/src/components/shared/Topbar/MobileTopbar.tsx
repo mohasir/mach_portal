@@ -27,15 +27,13 @@ export function MobileTopbar() {
             {header.onBack && (
               <Button
                 type="text"
+                shape="circle"
                 icon={<IconBadge icon={ArrowLeft} />}
                 onClick={header.onBack}
                 aria-label={tc('back')}
               />
             )}
-            <Typography.Title
-              level={2}
-              className={`font-heading text-brown m-0! min-w-0 truncate ${header.titleSize === 'sm' ? 'text-lg!' : ''}`}
-            >
+            <Typography.Title className={`font-heading text-brown m-0! min-w-0 truncate text-lg!`}>
               {header.title}
             </Typography.Title>
             {header.titleSuffix && <span className="shrink-0">{header.titleSuffix}</span>}
@@ -61,6 +59,7 @@ export function MobileTopbar() {
           {header?.action && (
             <Button
               type="text"
+              shape="circle"
               icon={<IconBadge icon={header.action.icon} />}
               onClick={header.action.onClick}
               aria-label={header.action.ariaLabel}

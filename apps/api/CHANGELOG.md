@@ -5,6 +5,38 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.3.0] - 2026-08-05
+
+### Added
+
+- Módulo de pagos (`payments`): `list` (listado paginado de pagos de eventos,
+  con filtros de rango de fechas, cliente, tipo de evento y método) e
+  `income` (ingresos agrupados por semana/mes/año), sobre la tabla existente
+  `eventPayments`; nuevo recurso de permisos `PAYMENT`.
+- Endpoint `updateEventSelections` para resolver, desde el evento, las
+  opciones de cada estación pendientes de elegir: valida que cada línea
+  pertenezca a la cotización del evento y que las opciones respeten las
+  reglas del grupo de opciones (`validateLineSelections`); rechaza el cambio
+  si el evento ya se marcó como completado.
+- Nueva acción de permisos `manage_selections` (recurso `event`) para
+  controlar quién puede editar las selecciones de un evento.
+- Preferencia configurable `optionsSelectionDeadlineDays` (días de margen
+  antes del evento para exigir la confirmación de selecciones), expuesta en
+  el detalle del evento como `selectionsDeadline`/`selectionsPending`.
+- Preferencia configurable `allowSelectOptionsAtQuote` (nuevo recurso de
+  permisos `quote_builder_preferences`): define si las opciones de cada
+  estación se resuelven al armar la cotización o quedan pendientes para el
+  evento.
+- Seed de pagos de eventos (`eventPayments`) y datos de demo de cotizaciones
+  ampliados, para entornos con `--demo=local`.
+
+### Changed
+
+- `WEB_ORIGIN` ahora acepta una lista separada por comas, para confiar en
+  múltiples orígenes (ej. `localhost` + una IP de LAN al probar desde el
+  celular) sin dejar de aceptar la configuración anterior de un solo
+  origen.
+
 ## [0.2.0] - 2026-07-31
 
 ### Added

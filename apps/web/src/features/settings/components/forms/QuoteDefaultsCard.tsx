@@ -2,18 +2,18 @@
 import { Button, Form, InputNumber, Select, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
-import { CURRENCY_OPTIONS } from '../contants';
+import { CURRENCY_OPTIONS } from '../../contants';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
 import { useCan } from '@/lib/auth/useCan';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
-import { useConfig } from '../hooks/useConfig';
-import { useUpdateQuoteDefaults } from '../hooks/useUpdateQuoteDefaults';
+import { useConfig } from '../../hooks/useConfig';
+import { useUpdateQuoteDefaults } from '../../hooks/useUpdateQuoteDefaults';
 import {
   toQuoteDefaultsFormValues,
   toQuoteDefaultsUpdateInput,
   type QuoteDefaultsFormValues,
-} from '../helpers';
-import { SettingsCard } from './SettingsCard';
+} from '../../helpers';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 export function QuoteDefaultsCard() {
   const { t } = useTranslation('settings');
@@ -33,15 +33,15 @@ export function QuoteDefaultsCard() {
   };
 
   return (
-    <Form
-      key={String(data.appSettings.updatedAt)}
-      form={form}
-      layout="vertical"
-      initialValues={toQuoteDefaultsFormValues(data)}
-      onFinish={onFinish}
-      disabled={!canEdit}
-    >
-      <SettingsCard title={t('quoteDefaults.title')}>
+    <WrapperCard title={t('quoteDefaults.title')}>
+      <Form
+        key={String(data.appSettings.updatedAt)}
+        form={form}
+        layout="vertical"
+        initialValues={toQuoteDefaultsFormValues(data)}
+        onFinish={onFinish}
+        disabled={!canEdit}
+      >
         <FieldRow
           title={t('quoteDefaults.depositRate')}
           caption={t('quoteDefaults.depositRateCaption')}
@@ -112,19 +112,34 @@ export function QuoteDefaultsCard() {
             <Select options={CURRENCY_OPTIONS} className="w-full" />
           </Form.Item>
         </FieldRow>
-      </SettingsCard>
 
-      {canEdit && (
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={isPending}
-          disabled={unchanged}
-          className="mt-6"
+        <FieldRow
+          title={t('quoteDefaults.optionsSelectionDeadlineDays')}
+          caption={t('quoteDefaults.optionsSelectionDeadlineDaysCaption')}
+          required
         >
-          {t('save')}
-        </Button>
-      )}
-    </Form>
+          <Form.Item
+            name="optionsSelectionDeadlineDays"
+            className="mb-0"
+            rules={[
+              { required: true, message: t('validation.optionsSelectionDeadlineDaysInvalid') },
+            ]}
+          >
+            <InputNumber min={0} className="w-full" suffix={t('quoteDefaults.days')} />
+          </Form.Item>
+        </FieldRow>
+        {canEdit && (
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={isPending}
+            disabled={unchanged}
+            className="mt-6"
+          >
+            {t('save')}
+          </Button>
+        )}
+      </Form>
+    </WrapperCard>
   );
 }

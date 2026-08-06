@@ -48,3 +48,18 @@ export const removeEventPaymentAttachmentSchema = z.object({
   attachmentId: z.uuid(),
 });
 export type RemoveEventPaymentAttachmentInput = z.infer<typeof removeEventPaymentAttachmentSchema>;
+
+// One entry per (quoteLine, optionGroup) being resolved — mirrors quoteLineSelectionSchema
+// (quotes.ts) but scoped to a specific line rather than a whole new line.
+export const eventLineSelectionSchema = z.object({
+  quoteLineId: z.uuid(),
+  optionGroupId: z.uuid(),
+  optionIds: z.array(z.uuid()),
+});
+export type EventLineSelectionInput = z.infer<typeof eventLineSelectionSchema>;
+
+export const updateEventSelectionsSchema = z.object({
+  eventId: z.uuid(),
+  selections: z.array(eventLineSelectionSchema),
+});
+export type UpdateEventSelectionsInput = z.infer<typeof updateEventSelectionsSchema>;

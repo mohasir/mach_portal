@@ -21,7 +21,7 @@ export function ClientCard({ client, onEdit, onDelete, onClick }: ClientCardProp
   const rowActions = useClientRowActions({ onEdit, onDelete });
 
   return (
-    <Card size="small" onClick={onClick} className={onClick ? 'cursor-pointer' : undefined}>
+    <Card onClick={onClick} className={onClick ? 'cursor-pointer' : undefined}>
       <div className="flex items-start justify-between gap-3">
         <AvatarUser name={client.name} email={client.email} />
         <div onClick={(e) => e.stopPropagation()}>

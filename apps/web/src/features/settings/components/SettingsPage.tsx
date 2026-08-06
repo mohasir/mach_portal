@@ -1,11 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { SectionMenuItem } from '@/components/shared/SectionMenu';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useIsSuperAdmin } from '@/lib/auth/useIsSuperAdmin';
 import { useCan } from '@/lib/auth/useCan';
+import { useLayoutStore } from '@/lib/stores/layout.store';
 import { SettingsPageDesktop } from './SettingsPageDesktop';
 import { SettingsPageMobile } from './SettingsPageMobile';
 
@@ -20,6 +21,12 @@ export function SettingsPage() {
   const isDesktop = useIsDesktop();
   const [section, setSection] = useState<SettingsSection>('profile');
   const [mobileSection, setMobileSection] = useState<MobileSettingsSection | null>(null);
+  const setHideBottomNav = useLayoutStore((s) => s.setHideBottomNav);
+
+  useEffect(() => {
+    setHideBottomNav(true);
+    return () => setHideBottomNav(false);
+  }, [setHideBottomNav]);
 
   const canViewGeneral =
     can({ [RESOURCES.TAX_RATES]: [ACTIONS.VIEW] }) ||

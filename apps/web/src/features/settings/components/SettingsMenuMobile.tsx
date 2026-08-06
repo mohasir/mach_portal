@@ -1,7 +1,7 @@
 'use client';
-import { Typography } from 'antd';
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 import { IconBadge } from '@/components/shared/IconBadge';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface SettingsMenuMobileItem {
   key: string;
@@ -17,18 +17,14 @@ interface SettingsMenuMobileProps {
 
 export function SettingsMenuMobile({ title, items, onSelect }: SettingsMenuMobileProps) {
   return (
-    <div className="flex flex-col gap-2 mx-2">
-      <Typography.Text strong className="text-brown px-1">
-        {title}
-      </Typography.Text>
-
+    <WrapperCard title={title}>
       <div>
         {items.map(({ key, label, icon: Icon }, index) => (
           <button
             key={key}
             type="button"
             onClick={() => onSelect(key)}
-            className={`flex w-full items-center gap-3 px-1 py-3 text-left text-base ${
+            className={`flex w-full items-center gap-3 py-4 text-left text-base ${
               index > 0 ? 'border-line/50 border-t' : ''
             }`}
           >
@@ -38,6 +34,6 @@ export function SettingsMenuMobile({ title, items, onSelect }: SettingsMenuMobil
           </button>
         ))}
       </div>
-    </div>
+    </WrapperCard>
   );
 }

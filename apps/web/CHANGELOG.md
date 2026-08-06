@@ -5,6 +5,75 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.4.0] - 2026-08-05
+
+### Added
+
+- Sección de Pagos (`/admin/payments`): listado paginado con filtros de rango
+  de fechas, cliente, tipo de evento y método, y una vista de ingresos
+  agrupados por semana/mes/año, con selector de vista (`Segmented`)
+  persistido en la URL.
+- Flujo de selección de opciones de estaciones desde el evento: bottom sheet
+  dedicado (`StationSelectionsSheet`) para elegir/editar las opciones
+  pendientes de cada estación, y su contraparte de solo lectura
+  (`StationSelectionDetailSheet`) para ver el detalle de lo ya elegido.
+  Ambos comparten un header con ícono, nombre, cantidad de personas y precio
+  de la estación, y muestran cada grupo de opciones en una card con contador
+  de seleccionadas/máximo permitido y marca de check (o tag "Incluido" para
+  los grupos que no requieren elección).
+- Aviso en el detalle del evento (vía `WrapperAlert`) cuando el evento ya
+  pasó su fecha, o cuando quedan selecciones de estaciones pendientes de
+  confirmar (con su fecha límite, si aplica).
+- Preferencia "Elegir opciones ahora" en Configuración > Cotizaciones
+  (`QuoteBuilderPreferencesCard`): define si las opciones de cada estación se
+  resuelven al armar la cotización o quedan pendientes para el evento; nuevo
+  campo de días de margen antes del evento para la fecha límite de
+  selección.
+- Tag de progreso ("Sin selección" / "X/Y seleccionadas") junto al nombre de
+  la estación en `QuickLineCard` cuando está en modo selección.
+- Componente `WrapperAlert`, reemplazo propio del `Alert` de AntD: 5 tipos
+  semánticos (`primary`/`success`/`info`/`warning`/`error`), ícono
+  desacoplable del color del tipo (`icon` puede diferir de `type`), y un
+  modo con botón de acción para avisos tipo banner.
+- El total de resultados de cualquier tabla (`DataTable`) ahora se muestra
+  siempre arriba de la tabla (antes solo en Pagos, con una implementación
+  manual por fuera del componente).
+- Iconografía propia (`assets/icons/option_*.svg`) para las cards de la
+  página de Opciones, en vez de los íconos de `lucide-react` usados en el
+  resto de la navegación.
+
+### Changed
+
+- Página de Configuración: layout unificado entre mobile y desktop (los
+  formularios se movieron a `components/forms/` y ambas vistas comparten el
+  mismo `WrapperCard`); la navegación inferior (bottom nav) se oculta en las
+  páginas de Configuración.
+- En mobile, el modo card de las tablas (`DataTable`) ya no dibuja el fondo
+  blanco ni el borde entre filas de AntD debajo de cada card — evitaba un
+  efecto de "doble tarjeta" ahora que cada fila ya trae su propio fondo; el
+  padding vertical de la celda también se redujo, para achicar el espacio
+  entre cards.
+- El padding interno de todos los `Card` de AntD pasa a 18px (antes el valor
+  por defecto de AntD); `Card` ya no soporta la variante de tamaño `small`
+  (unificado a un solo tamaño en toda la app).
+- El radio del ítem activo y el fondo de los inactivos en `Segmented` ahora
+  son consistentes con la marca (10px de radio, fondo "olive faint").
+- El bottom sheet compartido (`BottomSheet`) soporta un footer fijo (fuera
+  del área con scroll) para acciones primarias tipo "Guardar".
+- Los filtros de Pagos usan dos `DatePicker` independientes (desde/hasta) en
+  vez de un `RangePicker`, con ajustes de tamaño para mobile.
+
+### Fixed
+
+- El bottom sheet compartido, al cerrarse, a veces quedaba visualmente
+  trabado sin el fondo opaco (o se volvía a mostrar vacío) cuando su
+  contenido se vaciaba en el mismo render en que se cerraba — el `Drawer`
+  de AntD (con altura automática) necesita contenido estable para animar el
+  cierre correctamente. `BottomSheet` ahora retiene el último contenido
+  válido mientras está cerrando, y las pantallas que antes desmontaban el
+  sheet entero al cerrar (selección de estaciones) pasaron a solo alternar
+  su estado de apertura.
+
 ## [0.3.0] - 2026-07-31
 
 ### Added

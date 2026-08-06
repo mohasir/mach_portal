@@ -9,6 +9,7 @@ import { seedQuoteStages } from './quoteStages';
 import { seedQuotePdfTemplate } from './quotePdfTemplate';
 import { seedQuotes } from './quotes';
 import { seedEvents } from './events';
+import { seedEventPayments } from './eventPayments';
 
 type DemoMode = 'prod' | 'local';
 
@@ -44,6 +45,7 @@ async function main() {
       await seedStaff();
       await seedQuotes();
       await seedEvents();
+      await seedEventPayments();
     }
 
     console.log('✅ Seeding completado.');

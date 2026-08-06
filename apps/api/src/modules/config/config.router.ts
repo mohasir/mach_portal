@@ -1,5 +1,6 @@
 import {
   updateCatalogPreferencesSchema,
+  updateQuoteBuilderPreferencesSchema,
   updateQuoteDefaultsSchema,
   updateQuoteStagesSchema,
   updateTaxRatesSchema,
@@ -30,4 +31,10 @@ export const configRouter = router({
   updateCatalogPreferences: guardedProcedure({ [RESOURCES.CATALOG_PREFERENCES]: [ACTIONS.UPDATE] })
     .input(updateCatalogPreferencesSchema)
     .mutation(({ input }) => service.updateCatalogPreferences(input)),
+
+  updateQuoteBuilderPreferences: guardedProcedure({
+    [RESOURCES.QUOTE_BUILDER_PREFERENCES]: [ACTIONS.UPDATE],
+  })
+    .input(updateQuoteBuilderPreferencesSchema)
+    .mutation(({ input }) => service.updateQuoteBuilderPreferences(input)),
 });

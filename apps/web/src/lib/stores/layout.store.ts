@@ -10,6 +10,8 @@ interface LayoutState {
   toggleSidebarCollapsed: () => void;
   contentBg: ContentBg;
   setContentBg: (contentBg: ContentBg) => void;
+  hideBottomNav: boolean;
+  setHideBottomNav: (hideBottomNav: boolean) => void;
 }
 
 export const useLayoutStore = create<LayoutState>((set) => ({
@@ -18,6 +20,8 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   sidebarCollapsed: false,
   setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
   toggleSidebarCollapsed: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
-  contentBg: 'white',
+  contentBg: 'grey',
   setContentBg: (contentBg) => set({ contentBg }),
+  hideBottomNav: false,
+  setHideBottomNav: (hideBottomNav) => set({ hideBottomNav }),
 }));

@@ -1,10 +1,11 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Alert, App, Button, Card, Space, Tag, Typography } from 'antd';
+import { App, Button, Card, Space, Tag, Typography } from 'antd';
 import { CheckCircle, ExternalLink, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AddressLines } from '@/components/shared/AddressLines';
 import { useConfirmModal, useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
+import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { useCancelQuote } from '@/features/quotes';
 import { isPastDate } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
@@ -19,7 +20,6 @@ interface EventHeaderProps {
 
 export function EventHeader({ event }: EventHeaderProps) {
   const { t } = useTranslation('events');
-  const { t: tc } = useTranslation('common');
   const router = useRouter();
   const { modal } = App.useApp();
   const isDesktop = useIsDesktop();
@@ -55,67 +55,87 @@ export function EventHeader({ event }: EventHeaderProps) {
   };
 
   return (
-    <Card size="small">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <Typography.Title level={4} className="m-0">
-              {event.quoteNumber}
-            </Typography.Title>
-            <Tag color={EVENT_STATUS_COLORS[event.status]}>{t(`status.${event.status}`)}</Tag>
-            {event.eventTypeName && <Tag>{event.eventTypeName}</Tag>}
-          </div>
-          <div className="mt-1 text-base text-gray-500">
-            {event.eventDate ? date(event.eventDate) : '—'}
-            {event.eventTime ? ` · ${event.eventTime}` : ''}
-          </div>
-          <AddressLines
-            address={event.address}
-            city={event.city}
-            state={event.state}
-            className="mt-1 text-base text-gray-500"
+    <div>
+      <div className="mb-4">
+        {isPastDue && (
+          <WrapperAlert
+            className="mt-2"
+            type="info"
+            icon="help"
+            title={t('detail.pastDueTitle')}
+            description={t('detail.pastDue')}
+            actionText="Marcarlo"
+            onAction={onMarkCompleted}
           />
-        </div>
-
-        <Space wrap>
-          <Button
-            icon={<ExternalLink size={14} />}
-            onClick={() => router.push(`/admin/quotes/${event.quoteId}`)}
-          >
-            {t('detail.backToQuote')}
-          </Button>
-          {isUpcoming && (
-            <>
-              <Button
-                icon={<CheckCircle size={14} />}
-                loading={isCompleting}
-                onClick={onMarkCompleted}
-              >
-                {t('detail.markCompleted')}
-              </Button>
-              <Button danger icon={<XCircle size={14} />} loading={isCancelling} onClick={onCancel}>
-                {t('detail.cancel')}
-              </Button>
-            </>
-          )}
-        </Space>
+        )}
+        {event.selectionsPending && (
+          <WrapperAlert
+            className="mt-2"
+            type="error"
+            showIcon
+            title={t('detail.selections.pendingAlert')}
+            description={
+              event.selectionsDeadline
+                ? t('detail.selections.deadlineNote', { date: date(event.selectionsDeadline) })
+                : undefined
+            }
+          />
+        )}
       </div>
 
-      {isPastDue && (
-        <Alert
-          className="mt-3"
-          type="warning"
-          showIcon
-          title={t('detail.pastDue')}
-          action={
-            <Button size="small" loading={isCompleting} onClick={onMarkCompleted}>
-              {tc('yes')}
+      <Card>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <Typography.Title level={4} className="m-0">
+                {event.quoteNumber}
+              </Typography.Title>
+              <Tag color={EVENT_STATUS_COLORS[event.status]}>{t(`status.${event.status}`)}</Tag>
+              {event.eventTypeName && <Tag>{event.eventTypeName}</Tag>}
+            </div>
+            <div className="mt-1 text-base text-gray-500">
+              {event.eventDate ? date(event.eventDate) : '—'}
+              {event.eventTime ? ` · ${event.eventTime}` : ''}
+            </div>
+            <AddressLines
+              address={event.address}
+              city={event.city}
+              state={event.state}
+              className="mt-1 text-base text-gray-500"
+            />
+          </div>
+
+          <Space wrap>
+            <Button
+              icon={<ExternalLink size={14} />}
+              onClick={() => router.push(`/admin/quotes/${event.quoteId}`)}
+            >
+              {t('detail.backToQuote')}
             </Button>
-          }
-        />
-      )}
+            {isUpcoming && (
+              <>
+                <Button
+                  icon={<CheckCircle size={14} />}
+                  loading={isCompleting}
+                  onClick={onMarkCompleted}
+                >
+                  {t('detail.markCompleted')}
+                </Button>
+                <Button
+                  danger
+                  icon={<XCircle size={14} />}
+                  loading={isCancelling}
+                  onClick={onCancel}
+                >
+                  {t('detail.cancel')}
+                </Button>
+              </>
+            )}
+          </Space>
+        </div>
+      </Card>
       {actionContextHolder}
       {deleteContextHolder}
-    </Card>
+    </div>
   );
 }

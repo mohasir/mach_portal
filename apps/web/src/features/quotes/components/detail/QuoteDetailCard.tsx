@@ -1,11 +1,12 @@
 'use client';
-import { Alert, Button, Card, Descriptions, Divider, Empty, Typography } from 'antd';
+import { Button, Card, Descriptions, Divider, Empty, Typography } from 'antd';
 import { AlertCircle, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import { useConfig } from '@/features/settings';
 import { AddressLines } from '@/components/shared/AddressLines';
+import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { IconTag } from '@/components/shared/IconTag';
 import { Logo } from '@/components/shared/Logo';
 import { ShareButton } from '@/components/shared/ShareButton';
@@ -74,17 +75,9 @@ export function QuoteDetailCard({
         {lineRows.map((row) => (
           <QuickLineCard
             key={row.id}
-            line={{
-              key: row.id,
-              productId: row.productId,
-              numPersons: row.numPersons,
-              subtotal: row.subtotal,
-              selections: {},
-            }}
+            mode="readOnly"
+            line={{ numPersons: row.numPersons, subtotal: row.subtotal }}
             product={row.product}
-            readOnly
-            onRemove={() => {}}
-            onChange={() => {}}
           />
         ))}
       </div>
@@ -179,7 +172,7 @@ export function QuoteDetailCard({
         {lineRows.length > 0 && ` (${lineRows.length})`}
       </Typography.Title>
       {detail.validUntil && (
-        <Alert
+        <WrapperAlert
           type="info"
           showIcon
           title={t('detail.validUntil', {
@@ -194,31 +187,29 @@ export function QuoteDetailCard({
 
   return (
     <div className={`flex h-full flex-col ${isDesktop ? '' : 'gap-4'}`}>
-      {isDesktop ? headerRow : <Card size="small">{headerRow}</Card>}
+      {isDesktop ? headerRow : <Card>{headerRow}</Card>}
 
       {isDesktop && <Divider className="my-4" />}
 
       {isDesktop ? (
         <QuoteClientCard detail={detail} />
       ) : (
-        <Card size="small">
+        <Card>
           <QuoteClientCard detail={detail} />
         </Card>
       )}
 
       {isDesktop && <Divider className="my-4" />}
 
-      {isDesktop ? eventSection : <Card size="small">{eventSection}</Card>}
+      {isDesktop ? eventSection : <Card>{eventSection}</Card>}
 
       {isDesktop && <Divider className="mt-4 mb-0" />}
 
       {isPastDue && (
-        <Alert className="mt-4 mb-4" type="warning" showIcon title={t('detail.pastDue')} />
+        <WrapperAlert className="mt-4 mb-4" type="warning" showIcon title={t('detail.pastDue')} />
       )}
 
-      <div className="flex-1">
-        {isDesktop ? productsSection : <Card size="small">{productsSection}</Card>}
-      </div>
+      <div className="flex-1">{isDesktop ? productsSection : <Card>{productsSection}</Card>}</div>
 
       {isDesktop && <Divider className="my-3" />}
 

@@ -17,7 +17,7 @@ export const eventAttachmentsRouter = Router();
 
 eventAttachmentsRouter.post(
   '/:paymentId/attachments',
-  guardSession({ [RESOURCES.EVENT]: [ACTIONS.UPLOAD_ATTACHMENT] }),
+  guardSession({ [RESOURCES.PAYMENT]: [ACTIONS.UPLOAD_ATTACHMENT] }),
   upload.single('file'),
   uploadPaymentAttachment,
 );

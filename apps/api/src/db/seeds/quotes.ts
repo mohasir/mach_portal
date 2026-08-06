@@ -60,7 +60,7 @@ const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Crepes',
-        numPersons: 80,
+        numPersons: 70,
         selections: [
           {
             groupLabel: 'Premium Toppings',
@@ -71,7 +71,7 @@ const SEED_QUOTES: SeedQuote[] = [
       },
       {
         productName: 'Craft Bar',
-        numPersons: 80,
+        numPersons: 70,
         selections: [
           {
             groupLabel: 'Signature Cocktails',
@@ -219,6 +219,130 @@ const SEED_QUOTES: SeedQuote[] = [
     eventDate: '2026-05-30',
     address: '400 Washington St',
     stageId: QUOTE_STAGE.CANCELLED,
+    lines: [
+      {
+        productName: 'Nachos',
+        numPersons: 40,
+        selections: [{ groupLabel: 'Choose Your Base', optionNames: ['Tortilla Chips'] }],
+      },
+    ],
+  },
+  // Confirmadas extra — dan varios eventos+pagos de prueba (seedEventPayments) repartidos en
+  // meses distintos (y uno en 2025) para probar filtros/agrupación por semana-mes-año de Pagos.
+  {
+    clientEmail: 'tomas.alvarez@example.com',
+    eventTypeName: 'Corporativo',
+    eventDate: '2026-02-10',
+    eventTime: '13:00',
+    address: '10 Fairfield Ave, Bridgeport',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    lines: [
+      {
+        productName: 'Esquites',
+        numPersons: 60,
+        selections: [{ groupLabel: 'Base Chip', optionNames: ['Doritos Nacho Cheese'] }],
+      },
+    ],
+  },
+  {
+    clientEmail: 'rachel.kim@example.com',
+    eventTypeName: 'Corporativo',
+    eventDate: '2026-01-15',
+    eventTime: '12:30',
+    address: '200 Park Ave',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    lines: [
+      {
+        productName: 'Snack Station',
+        numPersons: 60,
+        selections: [
+          { groupLabel: 'Base Chips', optionNames: ['Nacho Cheese', 'Cool Ranch'] },
+          { groupLabel: 'Toppings', optionNames: ['Peanuts'] },
+          { groupLabel: 'Fruits', optionNames: ['Pineapple'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'rachel.kim@example.com',
+    eventTypeName: 'Corporativo',
+    eventDate: '2026-04-16',
+    eventTime: '12:30',
+    address: '200 Park Ave',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    lines: [
+      {
+        productName: 'Snack Station',
+        numPersons: 60,
+        selections: [
+          { groupLabel: 'Base Chips', optionNames: ["Flamin' Hot", 'Cool Ranch'] },
+          { groupLabel: 'Toppings', optionNames: ['Gummy Bears'] },
+          { groupLabel: 'Fruits', optionNames: ['Watermelon'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'rachel.kim@example.com',
+    eventTypeName: 'Corporativo',
+    eventDate: '2026-07-15',
+    eventTime: '12:30',
+    address: '200 Park Ave',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    lines: [
+      {
+        productName: 'Snack Station',
+        numPersons: 60,
+        selections: [
+          { groupLabel: 'Base Chips', optionNames: ['Nacho Cheese'] },
+          { groupLabel: 'Toppings', optionNames: ['Peanuts', 'Gummy Bears'] },
+          { groupLabel: 'Fruits', optionNames: ['Pineapple', 'Watermelon'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'diego.fernandez@example.com',
+    eventTypeName: 'Cumpleaños',
+    eventDate: '2026-05-22',
+    eventTime: '16:00',
+    address: '210 Bedford Ave',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    lines: [
+      {
+        productName: 'Crepaletas',
+        numPersons: 40,
+        selections: [
+          { groupLabel: 'Premium Toppings', optionNames: ['Chopped Peanuts', 'Coconut Flakes'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'emily.carter@example.com',
+    eventTypeName: 'Corporativo',
+    eventDate: '2026-11-20',
+    eventTime: '12:00',
+    address: '1 Palmer Sq, Princeton',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    lines: [
+      {
+        productName: 'Fruit Station',
+        numPersons: 50,
+        selections: [
+          { groupLabel: 'Fresh Fruits', optionNames: ['Mango', 'Watermelon'] },
+          { groupLabel: 'Yogurt', optionNames: ['Vanilla Yogurt'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'marcus.bennett@example.com',
+    eventTypeName: 'Aniversario',
+    eventDate: '2025-12-05',
+    eventTime: '19:00',
+    address: '88 Morgan St',
+    stageId: QUOTE_STAGE.CONFIRMED,
     lines: [
       {
         productName: 'Nachos',

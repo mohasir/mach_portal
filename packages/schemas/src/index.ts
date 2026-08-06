@@ -9,5 +9,6 @@ export * from './eventTypes';
 export * from './config';
 export * from './quotes';
 export * from './events';
+export * from './payments';
 export * from './storage';
 export * from './templates';

@@ -242,6 +242,15 @@ export class QuotesRepository {
     return row?.value ?? 0;
   }
 
+  // Used by events.service.ts (updateSelections) to know which productId each quoteLineId
+  // belongs to, and to confirm a given line actually belongs to this quote.
+  findLinesByQuoteId(quoteId: string) {
+    return this.db
+      .select({ id: quoteLines.id, productId: quoteLines.productId })
+      .from(quoteLines)
+      .where(eq(quoteLines.quoteId, quoteId));
+  }
+
   async loadCatalogContext(productIds: string[]) {
     const uniqueIds = [...new Set(productIds)];
     if (uniqueIds.length === 0) return { products: [], tiers: [], groups: [], options: [] };

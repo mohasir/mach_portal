@@ -9,7 +9,7 @@ import { SecuritySettingsForm } from './SecuritySettingsForm';
 import { GeneralSettingsForm } from './GeneralSettingsForm';
 import { PreferencesSettingsForm } from './PreferencesSettingsForm';
 import { PermissionsSettingsForm } from './PermissionsSettingsForm';
-import { QuotePdfTemplateForm } from './QuotePdfTemplateForm';
+import { QuotePdfTemplateForm } from './forms/QuotePdfTemplateForm';
 import { SettingsMenuMobile } from './SettingsMenuMobile';
 import type { MobileSettingsSection } from './SettingsPage';
 

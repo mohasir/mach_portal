@@ -13,7 +13,7 @@ import {
   type RolePermissions,
   type RoleType,
 } from '@repo/guards';
-import { SettingsCard } from './SettingsCard';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 const VISIBLE_ROLES: RoleType[] = [ROLES.MEMBER, ROLES.MANAGER, ROLES.ADMIN];
 
@@ -23,6 +23,7 @@ const CONFIGURATION_RESOURCES = new Set<ResourceType>([
   RESOURCES.QUOTE_STAGES,
   RESOURCES.CATALOG_PREFERENCES,
   RESOURCES.QUOTE_PDF_TEMPLATE,
+  RESOURCES.QUOTE_BUILDER_PREFERENCES,
 ]);
 
 const permissionsByRole = Object.fromEntries(
@@ -42,7 +43,7 @@ export function PermissionsMatrixCard() {
   const { t: tu } = useTranslation('users');
 
   return (
-    <SettingsCard title={t('permissions.title')} dividerClassName="mt-3 mb-2">
+    <WrapperCard title={t('permissions.title')}>
       <div className="overflow-x-auto">
         <div className="grid min-w-105 grid-cols-[minmax(0,1fr)_repeat(3,3rem)] items-center gap-x-1 gap-y-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,4rem)] sm:gap-x-3">
           <div></div>
@@ -96,6 +97,6 @@ export function PermissionsMatrixCard() {
           })}
         </div>
       </div>
-    </SettingsCard>
+    </WrapperCard>
   );
 }

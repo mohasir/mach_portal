@@ -27,7 +27,7 @@ export function QuoteRowCard({ row, onClick }: QuoteRowCardProps) {
   const stage = stageMap.get(row.stageId as QuoteStageId);
 
   return (
-    <Card size="small" onClick={onClick} className="cursor-pointer">
+    <Card onClick={onClick}>
       <div className="flex items-center justify-between gap-2">
         <CopyableQuoteNumber number={row.number} className="font-medium" />
         <div className="flex items-center gap-1">

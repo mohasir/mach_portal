@@ -3,6 +3,7 @@ import type {
   QuoteStageCatalogItem,
   StateSettingInput,
   UpdateCatalogPreferencesInput,
+  UpdateQuoteBuilderPreferencesInput,
   UpdateQuoteDefaultsInput,
 } from '@repo/schemas';
 import type { Database } from '../../db';
@@ -67,6 +68,15 @@ export class ConfigRepository {
   }
 
   updateCatalogPreferences(data: UpdateCatalogPreferencesInput) {
+    return this.db
+      .update(appSettings)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(appSettings.id, APP_SETTINGS_ID))
+      .returning(publicAppSettingsColumns)
+      .then((r) => r[0]!);
+  }
+
+  updateQuoteBuilderPreferences(data: UpdateQuoteBuilderPreferencesInput) {
     return this.db
       .update(appSettings)
       .set({ ...data, updatedAt: new Date() })
