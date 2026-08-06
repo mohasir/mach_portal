@@ -23,7 +23,7 @@ export function AutoRowCard<TData extends object>({
   };
 
   return (
-    <Card size="small">
+    <Card>
       {actions.length > 0 && (
         <div className="mb-2 flex justify-end">
           {actions.map((col, i) => (

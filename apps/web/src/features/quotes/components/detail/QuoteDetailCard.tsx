@@ -187,21 +187,21 @@ export function QuoteDetailCard({
 
   return (
     <div className={`flex h-full flex-col ${isDesktop ? '' : 'gap-4'}`}>
-      {isDesktop ? headerRow : <Card size="small">{headerRow}</Card>}
+      {isDesktop ? headerRow : <Card>{headerRow}</Card>}
 
       {isDesktop && <Divider className="my-4" />}
 
       {isDesktop ? (
         <QuoteClientCard detail={detail} />
       ) : (
-        <Card size="small">
+        <Card>
           <QuoteClientCard detail={detail} />
         </Card>
       )}
 
       {isDesktop && <Divider className="my-4" />}
 
-      {isDesktop ? eventSection : <Card size="small">{eventSection}</Card>}
+      {isDesktop ? eventSection : <Card>{eventSection}</Card>}
 
       {isDesktop && <Divider className="mt-4 mb-0" />}
 
@@ -209,9 +209,7 @@ export function QuoteDetailCard({
         <WrapperAlert className="mt-4 mb-4" type="warning" showIcon title={t('detail.pastDue')} />
       )}
 
-      <div className="flex-1">
-        {isDesktop ? productsSection : <Card size="small">{productsSection}</Card>}
-      </div>
+      <div className="flex-1">{isDesktop ? productsSection : <Card>{productsSection}</Card>}</div>
 
       {isDesktop && <Divider className="my-3" />}
 

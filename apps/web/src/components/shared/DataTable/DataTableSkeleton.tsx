@@ -23,7 +23,7 @@ export function DataTableSkeleton<TData extends object>({
   })) as TableColumnsType<TData>;
 
   const skeletonCard = () => (
-    <Card size="small">
+    <Card>
       <Skeleton active title={{ width: '55%' }} paragraph={{ rows: 2 }} />
     </Card>
   );

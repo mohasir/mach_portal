@@ -78,20 +78,16 @@ export function PaymentsTable() {
           aria-label={t('filters.title')}
         />
       </div>
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-500">
-          {tc('table.results', { count: paginationOf(data)?.total ?? 0 })}
-        </span>
-        {hasActiveFilters && (
+      {hasActiveFilters && (
+        <div className="flex justify-end">
           <Button type="link" className="px-0" onClick={clearFilters}>
             {tc('table.clearFilters')}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
       <DataTable<Payment>
         {...table.tableProps}
         onSearch={undefined}
-        showTotal={false}
         rowKey="id"
         columns={columns}
         mobileRenderType="card"

@@ -78,9 +78,12 @@
     }
 
     /* In card mode that single cell should fill the row: AntD's default
-       .ant-table-cell inline padding would inset the card. */
+       .ant-table-cell inline padding would inset the card. Block padding is
+       trimmed too — AntD's default (sized for a dense table row) stacks
+       between adjacent cells and reads as an oversized gap between cards. */
     .mach-datatable--mobile-card .ant-table-cell {
       padding-inline: 0;
+      padding-block: 6px;
     }
 
     /* AntD toggles this row/cell hover highlight via JS mouseenter/mouseleave,
@@ -90,6 +93,19 @@
     .mach-datatable .ant-table-tbody > tr > td.ant-table-cell-row-hover,
     .mach-datatable .ant-table-tbody > tr.ant-table-row:hover > td {
       background: inherit;
+    }
+
+    /* Mobile card mode already draws each row as its own card (AutoRowCard or a
+       feature's renderCard) with its own background and edge; AntD's own
+       colorBgContainer + per-cell border-bottom behind it just reads as a
+       redundant sheet of "paper" plus a stray divider line under every card. */
+    .mach-datatable--mobile-card .ant-table,
+    .mach-datatable--mobile-card .ant-table-container {
+      background: transparent;
+    }
+    .mach-datatable--mobile-card .ant-table-tbody > tr > td {
+      background: transparent;
+      border-bottom: none;
     }
   }
 
@@ -165,13 +181,5 @@
      land at ~40.8px instead of the app's 40px control height. Force it exactly. */
   .ant-picker {
     height: 40px;
-  }
-
-  .ant-alert {
-    padding: 18px;
-    align-items: start;
-  }
-  .ant-alert .ant-alert-section .ant-alert-title {
-    line-height: 1;
   }
 }

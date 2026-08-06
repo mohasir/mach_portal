@@ -22,7 +22,7 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
   const rowActions = useUserRowActions({ onEdit, onDelete });
 
   return (
-    <Card size="small">
+    <Card>
       <div className="flex items-start justify-between gap-3">
         <AvatarUser name={user.name} email={user.email} />
         <DataTableRowActions actions={rowActions(user)} label={tc('table.actions')} />

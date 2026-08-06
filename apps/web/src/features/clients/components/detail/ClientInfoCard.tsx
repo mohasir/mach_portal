@@ -21,7 +21,7 @@ export function ClientInfoCard({ client }: ClientInfoCardProps) {
   const [isEditing, setEditing] = useState(false);
 
   return (
-    <Card size="small">
+    <Card>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <AvatarUser name={client.name} size={48} />
 

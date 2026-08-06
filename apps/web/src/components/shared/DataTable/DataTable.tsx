@@ -76,6 +76,7 @@ export function DataTable<TData extends object>({
     mobileRenderType === 'card' ? withMobileCard(columnsWithSortOrder, card) : columnsWithSortOrder;
 
   const firstLoad = !!loading && !dataSource?.length;
+  const showTotalTop = showTotal && server;
 
   return (
     <div
@@ -91,35 +92,43 @@ export function DataTable<TData extends object>({
           className="w-full sm:max-w-xs"
         />
       )}
-      {firstLoad ? (
-        <DataTableSkeleton<TData>
-          columns={columns}
-          rows={pageSize}
-          mobileCard={mobileRenderType === 'card'}
-        />
-      ) : (
-        <Table<TData>
-          {...rest}
-          dataSource={dataSource}
-          loading={loading}
-          columns={responsiveColumns}
-          onChange={server ? handleChange : undefined}
-          scroll={mobileCardActive ? undefined : { x: 'max-content' }}
-          locale={{ emptyText, ...locale }}
-          pagination={
-            server
-              ? {
-                  current: page,
-                  pageSize,
-                  total,
-                  showSizeChanger: true,
-                  responsive: true,
-                  showTotal: showTotal ? (n) => t('table.total', { total: n }) : undefined,
-                }
-              : { pageSize, hideOnSinglePage: true, responsive: true }
-          }
-        />
-      )}
+      <div>
+        <div>
+          {showTotalTop && (
+            <span className="block text-sm text-gray-500 px-2 mb-2">
+              {t('table.results', { count: total ?? 0 })}
+            </span>
+          )}
+        </div>
+        {firstLoad ? (
+          <DataTableSkeleton<TData>
+            columns={columns}
+            rows={pageSize}
+            mobileCard={mobileRenderType === 'card'}
+          />
+        ) : (
+          <Table<TData>
+            {...rest}
+            dataSource={dataSource}
+            loading={loading}
+            columns={responsiveColumns}
+            onChange={server ? handleChange : undefined}
+            scroll={mobileCardActive ? undefined : { x: 'max-content' }}
+            locale={{ emptyText, ...locale }}
+            pagination={
+              server
+                ? {
+                    current: page,
+                    pageSize,
+                    total,
+                    showSizeChanger: true,
+                    responsive: true,
+                  }
+                : { pageSize, hideOnSinglePage: true, responsive: true }
+            }
+          />
+        )}
+      </div>
     </div>
   );
 }

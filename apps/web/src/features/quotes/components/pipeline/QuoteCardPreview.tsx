@@ -9,7 +9,7 @@ interface QuoteCardPreviewProps {
 
 export function QuoteCardPreview({ card }: QuoteCardPreviewProps) {
   return (
-    <Card size="small" className="shadow-lg">
+    <Card>
       <QuoteCardBody card={card} />
     </Card>
   );

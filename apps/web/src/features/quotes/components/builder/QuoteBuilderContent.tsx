@@ -188,14 +188,14 @@ export function QuoteBuilderContent({
   const formFields = (
     <div className={`flex flex-col ${isDesktop ? '' : 'gap-4'}`}>
       {quoteId && stageId && (
-        <Card size="small">
+        <Card>
           <QuoteStageTagDropdown quoteId={quoteId} stageId={stageId} isDraft={isDraft} />
         </Card>
       )}
       <ClientSection ref={clientSectionRef} readOnly={readOnly} />
       {!isDesktop && (
         <>
-          <Card size="small">
+          <Card>
             <LinesBuilderSection catalog={catalog} readOnly={readOnly} />
           </Card>
           <ExtraChargesSection readOnly={readOnly} />

@@ -16,7 +16,7 @@ export function PaymentRowCard({ row, onClick }: PaymentRowCardProps) {
   const { money } = useMoneyFormatter();
 
   return (
-    <div onClick={onClick} className="cursor-pointer px-3">
+    <Card onClick={onClick}>
       <div className="flex items-center gap-3">
         <IconBadge icon={PAYMENT_METHOD_ICONS[row.method]} shape="square" className="bg-gray-100" />
         <div className="min-w-0 flex-1">
@@ -25,6 +25,6 @@ export function PaymentRowCard({ row, onClick }: PaymentRowCardProps) {
         </div>
         <span className="font-semibold text-base">{money(row.amount)}</span>
       </div>
-    </div>
+    </Card>
   );
 }
