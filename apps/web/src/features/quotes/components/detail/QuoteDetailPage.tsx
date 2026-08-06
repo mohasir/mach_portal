@@ -1,5 +1,4 @@
 'use client';
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { App, Button, Card, Skeleton, Tooltip, Typography } from 'antd';
 import { Copy, Download } from 'lucide-react';
@@ -11,7 +10,6 @@ import { ShareButton } from '@/components/shared/ShareButton';
 import { isAfter } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
-import { useLayoutStore } from '@/lib/stores/layout.store';
 import { copyToClipboard } from '@/lib/utils/clipboard';
 import { useGenerateQuotePdf, useQuote } from '../../hooks/useQuotes';
 import { QuoteHistoryCard } from '../builder/QuoteHistoryCard';

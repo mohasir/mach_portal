@@ -1,5 +1,4 @@
 'use client';
-import { Card, Typography } from 'antd';
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { WrapperCard } from '@/components/shared/WrapperCard';

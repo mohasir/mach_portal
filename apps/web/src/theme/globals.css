@@ -182,4 +182,13 @@
   .ant-picker {
     height: 40px;
   }
+
+  /* Segmented has no component token for item/track radius — both .ant-segmented
+     (borderRadius) and .ant-segmented-item-selected (borderRadiusSM) fall back to
+     aliases shared by many other components, so they can't be bumped globally
+     just for this control. */
+  .ant-segmented,
+  .ant-segmented-item-selected {
+    border-radius: 10px;
+  }
 }

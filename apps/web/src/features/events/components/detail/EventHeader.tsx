@@ -20,7 +20,6 @@ interface EventHeaderProps {
 
 export function EventHeader({ event }: EventHeaderProps) {
   const { t } = useTranslation('events');
-  const { t: tc } = useTranslation('common');
   const router = useRouter();
   const { modal } = App.useApp();
   const isDesktop = useIsDesktop();

@@ -1,13 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Button, Typography } from 'antd';
+import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { EventLineSelectionInput } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import { BottomSheet } from '@/components/shared/BottomSheet';
-import { getStationIcon, OptionGroupChips } from '@/features/quotes';
+import { OptionGroupSelectList } from '@/features/quotes';
 import { useUpdateEventSelections } from '../../hooks/useEventSelections';
 import type { EventDetail } from '../../types';
+import { StationSheetHeader } from './StationSheetHeader';
 
 interface StationSelectionsSheetProps {
   eventId: string;
@@ -39,7 +40,6 @@ export function StationSelectionsSheet({
   }, [open, line]);
 
   const selectGroups = product.optionGroups.filter((g) => g.selectionType === 'select');
-  const Icon = getStationIcon(product.name);
 
   const handleSave = async () => {
     const payload: EventLineSelectionInput[] = selectGroups.map((group) => ({
@@ -56,23 +56,37 @@ export function StationSelectionsSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={t('detail.selections.sheetTitle')}>
-      <div className="flex flex-col gap-4 p-4 pb-8">
-        <div className="flex items-center gap-2">
-          <Icon size={16} className="text-brown shrink-0" />
-          <Typography.Text strong>{product.name}</Typography.Text>
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title={t('detail.selections.sheetTitle')}
+      footerClassName="shadow-[0_-4px_8px_-2px_rgba(0,0,0,0.08)]"
+      footer={
+        <div className="py-2 pt-4">
+          <Button type="primary" block loading={isPending} onClick={() => void handleSave()}>
+            {t('detail.selections.save')}
+          </Button>
         </div>
-        {selectGroups.map((group) => (
-          <OptionGroupChips
-            key={group.id}
-            group={group}
-            selectedIds={selections[group.id] ?? []}
-            onChange={(optionIds) => setSelections((prev) => ({ ...prev, [group.id]: optionIds }))}
-          />
-        ))}
-        <Button type="primary" block loading={isPending} onClick={() => void handleSave()}>
-          {t('detail.selections.save')}
-        </Button>
+      }
+    >
+      <div className="flex flex-col gap-6 px-4 pb-4">
+        <StationSheetHeader
+          product={product}
+          numPersons={line.numPersons}
+          subtotal={line.subtotal}
+        />
+        <div className="flex flex-col gap-2">
+          {selectGroups.map((group) => (
+            <OptionGroupSelectList
+              key={group.id}
+              group={group}
+              selectedIds={selections[group.id] ?? []}
+              onChange={(optionIds) =>
+                setSelections((prev) => ({ ...prev, [group.id]: optionIds }))
+              }
+            />
+          ))}
+        </div>
       </div>
     </BottomSheet>
   );

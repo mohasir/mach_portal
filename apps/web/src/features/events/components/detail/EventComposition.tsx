@@ -20,10 +20,25 @@ type SheetLine = { line: EventDetail['lines'][number]; product: Product };
 
 export function EventComposition({ event, lines, catalog }: EventCompositionProps) {
   const can = useCan();
+  // Line data and open-state are tracked separately: closing only flips `*Open` to
+  // false, it never clears `editing`/`viewing`. Unmounting the sheet (or blanking its
+  // content) the same render `open` goes false confuses AntD's Drawer size="auto"
+  // close animation — the panel gets stuck visible with no mask.
   const [editing, setEditing] = useState<SheetLine | null>(null);
+  const [editingOpen, setEditingOpen] = useState(false);
   const [viewing, setViewing] = useState<SheetLine | null>(null);
+  const [viewingOpen, setViewingOpen] = useState(false);
 
   const canManageSelections = can({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_SELECTIONS] });
+
+  const openViewing = (sheetLine: SheetLine) => {
+    setViewing(sheetLine);
+    setViewingOpen(true);
+  };
+  const openEditing = (sheetLine: SheetLine) => {
+    setEditing(sheetLine);
+    setEditingOpen(true);
+  };
 
   return (
     <WrapperCard>
@@ -41,8 +56,8 @@ export function EventComposition({ event, lines, catalog }: EventCompositionProp
                 mode="selection"
                 line={line}
                 product={product}
-                onShow={() => setViewing({ line, product })}
-                onEditSelection={() => setEditing({ line, product })}
+                onShow={() => openViewing({ line, product })}
+                onEditSelection={() => openEditing({ line, product })}
               />
             ) : (
               <QuickLineCard key={line.id} mode="readOnly" line={line} product={product} />
@@ -55,16 +70,16 @@ export function EventComposition({ event, lines, catalog }: EventCompositionProp
           eventId={event.id}
           line={editing.line}
           product={editing.product}
-          open
-          onClose={() => setEditing(null)}
+          open={editingOpen}
+          onClose={() => setEditingOpen(false)}
         />
       )}
       {viewing && (
         <StationSelectionDetailSheet
           line={viewing.line}
           product={viewing.product}
-          open
-          onClose={() => setViewing(null)}
+          open={viewingOpen}
+          onClose={() => setViewingOpen(false)}
         />
       )}
     </WrapperCard>

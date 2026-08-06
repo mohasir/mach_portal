@@ -8,6 +8,7 @@ export { PipelineBoard } from './components/pipeline/PipelineBoard';
 export { QuoteLineItem, type QuoteLineItemGroup } from './components/QuoteLineItem';
 export { QuickLineCard } from './components/builder/QuickLineBuilder/QuickLineCard';
 export { OptionGroupChips } from './components/builder/LineBuilder/OptionGroupChips';
+export { OptionGroupSelectList } from './components/builder/LineBuilder/OptionGroupSelectList';
 export { useCancelQuote, useQuote, useQuotesList } from './hooks/useQuotes';
 export { getStationIcon } from './helpers';
 export type { Quote, QuoteDetail, QuoteBoard, QuoteCard } from './types';

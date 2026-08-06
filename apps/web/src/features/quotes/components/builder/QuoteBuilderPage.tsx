@@ -6,7 +6,6 @@ import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import { useProductCatalog } from '@/features/catalog';
 import { useEventTypesList } from '@/features/event-types';
 import { useConfig } from '@/features/settings';
-import { useLayoutStore } from '@/lib/stores/layout.store';
 import { toBuilderState } from '../../helpers';
 import { emptyBuilderState, QuoteBuilderProvider } from '../../hooks/useQuoteBuilder';
 import { useQuote } from '../../hooks/useQuotes';

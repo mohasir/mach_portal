@@ -159,6 +159,7 @@ export const machBarTheme: ThemeConfig = {
     Segmented: {
       itemSelectedBg: MB.olive,
       itemSelectedColor: '#ffffff',
+      trackBg: MB.oliveFaint,
     },
   },
 };

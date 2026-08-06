@@ -1,10 +1,10 @@
 'use client';
-import { Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
 import { BottomSheet } from '@/components/shared/BottomSheet';
-import { getStationIcon } from '@/features/quotes';
+import { OptionGroupSelectList } from '@/features/quotes';
 import type { EventDetail } from '../../types';
+import { StationSheetHeader } from './StationSheetHeader';
 
 interface StationSelectionDetailSheetProps {
   line: EventDetail['lines'][number];
@@ -20,40 +20,24 @@ export function StationSelectionDetailSheet({
   onClose,
 }: StationSelectionDetailSheetProps) {
   const { t } = useTranslation('events');
-  const { t: tq } = useTranslation('quotes');
-  const Icon = getStationIcon(product.name);
 
-  const groups = product.optionGroups
-    .map((group) => {
-      const isIncluded = group.selectionType === 'included';
-      const selection = line.selections.find((s) => s.optionGroupId === group.id);
-      const options = isIncluded
-        ? group.options
-        : group.options.filter((o) => selection?.optionIds.includes(o.id));
-      return {
-        key: group.id,
-        label: group.label,
-        isIncluded,
-        optionNames: options.map((o) => o.name),
-      };
-    })
-    .filter((group) => group.optionNames.length > 0);
+  const groups = product.optionGroups.filter((group) => {
+    if (group.selectionType === 'included') return group.options.length > 0;
+    const selection = line.selections.find((s) => s.optionGroupId === group.id);
+    return !!selection?.optionIds.length;
+  });
 
   return (
     <BottomSheet open={open} onClose={onClose} title={t('detail.selections.detailTitle')}>
-      <div className="flex flex-col gap-4 p-4 pb-8">
-        <div className="flex items-center gap-2">
-          <Icon size={16} className="text-brown shrink-0" />
-          <Typography.Text strong>{product.name}</Typography.Text>
-        </div>
+      <div className="flex flex-col gap-4 px-4 pb-8">
+        <StationSheetHeader product={product} numPersons={line.numPersons} subtotal={line.subtotal} />
         {groups.map((group) => (
-          <div key={group.key} className="flex flex-col gap-1">
-            <span className="text-xs text-gray-500">
-              {group.label}
-              {group.isIncluded ? ` | ${tq('detail.includedLabel')}` : ''}
-            </span>
-            <span className="text-base">{group.optionNames.join(', ')}</span>
-          </div>
+          <OptionGroupSelectList
+            key={group.id}
+            group={group}
+            selectedIds={line.selections.find((s) => s.optionGroupId === group.id)?.optionIds ?? []}
+            readOnly
+          />
         ))}
       </div>
     </BottomSheet>
