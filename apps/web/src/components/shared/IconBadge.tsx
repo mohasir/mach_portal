@@ -1,7 +1,9 @@
-import type { LucideIcon } from 'lucide-react';
+import type { ComponentType } from 'react';
+
+type IconComponent = ComponentType<{ size?: number }>;
 
 interface IconBadgeProps {
-  icon: LucideIcon;
+  icon: IconComponent;
   size?: number;
   shape?: 'circle' | 'square';
   className?: string;

@@ -5,6 +5,31 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.5.0] - 2026-08-08
+
+### Added
+
+- Centro de notificaciones (`/admin/notifications`): listado paginado con
+  scroll infinito, agrupado por fecha (Hoy/Ayer/Esta semana/Este mes/Este
+  año/Más antiguas), con avatar de quien originó la notificación (o ícono
+  para las del sistema) y opción de marcar todas como leídas.
+- El ícono de notificaciones del topbar (`NotificationMenu`) ahora muestra
+  un preview real de las últimas notificaciones no leídas (antes un estado
+  vacío fijo), con badge cuando hay pendientes y acceso directo al centro
+  de notificaciones.
+- Notificaciones de cotización confirmada/cancelada para los admins (menos
+  quien hizo la acción), al aprobar o cancelar una cotización.
+- Notificación diaria de selecciones de estaciones pendientes por evento:
+  avisa cuando quedan 3 días o menos para el vencimiento de confirmación de
+  un evento sin selecciones hechas.
+
+### Changed
+
+- `AddressLines` ahora muestra el nombre completo del estado (ej.
+  "New York") en vez de la abreviatura (ej. "NY").
+- Card de evento en mobile (`EventCard`): la hora pasa de badge junto a las
+  acciones a texto plano debajo de la card de fecha (día/mes).
+
 ## [0.4.0] - 2026-08-05
 
 ### Added

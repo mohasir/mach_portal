@@ -12,3 +12,4 @@ export * from './events';
 export * from './payments';
 export * from './storage';
 export * from './templates';
+export * from './notifications';

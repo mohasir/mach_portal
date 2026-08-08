@@ -1,6 +1,6 @@
 {
   "name": "api",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -15,6 +15,7 @@
     "db:reset": "tsx src/db/scripts/reset.ts",
     "db:seed": "tsx src/db/seeds/index.ts",
     "db:fresh": "pnpm db:reset && pnpm db:push && pnpm db:seed",
+    "jobs:event-reminders": "tsx src/jobs/scripts/runEventReminders.ts",
     "auth:generate": "better-auth generate --output src/db/schema/auth.ts",
     "check-types": "tsc --noEmit",
     "lint": "eslint ."
@@ -30,6 +31,7 @@
     "drizzle-orm": "^0.45",
     "express": "^5",
     "multer": "^2.2.0",
+    "node-cron": "^4.6.0",
     "postgres": "^3",
     "zod": "^4"
   },

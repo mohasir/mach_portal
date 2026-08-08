@@ -50,6 +50,10 @@ Monorepo Turborepo + pnpm.
   `useDateFormatter` en componentes). Prohibido `toLocaleDateString`, `Intl.DateTimeFormat`
   y formatos a mano. Locale-aware (es/en). Detalle en `docs/frontend/styling-guide.md` (sección Fechas).
 
+- **Prohibido `uppercase`** (clase Tailwind o `text-transform` a mano) en texto, salvo pedido
+  explícito del usuario para ese caso puntual. No usarlo por iniciativa propia en labels,
+  headers de sección, badges, etc.
+
 - **Arquitectura de features → `docs/frontend/architecture.md` es la spec estricta.**
   **Leerla antes** de crear o modificar cualquier feature/UI de la web app, y seguir su patrón
   (feature-sliced, `DataTable` + card en móvil, hooks tRPC, `<Can>`/`useCan`, i18n). Es genérica

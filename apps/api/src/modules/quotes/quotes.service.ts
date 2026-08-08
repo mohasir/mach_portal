@@ -15,6 +15,8 @@ import {
 import { AppError, ErrorCodes } from '../../lib/errors';
 import { generateQuotePdf } from '../../lib/pdfService/client';
 import { ConfigRepository } from '../config/config.repository';
+import { NotificationsRepository } from '../notifications/notifications.repository';
+import type { NotificationActor } from '../notifications/notifications.resource';
 import { ProductsRepository } from '../products/products.repository';
 import { buildProductTree } from '../products/products.resource';
 import { TemplatesRepository } from '../templates/templates.repository';
@@ -51,6 +53,7 @@ export class QuotesService {
     private configRepo: ConfigRepository,
     private productsRepo: ProductsRepository,
     private templatesRepo: TemplatesRepository,
+    private notificationsRepo: NotificationsRepository,
   ) {}
 
   async list(query: QuotesListQuery) {
@@ -254,7 +257,7 @@ export class QuotesService {
     return quoteResource(updated);
   }
 
-  async approve(id: string, userId: string) {
+  async approve(id: string, userId: string, actor: NotificationActor) {
     const current = await this.repo.findQuoteRow(id);
     if (!current) throw notFound();
     const fromStageId = current.stageId as QuoteStageId;
@@ -275,16 +278,30 @@ export class QuotesService {
       selectionsConfirmedById: current.selectOptionsAtQuote ? userId : null,
     });
     if (!updated) throw notFound();
+    await this.notificationsRepo.create({
+      type: 'quote_confirmed',
+      data: { quoteNumber: updated.number, source: 'user', actor },
+      entityType: 'quote',
+      entityId: id,
+      excludedUserId: userId,
+    });
     return quoteResource(updated);
   }
 
-  async cancel(id: string, userId: string) {
+  async cancel(id: string, userId: string, actor: NotificationActor) {
     const current = await this.repo.findQuoteRow(id);
     if (!current) throw notFound();
     const fromStageId = current.stageId as QuoteStageId;
     this.assertTransition(fromStageId, QUOTE_STAGE.CANCELLED);
     const updated = await this.repo.updateStage(id, fromStageId, QUOTE_STAGE.CANCELLED, userId);
     if (!updated) throw notFound();
+    await this.notificationsRepo.create({
+      type: 'quote_cancelled',
+      data: { quoteNumber: updated.number, source: 'user', actor },
+      entityType: 'quote',
+      entityId: id,
+      excludedUserId: userId,
+    });
     return quoteResource(updated);
   }
 
