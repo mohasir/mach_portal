@@ -5,6 +5,26 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.4.0] - 2026-08-08
+
+### Added
+
+- Módulo de notificaciones (`notifications`): tablas `notifications` y
+  `notification_reads`, endpoints `list` (paginado, con soporte de cursor
+  para scroll infinito), `unreadCount`, `markRead`, `markAllRead` y
+  `dismiss`. La visibilidad por tipo de notificación se resuelve por rol en
+  código (`NOTIFICATION_TYPE_ROLES`), no en una columna de la tabla.
+- Notificaciones `quote_confirmed` y `quote_cancelled`, creadas al aprobar
+  o cancelar una cotización (visibles para Admin, excepto quien hizo la
+  acción).
+- Cron diario (`node-cron`, 12:00 UTC ≈ 7-8am hora de negocio) que revisa
+  los eventos con selecciones de estaciones pendientes
+  (`EventsRepository.findPendingSelectionsCandidates`) y crea una
+  notificación `event_selections_reminder` cuando quedan 3 días o menos
+  para el vencimiento de confirmación (`optionsSelectionDeadlineDays`);
+  idempotente por evento (`NotificationsRepository.createIfNotExists`).
+  Script `pnpm --filter api jobs:event-reminders` para correrlo a mano.
+
 ## [0.3.0] - 2026-08-05
 
 ### Added

@@ -1,5 +1,5 @@
 'use client';
-import { useRef, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { Drawer } from 'antd';
 
 interface BottomSheetProps {
@@ -8,12 +8,6 @@ interface BottomSheetProps {
   title?: ReactNode;
   footer?: ReactNode;
   footerClassName?: string;
-  children: ReactNode;
-}
-
-interface SheetContent {
-  title?: ReactNode;
-  footer?: ReactNode;
   children: ReactNode;
 }
 

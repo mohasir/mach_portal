@@ -1,11 +1,11 @@
 'use client';
 import { Button, Card, Typography } from 'antd';
 import { Trans, useTranslation } from 'react-i18next';
-import { TbEyeCheck, TbTrash } from 'react-icons/tb';
+import { TbTrash } from 'react-icons/tb';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { resolveSystemIcon } from '../helpers';
-import { useDismissNotification, useMarkNotificationRead } from '../hooks/useNotifications';
+import { useDismissNotification } from '../hooks/useNotifications';
 import { useOpenNotification } from '../hooks/useOpenNotification';
 import type { Notification } from '../types';
 
@@ -18,7 +18,6 @@ export function NotificationCard({ item }: NotificationCardProps) {
   const { relative, date } = useDateFormatter();
   const openNotification = useOpenNotification();
   const { dismissNotification } = useDismissNotification();
-  const { markNotificationRead } = useMarkNotificationRead();
   const { data } = item;
   const SystemIcon = data.source === 'system' ? resolveSystemIcon(data.icon) : null;
   // Dates in `data` are raw ISO strings (snapshotted at creation) — format them here rather
