@@ -1,7 +1,7 @@
 import { ROLES, type RoleType } from '@repo/guards';
 import { notifications } from '../../db/schema';
 
-export type NotificationType = 'quote_confirmed' | 'quote_cancelled';
+export type NotificationType = 'quote_confirmed' | 'quote_cancelled' | 'event_selections_reminder';
 
 // Audience per type, resolved in code rather than a DB column — a single source of truth,
 // easy to extend when a new type needs a different audience. Superadmin is deliberately
@@ -9,18 +9,28 @@ export type NotificationType = 'quote_confirmed' | 'quote_cancelled';
 export const NOTIFICATION_TYPE_ROLES: Record<NotificationType, RoleType[]> = {
   quote_confirmed: [ROLES.ADMIN],
   quote_cancelled: [ROLES.ADMIN],
+  event_selections_reminder: [ROLES.ADMIN],
 };
 
 export type NotificationActor = { name: string; image: string | null };
 
 // Who/what triggered the notification, self-described in `data` rather than derived from
 // `type` — the front decides avatar vs. icon per-notification from this, not from a
-// type→visual lookup table (a future cron-driven type would carry `source: 'system'`).
+// type→visual lookup table ('system' is for job-driven types like event_selections_reminder,
+// see jobs/eventReminders.job.ts).
 export type NotificationVisualData =
-  | { source: 'user'; actor: NotificationActor }
-  | { source: 'system'; icon: string };
+  { source: 'user'; actor: NotificationActor } | { source: 'system'; icon: string };
 
 export type QuoteStageChangeData = { quoteNumber: string } & NotificationVisualData;
+
+export type EventSelectionsReminderData = {
+  clientName: string;
+  eventDate: string;
+  quoteNumber: string;
+  deadline: string;
+} & NotificationVisualData;
+
+export type NotificationData = QuoteStageChangeData | EventSelectionsReminderData;
 
 export const publicNotificationColumns = {
   id: notifications.id,
@@ -40,7 +50,7 @@ export type PublicNotification = Pick<
 export const notificationResource = (row: PublicNotification & { read: boolean }) => ({
   id: row.id,
   type: row.type as NotificationType,
-  data: row.data as QuoteStageChangeData,
+  data: row.data as NotificationData,
   entityType: row.entityType,
   entityId: row.entityId,
   createdAt: row.createdAt,

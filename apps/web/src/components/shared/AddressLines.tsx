@@ -1,3 +1,6 @@
+'use client';
+import { useTranslation } from 'react-i18next';
+
 interface AddressLinesProps {
   address?: string | null;
   city?: string | null;
@@ -7,7 +10,9 @@ interface AddressLinesProps {
 }
 
 export function AddressLines({ address, city, state, lines = 2, className }: AddressLinesProps) {
-  const cityState = [city, state].filter(Boolean).join(', ');
+  const { t } = useTranslation('common');
+  const stateLabel = state ? t(`states.${state}`, state) : state;
+  const cityState = [city, stateLabel].filter(Boolean).join(', ');
   if (!address && !cityState) return null;
 
   if (lines === 1) {

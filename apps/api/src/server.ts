@@ -7,6 +7,7 @@ import { appRouter } from './core/trpc/router';
 import { createContext } from './core/trpc/context';
 import { env } from './env';
 import { eventAttachmentsRouter } from './modules/events/events.express';
+import { registerCrons } from './crons';
 
 const app = express();
 
@@ -36,5 +37,7 @@ app.use(
     },
   }),
 );
+
+registerCrons();
 
 app.listen(env.PORT, () => console.log(`API on :${env.PORT}`));

@@ -51,11 +51,16 @@ export class NotificationsRepository {
       .leftJoin(notificationReads, this.readJoin(userId));
   }
 
-  async findPaginated(userId: string, visibleTypes: NotificationType[], query: NotificationsListQuery) {
+  async findPaginated(
+    userId: string,
+    visibleTypes: NotificationType[],
+    query: NotificationsListQuery,
+  ) {
     const { limit, offset: pageOffset, paginate, page, pageSize } = resolvePagination(query);
     // The infinite-scroll feed drives its own offset (cursor) instead of a page number.
     const offset = query.cursor ?? pageOffset;
-    if (visibleTypes.length === 0) return { items: [], total: 0, paginate, page, pageSize, offset, limit };
+    if (visibleTypes.length === 0)
+      return { items: [], total: 0, paginate, page, pageSize, offset, limit };
 
     const where = and(
       this.audienceWhere(userId, visibleTypes),
@@ -63,7 +68,11 @@ export class NotificationsRepository {
     );
     const orderBy = (query.sortDir === 'asc' ? asc : desc)(notifications.createdAt);
 
-    const items = await this.baseSelect(userId).where(where).orderBy(orderBy).limit(limit).offset(offset);
+    const items = await this.baseSelect(userId)
+      .where(where)
+      .orderBy(orderBy)
+      .limit(limit)
+      .offset(offset);
     const total = paginate ? await this.countAll(userId, where) : items.length;
     return { items, total, paginate, page, pageSize, offset, limit };
   }
@@ -98,8 +107,23 @@ export class NotificationsRepository {
     });
   }
 
+  // For job-driven types (e.g. reminders): a job may find the same entity "candidate" again
+  // on its next run, but the notification for it should only ever be created once.
+  async createIfNotExists(input: CreateNotificationInput) {
+    const [existing] = await this.db
+      .select({ id: notifications.id })
+      .from(notifications)
+      .where(and(eq(notifications.type, input.type), eq(notifications.entityId, input.entityId)))
+      .limit(1);
+    if (existing) return;
+    await this.create(input);
+  }
+
   async markRead(notificationId: string, userId: string) {
-    await this.db.insert(notificationReads).values({ notificationId, userId }).onConflictDoNothing();
+    await this.db
+      .insert(notificationReads)
+      .values({ notificationId, userId })
+      .onConflictDoNothing();
   }
 
   async dismiss(notificationId: string, userId: string) {

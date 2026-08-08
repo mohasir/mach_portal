@@ -33,6 +33,11 @@
     "irreversible": "This action cannot be undone"
   },
   "confirmAction": "Confirm",
+  "states": {
+    "NY": "New York",
+    "NJ": "New Jersey",
+    "CT": "Connecticut"
+  },
   "notFound": {
     "title": "Page not found",
     "subtitle": "The page you're looking for doesn't exist or was moved.",

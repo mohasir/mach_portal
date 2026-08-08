@@ -7,8 +7,10 @@ import {
   gte,
   ilike,
   inArray,
+  isNotNull,
   isNull,
   lt,
+  ne,
   or,
   sql,
   type SQL,
@@ -294,6 +296,29 @@ export class EventsRepository {
       .where(and(eq(eventStaff.eventId, data.eventId), eq(eventStaff.staffId, data.staffId)))
       .returning({ id: eventStaff.id })
       .then((r) => r[0]);
+  }
+
+  // Candidates for the "selections pending" reminder job (jobs/eventReminders.job.ts) — the
+  // actual deadline math (vs. optionsSelectionDeadlineDays) happens in JS, not here.
+  findPendingSelectionsCandidates() {
+    return this.db
+      .select({
+        id: events.id,
+        eventDate: events.eventDate,
+        quoteNumber: quotes.number,
+        clientName: clients.name,
+      })
+      .from(events)
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
+      .innerJoin(clients, eq(events.clientId, clients.id))
+      .where(
+        and(
+          isNull(events.selectionsConfirmedAt),
+          isNull(events.completedAt),
+          isNotNull(events.eventDate),
+          ne(quotes.stageId, QUOTE_STAGE.CANCELLED),
+        ),
+      );
   }
 
   async findForSelectionsUpdate(eventId: string) {

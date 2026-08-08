@@ -27,39 +27,37 @@ export function EventCard({ row, index, onClick, onAssignStaff }: EventCardProps
   return (
     <Card onClick={onClick} className="cursor-pointer">
       <div className="flex items-center gap-3">
-        <div
-          className={`flex size-14 shrink-0 flex-col items-center justify-center rounded-2xl ${badgeClass}`}
-        >
-          {row.eventDate ? (
-            <>
-              <span className="text-lg leading-none font-bold">{dayOfMonth(row.eventDate)}</span>
-              <span className="text-xs">{monthShort(row.eventDate)}</span>
-            </>
-          ) : (
-            <span className="text-xs">—</span>
-          )}
+        <div className="flex shrink-0 flex-col items-center gap-1">
+          <div
+            className={`flex size-14 flex-col items-center justify-center rounded-2xl ${badgeClass}`}
+          >
+            {row.eventDate ? (
+              <>
+                <span className="text-lg leading-none font-bold">{dayOfMonth(row.eventDate)}</span>
+                <span className="text-xs">{monthShort(row.eventDate)}</span>
+              </>
+            ) : (
+              <span className="text-xs">—</span>
+            )}
+          </div>
+          {row.eventTime && <span className="text-xs text-gray-500">{time(row.eventTime)}</span>}
         </div>
         <div className="min-w-0 flex-1">
           <div className="truncate font-medium">{row.clientName}</div>
-          {row.eventTypeName && (
-            <div className="mt-0.5 truncate text-xs text-gray-500">{row.eventTypeName}</div>
-          )}
-          <AddressLines
-            address={row.address}
-            city={row.city}
-            state={row.state}
-            className="mt-0.5 text-xs text-gray-500"
-          />
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {row.eventTime && (
-            <span className="bg-olive-faint text-primary rounded-full px-2.5 py-1 text-xs font-medium">
-              {time(row.eventTime)}
-            </span>
-          )}
-          <div onClick={(e) => e.stopPropagation()}>
-            <DataTableRowActions actions={rowActions(row)} label={tc('table.actions')} />
+          <div className="mt-1">
+            {row.eventTypeName && (
+              <div className="mt-0.5 truncate text-xs text-gray-500">{row.eventTypeName}</div>
+            )}
+            <AddressLines
+              address={row.address}
+              city={row.city}
+              state={row.state}
+              className="mt-0.5 text-xs text-gray-500"
+            />
           </div>
+        </div>
+        <div onClick={(e) => e.stopPropagation()}>
+          <DataTableRowActions actions={rowActions(row)} label={tc('table.actions')} />
         </div>
       </div>
     </Card>

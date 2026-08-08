@@ -1,16 +1,18 @@
 import dayjs from 'dayjs';
-import { Bell, type LucideIcon } from 'lucide-react';
+import { Bell, CalendarClock, type LucideIcon } from 'lucide-react';
 import type { Notification } from './types';
 
 /** Where a notification's "detail" action navigates, keyed by its `entityType`. */
 export const NOTIFICATION_ENTITY_ROUTES: Record<string, (id: string) => string> = {
   quote: (id) => `/admin/quotes/${id}`,
+  event: (id) => `/admin/events/${id}`,
 };
 
 // `source: 'system'` notifications carry their own icon name in `data.icon` — the action
 // picks it, not the type — so this stays a lookup by that arbitrary string, not by `type`.
-// Empty until a system-generated notification type actually exists; falls back to Bell.
-const SYSTEM_ICON_REGISTRY: Record<string, LucideIcon> = {};
+const SYSTEM_ICON_REGISTRY: Record<string, LucideIcon> = {
+  'calendar-clock': CalendarClock,
+};
 
 export function resolveSystemIcon(name: string): LucideIcon {
   return SYSTEM_ICON_REGISTRY[name] ?? Bell;
@@ -18,7 +20,14 @@ export function resolveSystemIcon(name: string): LucideIcon {
 
 export type NotificationGroupKey = 'today' | 'yesterday' | 'week' | 'month' | 'year' | 'older';
 
-const GROUP_ORDER: NotificationGroupKey[] = ['today', 'yesterday', 'week', 'month', 'year', 'older'];
+const GROUP_ORDER: NotificationGroupKey[] = [
+  'today',
+  'yesterday',
+  'week',
+  'month',
+  'year',
+  'older',
+];
 
 function bucketKey(createdAt: Notification['createdAt']): NotificationGroupKey {
   const created = dayjs(createdAt);
@@ -45,5 +54,8 @@ export function groupNotificationsByDate(items: Notification[]): NotificationGro
     arr.push(item);
     buckets.set(key, arr);
   }
-  return GROUP_ORDER.filter((key) => buckets.has(key)).map((key) => ({ key, items: buckets.get(key)! }));
+  return GROUP_ORDER.filter((key) => buckets.has(key)).map((key) => ({
+    key,
+    items: buckets.get(key)!,
+  }));
 }

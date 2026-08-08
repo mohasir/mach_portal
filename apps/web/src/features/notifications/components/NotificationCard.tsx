@@ -15,12 +15,20 @@ interface NotificationCardProps {
 
 export function NotificationCard({ item }: NotificationCardProps) {
   const { t } = useTranslation('notifications');
-  const { relative } = useDateFormatter();
+  const { relative, date } = useDateFormatter();
   const openNotification = useOpenNotification();
   const { dismissNotification } = useDismissNotification();
   const { markNotificationRead } = useMarkNotificationRead();
   const { data } = item;
   const SystemIcon = data.source === 'system' ? resolveSystemIcon(data.icon) : null;
+  // Dates in `data` are raw ISO strings (snapshotted at creation) — format them here rather
+  // than baking a locale-specific format into the payload.
+  const values =
+    data.source === 'user'
+      ? { ...data, actorName: data.actor.name }
+      : 'eventDate' in data
+        ? { ...data, eventDate: date(data.eventDate), deadline: date(data.deadline) }
+        : data;
 
   return (
     <Card
@@ -33,7 +41,7 @@ export function NotificationCard({ item }: NotificationCardProps) {
         {data.source === 'user' ? (
           <AvatarUser name={data.actor.name} image={data.actor.image} showDetails={false} />
         ) : (
-          SystemIcon && <SystemIcon size={20} className="text-info mt-0.5 shrink-0" />
+          SystemIcon && <SystemIcon size={20} className="text-info shrink-0" />
         )}
         <div className="min-w-0 flex-1 pr-8">
           {t(`titles.${item.type}`, { defaultValue: '' }) && (
@@ -45,15 +53,14 @@ export function NotificationCard({ item }: NotificationCardProps) {
             <Trans
               t={t}
               i18nKey={`types.${item.type}`}
-              values={
-                data.source === 'user'
-                  ? { actorName: data.actor.name, quoteNumber: data.quoteNumber }
-                  : { quoteNumber: data.quoteNumber }
-              }
-              components={{ bold: <Typography.Text className="text-blacker" strong /> }}
+              values={values}
+              components={{
+                bold: <Typography.Text className="text-blacker" strong />,
+                caption: <Typography.Text className="text-blacker/90 mt-0.5 block" />,
+              }}
             />
           </Typography.Text>
-          <Typography.Text type="secondary" className="mt-1 block text-xs">
+          <Typography.Text type="secondary" className="mt-2 block text-xs">
             {relative(item.createdAt)}
           </Typography.Text>
         </div>
