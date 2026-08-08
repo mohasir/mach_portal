@@ -9,6 +9,7 @@ import { quotesRouter } from '../../modules/quotes/quotes.router';
 import { eventsRouter } from '../../modules/events/events.router';
 import { paymentsRouter } from '../../modules/payments/payments.router';
 import { templatesRouter } from '../../modules/templates/templates.router';
+import { notificationsRouter } from '../../modules/notifications/notifications.router';
 
 export const appRouter = router({
   users: usersRouter,
@@ -21,6 +22,7 @@ export const appRouter = router({
   events: eventsRouter,
   payments: paymentsRouter,
   templates: templatesRouter,
+  notifications: notificationsRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -17,6 +17,7 @@
   --color-surface: var(--ant-color-bg-container);
   --color-line: var(--ant-color-border);
   --color-line-strong: rgba(0, 0, 0, 0.1);
+  --color-blacker: #35393c;
 
   /* ── Brand colors ── */
   --color-brown: #4a2c2a;

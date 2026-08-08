@@ -5,6 +5,7 @@ import { ArrowLeft, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { LogoutButton } from '@/components/shared/LogoutButton';
+import { NotificationMenu } from '@/components/NotificationMenu/NotificationMenu';
 import { RoleTag } from '@/components/shared/RoleTag';
 import { UserDrawer } from '@/components/UserProfile';
 import { useSession } from '@/lib/auth/client';
@@ -56,6 +57,7 @@ export function MobileTopbar() {
         )}
 
         <Flex align="center" gap={4}>
+          <NotificationMenu />
           {header?.action && (
             <Button
               type="text"

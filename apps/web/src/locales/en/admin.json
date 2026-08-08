@@ -37,8 +37,6 @@
   },
   "topbar": {
     "search": "Search by date, name or ID...",
-    "notifications": "Notifications",
-    "noNotifications": "No notifications",
     "toggleMenu": "Toggle menu",
     "greeting": "Hi, {{name}}"
   },

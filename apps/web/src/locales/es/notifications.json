@@ -1,0 +1,19 @@
+{
+  "title": "Notificaciones",
+  "empty": "No hay notificaciones",
+  "markAllRead": "Marcar todas como leídas",
+  "viewAll": "Ver todas",
+  "titles": {},
+  "types": {
+    "quote_confirmed": "<bold>{{actorName}}</bold> confirmó la cotización <bold>{{quoteNumber}}</bold>",
+    "quote_cancelled": "<bold>{{actorName}}</bold> canceló la cotización <bold>{{quoteNumber}}</bold>"
+  },
+  "groups": {
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "week": "Esta semana",
+    "month": "Este mes",
+    "year": "Este año",
+    "older": "Más antiguas"
+  }
+}

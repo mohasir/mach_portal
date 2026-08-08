@@ -10,6 +10,7 @@ import { RESOURCES, ACTIONS } from '@repo/guards';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { db } from '../../db';
 import { ConfigRepository } from '../config/config.repository';
+import { NotificationsRepository } from '../notifications/notifications.repository';
 import { ProductsRepository } from '../products/products.repository';
 import { TemplatesRepository } from '../templates/templates.repository';
 import { QuotesRepository } from './quotes.repository';
@@ -20,6 +21,7 @@ const service = new QuotesService(
   new ConfigRepository(db),
   new ProductsRepository(db),
   new TemplatesRepository(db),
+  new NotificationsRepository(db),
 );
 
 const read = guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.READ] });
@@ -46,10 +48,17 @@ export const quotesRouter = router({
     .mutation(({ input, ctx }) => service.updateStage(input.id, input.stageId, ctx.user.id)),
   approve: update
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input, ctx }) => service.approve(input.id, ctx.user.id)),
+    .mutation(({ input, ctx }) =>
+      service.approve(input.id, ctx.user.id, {
+        name: ctx.user.name,
+        image: ctx.user.image ?? null,
+      }),
+    ),
   cancel: update
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input, ctx }) => service.cancel(input.id, ctx.user.id)),
+    .mutation(({ input, ctx }) =>
+      service.cancel(input.id, ctx.user.id, { name: ctx.user.name, image: ctx.user.image ?? null }),
+    ),
   archive: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.DELETE] })
     .input(z.object({ id: z.uuid() }))
     .mutation(({ input }) => service.archive(input.id)),
