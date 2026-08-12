@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Tag } from 'antd';
+import { Card, Tag } from 'antd';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
@@ -21,7 +21,7 @@ export function PricePanel({ product, canEdit }: PricePanelProps) {
   const minPrice = tiers.length > 0 ? Math.min(...tiers.map((tier) => tier.price)) : null;
 
   return (
-    <div className="border-line rounded-lg border p-3">
+    <Card>
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
@@ -45,6 +45,6 @@ export function PricePanel({ product, canEdit }: PricePanelProps) {
           <PriceTiersForm product={product} canEdit={canEdit} />
         </div>
       )}
-    </div>
+    </Card>
   );
 }
