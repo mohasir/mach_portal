@@ -44,6 +44,7 @@ export async function seedConfig() {
     quoteSeqStart: 1,
     currency: 'USD',
     catalogSortable: false,
+    cardSurchargeRate: 0.09,
   });
   console.log(
     '  ✅ app_settings (deposit 50%, validez 3 meses, min 30 personas, seq desde 1, USD, catálogo ordenable)',

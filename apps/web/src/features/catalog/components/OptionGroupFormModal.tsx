@@ -1,7 +1,9 @@
 'use client';
-import { Modal } from 'antd';
+import { useEffect } from 'react';
+import { Button, Form } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { UpdateOptionGroupInput } from '@repo/schemas';
+import { BottomSheet } from '@/components/shared/BottomSheet';
 import { useOptionGroupMutations } from '../hooks/useOptionGroupMutations';
 import { OptionGroupForm } from './OptionGroupForm';
 import type { OptionGroup } from '../types';
@@ -21,6 +23,11 @@ export function OptionGroupFormModal({
 }: OptionGroupFormModalProps) {
   const { t } = useTranslation('catalog');
   const { createOptionGroup, updateOptionGroup, isPending } = useOptionGroupMutations();
+  const [form] = Form.useForm<UpdateOptionGroupInput>();
+
+  useEffect(() => {
+    if (open) form.resetFields();
+  }, [open, group, form]);
 
   const onSubmit = async (values: UpdateOptionGroupInput) => {
     try {
@@ -33,28 +40,37 @@ export function OptionGroupFormModal({
   };
 
   return (
-    <Modal
+    <BottomSheet
       open={open}
-      onCancel={onClose}
-      footer={null}
+      onClose={onClose}
       title={t(group ? 'optionGroup.edit.title' : 'optionGroup.create.title')}
+      footerClassName="shadow-[0_-4px_8px_-2px_rgba(0,0,0,0.08)]"
+      footer={
+        <div className="py-2 pt-4">
+          <Button type="primary" block loading={isPending} onClick={() => form.submit()}>
+            {t('form.save')}
+          </Button>
+        </div>
+      }
     >
       {open && (
-        <OptionGroupForm
-          key={group?.id ?? 'create'}
-          initialValues={
-            group
-              ? {
-                  label: group.label,
-                  selectionType: group.selectionType,
-                  maxSelect: group.maxSelect ?? undefined,
-                }
-              : undefined
-          }
-          onSubmit={onSubmit}
-          isPending={isPending}
-        />
+        <div className="p-4">
+          <OptionGroupForm
+            key={group?.id ?? 'create'}
+            form={form}
+            initialValues={
+              group
+                ? {
+                    label: group.label,
+                    selectionType: group.selectionType,
+                    maxSelect: group.maxSelect ?? undefined,
+                  }
+                : undefined
+            }
+            onSubmit={onSubmit}
+          />
+        </div>
       )}
-    </Modal>
+    </BottomSheet>
   );
 }

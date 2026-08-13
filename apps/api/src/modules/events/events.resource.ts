@@ -39,11 +39,17 @@ export type EventStatus = 'upcoming' | 'completed' | 'cancelled';
 const deriveStatus = (row: { completedAt: Date | null; quoteCancelled: boolean }): EventStatus =>
   row.quoteCancelled ? 'cancelled' : row.completedAt ? 'completed' : 'upcoming';
 
+export type PaymentStatus = 'pending' | 'partial' | 'paid';
+
+export const derivePaymentStatus = (totalAmount: number, totalPaid: number): PaymentStatus =>
+  totalPaid <= 0 ? 'pending' : totalPaid >= totalAmount ? 'paid' : 'partial';
+
 export type EventWithNames = PublicEvent & {
   clientName: string;
   eventTypeName: string | null;
   quoteNumber: string;
   quoteCancelled: boolean;
+  totalPaid: number;
 };
 
 export const eventListItemResource = (row: EventWithNames) => ({
@@ -65,6 +71,7 @@ export const eventListItemResource = (row: EventWithNames) => ({
   paymentMethod: row.paymentMethod,
   notes: row.notes,
   status: deriveStatus(row),
+  paymentStatus: derivePaymentStatus(row.totalAmount, row.totalPaid),
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });
@@ -145,11 +152,6 @@ export const buildEventPaymentDetails = (
       .filter((a) => a.paymentId === payment.id)
       .map(eventPaymentAttachmentResource),
   }));
-
-export type PaymentStatus = 'pending' | 'partial' | 'paid';
-
-const derivePaymentStatus = (totalAmount: number, totalPaid: number): PaymentStatus =>
-  totalPaid <= 0 ? 'pending' : totalPaid >= totalAmount ? 'paid' : 'partial';
 
 export const buildEventDetail = (
   eventRow: EventWithNames,

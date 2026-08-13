@@ -128,6 +128,20 @@ export function QuoteDefaultsCard() {
             <InputNumber min={0} className="w-full" suffix={t('quoteDefaults.days')} />
           </Form.Item>
         </FieldRow>
+
+        <FieldRow
+          title={t('quoteDefaults.cardSurchargeRate')}
+          caption={t('quoteDefaults.cardSurchargeRateCaption')}
+          required
+        >
+          <Form.Item
+            name="cardSurchargeRatePercent"
+            className="mb-0"
+            rules={[{ required: true, message: t('validation.cardSurchargeRateInvalid') }]}
+          >
+            <InputNumber min={0} max={100} step={1} precision={0} suffix="%" className="w-full" />
+          </Form.Item>
+        </FieldRow>
         {canEdit && (
           <Button
             type="primary"

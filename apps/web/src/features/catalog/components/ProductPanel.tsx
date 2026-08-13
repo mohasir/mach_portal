@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Tag } from 'antd';
+import { Card, Tag } from 'antd';
 import { ChevronDown, ChevronRight, Power, PowerOff, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
@@ -41,11 +41,7 @@ export function ProductPanel({ product, onEdit }: ProductPanelProps) {
   ];
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`border-line rounded-lg border p-3 ${isDragging ? 'opacity-50' : ''}`}
-    >
+    <Card ref={setNodeRef} style={style} className={`${isDragging ? 'opacity-50' : ''}`}>
       <div className="flex flex-wrap items-center gap-2">
         <ReorderControl dragHandleProps={dragHandleProps} />
         <button
@@ -68,6 +64,6 @@ export function ProductPanel({ product, onEdit }: ProductPanelProps) {
       </div>
 
       {expanded && <OptionGroupList productId={product.id} groups={product.optionGroups} />}
-    </div>
+    </Card>
   );
 }

@@ -5,6 +5,44 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.6.0] - 2026-08-12
+
+### Added
+
+- Toggle "Aplicar impuesto por estado" en Configuración > Impuestos
+  (`TaxRatesCard`): permite desactivar el cálculo de impuesto para todas las
+  cotizaciones sin borrar las tasas configuradas; con el toggle apagado, la
+  lista de tasas por estado se oculta y el resumen de la cotización deja de
+  mostrar la línea de impuesto.
+- Recargo por pago con tarjeta/cheque, configurable en Configuración >
+  Cotizaciones (`QuoteDefaultsCard`, tasa por defecto 9%) y aplicable por
+  cotización desde un switch en Cargos extra del builder
+  (`ExtraChargesSection`); se calcula sobre el total ya con impuesto y se
+  muestra como línea separada en el resumen, el detalle y el PDF.
+- Indicador de estado de pago en la card de evento mobile (`EventCard`):
+  franja de color a la izquierda y tag (Pendiente/Parcial/Pagado) en el
+  listado de Eventos, ahora calculado en la API a partir del total
+  efectivamente pagado (antes solo estaba disponible en el detalle del
+  evento).
+
+### Changed
+
+- Página de Productos: el menú de secciones (Estaciones/Precios) pasa de un
+  `Card` con menú vertical al costado a un `Segmented` horizontal arriba del
+  contenido; las secciones ya no quedan envueltas en una card adicional.
+- Las secciones del builder de cotización (Cliente, Evento, Líneas, Notas,
+  Cargos extra) migran del `Card` de AntD al `WrapperCard` propio de la app,
+  que ahora soporta un slot `extra` (usado para el botón "Cambiar" de
+  Cliente y el tag de estado en Pagos).
+- Card de Pagos en el detalle de evento (`EventPayments`) rediseñada: total,
+  pagado y saldo se muestran en bloques separados, y registrar un pago pasa
+  de formulario inline a un bottom sheet dedicado.
+- Formularios de Opción y Grupo de opciones (catálogo) pasan de modal a
+  bottom sheet, consistente con el resto de formularios en mobile.
+- Aumentado el tamaño de fuente base de la app de 13px a 14px; el label de
+  los campos de formulario ahora tiene su propio padding inferior en vez de
+  depender del alto de línea del contenido.
+
 ## [0.5.0] - 2026-08-08
 
 ### Added

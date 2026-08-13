@@ -58,7 +58,9 @@
     }
   },
   "taxRates": {
-    "title": "Impuestos por estado"
+    "title": "Impuestos por estado",
+    "applyByState": "Aplicar impuesto por estado",
+    "applyByStateCaption": "Impuesto aplicado a las cotizaciones según el estado."
   },
   "quotePdfTemplate": {
     "title": "Plantilla de PDF",
@@ -99,7 +101,9 @@
     "currencyCaption": "Moneda en la que se muestran los montos de las cotizaciones.",
     "optionsSelectionDeadlineDays": "Fecha límite para elegir opciones",
     "optionsSelectionDeadlineDaysCaption": "Días antes del evento para los que debería estar confirmada la elección de opciones del cliente.",
-    "days": "días"
+    "days": "días",
+    "cardSurchargeRate": "Recargo tarjeta/cheque",
+    "cardSurchargeRateCaption": "Porcentaje que se suma al total de la cotización cuando el switch de recargo está activado."
   },
   "permissions": {
     "title": "Permisos",
@@ -181,12 +185,14 @@
   },
   "validation": {
     "taxRateInvalid": "Tasa inválida",
+    "taxRatesAllZeroInvalid": "Al menos una tasa debe ser mayor a 0",
     "depositRateInvalid": "Depósito inválido",
     "quoteValidityInvalid": "Validez inválida",
     "minPersonsInvalid": "Mínimo inválido",
     "quoteSeqStartInvalid": "Inicio de consecutivo inválido",
     "currencyInvalid": "Moneda inválida",
     "optionsSelectionDeadlineDaysInvalid": "Cantidad de días inválida",
+    "cardSurchargeRateInvalid": "Tasa inválida",
     "quoteStagesLabelInvalid": "Nombre requerido",
     "serviceLabelRequired": "La estación es obligatoria",
     "serviceDurationRequired": "La duración es obligatoria"

@@ -106,6 +106,8 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
         discountAmount={totals.discountAmount}
         longDistanceAmount={totals.longDistanceAmount}
         taxAmount={totals.taxAmount}
+        cardSurchargeRate={totals.cardSurchargeRate}
+        cardSurchargeAmount={totals.cardSurchargeAmount}
         total={totals.total}
         depositRate={totals.depositRate}
         depositAmount={totals.depositAmount}

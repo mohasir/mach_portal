@@ -1,6 +1,6 @@
 'use client';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { Button, Card, Form, Input, Select, Spin, Typography, type FormInstance } from 'antd';
+import { Button, Form, Input, Select, Spin, Typography, type FormInstance } from 'antd';
 import { ArrowLeft, Plus, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useClient, useClientsList } from '@/features/clients';
@@ -8,6 +8,7 @@ import { AvatarUser } from '@/components/shared/AvatarUser';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { PhoneInput } from '@/components/shared/Inputs/PhoneInput';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 import {
@@ -139,12 +140,11 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
 
       return (
         <div>
-          <Card>
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <Typography.Title level={4} className="font-heading text-brown m-0!">
-                {t('builder.client.label')}
-              </Typography.Title>
-              {hasClient && !readOnly && (
+          <WrapperCard
+            title={t('builder.client.label')}
+            extra={
+              hasClient &&
+              !readOnly && (
                 <Button
                   type="link"
                   size="small"
@@ -153,9 +153,9 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
                 >
                   {t('builder.client.change')}
                 </Button>
-              )}
-            </div>
-
+              )
+            }
+          >
             {hasClient ? (
               <AvatarUser
                 name={state.newClient?.name || state.clientName || ''}
@@ -190,7 +190,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
                 </button>
               </div>
             )}
-          </Card>
+          </WrapperCard>
 
           <BottomSheet open={sheetMode !== null} onClose={cancelSheet} title={sheetTitle}>
             {sheetMode === 'select' && (
@@ -312,49 +312,50 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
 
     if (state.newClient) {
       return (
-        <div className="flex flex-col gap-3">
-          <Button
-            type="text"
-            size="small"
-            className="self-start"
-            disabled={readOnly}
-            icon={<ArrowLeft size={14} />}
-            onClick={backToSearch}
-          >
-            {t('builder.client.backToSearch')}
-          </Button>
-
-          <Form<NewClientFormValues>
-            form={form}
-            layout="vertical"
-            disabled={readOnly}
-            initialValues={state.newClient}
-            onValuesChange={handleNewClientChange}
-            requiredMark={false}
-          >
-            <Form.Item
-              name="name"
-              label={<FieldLabel title={t('builder.client.name')} required />}
-              rules={[{ required: true, message: t('validation.clientRequired') }]}
+        <WrapperCard title={t('builder.client.label')}>
+          <div className="flex flex-col gap-3">
+            <Button
+              type="text"
+              size="small"
+              className="self-start"
+              disabled={readOnly}
+              icon={<ArrowLeft size={14} />}
+              onClick={backToSearch}
             >
-              <Input autoFocus />
-            </Form.Item>
-            <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-              <Form.Item name="phone" label={<FieldLabel title={t('builder.client.phone')} />}>
-                <PhoneInput />
+              {t('builder.client.backToSearch')}
+            </Button>
+
+            <Form<NewClientFormValues>
+              form={form}
+              layout="vertical"
+              disabled={readOnly}
+              initialValues={state.newClient}
+              onValuesChange={handleNewClientChange}
+              requiredMark={false}
+            >
+              <Form.Item
+                name="name"
+                label={<FieldLabel title={t('builder.client.name')} required />}
+                rules={[{ required: true, message: t('validation.clientRequired') }]}
+              >
+                <Input autoFocus />
               </Form.Item>
-              <Form.Item name="email" label={<FieldLabel title={t('builder.client.email')} />}>
-                <Input />
-              </Form.Item>
-            </div>
-          </Form>
-        </div>
+              <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+                <Form.Item name="phone" label={<FieldLabel title={t('builder.client.phone')} />}>
+                  <PhoneInput />
+                </Form.Item>
+                <Form.Item name="email" label={<FieldLabel title={t('builder.client.email')} />}>
+                  <Input />
+                </Form.Item>
+              </div>
+            </Form>
+          </div>
+        </WrapperCard>
       );
     }
 
     return (
-      <div className="mb-4 flex flex-col gap-1">
-        <FieldLabel title={t('builder.client.label')} required />
+      <WrapperCard title={t('builder.client.label')}>
         <Select
           showSearch={{ onSearch: setSearch, filterOption: false }}
           allowClear
@@ -388,7 +389,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
             });
           }}
         />
-      </div>
+      </WrapperCard>
     );
   },
 );

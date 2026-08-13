@@ -1,7 +1,9 @@
 'use client';
-import { Flex, Switch } from 'antd';
+import { Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
+import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useConfig } from '@/features/settings';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { LineBuilder } from './LineBuilder';
@@ -22,29 +24,30 @@ export function LinesBuilderSection({ catalog, readOnly }: LinesBuilderSectionPr
   const { state, setFields } = useQuoteBuilder();
   const { data: config } = useConfig();
   const allowToggle = !!config?.appSettings.allowSelectOptionsAtQuote;
+  const title = `${t('builder.lines.title')}${state.lines.length > 0 ? ` (${state.lines.length})` : ''}`;
 
   return (
-    <div className="flex flex-col gap-3">
-      {allowToggle && (
-        <Flex justify="space-between" align="start" gap={16}>
-          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span>{t('builder.selectionsMode.label')}</span>
-            <span className="text-xs font-normal text-gray-500">
-              {t('builder.selectionsMode.hint')}
-            </span>
-          </span>
-          <Switch
-            checked={state.selectOptionsAtQuote}
-            disabled={readOnly}
-            onChange={(checked) => setFields({ selectOptionsAtQuote: checked })}
+    <WrapperCard title={title}>
+      <div className="flex flex-col gap-3">
+        {allowToggle && (
+          <SwitchRow
+            title={t('builder.selectionsMode.label')}
+            caption={t('builder.selectionsMode.hint')}
+            control={
+              <Switch
+                checked={state.selectOptionsAtQuote}
+                disabled={readOnly}
+                onChange={(checked) => setFields({ selectOptionsAtQuote: checked })}
+              />
+            }
           />
-        </Flex>
-      )}
-      {state.selectOptionsAtQuote ? (
-        <LineBuilder catalog={catalog} readOnly={readOnly} />
-      ) : (
-        <QuickLineBuilder catalog={catalog} readOnly={readOnly} />
-      )}
-    </div>
+        )}
+        {state.selectOptionsAtQuote ? (
+          <LineBuilder catalog={catalog} readOnly={readOnly} />
+        ) : (
+          <QuickLineBuilder catalog={catalog} readOnly={readOnly} />
+        )}
+      </div>
+    </WrapperCard>
   );
 }

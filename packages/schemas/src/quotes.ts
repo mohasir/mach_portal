@@ -102,6 +102,7 @@ const quoteMutationFields = {
   discountType: z.preprocess(blankToUndefined, discountTypeSchema.optional()),
   discountValue: z.number().min(0).optional(),
   longDistanceAmount: z.number().int().min(0).optional(),
+  applyCardSurcharge: z.boolean().optional(),
   depositRate: z.number().min(0).max(1).optional(),
   lines: z.array(quoteLineInputSchema).default([]),
   selectOptionsAtQuote: z.boolean().default(false),
@@ -150,6 +151,8 @@ export interface QuoteTotalsInput {
   discountValue?: number | null;
   longDistanceAmount?: number | null;
   taxRate: number;
+  applyCardSurcharge?: boolean | null;
+  cardSurchargeRate: number;
   depositRate: number;
 }
 
@@ -159,6 +162,9 @@ export interface QuoteTotals {
   longDistanceAmount: number;
   taxRate: number;
   taxAmount: number;
+  applyCardSurcharge: boolean;
+  cardSurchargeRate: number;
+  cardSurchargeAmount: number;
   total: number;
   depositRate: number;
   depositAmount: number;
@@ -178,7 +184,12 @@ export function computeQuoteTotals(input: QuoteTotalsInput): QuoteTotals {
 
   const base = subtotal - discountAmount + longDistanceAmount;
   const taxAmount = Math.round(base * input.taxRate);
-  const total = base + taxAmount;
+  const taxedTotal = base + taxAmount;
+  const applyCardSurcharge = input.applyCardSurcharge ?? false;
+  const cardSurchargeAmount = applyCardSurcharge
+    ? Math.round(taxedTotal * input.cardSurchargeRate)
+    : 0;
+  const total = taxedTotal + cardSurchargeAmount;
   const depositAmount = Math.round(total * input.depositRate);
 
   return {
@@ -187,6 +198,9 @@ export function computeQuoteTotals(input: QuoteTotalsInput): QuoteTotals {
     longDistanceAmount,
     taxRate: input.taxRate,
     taxAmount,
+    applyCardSurcharge,
+    cardSurchargeRate: input.cardSurchargeRate,
+    cardSurchargeAmount,
     total,
     depositRate: input.depositRate,
     depositAmount,

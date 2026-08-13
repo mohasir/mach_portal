@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { Button } from 'antd';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useOptionMutations } from '../hooks/useOptionMutations';
@@ -30,15 +29,14 @@ export function OptionList({ optionGroupId, options }: OptionListProps) {
         ))}
       </SortableList>
 
-      <Button
-        type="dashed"
-        size="small"
-        icon={<Plus size={14} />}
-        className="mt-1"
+      <button
+        type="button"
         onClick={() => setCreateOpen(true)}
+        className="border-line mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed p-2.5 text-gray-400"
       >
-        {t('option.add')}
-      </Button>
+        <Plus size={16} />
+        <span className="text-base">{t('option.add')}</span>
+      </button>
 
       <OptionFormModal
         optionGroupId={optionGroupId}

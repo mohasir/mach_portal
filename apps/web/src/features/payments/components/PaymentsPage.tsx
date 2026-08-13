@@ -26,7 +26,7 @@ export function PaymentsPage() {
 
   return (
     <div>
-      <PageHeader title={t('title')} />
+      <PageHeader backHref="/admin/options" title={t('title')} />
       <Segmented
         block
         className="mb-4"

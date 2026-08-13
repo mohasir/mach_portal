@@ -1,14 +1,15 @@
 'use client';
 import { useState } from 'react';
-import { Card } from 'antd';
-import { ChevronRight, Plus } from 'lucide-react';
+import { Segmented } from 'antd';
+import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { SectionMenu, type SectionMenuItem } from '@/components/shared/SectionMenu';
 import { useCan } from '@/lib/auth/useCan';
 import { CatalogPage } from './CatalogPage';
+import { ProductFormModal } from './ProductFormModal';
 import { PricesPage } from './prices/PricesPage';
+import type { Product } from '../types';
 
 type ProductsSection = 'estaciones' | 'precios';
 
@@ -18,53 +19,38 @@ export function ProductsPage() {
   const canCreate = can({ [RESOURCES.PRODUCT]: [ACTIONS.CREATE] });
   const [section, setSection] = useState<ProductsSection>('estaciones');
   const [isCreateOpen, setCreateOpen] = useState(false);
-
-  const menuItems: SectionMenuItem[] = [
-    { key: 'estaciones', label: t('title') },
-    { key: 'precios', label: t('prices.title') },
-  ];
-
-  const sectionLabel = section === 'estaciones' ? t('title') : t('prices.title');
-  const showCreateAction = section === 'estaciones' && canCreate;
+  const [editing, setEditing] = useState<Product | null>(null);
 
   return (
     <div>
       <PageHeader
-        title={
-          <span className="flex flex-wrap items-center gap-1">
-            <span className="whitespace-nowrap">{t('breadcrumbRoot')}</span>
-            <ChevronRight size={20} className="text-muted shrink-0" />
-            <span className="text-muted font-sans text-base font-normal whitespace-nowrap">
-              {sectionLabel}
-            </span>
-          </span>
-        }
+        title={t('breadcrumbRoot')}
         backHref="/admin/options"
-        actionLabel={showCreateAction ? t('product.add') : undefined}
-        onAction={showCreateAction ? () => setCreateOpen(true) : undefined}
+        actionLabel={canCreate ? t('product.add') : undefined}
+        onAction={canCreate ? () => setCreateOpen(true) : undefined}
         mobileAction={
-          showCreateAction
+          canCreate
             ? { icon: Plus, onClick: () => setCreateOpen(true), ariaLabel: t('product.add') }
             : undefined
         }
       />
 
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-6">
-        <Card className="md:sticky md:top-4 md:self-start" classNames={{ body: 'p-2' }}>
-          <SectionMenu
-            items={menuItems}
-            activeKey={section}
-            onSelect={(key) => setSection(key as ProductsSection)}
-          />
-        </Card>
+      <Segmented
+        block
+        className="mb-4"
+        value={section}
+        onChange={(value) => setSection(value as ProductsSection)}
+        options={[
+          { value: 'estaciones', label: t('title') },
+          { value: 'precios', label: t('prices.title') },
+        ]}
+      />
 
-        <Card className="min-w-0 flex-1">
-          {section === 'estaciones' && (
-            <CatalogPage createOpen={isCreateOpen} onCreateClose={() => setCreateOpen(false)} />
-          )}
-          {section === 'precios' && <PricesPage />}
-        </Card>
-      </div>
+      {section === 'estaciones' && <CatalogPage onEdit={setEditing} />}
+      {section === 'precios' && <PricesPage />}
+
+      <ProductFormModal product={null} open={isCreateOpen} onClose={() => setCreateOpen(false)} />
+      <ProductFormModal product={editing} open={!!editing} onClose={() => setEditing(null)} />
     </div>
   );
 }

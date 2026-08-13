@@ -387,6 +387,8 @@ async function loadContext() {
         depositRate: appSettings.depositRate,
         quoteValidityMonths: appSettings.quoteValidityMonths,
         quoteSeqStart: appSettings.quoteSeqStart,
+        applyTaxByState: appSettings.applyTaxByState,
+        cardSurchargeRate: appSettings.cardSurchargeRate,
       })
       .from(appSettings)
       .where(eq(appSettings.id, 1))
@@ -483,7 +485,9 @@ export async function seedQuotes() {
     const eventTypeId = seed.eventTypeName
       ? (ctx.eventTypeRows.find((e) => e.name === seed.eventTypeName)?.id ?? null)
       : null;
-    const taxRate = ctx.stateRows.find((s) => s.state === client.state)?.taxRate ?? 0;
+    const taxRate = appRow.applyTaxByState
+      ? (ctx.stateRows.find((s) => s.state === client.state)?.taxRate ?? 0)
+      : 0;
     const depositRate = appRow.depositRate;
 
     const lines = seed.lines.map((l) => resolveLine(l, ctx));
@@ -495,6 +499,7 @@ export async function seedQuotes() {
       discountValue: seed.discountValue,
       longDistanceAmount,
       taxRate,
+      cardSurchargeRate: appRow.cardSurchargeRate,
       depositRate,
     });
 

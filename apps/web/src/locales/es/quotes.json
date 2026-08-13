@@ -77,6 +77,8 @@
       "addressPlaceholder": "Dirección del evento",
       "longDistance": "Cargo por larga distancia",
       "longDistanceHint": "Sugerido según la tasa del estado ({{rate}}%) — se puede ajustar",
+      "cardSurcharge": "Recargo tarjeta/cheque",
+      "cardSurchargeHint": "Agrega un {{rate}}% sobre el total de la cotización",
       "notes": "Notas",
       "notesPlaceholder": "Notas internas"
     },
@@ -118,6 +120,7 @@
       "longDistance": "Cargo por Larga Distancia",
       "tax": "Impuesto ({{rate}}%)",
       "taxShort": "Impuesto",
+      "cardSurcharge": "Recargo tarjeta/cheque ({{rate}}%)",
       "total": "Total",
       "deposit": "Depósito ({{rate}}%)",
       "balance": "Saldo"

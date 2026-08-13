@@ -58,7 +58,9 @@
     }
   },
   "taxRates": {
-    "title": "Tax rates by state"
+    "title": "Tax rates by state",
+    "applyByState": "Apply tax by state",
+    "applyByStateCaption": "Tax applied to quotes based on state."
   },
   "quotePdfTemplate": {
     "title": "PDF template",
@@ -99,7 +101,9 @@
     "currencyCaption": "Currency used to display quote amounts.",
     "optionsSelectionDeadlineDays": "Options selection deadline",
     "optionsSelectionDeadlineDaysCaption": "Days before the event date by which the client's option choices should be confirmed.",
-    "days": "days"
+    "days": "days",
+    "cardSurchargeRate": "Card/check surcharge",
+    "cardSurchargeRateCaption": "Percentage added to the quote total when the surcharge switch is on."
   },
   "permissions": {
     "title": "Permissions",
@@ -181,12 +185,14 @@
   },
   "validation": {
     "taxRateInvalid": "Invalid rate",
+    "taxRatesAllZeroInvalid": "At least one rate must be greater than 0",
     "depositRateInvalid": "Invalid deposit",
     "quoteValidityInvalid": "Invalid validity",
     "minPersonsInvalid": "Invalid minimum",
     "quoteSeqStartInvalid": "Invalid sequence start",
     "currencyInvalid": "Invalid currency",
     "optionsSelectionDeadlineDaysInvalid": "Invalid number of days",
+    "cardSurchargeRateInvalid": "Invalid rate",
     "quoteStagesLabelInvalid": "Label required",
     "serviceLabelRequired": "Station is required",
     "serviceDurationRequired": "Duration is required"

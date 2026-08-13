@@ -77,6 +77,8 @@
       "addressPlaceholder": "Event address",
       "longDistance": "Long distance fee",
       "longDistanceHint": "Suggested from the state's tax rate ({{rate}}%) — override as needed",
+      "cardSurcharge": "Card/check surcharge",
+      "cardSurchargeHint": "Adds {{rate}}% on top of the quote total",
       "notes": "Notes",
       "notesPlaceholder": "Internal notes"
     },
@@ -118,6 +120,7 @@
       "longDistance": "Long Distance Fee",
       "tax": "Tax ({{rate}}%)",
       "taxShort": "Tax",
+      "cardSurcharge": "Card/check surcharge ({{rate}}%)",
       "total": "Total",
       "deposit": "Deposit ({{rate}}%)",
       "balance": "Balance"

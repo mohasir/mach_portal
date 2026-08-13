@@ -47,6 +47,11 @@ export const quotes = pgTable('quotes', {
   taxRate: numeric('tax_rate', { mode: 'number', precision: 6, scale: 5 }).notNull(),
   taxAmount: integer('tax_amount').notNull().default(0),
   total: integer('total').notNull().default(0),
+  applyCardSurcharge: boolean('apply_card_surcharge').notNull().default(false),
+  cardSurchargeRate: numeric('card_surcharge_rate', { mode: 'number', precision: 4, scale: 3 })
+    .notNull()
+    .default(0.09),
+  cardSurchargeAmount: integer('card_surcharge_amount').notNull().default(0),
   depositRate: numeric('deposit_rate', { mode: 'number', precision: 4, scale: 3 })
     .notNull()
     .default(0.5),
