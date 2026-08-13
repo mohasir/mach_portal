@@ -4,6 +4,7 @@ import type {
   UpdateQuoteBuilderPreferencesInput,
   UpdateQuoteDefaultsInput,
   UpdateQuoteStagesInput,
+  UpdateTaxPreferencesInput,
   UpdateTaxRatesInput,
 } from '@repo/schemas';
 import { AppError, ErrorCodes } from '../../lib/errors';
@@ -27,6 +28,11 @@ export class ConfigService {
 
   async updateTaxRates(input: UpdateTaxRatesInput) {
     await this.repo.upsertStateSettings(input);
+    return this.get();
+  }
+
+  async updateTaxPreferences(input: UpdateTaxPreferencesInput) {
+    await this.repo.updateTaxPreferences(input);
     return this.get();
   }
 

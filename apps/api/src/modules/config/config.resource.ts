@@ -23,6 +23,7 @@ export const publicAppSettingsColumns = {
   catalogSortable: appSettings.catalogSortable,
   optionsSelectionDeadlineDays: appSettings.optionsSelectionDeadlineDays,
   allowSelectOptionsAtQuote: appSettings.allowSelectOptionsAtQuote,
+  applyTaxByState: appSettings.applyTaxByState,
   updatedAt: appSettings.updatedAt,
 } as const;
 
@@ -54,6 +55,7 @@ export const appSettingsResource = (row: PublicAppSettings) => ({
   catalogSortable: row.catalogSortable,
   optionsSelectionDeadlineDays: row.optionsSelectionDeadlineDays,
   allowSelectOptionsAtQuote: row.allowSelectOptionsAtQuote,
+  applyTaxByState: row.applyTaxByState,
   updatedAt: row.updatedAt,
 });
 

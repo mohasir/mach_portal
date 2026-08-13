@@ -23,6 +23,7 @@ export const appSettings = pgTable('app_settings', {
   catalogSortable: boolean('catalog_sortable').notNull().default(true),
   optionsSelectionDeadlineDays: integer('options_selection_deadline_days').notNull().default(7),
   allowSelectOptionsAtQuote: boolean('allow_select_options_at_quote').notNull().default(true),
+  applyTaxByState: boolean('apply_tax_by_state').notNull().default(false),
   updatedAt: timestamp('updated_at')
     .defaultNow()
     .$onUpdate(() => new Date())

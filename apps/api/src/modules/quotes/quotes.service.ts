@@ -132,7 +132,9 @@ export class QuotesService {
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.config.NOT_FOUND) });
 
     const now = new Date();
-    const taxRate = stateRows.find((s) => s.state === input.state)?.taxRate ?? 0;
+    const taxRate = appRow.applyTaxByState
+      ? (stateRows.find((s) => s.state === input.state)?.taxRate ?? 0)
+      : 0;
     const depositRate = input.depositRate ?? appRow.depositRate;
     const totals = computeQuoteTotals({
       lines: input.lines.map((l) => ({ subtotal: l.subtotal })),
@@ -233,7 +235,9 @@ export class QuotesService {
     if (!appRow)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.config.NOT_FOUND) });
 
-    const taxRate = stateRows.find((s) => s.state === input.state)?.taxRate ?? 0;
+    const taxRate = appRow.applyTaxByState
+      ? (stateRows.find((s) => s.state === input.state)?.taxRate ?? 0)
+      : 0;
     const depositRate = input.depositRate ?? appRow.depositRate;
     return computeQuoteTotals({
       ...lines,

@@ -58,7 +58,9 @@
     }
   },
   "taxRates": {
-    "title": "Impuestos por estado"
+    "title": "Impuestos por estado",
+    "applyByState": "Aplicar impuesto por estado",
+    "applyByStateCaption": "Impuesto aplicado a las cotizaciones según el estado."
   },
   "quotePdfTemplate": {
     "title": "Plantilla de PDF",
@@ -181,6 +183,7 @@
   },
   "validation": {
     "taxRateInvalid": "Tasa inválida",
+    "taxRatesAllZeroInvalid": "Al menos una tasa debe ser mayor a 0",
     "depositRateInvalid": "Depósito inválido",
     "quoteValidityInvalid": "Validez inválida",
     "minPersonsInvalid": "Mínimo inválido",

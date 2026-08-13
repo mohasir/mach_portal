@@ -3,6 +3,7 @@ import {
   updateQuoteBuilderPreferencesSchema,
   updateQuoteDefaultsSchema,
   updateQuoteStagesSchema,
+  updateTaxPreferencesSchema,
   updateTaxRatesSchema,
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
@@ -19,6 +20,10 @@ export const configRouter = router({
   updateTaxRates: guardedProcedure({ [RESOURCES.TAX_RATES]: [ACTIONS.UPDATE] })
     .input(updateTaxRatesSchema)
     .mutation(({ input }) => service.updateTaxRates(input)),
+
+  updateTaxPreferences: guardedProcedure({ [RESOURCES.TAX_RATES]: [ACTIONS.UPDATE] })
+    .input(updateTaxPreferencesSchema)
+    .mutation(({ input }) => service.updateTaxPreferences(input)),
 
   updateQuoteDefaults: guardedProcedure({ [RESOURCES.QUOTE_DEFAULTS]: [ACTIONS.UPDATE] })
     .input(updateQuoteDefaultsSchema)

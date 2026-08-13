@@ -5,6 +5,7 @@ import type {
   UpdateCatalogPreferencesInput,
   UpdateQuoteBuilderPreferencesInput,
   UpdateQuoteDefaultsInput,
+  UpdateTaxPreferencesInput,
 } from '@repo/schemas';
 import type { Database } from '../../db';
 import { appSettings, stateSettings, quotes, quoteStages } from '../../db/schema';
@@ -77,6 +78,15 @@ export class ConfigRepository {
   }
 
   updateQuoteBuilderPreferences(data: UpdateQuoteBuilderPreferencesInput) {
+    return this.db
+      .update(appSettings)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(appSettings.id, APP_SETTINGS_ID))
+      .returning(publicAppSettingsColumns)
+      .then((r) => r[0]!);
+  }
+
+  updateTaxPreferences(data: UpdateTaxPreferencesInput) {
     return this.db
       .update(appSettings)
       .set({ ...data, updatedAt: new Date() })

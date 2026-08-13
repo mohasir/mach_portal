@@ -58,7 +58,9 @@
     }
   },
   "taxRates": {
-    "title": "Tax rates by state"
+    "title": "Tax rates by state",
+    "applyByState": "Apply tax by state",
+    "applyByStateCaption": "Tax applied to quotes based on state."
   },
   "quotePdfTemplate": {
     "title": "PDF template",
@@ -181,6 +183,7 @@
   },
   "validation": {
     "taxRateInvalid": "Invalid rate",
+    "taxRatesAllZeroInvalid": "At least one rate must be greater than 0",
     "depositRateInvalid": "Invalid deposit",
     "quoteValidityInvalid": "Invalid validity",
     "minPersonsInvalid": "Invalid minimum",

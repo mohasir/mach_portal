@@ -45,10 +45,12 @@ export function QuoteSummary({
           <span>{money(longDistanceAmount)}</span>
         </div>
       )}
-      <div className="flex justify-between">
-        <span className="text-gray-500">{t('builder.pricing.taxShort')}</span>
-        <span>{money(taxAmount)}</span>
-      </div>
+      {taxAmount > 0 && (
+        <div className="flex justify-between">
+          <span className="text-gray-500">{t('builder.pricing.taxShort')}</span>
+          <span>{money(taxAmount)}</span>
+        </div>
+      )}
       <div className="flex justify-between text-base font-semibold">
         <span>{t('builder.pricing.total')}</span>
         <span>{money(total)}</span>

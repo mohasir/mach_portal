@@ -12,6 +12,11 @@ export type StateSettingInput = z.infer<typeof stateSettingSchema>;
 export const updateTaxRatesSchema = z.array(stateSettingSchema).min(1);
 export type UpdateTaxRatesInput = z.infer<typeof updateTaxRatesSchema>;
 
+export const updateTaxPreferencesSchema = z.object({
+  applyTaxByState: z.boolean(),
+});
+export type UpdateTaxPreferencesInput = z.infer<typeof updateTaxPreferencesSchema>;
+
 // ISO 4217 alpha code
 const currencyCodeSchema = z.string().regex(/^[A-Z]{3}$/, 'config.validation.currencyInvalid');
 
