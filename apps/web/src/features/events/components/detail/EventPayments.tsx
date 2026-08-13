@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { App, Button, DatePicker, Empty, Form, Image, Input, Select, Tag } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
-import { FileText, Paperclip, Plus, User, X } from 'lucide-react';
+import { FileText, Paperclip, User, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { paymentMethodSchema, type PaymentMethod } from '@repo/schemas';
