@@ -24,6 +24,9 @@ export const appSettings = pgTable('app_settings', {
   optionsSelectionDeadlineDays: integer('options_selection_deadline_days').notNull().default(7),
   allowSelectOptionsAtQuote: boolean('allow_select_options_at_quote').notNull().default(true),
   applyTaxByState: boolean('apply_tax_by_state').notNull().default(false),
+  cardSurchargeRate: numeric('card_surcharge_rate', { mode: 'number', precision: 4, scale: 3 })
+    .notNull()
+    .default(0.09),
   updatedAt: timestamp('updated_at')
     .defaultNow()
     .$onUpdate(() => new Date())

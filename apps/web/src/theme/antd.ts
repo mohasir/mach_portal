@@ -95,6 +95,7 @@ export const machBarTheme: ThemeConfig = {
     },
     Form: {
       verticalLabelPadding: 0,
+      labelFontSize: 14,
     },
     InputNumber: {
       controlHeight: GlobalProperties.ControlHeight,

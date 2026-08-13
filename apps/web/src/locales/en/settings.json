@@ -101,7 +101,9 @@
     "currencyCaption": "Currency used to display quote amounts.",
     "optionsSelectionDeadlineDays": "Options selection deadline",
     "optionsSelectionDeadlineDaysCaption": "Days before the event date by which the client's option choices should be confirmed.",
-    "days": "days"
+    "days": "days",
+    "cardSurchargeRate": "Card/check surcharge",
+    "cardSurchargeRateCaption": "Percentage added to the quote total when the surcharge switch is on."
   },
   "permissions": {
     "title": "Permissions",
@@ -190,6 +192,7 @@
     "quoteSeqStartInvalid": "Invalid sequence start",
     "currencyInvalid": "Invalid currency",
     "optionsSelectionDeadlineDaysInvalid": "Invalid number of days",
+    "cardSurchargeRateInvalid": "Invalid rate",
     "quoteStagesLabelInvalid": "Label required",
     "serviceLabelRequired": "Station is required",
     "serviceDurationRequired": "Duration is required"

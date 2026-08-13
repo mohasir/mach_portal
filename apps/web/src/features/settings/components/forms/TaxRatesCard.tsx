@@ -1,9 +1,10 @@
 'use client';
-import { App, Button, Flex, Form, InputNumber, Skeleton, Switch } from 'antd';
+import { App, Button, Form, InputNumber, Skeleton, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { STATE_NAMES } from '@repo/schemas';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
+import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
 import { useCan } from '@/lib/auth/useCan';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
 import { useConfig } from '../../hooks/useConfig';
@@ -59,17 +60,16 @@ export function TaxRatesCard() {
         onFinish={onFinish}
         disabled={!canEdit}
       >
-        <Flex justify="space-between" align="start" gap={16} className="mb-4">
-          <span className="flex min-w-0 flex-1 flex-col gap-0.5 py-1">
-            <span>{t('taxRates.applyByState')}</span>
-            <span className="text-gray-500 text-xs font-normal">
-              {t('taxRates.applyByStateCaption')}
-            </span>
-          </span>
-          <Form.Item name="applyTaxByState" valuePropName="checked" noStyle>
-            <Switch />
-          </Form.Item>
-        </Flex>
+        <SwitchRow
+          className="mb-4"
+          title={t('taxRates.applyByState')}
+          caption={t('taxRates.applyByStateCaption')}
+          control={
+            <Form.Item name="applyTaxByState" valuePropName="checked" noStyle>
+              <Switch />
+            </Form.Item>
+          }
+        />
 
         {applyTaxByState && (
           <>

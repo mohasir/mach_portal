@@ -1,5 +1,5 @@
 'use client';
-import { Empty, Typography } from 'antd';
+import { Empty } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
 import { nextLineKey } from '../../../helpers';
@@ -31,10 +31,6 @@ export function QuickLineBuilder({ catalog, readOnly }: QuickLineBuilderProps) {
   return (
     <div className="flex flex-col gap-3">
       {!readOnly && <ProductPicker catalog={catalog} onAdd={handleAdd} />}
-      <Typography.Title level={4} className="font-heading text-brown m-0!">
-        {t('builder.lines.title')}
-        {state.lines.length > 0 && ` (${state.lines.length})`}
-      </Typography.Title>
       {state.lines.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('builder.lines.empty')} />
       ) : (

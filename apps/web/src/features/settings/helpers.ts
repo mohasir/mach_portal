@@ -35,6 +35,7 @@ export interface QuoteDefaultsFormValues {
   quoteSeqStart: number;
   currency: string;
   optionsSelectionDeadlineDays: number;
+  cardSurchargeRatePercent: number;
 }
 
 export function toQuoteDefaultsFormValues(config: Config): QuoteDefaultsFormValues {
@@ -45,6 +46,7 @@ export function toQuoteDefaultsFormValues(config: Config): QuoteDefaultsFormValu
     quoteSeqStart: config.appSettings.quoteSeqStart,
     currency: config.appSettings.currency,
     optionsSelectionDeadlineDays: config.appSettings.optionsSelectionDeadlineDays,
+    cardSurchargeRatePercent: toPercent(config.appSettings.cardSurchargeRate),
   };
 }
 
@@ -58,6 +60,7 @@ export function toQuoteDefaultsUpdateInput(
     quoteSeqStart: values.quoteSeqStart,
     currency: values.currency,
     optionsSelectionDeadlineDays: values.optionsSelectionDeadlineDays,
+    cardSurchargeRate: fromPercent(values.cardSurchargeRatePercent),
   };
 }
 

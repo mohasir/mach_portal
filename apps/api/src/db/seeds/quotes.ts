@@ -388,6 +388,7 @@ async function loadContext() {
         quoteValidityMonths: appSettings.quoteValidityMonths,
         quoteSeqStart: appSettings.quoteSeqStart,
         applyTaxByState: appSettings.applyTaxByState,
+        cardSurchargeRate: appSettings.cardSurchargeRate,
       })
       .from(appSettings)
       .where(eq(appSettings.id, 1))
@@ -498,6 +499,7 @@ export async function seedQuotes() {
       discountValue: seed.discountValue,
       longDistanceAmount,
       taxRate,
+      cardSurchargeRate: appRow.cardSurchargeRate,
       depositRate,
     });
 

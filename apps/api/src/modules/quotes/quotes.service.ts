@@ -142,6 +142,8 @@ export class QuotesService {
       discountValue: input.discountValue,
       longDistanceAmount: input.longDistanceAmount,
       taxRate,
+      applyCardSurcharge: input.applyCardSurcharge,
+      cardSurchargeRate: appRow.cardSurchargeRate,
       depositRate,
     });
 
@@ -224,6 +226,8 @@ export class QuotesService {
         discountValue: input.discountValue,
         longDistanceAmount: input.longDistanceAmount,
         taxRate: current.taxRate,
+        applyCardSurcharge: current.applyCardSurcharge,
+        cardSurchargeRate: current.cardSurchargeRate,
         depositRate: current.depositRate,
       });
     }
@@ -245,6 +249,8 @@ export class QuotesService {
       discountValue: input.discountValue,
       longDistanceAmount: input.longDistanceAmount,
       taxRate,
+      applyCardSurcharge: input.applyCardSurcharge,
+      cardSurchargeRate: appRow.cardSurchargeRate,
       depositRate,
     });
   }

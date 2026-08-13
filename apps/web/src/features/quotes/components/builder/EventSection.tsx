@@ -1,14 +1,13 @@
 'use client';
-import { Card, DatePicker, Form, Input, Select, Typography } from 'antd';
+import { DatePicker, Form, Input, Select } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { STATE_NAMES, stateSchema, type StateValue } from '@repo/schemas';
 import type { EventType } from '@/features/event-types';
 import { AutoCloseTimePicker } from '@/components/shared/Inputs/AutoCloseTimePicker';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
-import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useConfig } from '@/features/settings';
-import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 import CITIES_BY_STATE from '../../citiesByState.json';
 import { useQuoteBuilder, type QuoteBuilderState } from '../../hooks/useQuoteBuilder';
@@ -34,7 +33,6 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
   const { t } = useTranslation('quotes');
   const { state, setFields } = useQuoteBuilder();
   const { data: config } = useConfig();
-  const isDesktop = useIsDesktop();
   const [form] = Form.useForm<EventFormValues>();
   const eventDate = Form.useWatch('eventDate', form);
   const selectedState = Form.useWatch('state', form);
@@ -42,10 +40,6 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
   const cityOptions = (selectedState ? (CITIES_BY_STATE_MAP[selectedState] ?? []) : []).map(
     (city) => ({ value: city, label: city }),
   );
-
-  const stateTaxRate = selectedState
-    ? (config?.stateSettings.find((s) => s.state === selectedState)?.taxRate ?? 0)
-    : 0;
 
   const disabledDate = (current: Dayjs) => current.isBefore(dayjs(), 'day');
 
@@ -171,21 +165,6 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
     </Form.Item>
   );
 
-  const longDistanceField = (
-    <Form.Item
-      name="longDistanceAmount"
-      label={<FieldLabel title={t('builder.event.longDistance')} />}
-      extra={
-        selectedState
-          ? t('builder.event.longDistanceHint', { rate: Math.round(stateTaxRate * 1000) / 10 })
-          : undefined
-      }
-      className="sm:max-w-56"
-    >
-      <MoneyInput className="w-full" min={0} />
-    </Form.Item>
-  );
-
   return (
     <Form<EventFormValues>
       form={form}
@@ -194,50 +173,23 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
       initialValues={initialValues}
       onValuesChange={handleValuesChange}
       requiredMark={false}
+      className="flex flex-col gap-4"
     >
-      {isDesktop ? (
+      <WrapperCard title={t('builder.event.eventDetailsGroupTitle')}>
         <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
           {eventTypeField}
           {eventDateField}
           {eventTimeField}
+        </div>
+      </WrapperCard>
+
+      <WrapperCard title={t('builder.event.addressGroupTitle')}>
+        <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
           {stateField}
           {cityField}
+          <div className="sm:col-span-2">{addressField}</div>
         </div>
-      ) : (
-        <div className="mb-4">
-          <Card>
-            <Typography.Title level={4} className="font-heading text-brown m-0!">
-              {t('builder.event.eventDetailsGroupTitle')}
-            </Typography.Title>
-
-            <div className="mt-4">
-              {eventTypeField}
-              {eventDateField}
-              {eventTimeField}
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {isDesktop ? (
-        addressField
-      ) : (
-        <div className="mb-4">
-          <Card>
-            <Typography.Title level={4} className="font-heading text-brown m-0!">
-              {t('builder.event.addressGroupTitle')}
-            </Typography.Title>
-
-            <div className="mt-4">
-              {stateField}
-              {cityField}
-              {addressField}
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {isDesktop && longDistanceField}
+      </WrapperCard>
     </Form>
   );
 }

@@ -47,6 +47,7 @@ export function toCreateInput(state: QuoteBuilderState, isDraft: boolean): Creat
     discountType: state.discountType ?? undefined,
     discountValue: state.discountValue ?? undefined,
     longDistanceAmount: state.longDistanceAmount,
+    applyCardSurcharge: state.applyCardSurcharge,
     depositRate: state.depositRate,
     lines: toQuoteLineInputs(state.lines),
     selectOptionsAtQuote: state.selectOptionsAtQuote,
@@ -68,6 +69,7 @@ export function toBuilderState(detail: QuoteDetail): QuoteBuilderState {
     discountType: detail.discountType,
     discountValue: detail.discountValue,
     longDistanceAmount: detail.longDistanceAmount,
+    applyCardSurcharge: detail.applyCardSurcharge,
     depositRate: detail.depositRate,
     selectOptionsAtQuote: detail.selectOptionsAtQuote,
     lines: detail.lines.map((line) => ({

@@ -1,7 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { App, Button, Card, Divider, Tooltip } from 'antd';
+import { App, Button, Card, Tooltip } from 'antd';
 import { Copy } from 'lucide-react';
 import { TbLink } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
@@ -75,13 +75,17 @@ export function QuoteBuilderContent({
         ? t('builder.update')
         : t('builder.saveDraft');
 
-  const taxRate = config?.stateSettings.find((s) => s.state === state.state)?.taxRate ?? 0;
+  const taxRate = config?.appSettings.applyTaxByState
+    ? (config?.stateSettings.find((s) => s.state === state.state)?.taxRate ?? 0)
+    : 0;
   const totals = computeQuoteTotals({
     lines: state.lines.map((l) => ({ subtotal: l.subtotal })),
     discountType: state.discountType,
     discountValue: state.discountValue,
     longDistanceAmount: state.longDistanceAmount,
     taxRate,
+    applyCardSurcharge: state.applyCardSurcharge,
+    cardSurchargeRate: config?.appSettings.cardSurchargeRate ?? 0,
     depositRate: state.depositRate,
   });
 
@@ -186,7 +190,7 @@ export function QuoteBuilderContent({
   };
 
   const formFields = (
-    <div className={`flex flex-col ${isDesktop ? '' : 'gap-4'}`}>
+    <div className="flex flex-col gap-4">
       {quoteId && stageId && (
         <Card>
           <QuoteStageTagDropdown quoteId={quoteId} stageId={stageId} isDraft={isDraft} />
@@ -195,9 +199,7 @@ export function QuoteBuilderContent({
       <ClientSection ref={clientSectionRef} readOnly={readOnly} />
       {!isDesktop && (
         <>
-          <Card>
-            <LinesBuilderSection catalog={catalog} readOnly={readOnly} />
-          </Card>
+          <LinesBuilderSection catalog={catalog} readOnly={readOnly} />
           <ExtraChargesSection readOnly={readOnly} />
           <Card className="border-line border-2">
             <QuoteSummary
@@ -205,6 +207,8 @@ export function QuoteBuilderContent({
               discountAmount={totals.discountAmount}
               longDistanceAmount={totals.longDistanceAmount}
               taxAmount={totals.taxAmount}
+              cardSurchargeRate={totals.cardSurchargeRate}
+              cardSurchargeAmount={totals.cardSurchargeAmount}
               total={totals.total}
               depositRate={totals.depositRate}
               depositAmount={totals.depositAmount}
@@ -212,15 +216,9 @@ export function QuoteBuilderContent({
           </Card>
         </>
       )}
-      {isDesktop && <Divider />}
       <EventSection eventTypes={eventTypes} readOnly={readOnly} />
-      {isDesktop && (
-        <>
-          <Divider className="mt-2 mb-6" />
-          <LinesBuilderSection catalog={catalog} readOnly={readOnly} />
-        </>
-      )}
-      {isDesktop && <Divider className="my-4" />}
+      {isDesktop && <ExtraChargesSection readOnly={readOnly} />}
+      {isDesktop && <LinesBuilderSection catalog={catalog} readOnly={readOnly} />}
       <NotesSection readOnly={readOnly} />
     </div>
   );

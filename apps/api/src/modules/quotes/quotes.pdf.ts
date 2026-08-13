@@ -58,6 +58,14 @@ function buildFees(quoteRow: QuoteDetailRow): QuotePdfFee[] | undefined {
     });
   }
 
+  if (quoteRow.cardSurchargeAmount > 0) {
+    const rate = Math.round(quoteRow.cardSurchargeRate * 100);
+    fees.push({
+      description: `Card/Check Surcharge (${rate}%)`,
+      amount: quoteRow.cardSurchargeAmount / 100,
+    });
+  }
+
   return fees.length > 0 ? fees : undefined;
 }
 

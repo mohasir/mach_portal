@@ -30,6 +30,7 @@ export const updateQuoteDefaultsSchema = z.object({
     .number()
     .int()
     .min(0, 'config.validation.optionsSelectionDeadlineDaysInvalid'),
+  cardSurchargeRate: rateSchema('config.validation.cardSurchargeRateInvalid'),
 });
 export type UpdateQuoteDefaultsInput = z.infer<typeof updateQuoteDefaultsSchema>;
 

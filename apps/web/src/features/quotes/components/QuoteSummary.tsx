@@ -8,6 +8,8 @@ interface QuoteSummaryProps {
   discountAmount: number;
   longDistanceAmount: number;
   taxAmount: number;
+  cardSurchargeRate: number;
+  cardSurchargeAmount: number;
   total: number;
   depositRate: number;
   depositAmount: number;
@@ -19,6 +21,8 @@ export function QuoteSummary({
   discountAmount,
   longDistanceAmount,
   taxAmount,
+  cardSurchargeRate,
+  cardSurchargeAmount,
   total,
   depositRate,
   depositAmount,
@@ -49,6 +53,14 @@ export function QuoteSummary({
         <div className="flex justify-between">
           <span className="text-gray-500">{t('builder.pricing.taxShort')}</span>
           <span>{money(taxAmount)}</span>
+        </div>
+      )}
+      {cardSurchargeAmount > 0 && (
+        <div className="flex justify-between">
+          <span className="text-gray-500">
+            {t('builder.pricing.cardSurcharge', { rate: Math.round(cardSurchargeRate * 100) })}
+          </span>
+          <span>{money(cardSurchargeAmount)}</span>
         </div>
       )}
       <div className="flex justify-between text-base font-semibold">

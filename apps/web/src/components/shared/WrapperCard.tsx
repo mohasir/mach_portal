@@ -6,6 +6,7 @@ import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 interface WrapperCardProps {
   title?: ReactNode;
   caption?: ReactNode;
+  extra?: ReactNode;
   dividerClassName?: string;
   className?: string;
   children: ReactNode;
@@ -16,6 +17,7 @@ interface WrapperCardProps {
 export function WrapperCard({
   title,
   caption,
+  extra,
   dividerClassName = 'mt-3 mb-6',
   className,
   children,
@@ -27,9 +29,9 @@ export function WrapperCard({
 
   const content = (
     <>
-      {title ||
-        (caption && (
-          <div className="mb-4">
+      {(title || caption || extra) && (
+        <div className="mb-4 flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
             {title && (
               <Typography.Title className="font-heading text-lg text-brown m-0!">
                 {title}
@@ -41,7 +43,9 @@ export function WrapperCard({
               </Typography.Text>
             )}
           </div>
-        ))}
+          {extra && <div className="shrink-0">{extra}</div>}
+        </div>
+      )}
       {showDivider && <Divider className={dividerClassName} />}
       {children}
     </>

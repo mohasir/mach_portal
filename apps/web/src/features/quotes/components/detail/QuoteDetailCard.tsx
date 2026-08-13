@@ -89,6 +89,8 @@ export function QuoteDetailCard({
       discountAmount={detail.discountAmount}
       longDistanceAmount={detail.longDistanceAmount}
       taxAmount={detail.taxAmount}
+      cardSurchargeRate={detail.cardSurchargeRate}
+      cardSurchargeAmount={detail.cardSurchargeAmount}
       total={detail.total}
       depositRate={detail.depositRate}
       depositAmount={detail.depositAmount}

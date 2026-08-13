@@ -30,6 +30,7 @@ export interface QuoteBuilderState {
   discountType: DiscountType | null;
   discountValue: number | null;
   longDistanceAmount: number;
+  applyCardSurcharge: boolean;
   depositRate: number;
   selectOptionsAtQuote: boolean;
 }
@@ -54,6 +55,7 @@ export function emptyBuilderState(
     discountType: null,
     discountValue: null,
     longDistanceAmount: 0,
+    applyCardSurcharge: false,
     depositRate,
     selectOptionsAtQuote: false,
   };

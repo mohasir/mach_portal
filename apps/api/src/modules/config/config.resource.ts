@@ -24,6 +24,7 @@ export const publicAppSettingsColumns = {
   optionsSelectionDeadlineDays: appSettings.optionsSelectionDeadlineDays,
   allowSelectOptionsAtQuote: appSettings.allowSelectOptionsAtQuote,
   applyTaxByState: appSettings.applyTaxByState,
+  cardSurchargeRate: appSettings.cardSurchargeRate,
   updatedAt: appSettings.updatedAt,
 } as const;
 
@@ -56,6 +57,7 @@ export const appSettingsResource = (row: PublicAppSettings) => ({
   optionsSelectionDeadlineDays: row.optionsSelectionDeadlineDays,
   allowSelectOptionsAtQuote: row.allowSelectOptionsAtQuote,
   applyTaxByState: row.applyTaxByState,
+  cardSurchargeRate: row.cardSurchargeRate,
   updatedAt: row.updatedAt,
 });
 
