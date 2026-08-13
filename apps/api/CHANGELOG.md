@@ -5,6 +5,24 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.5.0] - 2026-08-12
+
+### Added
+
+- Preferencia `applyTaxByState` en `app_settings`, con endpoint
+  `updateTaxPreferences`: activa o desactiva el cálculo de impuesto por
+  estado para las cotizaciones; con la preferencia apagada, `QuotesService`
+  ignora la tasa del estado y calcula el impuesto en 0.
+- Recargo configurable por pago con tarjeta/cheque: columna
+  `cardSurchargeRate` en `app_settings` (default 9%) y columnas
+  `applyCardSurcharge`/`cardSurchargeRate`/`cardSurchargeAmount` en
+  `quotes`. `computeQuoteTotals` (`@repo/schemas`) calcula el recargo sobre
+  el total ya con impuesto aplicado, y el PDF de la cotización lo agrega
+  como línea de fee ("Card/Check Surcharge (X%)") cuando corresponde.
+- Campo `totalPaid` (subquery sobre `eventPayments`) y `paymentStatus`
+  derivado (pendiente/parcial/pagado) ahora también en el listado de
+  eventos (`eventListItemResource`), no solo en el detalle.
+
 ## [0.4.0] - 2026-08-08
 
 ### Added
