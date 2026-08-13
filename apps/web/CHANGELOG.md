@@ -5,6 +5,18 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.7.0] - 2026-08-13
+
+### Added
+
+- Dashboard con datos reales (`/admin`), cierra el dominio Mach Bar:
+  reemplaza los 3 stat cards con valores fijos que traía el placeholder
+  original por un resumen de solo lectura del mes actual — eventos,
+  ingresos, cotizaciones y tasa de cierre (`MetricCard`), gráfico de
+  cotizaciones por mes (`QuotesByMonthChart`, con Recharts) y ranking de
+  estaciones más pedidas (`TopProductsList`). Cada bloque se oculta según
+  permiso del rol (`<Can>`); "Próximos eventos" queda sin cambios.
+
 ## [0.6.0] - 2026-08-12
 
 ### Added

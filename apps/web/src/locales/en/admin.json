@@ -40,14 +40,6 @@
     "toggleMenu": "Toggle menu",
     "greeting": "Hi, {{name}}"
   },
-  "dashboard": {
-    "title": "Dashboard",
-    "stats": {
-      "new": "New Orders",
-      "pending": "Pending Orders",
-      "delivered": "Delivered Orders"
-    }
-  },
   "welcome": {
     "title": "Welcome!",
     "titleNamed": "Hi, {{name}}!",

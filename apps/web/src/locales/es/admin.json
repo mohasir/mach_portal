@@ -40,14 +40,6 @@
     "toggleMenu": "Abrir/cerrar menú",
     "greeting": "Hola, {{name}}"
   },
-  "dashboard": {
-    "title": "Panel",
-    "stats": {
-      "new": "Pedidos nuevos",
-      "pending": "Pedidos pendientes",
-      "delivered": "Pedidos entregados"
-    }
-  },
   "welcome": {
     "title": "¡Te damos la bienvenida!",
     "titleNamed": "¡Hola, {{name}}!",

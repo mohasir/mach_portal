@@ -5,6 +5,24 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.6.0] - 2026-08-13
+
+### Added
+
+- Módulo `dashboard`: `summary` (eventos, ingresos, cotizaciones y tasa de
+  cierre del mes), `quotesByMonth` (conteo de cotizaciones por mes, para la
+  gráfica) y `topProducts` (ranking de estaciones más pedidas, de
+  cotizaciones Aprobadas del mes por fecha de evento) — a diferencia del
+  resto de los módulos, son solo `query` de agregación, sin CRUD ni
+  `Paginated`.
+- Tres acciones nuevas en el recurso `dashboard` (`view_summary`,
+  `view_quotes_chart`, `view_top_products`), que reemplazan el `CRUD`
+  genérico que traía antes (no aplicaba a un módulo de solo lectura) y
+  permiten ocultar cada bloque del dashboard de forma independiente por rol.
+- Seed de cotizaciones ampliado (más cotizaciones de demo, con `createdAt`
+  repartido a lo largo del año en vez de la fecha en que corre el seed) para
+  que el dashboard tenga datos representativos en `--demo=local`.
+
 ## [0.5.0] - 2026-08-12
 
 ### Added
