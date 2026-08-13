@@ -47,6 +47,10 @@ interface SeedQuote {
   discountType?: DiscountType;
   discountValue?: number;
   lines: SeedLine[];
+  // Backdates `createdAt` (defaults to "now" otherwise) so quotes spread across the
+  // year instead of bunching into whichever day the seed happened to run — needed for
+  // dashboard.quotesByMonth/closeRate to show a real distribution, not one spike.
+  createdAt?: string;
 }
 
 const SEED_QUOTES: SeedQuote[] = [
@@ -57,6 +61,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventTime: '18:00',
     address: '145 W 57th St, Apt 12B',
     stageId: QUOTE_STAGE.PENDING,
+    createdAt: '2026-08-10',
     lines: [
       {
         productName: 'Crepes',
@@ -90,6 +95,7 @@ const SEED_QUOTES: SeedQuote[] = [
     stageId: QUOTE_STAGE.QUOTED,
     discountType: 'percent',
     discountValue: 0.1,
+    createdAt: '2026-06-20',
     lines: [
       {
         productName: 'Mini Pancakes',
@@ -111,6 +117,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventTime: '12:00',
     address: '1 Landmark Sq, Stamford',
     stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-06-01',
     lines: [
       {
         productName: 'Esquites',
@@ -134,6 +141,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventDate: '2026-06-20',
     address: '210 Bedford Ave',
     stageId: QUOTE_STAGE.CANCELLED,
+    createdAt: '2026-05-10',
     lines: [
       {
         productName: 'Crepaletas',
@@ -153,6 +161,7 @@ const SEED_QUOTES: SeedQuote[] = [
     stageId: QUOTE_STAGE.QUOTED,
     discountType: 'fixed',
     discountValue: 5000,
+    createdAt: '2026-08-01',
     lines: [
       {
         productName: 'Fruit Station',
@@ -176,6 +185,7 @@ const SEED_QUOTES: SeedQuote[] = [
     clientEmail: 'sofia.ramirez@example.com',
     eventTypeName: 'Aniversario',
     stageId: QUOTE_STAGE.PENDING,
+    createdAt: '2026-08-11',
     lines: [], // borrador vacío — cubre el caso de 0 líneas (D16/createQuoteSchema)
   },
   {
@@ -185,6 +195,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventTime: '17:30',
     address: '35-30 Vernon Blvd, Queens',
     stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-07-15',
     lines: [
       {
         productName: 'Crepes',
@@ -219,6 +230,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventDate: '2026-05-30',
     address: '400 Washington St',
     stageId: QUOTE_STAGE.CANCELLED,
+    createdAt: '2026-04-20',
     lines: [
       {
         productName: 'Nachos',
@@ -236,6 +248,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventTime: '13:00',
     address: '10 Fairfield Ave, Bridgeport',
     stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-01-20',
     lines: [
       {
         productName: 'Esquites',
@@ -251,6 +264,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventTime: '12:30',
     address: '200 Park Ave',
     stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-01-02',
     lines: [
       {
         productName: 'Snack Station',
@@ -270,6 +284,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventTime: '12:30',
     address: '200 Park Ave',
     stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-03-01',
     lines: [
       {
         productName: 'Snack Station',
@@ -289,6 +304,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventTime: '12:30',
     address: '200 Park Ave',
     stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-06-10',
     lines: [
       {
         productName: 'Snack Station',
@@ -308,6 +324,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventTime: '16:00',
     address: '210 Bedford Ave',
     stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-04-25',
     lines: [
       {
         productName: 'Crepaletas',
@@ -325,6 +342,7 @@ const SEED_QUOTES: SeedQuote[] = [
     eventTime: '12:00',
     address: '1 Palmer Sq, Princeton',
     stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-08-05',
     lines: [
       {
         productName: 'Fruit Station',
@@ -343,11 +361,235 @@ const SEED_QUOTES: SeedQuote[] = [
     eventTime: '19:00',
     address: '88 Morgan St',
     stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2025-11-01',
     lines: [
       {
         productName: 'Nachos',
         numPersons: 40,
         selections: [{ groupLabel: 'Choose Your Base', optionNames: ['Tortilla Chips'] }],
+      },
+    ],
+  },
+  // Tanda 2 — rellena los meses del año que quedaban sin cotizaciones (marzo/junio/agosto/
+  // septiembre/diciembre) y da createdAt repartido ene-ago 2026, para que el dashboard
+  // (summary/quotesByMonth/topProducts) tenga datos reales en cualquier mes que se mire, no
+  // solo en el mes en que se corrió el seed.
+  {
+    clientEmail: 'laura.jimenez@example.com',
+    eventTypeName: 'Corporativo',
+    eventDate: '2026-03-14',
+    eventTime: '10:00',
+    address: '145 W 57th St, Apt 12B',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-02-10',
+    lines: [
+      {
+        productName: 'Hot Chocolate',
+        numPersons: 50,
+        selections: [
+          { groupLabel: 'Premium Toppings', optionNames: ['Crushed Oreo', 'Mini Marshmallows'] },
+          { groupLabel: 'Cookie', optionNames: ['Classic Cookie'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'hannah.weiss@example.com',
+    eventTypeName: 'Cumpleaños',
+    eventDate: '2026-06-06',
+    eventTime: '14:00',
+    address: '400 Washington St',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-05-01',
+    lines: [
+      {
+        productName: 'Popsicles',
+        numPersons: 60,
+        selections: [
+          { groupLabel: 'Toppings', optionNames: ['Oreo', 'White Chocolate'] },
+          { groupLabel: 'Fruits', optionNames: ['Mango', 'Watermelon'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'sofia.ramirez@example.com',
+    eventTypeName: 'Baby Shower',
+    eventDate: '2026-08-03',
+    eventTime: '11:00',
+    address: '9 Nassau St, Princeton',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-06-25',
+    lines: [
+      {
+        productName: 'Fruit Station',
+        numPersons: 40,
+        selections: [
+          { groupLabel: 'Fresh Fruits', optionNames: ['Mango', 'Pineapple'] },
+          { groupLabel: 'Yogurt', optionNames: ['Strawberry Yogurt'] },
+        ],
+      },
+      {
+        productName: 'Crepaletas',
+        numPersons: 40,
+        selections: [
+          { groupLabel: 'Premium Toppings', optionNames: ['Sprinkles', 'Crushed Oreo'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'james.oconnor@example.com',
+    eventTypeName: 'Cumpleaños',
+    eventDate: '2026-08-28',
+    eventTime: '17:00',
+    address: '35-30 Vernon Blvd, Queens',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-07-20',
+    lines: [
+      {
+        productName: 'Snack Station',
+        numPersons: 70,
+        selections: [
+          { groupLabel: 'Base Chips', optionNames: ['Nacho Cheese', 'Ruffles'] },
+          { groupLabel: 'Toppings', optionNames: ['Gummy Bears', 'Nerds'] },
+          { groupLabel: 'Fruits', optionNames: ['Pineapple'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'priya.nair@example.com',
+    eventTypeName: 'Boda',
+    eventDate: '2026-09-18',
+    eventTime: '18:30',
+    address: '1 Landmark Sq, Stamford',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-08-02',
+    lines: [
+      {
+        productName: 'Crepes',
+        numPersons: 90,
+        selections: [
+          { groupLabel: 'Premium Toppings', optionNames: ['Mazapan', 'Sprinkles'] },
+          { groupLabel: 'Fresh Fruits', optionNames: ['Strawberry', 'Raspberry'] },
+        ],
+      },
+      {
+        productName: 'Craft Bar',
+        numPersons: 100,
+        selections: [
+          {
+            groupLabel: 'Signature Cocktails',
+            optionNames: ['Paloma', 'Mezcal Mule', 'Beach Breeze'],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'diego.fernandez@example.com',
+    eventTypeName: 'Graduación',
+    eventDate: '2026-12-12',
+    eventTime: '13:00',
+    address: '210 Bedford Ave',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-08-08',
+    lines: [
+      {
+        productName: 'Nachos',
+        numPersons: 60,
+        selections: [
+          { groupLabel: 'Choose Your Base', optionNames: ['Tortilla Chips', 'Ruffles'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'emily.carter@example.com',
+    eventTypeName: 'Graduación',
+    eventDate: '2026-09-30',
+    eventTime: '15:00',
+    address: '1 Palmer Sq, Princeton',
+    stageId: QUOTE_STAGE.QUOTED,
+    createdAt: '2026-08-09',
+    lines: [
+      {
+        productName: 'Mini Pancakes',
+        numPersons: 50,
+        selections: [
+          { groupLabel: 'Premium Toppings', optionNames: ["M&M's", 'Sprinkles'] },
+          { groupLabel: 'Fresh Fruits', optionNames: ['Banana'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'tomas.alvarez@example.com',
+    eventTypeName: 'Otro',
+    eventDate: '2026-10-05',
+    eventTime: '12:00',
+    address: '10 Fairfield Ave, Bridgeport',
+    stageId: QUOTE_STAGE.PENDING,
+    createdAt: '2026-08-12',
+    lines: [
+      {
+        productName: 'Esquites',
+        numPersons: 40,
+        selections: [{ groupLabel: 'Base Chip', optionNames: ['Cool Ranch'] }],
+      },
+    ],
+  },
+  {
+    clientEmail: 'james.oconnor@example.com',
+    eventTypeName: 'Baby Shower',
+    eventDate: '2026-03-20',
+    address: '35-30 Vernon Blvd, Queens',
+    stageId: QUOTE_STAGE.CANCELLED,
+    createdAt: '2026-02-15',
+    lines: [
+      {
+        productName: 'Popsicles',
+        numPersons: 40,
+        selections: [
+          { groupLabel: 'Toppings', optionNames: ['Sprinkles'] },
+          { groupLabel: 'Fruits', optionNames: ['Strawberries'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'hannah.weiss@example.com',
+    eventTypeName: 'Corporativo',
+    eventDate: '2026-06-25',
+    eventTime: '12:00',
+    address: '400 Washington St',
+    stageId: QUOTE_STAGE.QUOTED,
+    createdAt: '2026-05-20',
+    lines: [
+      {
+        productName: 'Hot Chocolate',
+        numPersons: 60,
+        selections: [
+          { groupLabel: 'Premium Toppings', optionNames: ['Almonds', 'Chocolate Chips'] },
+          { groupLabel: 'Cookie', optionNames: ['Flamed Cookie with Toasted Marshmallows'] },
+        ],
+      },
+    ],
+  },
+  {
+    clientEmail: 'laura.jimenez@example.com',
+    eventTypeName: 'Aniversario',
+    eventDate: '2026-01-25',
+    eventTime: '19:00',
+    address: '145 W 57th St, Apt 12B',
+    stageId: QUOTE_STAGE.CONFIRMED,
+    createdAt: '2026-01-10',
+    lines: [
+      {
+        productName: 'Crepaletas',
+        numPersons: 30,
+        selections: [{ groupLabel: 'Premium Toppings', optionNames: ['Lotus Biscoff'] }],
       },
     ],
   },
@@ -524,6 +766,7 @@ export async function seedQuotes() {
         stageId: seed.stageId,
         isDraft: seed.stageId === QUOTE_STAGE.PENDING,
         createdById: creatorId,
+        ...(seed.createdAt ? { createdAt: new Date(`${seed.createdAt}T09:00:00Z`) } : {}),
         ...totals,
       })
       .returning({ id: quotes.id });

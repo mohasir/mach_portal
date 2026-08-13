@@ -118,7 +118,10 @@
       "delete": "Eliminar",
       "upload_attachment": "Subir comprobante",
       "view": "Ver",
-      "manage_selections": "Elegir opciones del evento"
+      "manage_selections": "Elegir opciones del evento",
+      "view_summary": "Ver métricas del mes",
+      "view_quotes_chart": "Ver gráfica de cotizaciones",
+      "view_top_products": "Ver estaciones más pedidas"
     },
     "resources": {
       "dashboard": {

@@ -15,7 +15,18 @@ export type RolesPermissionsMatrixItem = {
   permissions: RolePermissions;
 };
 
-const { CREATE, READ, UPDATE, DELETE, UPLOAD_ATTACHMENT, VIEW, MANAGE_SELECTIONS } = ACTIONS;
+const {
+  CREATE,
+  READ,
+  UPDATE,
+  DELETE,
+  UPLOAD_ATTACHMENT,
+  VIEW,
+  MANAGE_SELECTIONS,
+  VIEW_SUMMARY,
+  VIEW_QUOTES_CHART,
+  VIEW_TOP_PRODUCTS,
+} = ACTIONS;
 
 const CRUD = [CREATE, READ, UPDATE, DELETE];
 const READ_ONLY = [READ];
@@ -24,12 +35,13 @@ const VIEW_ONLY = [VIEW];
 
 const PAYMENT_FULL = [CREATE, READ, DELETE, UPLOAD_ATTACHMENT];
 const EVENT_FULL = [...CRUD, MANAGE_SELECTIONS];
+const DASHBOARD_FULL = [READ, VIEW_SUMMARY, VIEW_QUOTES_CHART, VIEW_TOP_PRODUCTS];
 
 export const rolesPermissionsMatrix = [
   {
     role: ROLES.SUPERADMIN,
     permissions: {
-      [RESOURCES.DASHBOARD]: CRUD,
+      [RESOURCES.DASHBOARD]: DASHBOARD_FULL,
       [RESOURCES.EVENT]: EVENT_FULL,
       [RESOURCES.PAYMENT]: PAYMENT_FULL,
       [RESOURCES.CLIENT]: CRUD,
@@ -49,7 +61,7 @@ export const rolesPermissionsMatrix = [
   {
     role: ROLES.ADMIN,
     permissions: {
-      [RESOURCES.DASHBOARD]: CRUD,
+      [RESOURCES.DASHBOARD]: DASHBOARD_FULL,
       [RESOURCES.EVENT]: EVENT_FULL,
       [RESOURCES.PAYMENT]: PAYMENT_FULL,
       [RESOURCES.CLIENT]: CRUD,
@@ -69,7 +81,7 @@ export const rolesPermissionsMatrix = [
   {
     role: ROLES.MANAGER,
     permissions: {
-      [RESOURCES.DASHBOARD]: READ_ONLY,
+      [RESOURCES.DASHBOARD]: DASHBOARD_FULL,
       [RESOURCES.EVENT]: READ_ONLY,
       [RESOURCES.CLIENT]: READ_ONLY,
       [RESOURCES.QUOTE]: READ_ONLY,

@@ -118,7 +118,10 @@
       "delete": "Delete",
       "upload_attachment": "Upload receipt",
       "view": "View",
-      "manage_selections": "Choose event options"
+      "manage_selections": "Choose event options",
+      "view_summary": "View monthly metrics",
+      "view_quotes_chart": "View quotes chart",
+      "view_top_products": "View top requested stations"
     },
     "resources": {
       "dashboard": {

@@ -1,0 +1,16 @@
+{
+  "stats": {
+    "eventsCount": "Eventos del mes",
+    "revenue": "Ingresos del mes",
+    "quotesCount": "Cotizaciones del mes",
+    "closeRate": "Tasa de cierre"
+  },
+  "chart": {
+    "title": "Cotizaciones por mes",
+    "empty": "No hay cotizaciones registradas este año"
+  },
+  "topProducts": {
+    "title": "Estaciones más pedidas",
+    "empty": "No hay eventos confirmados este mes"
+  }
+}

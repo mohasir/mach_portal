@@ -1,4 +1,5 @@
 import { router } from './trpc';
+import { dashboardRouter } from '../../modules/dashboard/dashboard.router';
 import { usersRouter } from '../../modules/users/users.router';
 import { clientsRouter } from '../../modules/clients/clients.router';
 import { staffRouter } from '../../modules/staff/staff.router';
@@ -12,6 +13,7 @@ import { templatesRouter } from '../../modules/templates/templates.router';
 import { notificationsRouter } from '../../modules/notifications/notifications.router';
 
 export const appRouter = router({
+  dashboard: dashboardRouter,
   users: usersRouter,
   clients: clientsRouter,
   staff: staffRouter,

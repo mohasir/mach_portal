@@ -31,10 +31,11 @@
 > **Próximo paso**; (3) continuá desde ahí. **Actualizá esta sección** al cerrar cada tarea: marcá ✅,
 > movés el "Próximo paso" y agregás una línea a la bitácora.
 
-**Última actualización:** 2026-07-15 · **Fase actual:** Eventos (Fase 5) — **cierra la fase (BE+FE+
-seeder+checkpoint)** (ver bitácora) · **Próximo paso:** Fase 6 **Dashboard** (agregaciones + gráfica).
-En paralelo sigue pendiente, sin bloquear: terminar el re-seed de catálogo con datos reales (7 de 10
-estaciones + decisión de precio de Craft Bar).
+**Última actualización:** 2026-08-13 · **Fase actual:** Dashboard (Fase 6) — **BE+FE implementados**,
+falta el checkpoint en vivo (lo verifica el usuario, ver bitácora) · **Próximo paso:** ninguna fase
+nueva — el dominio Mach Bar queda cerrado en cuanto se verifique este checkpoint. En paralelo sigue
+pendiente, sin bloquear: terminar el re-seed de catálogo con datos reales (7 de 10 estaciones +
+decisión de precio de Craft Bar).
 
 Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 
@@ -47,7 +48,7 @@ Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 | 3    | Configuración   | ✅  | ✅  |   ✅   |     ✅     |
 | 4    | Cotizaciones    | ✅  | ✅  |   ✅   |     ✅     |
 | 5    | Eventos         | ✅  | ✅  |   ✅   |     ✅     |
-| 6    | Dashboard       |  ☐  |  ☐  |   ☐    |     ☐      |
+| 6    | Dashboard       | ✅  | ✅  |   —    |     ☐      |
 
 > 🔨 **Catálogo — rework D16/D17 cerrado en código, falta el re-seed real.** Schema
 > (`product_price_tiers`, `option_groups.selection_type`, `options.description`), `@repo/schemas`,
@@ -61,6 +62,26 @@ Leyenda: ☐ pendiente · 🔨 en progreso · ✅ hecho
 **Fundaciones** (transversales): guards nuevos ✅ (`STAFF`/`PRODUCT`/`EVENT_TYPE`/`CONFIG` — todos los de Fase 1-3) · enum `state` compartido ✅ · cents (BE) ✅ + `formatMoney`/`useMoneyFormatter` (FE, **currency configurable** vía `config.get`) ✅ · `%` helper ✅ (`lib/percent`) · dnd-kit ✅ (`SortableList`/`useSortableRow`/`ReorderControl` en `features/catalog`) · `computeQuoteTotals` ✅ (`@repo/schemas/quotes`, Fase 4)
 
 **Bitácora de sesión** (lo último arriba):
+
+- **2026-08-13** — **Fase 6 Dashboard implementada (BE+FE), falta checkpoint en vivo.** Módulo
+  `dashboard` nuevo, solo agregaciones (sin CRUD/`Paginated`/`resource.ts` — nota ya prevista en
+  `mach-bar-flows.md §8.1`): `summary({month,year})` → `{eventsCount, revenue, quotesCount,
+  closeRate}` (revenue = suma de `eventPayments` del mes, closeRate = confirmadas/creadas ese mes),
+  `quotesByMonth({year})` (12 posiciones, rellena meses sin datos con 0) y `topProducts({month,year,
+  limit})` (de quotes Aprobada, agrupado por el mes del **evento**, no el de creación). Reemplaza los
+  3 stat cards hardcodeados (`STATS` en `admin/page.tsx`, placeholder desde el scaffold inicial) por
+  datos reales. **Desviación de `mach-bar-flows.md §8.1`:** en vez de 4 procedures independientes se
+  dejó `summary` bundleado en 1 solo endpoint (decisión del usuario) — el permiso es por bloque
+  visual, no por número individual. Guards: `RESOURCES.DASHBOARD` pasa de `CRUD` (no tenía sentido en
+  un módulo read-only) a `[READ, VIEW_SUMMARY, VIEW_QUOTES_CHART, VIEW_TOP_PRODUCTS]` — `READ` sigue
+  gateando la página (nav + `route-access.ts`, sin tocar), los otros 3 gatean cada bloque de forma
+  independiente (mismo patrón que `MANAGE_SELECTIONS`/`UPLOAD_ATTACHMENT`, no resources nuevos por
+  widget); SUPERADMIN/ADMIN/MANAGER quedan con los 4 actions completos (paridad con el acceso de hoy,
+  ajustable después con una línea en `rolesPermissions.matrix.ts`). Chart de barras con **Recharts**
+  (se evaluó `@tanstack/charts`: v0.12.0 pre-alpha, descartada por sus propios docs). `check-types`
+  del monorepo limpio. **Pendiente:** el usuario verifica en vivo (no se levanta server/browser desde
+  la sesión, regla del proyecto) — números reales, año sin datos, ranking vacío, y que ocultar un
+  action en `rolesPermissions.matrix.ts` esconda el bloque correspondiente sin romper el resto.
 
 - **2026-07-15** — **Ajuste post-cierre de Fase 5: calendario pasa a página propia.** A pedido del
   usuario, el tab "Calendario" de `/admin/events` se separa en una superficie propia
