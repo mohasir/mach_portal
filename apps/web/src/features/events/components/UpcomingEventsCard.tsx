@@ -45,13 +45,15 @@ export function UpcomingEventsCard() {
         ) : items.length === 0 ? (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('empty')} />
         ) : (
-          items.map((event, index) => (
+          items.map((event) => (
             <EventCard
               key={event.id}
               row={event}
-              index={index}
               onClick={() => router.push(`/admin/events/${event.id}`)}
               onAssignStaff={setAssigningEvent}
+              colorDateBadge="mustard"
+              showActions={false}
+              showEventType={false}
             />
           ))
         )}

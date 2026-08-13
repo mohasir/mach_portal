@@ -52,6 +52,11 @@ export class EventsRepository {
   constructor(private db: Database) {}
 
   private baseSelect() {
+    const totalPaidSubquery = this.db
+      .select({ value: sql<number>`coalesce(sum(${eventPayments.amount}), 0)` })
+      .from(eventPayments)
+      .where(eq(eventPayments.eventId, events.id));
+
     return this.db
       .select({
         ...publicEventColumns,
@@ -59,6 +64,7 @@ export class EventsRepository {
         eventTypeName: eventTypes.name,
         quoteNumber: quotes.number,
         quoteCancelled: sql<boolean>`${quotes.stageId} = ${QUOTE_STAGE.CANCELLED}`,
+        totalPaid: sql<number>`(${totalPaidSubquery})`,
       })
       .from(events)
       .innerJoin(clients, eq(events.clientId, clients.id))

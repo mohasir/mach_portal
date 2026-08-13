@@ -48,7 +48,7 @@ export const machBarTheme: ThemeConfig = {
 
     // Typography
     fontFamily: "'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif",
-    fontSize: 13,
+    fontSize: 14,
     fontSizeSM: 11,
     fontSizeLG: 16,
     fontSizeHeading1: 28,
@@ -94,7 +94,7 @@ export const machBarTheme: ThemeConfig = {
       optionSelectedColor: MB.olive,
     },
     Form: {
-      verticalLabelPadding: 0,
+      verticalLabelPadding: '0 0 8px',
       labelFontSize: 14,
     },
     InputNumber: {

@@ -36,12 +36,12 @@ export function EventsTable({ clientId, segment = 'all' }: EventsTableProps) {
         rowKey="id"
         columns={columns}
         mobileRenderType="card"
-        renderCard={(row, index) => (
+        renderCard={(row) => (
           <EventCard
             row={row}
-            index={index}
             onClick={() => onRowClick(row)}
             onAssignStaff={setAssigningEvent}
+            showPaymentStatus
           />
         )}
         onRow={(row) => ({ onClick: () => onRowClick(row), className: 'cursor-pointer' })}
