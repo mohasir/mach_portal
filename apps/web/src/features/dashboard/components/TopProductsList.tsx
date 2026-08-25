@@ -101,7 +101,7 @@ export function TopProductsList({ data, isLoading, month, year }: TopProductsLis
           </div>
 
           <div className="flex flex-col gap-3">
-            {items.map((item, index) => (
+            {items.map((item) => (
               <div key={item.productId} className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-3">
                   <Typography.Text className="truncate">{item.productName}</Typography.Text>
