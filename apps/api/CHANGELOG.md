@@ -5,6 +5,19 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.7.0] - 2026-08-25
+
+### Added
+
+- `total` en `dashboard.topProducts` (`topProductsTotal` en `DashboardRepository`):
+  cuenta todas las cotizaciones confirmadas del mes, no solo las del top N — permite
+  calcular la porción de "otros" y los porcentajes de participación en el donut del
+  dashboard sin traer el listado completo de productos.
+
+### Changed
+
+- `dashboard.topProducts` devuelve ahora `{ items, total }` en vez de un array plano.
+
 ## [0.6.0] - 2026-08-13
 
 ### Added

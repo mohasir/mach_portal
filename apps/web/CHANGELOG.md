@@ -5,6 +5,33 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.8.0] - 2026-08-25
+
+### Added
+
+- Teléfono formateado (`FormattedPhone`, mismo mask de país que `PhoneInput`) en las
+  listas de clientes y en el detalle: `ClientCard`, la columna de teléfono de la
+  tabla y `ClientInfoCard` ahora renderizan el valor guardado con el formato
+  "+1 (131) 321-3123" en vez del string crudo.
+- Donut de participación en "Productos más pedidos" del dashboard (`TopProductsList`,
+  Recharts): top 2 + "otros" como gráfico, además del listado existente con
+  porcentajes; la card ahora muestra el mes/año del período como caption
+  (`monthYear`, nuevo formatter de `useDateFormatter`).
+- `DayView`, vista de agenda de un solo día para el calendario de eventos (línea de
+  hora actual, franja de eventos por hora); todavía no conectada al selector de
+  vista del calendario.
+
+### Changed
+
+- Toolbar del calendario de eventos (`CalendarToolbar`): el buscador y el acceso
+  directo a Configuración se reemplazan por un `Segmented` Mes/Semana; la vista Año
+  queda sin botón en el selector (el código de `YearView` no se tocó). Mes y Semana
+  se envuelven ahora en `WrapperCard`.
+- Eventos del calendario (`CalendarDayEvents`, nuevo `EventDayCard`): la vista
+  compacta (mes, mobile) muestra un punto de color por estado en vez de un contador;
+  la vista expandida (semana, día del mes en desktop) usa la misma card con franja
+  de color en los lugares donde antes había un `Badge` de texto o un botón suelto.
+
 ## [0.7.0] - 2026-08-13
 
 ### Added
