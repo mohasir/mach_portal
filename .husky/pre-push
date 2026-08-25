@@ -1,0 +1,5 @@
+pnpm build || {
+  echo ""
+  echo "❌ Build falló — push cancelado. Corregí los errores antes de volver a pushear."
+  exit 1
+}

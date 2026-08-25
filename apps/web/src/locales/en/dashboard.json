@@ -11,6 +11,7 @@
   },
   "topProducts": {
     "title": "Top requested stations",
-    "empty": "No confirmed events this month"
+    "empty": "No confirmed events this month",
+    "other": "Other"
   }
 }

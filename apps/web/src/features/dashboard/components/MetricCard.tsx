@@ -11,8 +11,10 @@ interface MetricCardProps {
 
 export function MetricCard({ label, value, bg, loading }: MetricCardProps) {
   return (
-    <div className={`rounded-2xl p-5 ${bg}`}>
-      <Typography.Text className="text-muted">{label}</Typography.Text>
+    <div className={`rounded-2xl p-4 ${bg}`}>
+      <div className="min-h-11">
+        <Typography.Text className="text-muted">{label}</Typography.Text>
+      </div>
       <div className="mt-2">
         {loading ? (
           <Skeleton active title={{ width: 80 }} paragraph={false} />

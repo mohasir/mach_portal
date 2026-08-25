@@ -6,6 +6,7 @@ import {
   formatDateTime,
   formatDayOfMonth,
   formatMonthShort,
+  formatMonthYear,
   formatRelative,
   formatTime,
   type DateInput,
@@ -32,6 +33,8 @@ export function useDateFormatter() {
       dayOfMonth: (value: DateInput) => formatDayOfMonth(value, locale),
       /** "Jan" */
       monthShort: (value: DateInput) => formatMonthShort(value, locale),
+      /** "January 2026" */
+      monthYear: (value: DateInput) => formatMonthYear(value, locale),
     }),
     [locale],
   );

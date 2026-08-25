@@ -11,6 +11,7 @@
   },
   "topProducts": {
     "title": "Estaciones más pedidas",
-    "empty": "No hay eventos confirmados este mes"
+    "empty": "No hay eventos confirmados este mes",
+    "other": "Otras"
   }
 }

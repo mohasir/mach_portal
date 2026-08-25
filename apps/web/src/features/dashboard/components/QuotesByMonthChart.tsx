@@ -25,7 +25,7 @@ export function QuotesByMonthChart({ year, data, isLoading }: QuotesByMonthChart
   const hasData = chartData.some((row) => row.count > 0);
 
   return (
-    <WrapperCard title={t('chart.title')}>
+    <WrapperCard title={t('chart.title')} caption={year}>
       {isLoading ? (
         <Skeleton active paragraph={{ rows: 5 }} />
       ) : !hasData ? (

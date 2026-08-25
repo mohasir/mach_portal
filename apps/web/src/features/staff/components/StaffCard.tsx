@@ -4,6 +4,7 @@ import { Phone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { AvatarUser } from '@/components/shared/AvatarUser';
+import { FormattedPhone } from '@/components/shared/Inputs/PhoneInput';
 import { useStaffRowActions } from '../hooks/useStaffRowActions';
 import type { Staff } from '../types';
 
@@ -33,7 +34,7 @@ export function StaffCard({ member, onEdit, onDelete }: StaffCardProps) {
           {member.phone ? (
             <Typography.Text type="secondary" className="flex items-center gap-1 text-xs">
               <Phone size={14} />
-              {member.phone}
+              <FormattedPhone value={member.phone} />
             </Typography.Text>
           ) : null}
         </div>

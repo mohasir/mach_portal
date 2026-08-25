@@ -3,6 +3,7 @@ import { Tag, type TableColumnsType } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { AvatarUser } from '@/components/shared/AvatarUser';
+import { FormattedPhone } from '@/components/shared/Inputs/PhoneInput';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useStaffRowActions } from '../hooks/useStaffRowActions';
 import type { Staff } from '../types';
@@ -32,7 +33,7 @@ export function useStaffColumns({
       dataIndex: 'phone',
       key: 'phone',
       responsive: ['lg'],
-      render: (phone: string | null) => phone || '—',
+      render: (phone: string | null) => (phone ? <FormattedPhone value={phone} /> : '—'),
     },
     {
       title: t('columns.status'),

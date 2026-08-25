@@ -4,6 +4,7 @@ import { Phone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { AvatarUser } from '@/components/shared/AvatarUser';
+import { FormattedPhone } from '@/components/shared/Inputs/PhoneInput';
 import { CLIENT_STATUS_COLORS } from '../helpers';
 import { useClientRowActions } from '../hooks/useClientRowActions';
 import type { Client } from '../types';
@@ -35,16 +36,16 @@ export function ClientCard({ client, onEdit, onDelete, onClick }: ClientCardProp
         </Tag>
         {client.state ? <Tag>{client.state}</Tag> : null}
         {client.city ? (
-          <Typography.Text type="secondary" className="text-xs">
+          <Typography.Text type="secondary" className="text-sm">
             {client.city}
           </Typography.Text>
         ) : null}
       </Flex>
 
       {client.phone ? (
-        <Typography.Text type="secondary" className="mt-2 flex items-center gap-1 text-xs">
+        <Typography.Text type="secondary" className="mt-2 flex items-center gap-1 text-sm">
           <Phone size={14} />
-          {client.phone}
+          <FormattedPhone value={client.phone} />
         </Typography.Text>
       ) : null}
     </Card>

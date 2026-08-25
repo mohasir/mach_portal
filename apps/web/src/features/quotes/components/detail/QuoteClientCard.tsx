@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { useClient } from '@/features/clients';
 import { AvatarUser } from '@/components/shared/AvatarUser';
+import { FormattedPhone } from '@/components/shared/Inputs/PhoneInput';
 import type { QuoteDetail } from '../../types';
 
 interface QuoteClientCardProps {
@@ -32,7 +33,7 @@ export function QuoteClientCard({ detail }: QuoteClientCardProps) {
           extra={
             client?.phone ? (
               <Typography.Text type="secondary" className="block truncate text-xs">
-                {client.phone}
+                <FormattedPhone value={client.phone} />
               </Typography.Text>
             ) : undefined
           }

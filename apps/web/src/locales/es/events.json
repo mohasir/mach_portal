@@ -30,8 +30,6 @@
     "today": "Hoy",
     "prev": "Anterior",
     "next": "Siguiente",
-    "search": "Buscar",
-    "searchPlaceholder": "Buscar eventos…",
     "views": {
       "month": "Mes",
       "week": "Semana",

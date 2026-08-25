@@ -43,6 +43,9 @@ export const formatDayOfMonth = (value: DateInput, locale: AppLocale) =>
 export const formatMonthShort = (value: DateInput, locale: AppLocale) =>
   toDayjs(value, locale).format('MMM');
 
+export const formatMonthYear = (value: DateInput, locale: AppLocale) =>
+  toDayjs(value, locale).format('MMMM YYYY');
+
 export const formatRelative = (value: DateInput, locale: AppLocale) =>
   toDayjs(value, locale).fromNow();
 

@@ -7,7 +7,7 @@ import { useClient, useClientsList } from '@/features/clients';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
-import { PhoneInput } from '@/components/shared/Inputs/PhoneInput';
+import { FormattedPhone, PhoneInput } from '@/components/shared/Inputs/PhoneInput';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { blurActiveElementOnTouch } from '@/lib/utils/dom';
@@ -162,8 +162,8 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
                 email={state.newClient?.email || selectedClient?.email || undefined}
                 extra={
                   state.newClient?.phone || selectedClient?.phone ? (
-                    <Typography.Text type="secondary" className="block truncate text-xs">
-                      {state.newClient?.phone || selectedClient?.phone}
+                    <Typography.Text type="secondary" className="block truncate text-sm mt-0.5">
+                      <FormattedPhone value={state.newClient?.phone || selectedClient?.phone} />
                     </Typography.Text>
                   ) : undefined
                 }

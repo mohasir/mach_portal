@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { ClientStatus } from '@repo/schemas';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { AvatarUser } from '@/components/shared/AvatarUser';
+import { FormattedPhone } from '@/components/shared/Inputs/PhoneInput';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { CLIENT_STATUS_COLORS } from '../helpers';
 import { useClientRowActions } from '../hooks/useClientRowActions';
@@ -34,7 +35,7 @@ export function useClientsColumns({
       dataIndex: 'phone',
       key: 'phone',
       responsive: ['lg'],
-      render: (phone: string | null) => phone || '—',
+      render: (phone: string | null) => (phone ? <FormattedPhone value={phone} /> : '—'),
     },
     {
       title: t('columns.location'),

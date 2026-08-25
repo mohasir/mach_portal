@@ -37,7 +37,7 @@ export function DeleteConfirmModal({
       onCancel={onCancel}
       footer={null}
       centered
-      width={340}
+      width={{ xs: '90%', md: 340 }}
       classNames={{ container: 'rounded-3xl!' }}
     >
       <div className="flex flex-col items-center gap-3 py-2 text-center">
@@ -52,10 +52,15 @@ export function DeleteConfirmModal({
           </Typography.Text>
         )}
         <div className="mt-3 flex w-full gap-3">
-          <Button danger type="primary" className="flex-1" onClick={onConfirm}>
+          <Button
+            danger
+            type="primary"
+            className="min-w-0 flex-1 whitespace-normal"
+            onClick={onConfirm}
+          >
             {okText ?? tc('delete')}
           </Button>
-          <Button className="flex-1" onClick={onCancel}>
+          <Button className="min-w-0 flex-1 whitespace-normal" onClick={onCancel}>
             {cancelText ?? tc('cancel')}
           </Button>
         </div>

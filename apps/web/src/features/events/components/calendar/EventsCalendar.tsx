@@ -16,6 +16,7 @@ import { CalendarToolbar } from './CalendarToolbar';
 import { WeekView } from './WeekView';
 import { YearView } from './YearView';
 import type { CalendarViewMode } from './types';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 const UNIT_BY_VIEW: Record<CalendarViewMode, 'month' | 'week' | 'year'> = {
   month: 'month',
@@ -31,7 +32,6 @@ export function EventsCalendar() {
   const screens = Grid.useBreakpoint();
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
   const [cursor, setCursor] = useState<Dayjs>(() => dayjs());
-  const [search, setSearch] = useState('');
 
   const rangeStart = viewMode === 'week' ? cursor.startOf('week') : cursor.startOf('month');
   const rangeEnd = viewMode === 'week' ? rangeStart.add(6, 'day') : cursor.endOf('month');
@@ -54,26 +54,16 @@ export function EventsCalendar() {
     return Array.from(map.values());
   }, [queryA.data, queryB.data]);
 
-  const filteredEvents = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return events;
-    return events.filter(
-      (event) =>
-        event.clientName.toLowerCase().includes(term) ||
-        (event.eventTypeName?.toLowerCase().includes(term) ?? false),
-    );
-  }, [events, search]);
-
   const eventsByDay = useMemo(() => {
     const map = new Map<string, EventCalendarItem[]>();
-    for (const event of filteredEvents) {
+    for (const event of events) {
       if (!event.eventDate) continue;
       const list = map.get(event.eventDate) ?? [];
       list.push(event);
       map.set(event.eventDate, list);
     }
     return map;
-  }, [filteredEvents]);
+  }, [events]);
 
   const periodLabel = useMemo(() => {
     if (viewMode === 'year') return cursor.locale(locale).format('YYYY');
@@ -120,32 +110,40 @@ export function EventsCalendar() {
         periodLabel={periodLabel}
         onNavigate={onNavigate}
         onToday={onToday}
-        search={search}
-        onSearchChange={setSearch}
       />
       {viewMode === 'week' && (
-        <WeekView
-          weekStart={rangeStart}
-          eventsByDay={eventsByDay}
-          locale={locale}
-          onSelectEvent={goToEvent}
-          onSelectDate={canCreateQuote ? goToNewQuote : undefined}
-        />
+        <WrapperCard>
+          <WeekView
+            weekStart={rangeStart}
+            eventsByDay={eventsByDay}
+            locale={locale}
+            onSelectEvent={goToEvent}
+            onSelectDate={canCreateQuote ? goToNewQuote : undefined}
+          />
+        </WrapperCard>
       )}
       {viewMode === 'year' && (
         <YearView year={cursor.year()} locale={locale} onSelectDate={onSelectYearDate} />
       )}
       {viewMode === 'month' && (
-        <Calendar
-          value={cursor}
-          mode="month"
-          fullscreen={!!screens.md}
-          cellRender={cellRender}
-          onPanelChange={setCursor}
-          onSelect={(date, info) => {
-            if (canCreateQuote && info.source === 'date') goToNewQuote(date);
-          }}
-        />
+        <WrapperCard>
+          <Calendar
+            value={cursor}
+            mode="month"
+            fullscreen={!!screens.md}
+            headerRender={() => null}
+            classNames={{
+              root: 'bg-transparent! rounded-none!',
+              itemContent: screens.md ? undefined : 'h-2! overflow-hidden',
+              body: screens.md ? undefined : '[&_th]:pb-6! [&_th]:font-medium',
+            }}
+            cellRender={cellRender}
+            onPanelChange={setCursor}
+            onSelect={(date, info) => {
+              if (canCreateQuote && info.source === 'date') goToNewQuote(date);
+            }}
+          />
+        </WrapperCard>
       )}
     </div>
   );

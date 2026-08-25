@@ -30,7 +30,7 @@ export function BottomSheet({
       focusable={{ trap: false }}
       footer={footer}
       classNames={{
-        section: 'overflow-hidden rounded-t-4xl h-auto min-h-0 flex-1',
+        section: 'overflow-hidden rounded-t-4xl max-h-[85dvh] min-h-0',
         body: 'p-0 overflow-y-auto min-h-0',
         header: 'border-none',
         footer: `pb-8 ${footerClassName}`,
@@ -38,7 +38,7 @@ export function BottomSheet({
       styles={{ wrapper: { maxHeight: '85dvh' } }}
       title={
         <div className="flex flex-col items-center gap-2">
-          <span className="bg-primary h-1 w-10 mb-2 rounded-full" />
+          <span className="bg-primary h-1.5 w-11 mb-2 rounded-full" />
           {title && <span>{title}</span>}
         </div>
       }

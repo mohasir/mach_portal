@@ -80,4 +80,20 @@ export class DashboardRepository {
       .orderBy(desc(count()))
       .limit(limit);
   }
+
+  async topProductsTotal(month: number, year: number) {
+    const [row] = await this.db
+      .select({ value: count() })
+      .from(quoteLines)
+      .innerJoin(quotes, eq(quoteLines.quoteId, quotes.id))
+      .where(
+        and(
+          eq(quotes.stageId, QUOTE_STAGE.CONFIRMED),
+          isNull(quotes.archivedAt),
+          sql`extract(month from ${quotes.eventDate}) = ${month}`,
+          sql`extract(year from ${quotes.eventDate}) = ${year}`,
+        ),
+      );
+    return row?.value ?? 0;
+  }
 }
