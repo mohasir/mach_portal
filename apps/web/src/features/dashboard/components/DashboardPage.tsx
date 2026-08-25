@@ -92,7 +92,12 @@ export function DashboardPage() {
       <Row gutter={[16, 16]}>
         <Can allowed={{ [RESOURCES.DASHBOARD]: [ACTIONS.VIEW_TOP_PRODUCTS] }}>
           <Col xs={24} lg={12}>
-            <TopProductsList data={topProducts} isLoading={topProductsLoading} />
+            <TopProductsList
+              data={topProducts}
+              isLoading={topProductsLoading}
+              month={MONTH}
+              year={YEAR}
+            />
           </Col>
         </Can>
         <Col xs={24} lg={12}>

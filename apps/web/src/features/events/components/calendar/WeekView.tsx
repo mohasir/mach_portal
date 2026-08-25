@@ -4,7 +4,8 @@ import { Grid } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import type { Locale } from '@/lib/i18n/config';
 import { CalendarDayEvents } from './CalendarDayEvents';
-import type { Event, EventCalendarItem } from '../../types';
+import { EventDayCard } from './EventDayCard';
+import type { EventCalendarItem } from '../../types';
 
 interface WeekViewProps {
   weekStart: Dayjs;
@@ -18,14 +19,6 @@ const HOUR_HEIGHT = 48;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DEFAULT_DURATION_HOURS = 1;
 const DEFAULT_SCROLL_HOUR = 8;
-
-// Tailwind classes over the app's semantic tokens (theme/globals.css), never hex —
-// mirrors what EVENT_STATUS_COLORS means for antd Tag/Badge, but for a plain styled block.
-const STATUS_ACCENT_CLASS: Record<Event['status'], string> = {
-  upcoming: 'border-primary bg-primary/10 text-primary',
-  completed: 'border-success bg-success/10 text-success',
-  cancelled: 'border-error bg-error/10 text-error',
-};
 
 const parseHour = (time: string) => {
   const [h, m] = time.split(':').map(Number);
@@ -75,7 +68,7 @@ export function WeekView({
 
   if (!screens.md) {
     return (
-      <div className="border-line rounded border">
+      <div>
         {days.map((day, index) => {
           const key = day.format('YYYY-MM-DD');
           const isToday = day.isSame(today, 'day');
@@ -83,7 +76,7 @@ export function WeekView({
           return (
             <div
               key={key}
-              className={`flex items-start gap-3 p-3 ${index > 0 ? 'border-line border-t' : ''}`}
+              className={`flex items-start gap-1 py-4 ${index > 0 ? 'border-line border-t' : ''}`}
             >
               <div
                 className={`flex w-12 shrink-0 flex-col items-center ${canCreate ? 'cursor-pointer' : ''}`}
@@ -184,21 +177,18 @@ export function WeekView({
                   style={{ top: hour * HOUR_HEIGHT }}
                 />
               ))}
-              {timed.map((event) => {
-                const top = parseHour(event.eventTime!) * HOUR_HEIGHT;
-                return (
-                  <button
-                    key={event.id}
-                    type="button"
-                    onClick={() => onSelectEvent(event.id)}
-                    className={`absolute inset-x-1 overflow-hidden rounded border px-2 py-1 text-left text-xs leading-tight ${STATUS_ACCENT_CLASS[event.status]}`}
-                    style={{ top, height: DEFAULT_DURATION_HOURS * HOUR_HEIGHT - 2 }}
-                  >
-                    <div className="truncate font-medium">{event.clientName}</div>
-                    <div className="truncate opacity-80">{event.eventTime}</div>
-                  </button>
-                );
-              })}
+              {timed.map((event) => (
+                <EventDayCard
+                  key={event.id}
+                  event={event}
+                  onSelect={onSelectEvent}
+                  className="absolute inset-x-1"
+                  style={{
+                    top: parseHour(event.eventTime!) * HOUR_HEIGHT,
+                    height: DEFAULT_DURATION_HOURS * HOUR_HEIGHT - 2,
+                  }}
+                />
+              ))}
             </div>
           ))}
         </div>

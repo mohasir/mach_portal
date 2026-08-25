@@ -13,6 +13,7 @@ export const MB = {
   ivoryDark: '#ede1b8',
   salmon: '#F28A86',
   salmonLight: '#fad5d3',
+  taupe: '#D8D4C8',
   red: '#E13348',
   bg: '#FDFAF2',
   text: '#2e2018',
@@ -58,7 +59,7 @@ export const machBarTheme: ThemeConfig = {
     fontSizeHeading5: 13,
 
     // Shape
-    borderRadius: 6,
+    borderRadius: 10,
     borderRadiusLG: 16,
     borderRadiusSM: 4,
 

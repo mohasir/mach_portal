@@ -11,6 +11,7 @@
   --color-warning: var(--ant-color-warning);
   --color-success: var(--ant-color-success);
   --color-info: var(--ant-color-info);
+  --color-link: var(--ant-color-link);
   --color-foreground: var(--ant-color-text);
   --color-muted: var(--ant-color-text-secondary);
   --color-background: var(--ant-color-bg-layout);
@@ -26,7 +27,9 @@
   --color-ivory: #f7eed2;
   --color-ivory-dark: #ede1b8;
   --color-salmon: #f28a86;
+  --color-olive: #91922a;
   --color-olive-faint: #f4f4e8;
+  --color-taupe: #d8d4c8;
 
   --font-sans: var(--font-work-sans);
   --font-heading: var(--font-marcellus);

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { AddressLines } from '@/components/shared/AddressLines';
 import { AvatarUser } from '@/components/shared/AvatarUser';
+import { FormattedPhone } from '@/components/shared/Inputs/PhoneInput';
 import { useCan } from '@/lib/auth/useCan';
 import { CLIENT_STATUS_COLORS } from '../../helpers';
 import { EditClientModal } from '../EditClientModal';
@@ -47,7 +48,7 @@ export function ClientInfoCard({ client }: ClientInfoCardProps) {
         )}
         {client.phone && (
           <Typography.Text type="secondary" className="flex items-center gap-2 text-base">
-            <Phone size={14} /> {client.phone}
+            <Phone size={14} /> <FormattedPhone value={client.phone} />
           </Typography.Text>
         )}
         {(client.address || client.city) && (

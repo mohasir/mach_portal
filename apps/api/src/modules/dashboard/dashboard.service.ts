@@ -32,11 +32,18 @@ export class DashboardService {
   }
 
   async topProducts(query: DashboardTopProductsQuery) {
-    const rows = await this.repo.topProducts(query.month, query.year, query.limit);
-    return rows.map((row) => ({
-      productId: row.productId,
-      productName: row.productName,
-      count: row.value,
-    }));
+    const [rows, total] = await Promise.all([
+      this.repo.topProducts(query.month, query.year, query.limit),
+      this.repo.topProductsTotal(query.month, query.year),
+    ]);
+
+    return {
+      items: rows.map((row) => ({
+        productId: row.productId,
+        productName: row.productName,
+        count: row.value,
+      })),
+      total,
+    };
   }
 }

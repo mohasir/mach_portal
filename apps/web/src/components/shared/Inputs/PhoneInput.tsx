@@ -17,6 +17,22 @@ interface PhoneInputProps {
   placeholder?: string;
 }
 
+interface FormattedPhoneProps {
+  value?: string | null;
+}
+
+/** Renders a stored phone number using the same country mask as `PhoneInput`, e.g. "+1 (131) 321-3123". */
+export function FormattedPhone({ value }: FormattedPhoneProps) {
+  const { inputValue } = usePhoneInput({
+    defaultCountry: 'us',
+    value: value ?? '',
+    countries: US_COUNTRIES,
+    forceDialCode: true,
+  });
+
+  return value ? <>{inputValue}</> : null;
+}
+
 export function PhoneInput({ value, onChange, disabled, placeholder }: PhoneInputProps) {
   const { inputValue, country, handlePhoneValueChange } = usePhoneInput({
     defaultCountry: 'us',

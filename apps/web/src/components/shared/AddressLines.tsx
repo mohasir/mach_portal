@@ -25,7 +25,7 @@ export function AddressLines({ address, city, state, lines = 2, className }: Add
 
   return (
     <div className={className}>
-      {address && <div className="truncate">{address}</div>}
+      {address && <div>{address}</div>}
       {cityState && <div className="truncate">{cityState}</div>}
     </div>
   );

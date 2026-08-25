@@ -23,7 +23,11 @@ export function AvatarUser({
   const initial = source ? source[0]!.toUpperCase() : '?';
 
   const avatar = (
-    <Avatar src={image || undefined} size={size} className="bg-olive-faint text-brown shrink-0 font-medium">
+    <Avatar
+      src={image || undefined}
+      size={size}
+      className="bg-olive-faint text-brown shrink-0 font-medium"
+    >
       {initial}
     </Avatar>
   );
@@ -31,14 +35,14 @@ export function AvatarUser({
   if (!showDetails) return avatar;
 
   return (
-    <div className="flex min-w-0 items-center gap-3">
+    <div className="flex min-w-0 items-start gap-3">
       {avatar}
       <div className="min-w-0">
         <Typography.Text strong className="text-brown block truncate">
           {name || '—'}
         </Typography.Text>
         {email ? (
-          <Typography.Text type="secondary" className="block truncate text-xs">
+          <Typography.Text type="secondary" className="block truncate text-sm">
             {email}
           </Typography.Text>
         ) : null}
