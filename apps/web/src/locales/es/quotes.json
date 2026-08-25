@@ -1,0 +1,202 @@
+{
+  "title": "Cotizaciones",
+  "empty": "No hay cotizaciones",
+  "index": {
+    "add": "Nueva cotización"
+  },
+  "columns": {
+    "number": "Número",
+    "client": "Cliente",
+    "eventDate": "Fecha del evento",
+    "stage": "Estado",
+    "total": "Total"
+  },
+  "filters": {
+    "stage": "Estado de la cotización",
+    "state": "Estado (US)"
+  },
+  "archive": {
+    "action": "Archivar",
+    "confirmTitle": "¿Archivar cotización?",
+    "confirmContent": "La cotización {{number}} se quitará de la tabla y del pipeline. Esta acción no se puede deshacer."
+  },
+  "validation": {
+    "clientRequired": "El cliente es obligatorio"
+  },
+  "form": {
+    "save": "Guardar"
+  },
+  "builder": {
+    "newTitle": "Nueva cotización",
+    "editTitle": "Editar cotización",
+    "saveDraft": "Guardar borrador",
+    "saveChanges": "Guardar cambios",
+    "update": "Actualizar",
+    "createQuote": "Crear cotización",
+    "saved": "Cotización guardada",
+    "created": "Cotización creada",
+    "exitConfirm": {
+      "title": "¿Salir sin guardar?",
+      "content": "Tenés cambios sin guardar. Si salís ahora, se perderán.",
+      "ok": "Salir sin guardar",
+      "cancel": "Seguir editando"
+    },
+    "errors": {
+      "clientRequired": "Elegí un cliente para guardar el borrador"
+    },
+    "client": {
+      "label": "Cliente",
+      "placeholder": "Buscar cliente...",
+      "noResults": "No se encontraron clientes",
+      "addNew": "Agregar nuevo cliente",
+      "backToSearch": "Volver al buscador",
+      "name": "Nombre",
+      "phone": "Teléfono",
+      "email": "Email",
+      "emptyCta": "Seleccionar cliente",
+      "change": "Cambiar",
+      "selectExisting": "Seleccionar cliente existente",
+      "changeSelectAnother": "Seleccionar otro cliente",
+      "changeSelectOne": "Seleccionar un cliente",
+      "editClient": "Editar cliente",
+      "done": "Listo"
+    },
+    "event": {
+      "type": "Tipo de evento",
+      "typePlaceholder": "Elegí un tipo",
+      "eventDetailsGroupTitle": "Detalle del evento",
+      "addressGroupTitle": "Dirección",
+      "taxesGroupTitle": "Cargos extras",
+      "state": "Estado",
+      "statePlaceholder": "NY / NJ / CT",
+      "city": "Ciudad",
+      "cityPlaceholder": "Ciudad del evento",
+      "date": "Fecha del evento",
+      "time": "Hora",
+      "address": "Dirección",
+      "addressPlaceholder": "Dirección del evento",
+      "longDistance": "Cargo por larga distancia",
+      "longDistanceHint": "Sugerido según la tasa del estado ({{rate}}%) — se puede ajustar",
+      "cardSurcharge": "Recargo tarjeta/cheque",
+      "cardSurchargeHint": "Agrega un {{rate}}% sobre el total de la cotización",
+      "notes": "Notas",
+      "notesPlaceholder": "Notas internas"
+    },
+    "selectionsMode": {
+      "label": "Elegir opciones ahora",
+      "hint": "Apagado: solo se agregan las estaciones; los ingredientes se eligen después desde el evento. Encendido: elegí las opciones de cada estación acá."
+    },
+    "lines": {
+      "title": "Estaciones",
+      "empty": "Todavía no agregaste ninguna estación",
+      "addPlaceholder": "+ Agregar estación",
+      "remove": "Quitar línea",
+      "show": "Ver selección",
+      "editSelections": "Elegir opciones",
+      "edit": "Editar cantidad y precio",
+      "editTitle": "Editar cantidad y precio",
+      "editDone": "Listo",
+      "decrease": "Disminuir cantidad",
+      "increase": "Aumentar cantidad",
+      "numPersons": "Personas",
+      "numPersonsCount_one": "{{count}} persona",
+      "numPersonsCount_other": "{{count}} personas",
+      "price": "Precio",
+      "included": "Incluido",
+      "selectAny": "Elegí las que quieras",
+      "maxSelect": "{{selected}}/{{max}}",
+      "selectionsPending": "Sin selección",
+      "selectionsCount": "{{done}}/{{total}} seleccionadas"
+    },
+    "pricing": {
+      "discountType": "Descuento",
+      "discountNone": "Sin descuento",
+      "discountFixed": "Monto fijo",
+      "discountPercent": "Porcentaje",
+      "discountValue": "Valor",
+      "depositRate": "Depósito",
+      "subtotal": "Subtotal",
+      "discount": "Descuento",
+      "longDistance": "Cargo por Larga Distancia",
+      "tax": "Impuesto ({{rate}}%)",
+      "taxShort": "Impuesto",
+      "cardSurcharge": "Recargo tarjeta/cheque ({{rate}}%)",
+      "total": "Total",
+      "deposit": "Depósito ({{rate}}%)",
+      "balance": "Saldo"
+    },
+    "preview": {
+      "title": "Vista previa",
+      "open": "Ver vista previa",
+      "client": "Cliente",
+      "eventType": "Tipo de evento",
+      "eventDate": "Fecha",
+      "address": "Dirección"
+    }
+  },
+  "stages": {
+    "pending": "Pendiente",
+    "quoted": "Enviada",
+    "confirmed": "Aprobada",
+    "cancelled": "Cancelada"
+  },
+  "pipeline": {
+    "title": "Pipeline",
+    "expired": "Vencida",
+    "pastDue": "Fecha vencida",
+    "noDate": "Sin fecha",
+    "moveTo": "Mover a…",
+    "assignStaff": "Asignar staff",
+    "noStaff": "Sin asignar",
+    "linesCount": "{{count}} líneas",
+    "draftTag": "Borrador",
+    "cloneNumber": "Clonar número de cotización",
+    "numberCopied": "Número copiado al portapapeles",
+    "moveSuccess": "Cotización movida correctamente",
+    "confirm": {
+      "confirmed": {
+        "title": "¿Aprobar cotización?",
+        "content": "La cotización pasa a Aprobada.",
+        "ok": "Aprobar"
+      },
+      "cancelled": {
+        "title": "¿Cancelar cotización?",
+        "content": "Esta acción no se puede deshacer.",
+        "ok": "Cancelar cotización"
+      },
+      "draft": {
+        "title": "¿Continuar con esta cotización?",
+        "content": "Todavía está guardada como borrador.",
+        "caption": "Una vez que cambie de etapa, dejará de ser un borrador.",
+        "ok": "Continuar"
+      }
+    }
+  },
+  "history": {
+    "title": "Actividad",
+    "createdSuffix": "creó esta cotización",
+    "movedTo": "movió la cotización a",
+    "unknownUser": "un usuario"
+  },
+  "detail": {
+    "title": "Cotización de servicio",
+    "number": "No.",
+    "client": "Nombre",
+    "services": "Servicios",
+    "eventDateTime": "Fecha del evento",
+    "location": "Ubicación",
+    "description": "Descripción",
+    "quantity": "Cantidad",
+    "validUntil_one": "Precios válidos hasta el {{date}} ({{count}} mes)",
+    "validUntil_other": "Precios válidos hasta el {{date}} ({{count}} meses)",
+    "dateLabel": "Fecha",
+    "typeLabel": "Tipo",
+    "addressLabel": "Dirección",
+    "pastDue": "La fecha de este evento ya pasó. ¿Deseás confirmar el evento de todas formas?",
+    "includedServices": "Servicios incluidos",
+    "includedLabel": "Incluido",
+    "generatePdf": "Generar PDF",
+    "viewPdf": "Ver PDF",
+    "pdfGeneratedAt": "Generado el {{date}}"
+  }
+}

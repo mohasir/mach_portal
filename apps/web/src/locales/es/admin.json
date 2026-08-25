@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "newQuote": "Nueva cotización",
+    "events": "Eventos",
+    "calendarTab": "Calendario",
+    "orders": "Pedidos",
+    "clients": "Clientes",
+    "payments": "Pagos",
+    "quotes": "Cotizaciones",
+    "pipeline": "Pipeline",
+    "staff": "Staff",
+    "catalogProducts": "Estaciones",
+    "prices": "Precios",
+    "eventTypes": "Tipos de evento",
+    "settings": "Configuración",
+    "options": "Opciones",
+    "statistics": "Estadísticas",
+    "finance": "Finanzas",
+    "users": "Usuarios",
+    "faq": "Preguntas frecuentes",
+    "support": "Soporte",
+    "groups": {
+      "commerce": "Comercio",
+      "catalog": "Catálogo",
+      "users": "Usuarios",
+      "others": "Otros",
+      "help": "Ayuda"
+    }
+  },
+  "common": {
+    "logout": "Cerrar sesión"
+  },
+  "sidebar": {
+    "upgradeTitle": "Mejora tu plan",
+    "upgradeCta": "Actualizar"
+  },
+  "topbar": {
+    "search": "Buscar por fecha, nombre o ID...",
+    "toggleMenu": "Abrir/cerrar menú",
+    "greeting": "Hola, {{name}}"
+  },
+  "welcome": {
+    "title": "¡Te damos la bienvenida!",
+    "titleNamed": "¡Hola, {{name}}!",
+    "subtitle": "Tu sesión está activa. Usá el menú lateral para navegar por las secciones disponibles para tu cuenta."
+  },
+  "placeholder": {
+    "comingSoon": "Esta sección está en construcción."
+  }
+}

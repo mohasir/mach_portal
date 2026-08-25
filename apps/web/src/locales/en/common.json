@@ -5,5 +5,42 @@
   "save": "Save",
   "cancel": "Cancel",
   "delete": "Delete",
-  "edit": "Edit"
+  "edit": "Edit",
+  "back": "Back",
+  "close": "Close",
+  "detail": "Details",
+  "logout": "Logout",
+  "yes": "Yes",
+  "no": "No",
+  "table": {
+    "actions": "Actions",
+    "copyId": "Copy ID",
+    "copied": "ID copied",
+    "search": "Search",
+    "total": "{{total}} records",
+    "results": "{{count}} results",
+    "clearFilters": "Clear filters"
+  },
+  "share": {
+    "action": "Share",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied to clipboard"
+  },
+  "confirm": {
+    "title": "Warning",
+    "irreversible": "This action cannot be undone"
+  },
+  "confirmAction": "Confirm",
+  "states": {
+    "NY": "New York",
+    "NJ": "New Jersey",
+    "CT": "Connecticut"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "subtitle": "The page you're looking for doesn't exist or was moved.",
+    "home": "Go to home"
+  }
 }

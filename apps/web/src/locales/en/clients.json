@@ -1,0 +1,57 @@
+{
+  "title": "Clients",
+  "index": {
+    "add": "New client"
+  },
+  "columns": {
+    "name": "Name",
+    "phone": "Phone",
+    "location": "Location",
+    "status": "Status",
+    "createdAt": "Created"
+  },
+  "status": {
+    "lead": "Lead",
+    "active": "Active"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "Full name",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "phone": "Phone",
+    "phonePlaceholder": "(212) 555-0100",
+    "city": "City",
+    "cityPlaceholder": "City",
+    "state": "State",
+    "statePlaceholder": "Select a state",
+    "address": "Address",
+    "addressPlaceholder": "Street, number, apt",
+    "notes": "Notes",
+    "notesPlaceholder": "Internal notes about the client",
+    "save": "Save"
+  },
+  "create": {
+    "title": "New client"
+  },
+  "edit": {
+    "title": "Edit client"
+  },
+  "delete": {
+    "confirmTitle": "Delete client?",
+    "confirmContent": "Are you sure you want to delete {{name}}?"
+  },
+  "empty": "No clients",
+  "validation": {
+    "nameRequired": "Name is required",
+    "emailInvalid": "Invalid email"
+  },
+  "detail": {
+    "edit": "Edit",
+    "tabs": {
+      "quotes": "Quotes",
+      "events": "Events"
+    },
+    "newQuote": "New quote"
+  }
+}

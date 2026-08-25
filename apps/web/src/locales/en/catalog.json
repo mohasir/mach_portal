@@ -1,0 +1,75 @@
+{
+  "breadcrumbRoot": "Products",
+  "title": "Stations",
+  "empty": "No stations",
+  "status": {
+    "inactive": "Inactive"
+  },
+  "actions": {
+    "activate": "Activate",
+    "deactivate": "Deactivate"
+  },
+  "form": {
+    "save": "Save"
+  },
+  "product": {
+    "add": "New station",
+    "premium": "Premium",
+    "tiersSummary": "{{count}} packages · from {{from}}",
+    "noTiers": "No packages",
+    "create": { "title": "New station" },
+    "edit": { "title": "Edit station" },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Station name",
+      "description": "Description",
+      "descriptionPlaceholder": "Short description (optional)",
+      "isPremium": "Premium"
+    }
+  },
+  "prices": {
+    "title": "Prices",
+    "numPersonsShort": "People",
+    "addTier": "Add package",
+    "removeTier": "Remove package"
+  },
+  "optionGroup": {
+    "add": "New section",
+    "maxSelectShort": "choose up to {{count}}",
+    "noLimitShort": "no limit",
+    "includedShort": "included",
+    "create": { "title": "New section" },
+    "edit": { "title": "Edit section" },
+    "selectionType": {
+      "select": "Selectable",
+      "included": "Included"
+    },
+    "form": {
+      "label": "Name",
+      "labelPlaceholder": "Section name",
+      "selectionType": "Type",
+      "maxSelect": "Max selection",
+      "maxSelectPlaceholder": "No limit",
+      "maxSelectHelp": "Max items the client can choose"
+    }
+  },
+  "option": {
+    "add": "New item",
+    "create": { "title": "New item" },
+    "edit": { "title": "Edit item" },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Item name",
+      "description": "Description",
+      "descriptionPlaceholder": "Detail or ingredients (optional)"
+    }
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "labelRequired": "Name is required",
+    "numPersonsInvalid": "Invalid quantity",
+    "priceInvalid": "Invalid price",
+    "tiersDuplicate": "Some packages have the same number of people",
+    "maxSelectInvalid": "Invalid max selection"
+  }
+}

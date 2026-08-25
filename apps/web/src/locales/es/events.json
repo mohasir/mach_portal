@@ -1,0 +1,147 @@
+{
+  "title": "Eventos",
+  "empty": "No hay eventos",
+  "validation": {
+    "amountRequired": "El monto debe ser mayor a 0"
+  },
+  "columns": {
+    "client": "Cliente",
+    "eventType": "Tipo de evento",
+    "eventDate": "Fecha",
+    "total": "Total",
+    "status": "Estado"
+  },
+  "status": {
+    "upcoming": "Próximo",
+    "completed": "Realizado",
+    "cancelled": "Cancelado"
+  },
+  "segment": {
+    "upcoming": "Próximos",
+    "past": "Pasados",
+    "all": "Todos"
+  },
+  "dashboard": {
+    "upcomingTitle": "Próximos eventos",
+    "seeMore": "Ver más"
+  },
+  "calendar": {
+    "moreEvents": "+{{count}} más",
+    "today": "Hoy",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "views": {
+      "month": "Mes",
+      "week": "Semana",
+      "year": "Año"
+    }
+  },
+  "detail": {
+    "backToQuote": "Ver cotización",
+    "pastDueTitle": "Vencido",
+    "pastDue": "La fecha de este evento ya pasó. ¿Deseás marcarlo como realizado?",
+    "markCompleted": "Marcar realizado",
+    "markCompletedSuccess": "Evento marcado como realizado",
+    "markCompletedConfirm": {
+      "title": "¿Marcar como realizado?",
+      "content": "Esta acción no se puede deshacer.",
+      "ok": "Marcar realizado"
+    },
+    "cancel": "Cancelar evento",
+    "cancelConfirm": {
+      "title": "¿Cancelar evento?",
+      "content": "Esto cancela también la cotización de origen.",
+      "ok": "Cancelar evento"
+    },
+    "tabs": {
+      "services": "Servicios incluidos",
+      "staff": "Staff",
+      "payments": "Pagos",
+      "attachments": "Adjuntos"
+    },
+    "composition": {
+      "title": "Composición"
+    },
+    "selections": {
+      "pendingAlert": "Falta elegir las opciones",
+      "deadlineNote": "Confirmá la elección del cliente antes del {{date}}",
+      "sheetTitle": "Elegir opciones",
+      "detailTitle": "Selección de opciones",
+      "save": "Guardar",
+      "saveSuccess": "Selecciones guardadas"
+    },
+    "payments": {
+      "title": "Estado de Pago",
+      "total": "Total factura",
+      "paid": "Pagado",
+      "balance": "Saldo",
+      "status": {
+        "pending": "Pendiente",
+        "partial": "Parcial",
+        "paid": "Pagado"
+      },
+      "register": {
+        "title": "Registrar pago",
+        "method": "Método",
+        "methodPlaceholder": "Seleccione…",
+        "percent": "Porcentaje",
+        "percentPlaceholder": "Elegí un %",
+        "amount": "Monto",
+        "date": "Fecha",
+        "reference": "Referencia",
+        "referencePlaceholder": "N° cheque, transferencia…",
+        "notes": "Notas",
+        "submit": "Registrar"
+      },
+      "history": {
+        "title": "Histórico de pagos",
+        "empty": "Sin pagos registrados",
+        "registeredBy": "Registrado por {{name}}"
+      },
+      "registered": "Pago registrado",
+      "attachments": {
+        "upload": "Comprobante",
+        "uploadModalTitle": "Subir comprobante",
+        "dragText": "Arrastrá el archivo acá o hacé clic para seleccionar",
+        "dragHint": "Imágenes o PDF, hasta {{maxSize}}MB",
+        "uploaded": "Comprobante subido",
+        "remove": "Quitar comprobante",
+        "removed": "Comprobante eliminado",
+        "removeConfirmTitle": "¿Eliminar comprobante?",
+        "removeConfirmContent": "Esta acción no se puede deshacer.",
+        "invalidType": "Ese tipo de archivo no está permitido. Usá una imagen o un PDF",
+        "tooLarge": "El archivo supera el tamaño máximo permitido (10MB)"
+      }
+    },
+    "staff": {
+      "title": "Staff asignado",
+      "empty": "Sin staff asignado",
+      "assign": "Asignar",
+      "remove": "Quitar",
+      "removeConfirmTitle": "¿Quitar del evento?",
+      "removeConfirmContent": "¿Quitás a {{name}} de este evento?"
+    },
+    "attachments": {
+      "title": "Adjuntos",
+      "empty": "Sin adjuntos subidos",
+      "sharedBy": "Subido por {{name}} el {{date}}"
+    }
+  },
+  "assignStaff": {
+    "title": "Asignar staff",
+    "staffLabel": "Staff disponible",
+    "staffPlaceholder": "Elegí un miembro del staff",
+    "roleLabel": "Rol (opcional)",
+    "rolePlaceholder": "Ej. Bartender",
+    "empty": "No hay staff disponible para esta fecha",
+    "submit": "Asignar",
+    "success": "Staff asignado"
+  },
+  "paymentMethods": {
+    "zelle": "Zelle",
+    "cash": "Efectivo",
+    "card": "Tarjeta",
+    "check": "Cheque",
+    "transfer": "Transferencia"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "newQuote": "New quote",
+    "events": "Events",
+    "calendarTab": "Calendar",
+    "orders": "Orders",
+    "clients": "Clients",
+    "payments": "Payments",
+    "quotes": "Quotes",
+    "pipeline": "Pipeline",
+    "staff": "Staff",
+    "catalogProducts": "Stations",
+    "prices": "Prices",
+    "eventTypes": "Event types",
+    "settings": "Settings",
+    "options": "Options",
+    "statistics": "Statistics",
+    "finance": "Finance",
+    "users": "Users",
+    "faq": "FAQ",
+    "support": "Support",
+    "groups": {
+      "commerce": "Commerce",
+      "catalog": "Catalog",
+      "users": "Users",
+      "others": "Others",
+      "help": "Help"
+    }
+  },
+  "common": {
+    "logout": "Log out"
+  },
+  "sidebar": {
+    "upgradeTitle": "Upgrade your plan",
+    "upgradeCta": "Upgrade"
+  },
+  "topbar": {
+    "search": "Search by date, name or ID...",
+    "toggleMenu": "Toggle menu",
+    "greeting": "Hi, {{name}}"
+  },
+  "welcome": {
+    "title": "Welcome!",
+    "titleNamed": "Hi, {{name}}!",
+    "subtitle": "Your session is active. Use the side menu to explore the sections available to your account."
+  },
+  "placeholder": {
+    "comingSoon": "This section is under construction."
+  }
+}

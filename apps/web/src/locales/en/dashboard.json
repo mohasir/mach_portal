@@ -1,0 +1,17 @@
+{
+  "stats": {
+    "eventsCount": "Events this month",
+    "revenue": "Revenue this month",
+    "quotesCount": "Quotes this month",
+    "closeRate": "Close rate"
+  },
+  "chart": {
+    "title": "Quotes by month",
+    "empty": "No quotes recorded this year"
+  },
+  "topProducts": {
+    "title": "Top requested stations",
+    "empty": "No confirmed events this month",
+    "other": "Other"
+  }
+}

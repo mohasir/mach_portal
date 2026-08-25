@@ -1,0 +1,198 @@
+@layer theme, base, antd, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import 'overlayscrollbars/overlayscrollbars.css' layer(components);
+
+@theme {
+  --color-primary: var(--ant-color-primary);
+  --color-error: var(--ant-color-error);
+  --color-warning: var(--ant-color-warning);
+  --color-success: var(--ant-color-success);
+  --color-info: var(--ant-color-info);
+  --color-link: var(--ant-color-link);
+  --color-foreground: var(--ant-color-text);
+  --color-muted: var(--ant-color-text-secondary);
+  --color-background: var(--ant-color-bg-layout);
+  --color-surface: var(--ant-color-bg-container);
+  --color-line: var(--ant-color-border);
+  --color-line-strong: rgba(0, 0, 0, 0.1);
+  --color-blacker: #35393c;
+
+  /* ── Brand colors ── */
+  --color-brown: #4a2c2a;
+  --color-brown-mid: #7a4a47;
+  --color-mustard: #dacd6b;
+  --color-ivory: #f7eed2;
+  --color-ivory-dark: #ede1b8;
+  --color-salmon: #f28a86;
+  --color-olive: #91922a;
+  --color-olive-faint: #f4f4e8;
+  --color-taupe: #d8d4c8;
+
+  --font-sans: var(--font-work-sans);
+  --font-heading: var(--font-marcellus);
+}
+
+@utility text-small {
+  font-size: 11px;
+}
+
+@utility text-label {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+@utility text-caption {
+  font-size: 9px;
+  color: var(--color-muted);
+}
+
+@layer components {
+  .ant-btn > .ant-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* AntD's Tabs theme tokens (theme/antd.ts) only cover color, not weight —
+     there's no itemActiveFontWeight token, so the active tab label is bolded here. */
+  .ant-tabs-tab-active .ant-tabs-tab-btn {
+    font-weight: 600;
+  }
+
+  /* Same root cause as the .ant-btn-icon fix above: Tailwind's preflight sets
+     svg { display: block }, which breaks .ant-tabs-tab-btn's icon+label row
+     (the icon span isn't flex, so the block svg drops to its own line). */
+  .ant-tabs-tab-btn {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .ant-tabs-tab-icon {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Phones collapse the DataTable to a single card column; drop the now-empty header row. */
+  @media (max-width: 575px) {
+    .mach-datatable .ant-table-thead {
+      display: none;
+    }
+
+    /* In card mode that single cell should fill the row: AntD's default
+       .ant-table-cell inline padding would inset the card. Block padding is
+       trimmed too — AntD's default (sized for a dense table row) stacks
+       between adjacent cells and reads as an oversized gap between cards. */
+    .mach-datatable--mobile-card .ant-table-cell {
+      padding-inline: 0;
+      padding-block: 6px;
+    }
+
+    /* AntD toggles this row/cell hover highlight via JS mouseenter/mouseleave,
+       not a CSS :hover — on touch that fires on tap and stays until another
+       tap elsewhere, so a row reads as "stuck" selected. No hover concept on
+       mobile, so drop the highlight entirely. */
+    .mach-datatable .ant-table-tbody > tr > td.ant-table-cell-row-hover,
+    .mach-datatable .ant-table-tbody > tr.ant-table-row:hover > td {
+      background: inherit;
+    }
+
+    /* Mobile card mode already draws each row as its own card (AutoRowCard or a
+       feature's renderCard) with its own background and edge; AntD's own
+       colorBgContainer + per-cell border-bottom behind it just reads as a
+       redundant sheet of "paper" plus a stray divider line under every card. */
+    .mach-datatable--mobile-card .ant-table,
+    .mach-datatable--mobile-card .ant-table-container {
+      background: transparent;
+    }
+    .mach-datatable--mobile-card .ant-table-tbody > tr > td {
+      background: transparent;
+      border-bottom: none;
+    }
+  }
+
+  /* Main sidebar's active nav item: light tint "pill" (matches the settings
+     page's custom sub-menu) instead of AntD's default solid-fill selected
+     item. Scoped to .mach-sidebar-menu only — the Menu theme tokens
+     (theme/antd.ts) stay untouched for any other Menu instance. */
+  .mach-sidebar-menu .ant-menu-item-selected {
+    background-color: var(--color-olive-faint);
+    color: var(--ant-color-primary);
+    font-weight: 600;
+  }
+
+  /* Kanban column scrollbar (OverlayScrollbars): keep the handle translucent
+     so the tinted column background still shows through it. */
+  .pipeline-column-scrollbar .os-theme-dark {
+    --os-handle-bg: rgba(0, 0, 0, 0.35);
+    --os-handle-bg-hover: rgba(0, 0, 0, 0.5);
+    --os-handle-bg-active: rgba(0, 0, 0, 0.65);
+  }
+
+  /* TimePicker/DatePicker-with-time panel: the selected hour/minute cell
+     defaults to controlItemBgActive (a faint neutral tint) instead of the
+     solid colorPrimary "pill" DatePicker uses for its selected day — no
+     component token exposes this, so match it here for visual consistency. */
+  .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+    background: var(--ant-color-primary);
+    color: var(--ant-color-text-light-solid);
+  }
+
+  /* Kill the browser-y overscroll bounce and tap-highlight flash so the
+     installed PWA feels like a native app rather than a website. */
+  html,
+  body {
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* iOS Safari auto-zooms the viewport on focus when an input's font-size is
+     below 16px — the theme's base fontSize (theme/antd.ts) is 13px, so every
+     AntD text field triggered it on iPhone. Bump to 16px only on mobile;
+     desktop keeps the 13px design size. `.ant-select-input` is the hidden
+     typing/search box only — it's a sibling of `.ant-select-content` (the
+     selected value's text) and `.ant-select-selection-placeholder`, so both
+     need their own rule too or they stay at 13px despite the input matching. */
+  @media (max-width: 575px) {
+    .ant-input,
+    textarea.ant-input,
+    .ant-input-number-input,
+    .ant-select-selector,
+    .ant-select-input,
+    .ant-select-content,
+    .ant-select-selection-placeholder,
+    .ant-picker-input > input {
+      font-size: 16px;
+    }
+  }
+
+  /* Quote builder's quantity stepper (-/+ around a borderless InputNumber): the borderless
+     variant draws its own focus ring as an `outline` via :focus-visible/:has(input:focus-
+     visible) (antd/es/input/style/variants.js), not a `-focused` class — so it hugs just the
+     input instead of the whole pill. The pill's own focus-within border color is a Tailwind
+     class on the component (focus-within:border-primary), not here — a utilities-layer class
+     always wins over a components-layer rule for the same property regardless of specificity. */
+  .quantity-stepper .ant-input-number-borderless:focus-visible,
+  .quantity-stepper .ant-input-number-borderless:has(input:focus-visible) {
+    outline: none;
+  }
+
+  /* .ant-picker's box height is padding + line-height derived (genPickerPadding in
+     antd's date-picker/style — unlike Input's affix wrapper, which sets `height`
+     directly), so DatePicker's paddingBlock/paddingInline tokens (theme/antd.ts)
+     land at ~40.8px instead of the app's 40px control height. Force it exactly. */
+  .ant-picker {
+    height: 40px;
+  }
+
+  /* Segmented has no component token for item/track radius — both .ant-segmented
+     (borderRadius) and .ant-segmented-item-selected (borderRadiusSM) fall back to
+     aliases shared by many other components, so they can't be bumped globally
+     just for this control. */
+  .ant-segmented,
+  .ant-segmented-item-selected {
+    border-radius: 10px;
+  }
+}

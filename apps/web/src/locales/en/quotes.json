@@ -1,0 +1,202 @@
+{
+  "title": "Quotes",
+  "empty": "No quotes yet",
+  "index": {
+    "add": "New quote"
+  },
+  "columns": {
+    "number": "Number",
+    "client": "Client",
+    "eventDate": "Event date",
+    "stage": "Stage",
+    "total": "Total"
+  },
+  "filters": {
+    "stage": "Quote stage",
+    "state": "State (US)"
+  },
+  "archive": {
+    "action": "Archive",
+    "confirmTitle": "Archive quote?",
+    "confirmContent": "Quote {{number}} will be removed from the list and the pipeline. This can't be undone."
+  },
+  "validation": {
+    "clientRequired": "Client is required"
+  },
+  "form": {
+    "save": "Save"
+  },
+  "builder": {
+    "newTitle": "New quote",
+    "editTitle": "Edit quote",
+    "saveDraft": "Save draft",
+    "saveChanges": "Save changes",
+    "update": "Update",
+    "createQuote": "Create quote",
+    "saved": "Quote saved",
+    "created": "Quote created",
+    "exitConfirm": {
+      "title": "Exit without saving?",
+      "content": "You have unsaved changes. If you leave now, they will be lost.",
+      "ok": "Exit without saving",
+      "cancel": "Keep editing"
+    },
+    "errors": {
+      "clientRequired": "Pick a client to save the draft"
+    },
+    "client": {
+      "label": "Client",
+      "placeholder": "Search a client...",
+      "noResults": "No clients found",
+      "addNew": "Add new client",
+      "backToSearch": "Back to search",
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "emptyCta": "Select customer",
+      "change": "Change",
+      "selectExisting": "Select existing client",
+      "changeSelectAnother": "Select another client",
+      "changeSelectOne": "Select a client",
+      "editClient": "Edit client",
+      "done": "Done"
+    },
+    "event": {
+      "type": "Event type",
+      "typePlaceholder": "Pick a type",
+      "eventDetailsGroupTitle": "Event details",
+      "addressGroupTitle": "Address",
+      "taxesGroupTitle": "Extra charges",
+      "state": "State",
+      "statePlaceholder": "NY / NJ / CT",
+      "city": "City",
+      "cityPlaceholder": "Event city",
+      "date": "Event date",
+      "time": "Time",
+      "address": "Address",
+      "addressPlaceholder": "Event address",
+      "longDistance": "Long distance fee",
+      "longDistanceHint": "Suggested from the state's tax rate ({{rate}}%) — override as needed",
+      "cardSurcharge": "Card/check surcharge",
+      "cardSurchargeHint": "Adds {{rate}}% on top of the quote total",
+      "notes": "Notes",
+      "notesPlaceholder": "Internal notes"
+    },
+    "selectionsMode": {
+      "label": "Choose options now",
+      "hint": "Off: only stations are added; ingredients get picked later from the event. On: pick each station's options here."
+    },
+    "lines": {
+      "title": "Stations",
+      "empty": "No stations added yet",
+      "addPlaceholder": "+ Add station",
+      "remove": "Remove line",
+      "show": "View selection",
+      "editSelections": "Choose options",
+      "edit": "Edit quantity and price",
+      "editTitle": "Edit quantity and price",
+      "editDone": "Done",
+      "decrease": "Decrease quantity",
+      "increase": "Increase quantity",
+      "numPersons": "Guests",
+      "numPersonsCount_one": "{{count}} guest",
+      "numPersonsCount_other": "{{count}} guests",
+      "price": "Price",
+      "included": "Included",
+      "selectAny": "Pick as many as you like",
+      "maxSelect": "{{selected}}/{{max}}",
+      "selectionsPending": "No selections yet",
+      "selectionsCount": "{{done}}/{{total}} selected"
+    },
+    "pricing": {
+      "discountType": "Discount",
+      "discountNone": "No discount",
+      "discountFixed": "Fixed amount",
+      "discountPercent": "Percentage",
+      "discountValue": "Value",
+      "depositRate": "Deposit",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "longDistance": "Long Distance Fee",
+      "tax": "Tax ({{rate}}%)",
+      "taxShort": "Tax",
+      "cardSurcharge": "Card/check surcharge ({{rate}}%)",
+      "total": "Total",
+      "deposit": "Deposit ({{rate}}%)",
+      "balance": "Balance"
+    },
+    "preview": {
+      "title": "Preview",
+      "open": "View preview",
+      "client": "Client",
+      "eventType": "Event type",
+      "eventDate": "Date",
+      "address": "Address"
+    }
+  },
+  "stages": {
+    "pending": "Pending",
+    "quoted": "Sent",
+    "confirmed": "Approved",
+    "cancelled": "Cancelled"
+  },
+  "pipeline": {
+    "title": "Pipeline",
+    "expired": "Expired",
+    "pastDue": "Past due",
+    "noDate": "No date",
+    "moveTo": "Move to…",
+    "assignStaff": "Assign staff",
+    "noStaff": "Unassigned",
+    "linesCount": "{{count}} lines",
+    "draftTag": "Draft",
+    "cloneNumber": "Clone quote number",
+    "numberCopied": "Number copied to clipboard",
+    "moveSuccess": "Quote moved successfully",
+    "confirm": {
+      "confirmed": {
+        "title": "Approve quote?",
+        "content": "The quote moves to Approved.",
+        "ok": "Approve"
+      },
+      "cancelled": {
+        "title": "Cancel quote?",
+        "content": "This action can't be undone.",
+        "ok": "Cancel quote"
+      },
+      "draft": {
+        "title": "Continue with this quote?",
+        "content": "It's still saved as a draft.",
+        "caption": "Once it changes stage, it will no longer be a draft.",
+        "ok": "Continue"
+      }
+    }
+  },
+  "history": {
+    "title": "Activity",
+    "createdSuffix": "created this quote",
+    "movedTo": "moved this quote to",
+    "unknownUser": "a user"
+  },
+  "detail": {
+    "title": "Service Quotation",
+    "number": "No.",
+    "client": "Name",
+    "services": "Services",
+    "eventDateTime": "Event date",
+    "location": "Location",
+    "description": "Description",
+    "quantity": "Quantity",
+    "validUntil_one": "Prices valid until {{date}} ({{count}} month)",
+    "validUntil_other": "Prices valid until {{date}} ({{count}} months)",
+    "dateLabel": "Date",
+    "typeLabel": "Type",
+    "addressLabel": "Address",
+    "pastDue": "This event's date has already passed. Do you want to confirm the event anyway?",
+    "includedServices": "Included services",
+    "includedLabel": "Included",
+    "generatePdf": "Generate PDF",
+    "viewPdf": "View PDF",
+    "pdfGeneratedAt": "Generated on {{date}}"
+  }
+}

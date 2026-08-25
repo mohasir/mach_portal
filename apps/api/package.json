@@ -1,22 +1,28 @@
 {
   "name": "api",
-  "version": "0.0.0",
+  "version": "0.7.0",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "esbuild src/server.ts --bundle --platform=node --format=esm --outfile=dist/server.js --packages=external",
+    "build": "esbuild src/server.ts --bundle --platform=node --format=esm --outfile=dist/server.js --external:@aws-sdk/client-s3 --external:@trpc/server --external:better-auth --external:cors --external:dotenv --external:drizzle-orm --external:express --external:multer --external:postgres --external:zod",
     "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "db:reset": "tsx src/db/scripts/reset.ts",
+    "db:seed": "tsx src/db/seeds/index.ts",
+    "db:fresh": "pnpm db:reset && pnpm db:push && pnpm db:seed",
+    "jobs:event-reminders": "tsx src/jobs/scripts/runEventReminders.ts",
     "auth:generate": "better-auth generate --output src/db/schema/auth.ts",
     "check-types": "tsc --noEmit",
     "lint": "eslint ."
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1090.0",
+    "@repo/guards": "workspace:*",
     "@repo/schemas": "workspace:*",
     "@trpc/server": "^11",
     "better-auth": "^1",
@@ -24,6 +30,8 @@
     "dotenv": "^16",
     "drizzle-orm": "^0.45",
     "express": "^5",
+    "multer": "^2.2.0",
+    "node-cron": "^4.6.0",
     "postgres": "^3",
     "zod": "^4"
   },
@@ -33,6 +41,7 @@
     "@repo/typescript-config": "workspace:*",
     "@types/cors": "^2",
     "@types/express": "^5",
+    "@types/multer": "^2.2.0",
     "drizzle-kit": "^0.31",
     "esbuild": "^0.25",
     "tsx": "^4",

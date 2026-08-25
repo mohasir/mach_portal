@@ -1,0 +1,203 @@
+{
+  "title": "Configuración",
+  "snapshotHint": "Los cambios afectan solo a las cotizaciones nuevas; las existentes conservan su snapshot.",
+  "save": "Guardar",
+  "saveSuccess": "Configuración guardada",
+  "groups": {
+    "account": "Cuenta",
+    "system": "Sistema",
+    "access": "Acceso"
+  },
+  "profile": {
+    "title": "Perfil",
+    "editTitle": "Editar perfil",
+    "name": "Nombre",
+    "nameRequired": "El nombre es obligatorio",
+    "email": "Correo electrónico",
+    "role": "Rol",
+    "updateError": "No se pudo actualizar el perfil",
+    "changePassword": {
+      "title": "Cambiar contraseña",
+      "current": "Contraseña actual",
+      "currentRequired": "Ingresá tu contraseña actual",
+      "new": "Nueva contraseña",
+      "newRequired": "La nueva contraseña debe tener al menos 8 caracteres",
+      "confirm": "Confirmar contraseña",
+      "confirmRequired": "Confirmá la nueva contraseña",
+      "mismatch": "Las contraseñas no coinciden",
+      "success": "Contraseña actualizada",
+      "error": "No se pudo cambiar la contraseña"
+    }
+  },
+  "security": {
+    "title": "Seguridad",
+    "sessions": {
+      "title": "Sesiones activas",
+      "caption": "Dispositivos que tienen una sesión iniciada en tu cuenta.",
+      "current": "Actual",
+      "activeNow": "Activa ahora",
+      "revoke": "Revocar",
+      "revokeSuccess": "Sesión revocada",
+      "revokeError": "No se pudo revocar la sesión"
+    }
+  },
+  "general": {
+    "title": "General"
+  },
+  "preferences": {
+    "title": "Preferencias",
+    "catalog": {
+      "title": "Catálogo",
+      "sortable": "Catálogo ordenable",
+      "sortableCaption": "Permite reordenar estaciones, secciones e ítems arrastrando. Si se desactiva, el orden queda fijo."
+    },
+    "quoteBuilder": {
+      "title": "Armador de cotizaciones",
+      "allowSelectOptionsAtQuote": "Permitir elegir opciones al cotizar",
+      "allowSelectOptionsAtQuoteCaption": "Si se apaga, el switch \"Elegir opciones ahora\" del armador se oculta — todas las cotizaciones difieren la selección de opciones al evento. Las cotizaciones existentes conservan lo que ya tengan guardado."
+    }
+  },
+  "taxRates": {
+    "title": "Impuestos por estado",
+    "applyByState": "Aplicar impuesto por estado",
+    "applyByStateCaption": "Impuesto aplicado a las cotizaciones según el estado."
+  },
+  "quotePdfTemplate": {
+    "title": "Plantilla de PDF",
+    "caption": "Textos fijos que se imprimen en el PDF de cada cotización generada.",
+    "services": "Duración de servicios",
+    "servicesCaption": "Se imprimen como \"Estación: Duración\" en la sección \"SERVICE DURATION\" del PDF.",
+    "serviceLabelPlaceholder": "Ej: Snack Station",
+    "serviceDurationPlaceholder": "Ej: Up to 2 hours of service",
+    "addService": "Agregar servicio",
+    "removeService": "Quitar servicio",
+    "termsAndConditions": "Términos y condiciones",
+    "termsAndConditionsCaption": "Un término por línea — a medida que escribís se muestran como badges debajo. Se imprimen como una lista de viñetas; si no cargás ninguno, esa sección no aparece en el PDF.",
+    "termsAndConditionsPlaceholder": "El depósito no es reembolsable\nLos precios pueden variar según disponibilidad",
+    "validityNote": "Nota de validez",
+    "validityNoteCaption": "Aparece junto a los totales del PDF (ej. \"Los precios son válidos por...\").",
+    "dietaryNote": "Nota dietética",
+    "dietaryNoteCaption": "Aparece al pie de la página \"Services Included\" (solo si la cotización tiene ítems con detalle)."
+  },
+  "quoteStages": {
+    "title": "Estados de cotización",
+    "label": "Nombre",
+    "color": "Color",
+    "descriptionPlaceholder": "Descripción (opcional) — cuándo aplica este estado"
+  },
+  "quoteDefaults": {
+    "title": "Cotizaciones",
+    "depositRate": "Depósito por defecto",
+    "depositRateCaption": "Porcentaje del total que se pide como depósito al confirmar una cotización.",
+    "quoteValidityMonths": "Validez",
+    "quoteValidityMonthsCaption": "Cantidad de meses que una cotización queda vigente antes de expirar.",
+    "months": "meses",
+    "minPersonsPerLine": "Mínimo personas/línea",
+    "minPersonsPerLineCaption": "Cantidad mínima de personas requerida por cada estación en una cotización.",
+    "quoteSeqStart": "Inicio de consecutivo",
+    "quoteSeqStartCaption": "Número desde el que arrancará el próximo consecutivo de cotización.",
+    "lastUsedSeqHint": "Último usado: {{seq}}",
+    "currency": "Moneda",
+    "currencyCaption": "Moneda en la que se muestran los montos de las cotizaciones.",
+    "optionsSelectionDeadlineDays": "Fecha límite para elegir opciones",
+    "optionsSelectionDeadlineDaysCaption": "Días antes del evento para los que debería estar confirmada la elección de opciones del cliente.",
+    "days": "días",
+    "cardSurchargeRate": "Recargo tarjeta/cheque",
+    "cardSurchargeRateCaption": "Porcentaje que se suma al total de la cotización cuando el switch de recargo está activado."
+  },
+  "permissions": {
+    "title": "Permisos",
+    "description": "Vista de solo lectura de lo que puede hacer cada rol. Los roles y permisos no se pueden crear, editar ni asignar desde acá.",
+    "groups": {
+      "configurations": "Configuraciones"
+    },
+    "actions": {
+      "create": "Crear",
+      "read": "Ver",
+      "update": "Editar",
+      "delete": "Eliminar",
+      "upload_attachment": "Subir comprobante",
+      "view": "Ver",
+      "manage_selections": "Elegir opciones del evento",
+      "view_summary": "Ver métricas del mes",
+      "view_quotes_chart": "Ver gráfica de cotizaciones",
+      "view_top_products": "Ver estaciones más pedidas"
+    },
+    "resources": {
+      "dashboard": {
+        "label": "Panel",
+        "caption": "Métricas y KPIs generales en la pantalla de inicio."
+      },
+      "event": {
+        "label": "Eventos",
+        "caption": "Eventos del salón, su programación y detalles."
+      },
+      "payment": {
+        "label": "Pagos",
+        "caption": "Registrar pagos, ver montos y el listado general de pagos."
+      },
+      "client": {
+        "label": "Clientes",
+        "caption": "Registros de clientes y su información de contacto."
+      },
+      "quote": {
+        "label": "Cotizaciones",
+        "caption": "Cotizaciones de precios y el armador de cotizaciones."
+      },
+      "pipeline": {
+        "label": "Pipeline",
+        "caption": "Etapas de seguimiento de las cotizaciones."
+      },
+      "staff": {
+        "label": "Personal",
+        "caption": "Miembros del personal y sus asignaciones."
+      },
+      "product": {
+        "label": "Productos",
+        "caption": "Productos del catálogo, opciones y precios."
+      },
+      "event_type": {
+        "label": "Tipos de evento",
+        "caption": "Definiciones de tipos de evento usadas en el catálogo."
+      },
+      "tax_rates": {
+        "label": "Impuestos",
+        "caption": "Tasas de impuesto aplicadas a las cotizaciones, por estado."
+      },
+      "quote_defaults": {
+        "label": "Valores por defecto",
+        "caption": "Depósito, validez, mínimo de personas, consecutivo y moneda por defecto para cotizaciones nuevas."
+      },
+      "quote_stages": {
+        "label": "Estados de cotización",
+        "caption": "Nombres, colores y descripciones de los estados del pipeline de cotizaciones."
+      },
+      "catalog_preferences": {
+        "label": "Preferencias de catálogo",
+        "caption": "Si el catálogo de productos se puede reordenar arrastrando."
+      },
+      "quote_pdf_template": {
+        "label": "Plantilla de PDF",
+        "caption": "Textos fijos y servicios que se imprimen en el PDF de cada cotización generada."
+      },
+      "quote_builder_preferences": {
+        "label": "Preferencias del armador de cotizaciones",
+        "caption": "Si el staff puede elegir opciones al momento de cotizar en vez de diferirlas al evento."
+      }
+    }
+  },
+  "validation": {
+    "taxRateInvalid": "Tasa inválida",
+    "taxRatesAllZeroInvalid": "Al menos una tasa debe ser mayor a 0",
+    "depositRateInvalid": "Depósito inválido",
+    "quoteValidityInvalid": "Validez inválida",
+    "minPersonsInvalid": "Mínimo inválido",
+    "quoteSeqStartInvalid": "Inicio de consecutivo inválido",
+    "currencyInvalid": "Moneda inválida",
+    "optionsSelectionDeadlineDaysInvalid": "Cantidad de días inválida",
+    "cardSurchargeRateInvalid": "Tasa inválida",
+    "quoteStagesLabelInvalid": "Nombre requerido",
+    "serviceLabelRequired": "La estación es obligatoria",
+    "serviceDurationRequired": "La duración es obligatoria"
+  }
+}

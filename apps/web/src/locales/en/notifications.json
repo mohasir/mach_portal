@@ -1,0 +1,20 @@
+{
+  "title": "Notifications",
+  "empty": "No notifications",
+  "markAllRead": "Mark all as read",
+  "viewAll": "View all",
+  "titles": {},
+  "types": {
+    "quote_confirmed": "<bold>{{actorName}}</bold> confirmed quote <bold>{{quoteNumber}}</bold>",
+    "quote_cancelled": "<bold>{{actorName}}</bold> cancelled quote <bold>{{quoteNumber}}</bold>",
+    "event_selections_reminder": "<bold>{{clientName}}</bold> has pending selections for their event on <bold>{{eventDate}}</bold>. <caption>Complete them before that date.</caption>"
+  },
+  "groups": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "week": "This week",
+    "month": "This month",
+    "year": "This year",
+    "older": "Older"
+  }
+}

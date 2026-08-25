@@ -1,12 +1,5 @@
-'use client';
-import { useSession } from '@/lib/auth/client';
-import { NotesPage } from '@/features/notes';
-import { AuthPage } from '@/features/auth/components/AuthPage';
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  const { data: session, isPending } = useSession();
-
-  if (isPending) return null;
-  if (!session) return <AuthPage />;
-  return <NotesPage />;
+  redirect('/admin');
 }

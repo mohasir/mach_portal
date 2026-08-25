@@ -1,0 +1,48 @@
+{
+  "title": "Users",
+  "index": {
+    "add": "New user"
+  },
+  "columns": {
+    "name": "Name",
+    "email": "Email",
+    "emailVerified": "Verified",
+    "role": "Role",
+    "sessions": "Sessions",
+    "createdAt": "Created"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "Full name",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "At least 8 characters",
+    "role": "Role",
+    "rolePlaceholder": "Select a role",
+    "save": "Save"
+  },
+  "roles": {
+    "superadmin": "Superadmin",
+    "admin": "Admin",
+    "manager": "Manager",
+    "member": "Member"
+  },
+  "create": {
+    "title": "New user"
+  },
+  "edit": {
+    "title": "Edit user"
+  },
+  "delete": {
+    "confirmTitle": "Delete user?",
+    "confirmContent": "Are you sure you want to delete {{name}}?"
+  },
+  "empty": "No users",
+  "validation": {
+    "nameRequired": "Name is required",
+    "emailInvalid": "Invalid email",
+    "passwordMin": "At least 8 characters",
+    "roleRequired": "Role is required"
+  }
+}

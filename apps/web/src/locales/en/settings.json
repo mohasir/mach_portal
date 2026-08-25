@@ -1,0 +1,203 @@
+{
+  "title": "Settings",
+  "snapshotHint": "Changes only affect new quotes; existing ones keep their snapshot.",
+  "save": "Save",
+  "saveSuccess": "Settings saved",
+  "groups": {
+    "account": "Account",
+    "system": "System",
+    "access": "Access"
+  },
+  "profile": {
+    "title": "Profile",
+    "editTitle": "Edit profile",
+    "name": "Name",
+    "nameRequired": "Name is required",
+    "email": "Email address",
+    "role": "Role",
+    "updateError": "Couldn't update your profile",
+    "changePassword": {
+      "title": "Change password",
+      "current": "Current password",
+      "currentRequired": "Enter your current password",
+      "new": "New password",
+      "newRequired": "New password must be at least 8 characters",
+      "confirm": "Confirm password",
+      "confirmRequired": "Confirm your new password",
+      "mismatch": "Passwords don't match",
+      "success": "Password updated",
+      "error": "Couldn't change the password"
+    }
+  },
+  "security": {
+    "title": "Security",
+    "sessions": {
+      "title": "Active sessions",
+      "caption": "Devices that are currently signed in to your account.",
+      "current": "Current",
+      "activeNow": "Active now",
+      "revoke": "Revoke",
+      "revokeSuccess": "Session revoked",
+      "revokeError": "Couldn't revoke the session"
+    }
+  },
+  "general": {
+    "title": "General"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "catalog": {
+      "title": "Catalog",
+      "sortable": "Sortable catalog",
+      "sortableCaption": "Allows reordering stations, sections and items by dragging. When off, the order stays fixed."
+    },
+    "quoteBuilder": {
+      "title": "Quote builder",
+      "allowSelectOptionsAtQuote": "Allow choosing options at quote time",
+      "allowSelectOptionsAtQuoteCaption": "When off, the builder's \"Choose options now\" toggle is hidden — every quote defers option selection to the event. Existing quotes keep whatever they already saved."
+    }
+  },
+  "taxRates": {
+    "title": "Tax rates by state",
+    "applyByState": "Apply tax by state",
+    "applyByStateCaption": "Tax applied to quotes based on state."
+  },
+  "quotePdfTemplate": {
+    "title": "PDF template",
+    "caption": "Fixed text printed on the PDF of every generated quote.",
+    "services": "Service duration",
+    "servicesCaption": "Printed as \"Station: Duration\" under the \"SERVICE DURATION\" section of the PDF.",
+    "serviceLabelPlaceholder": "E.g. Snack Station",
+    "serviceDurationPlaceholder": "E.g. Up to 2 hours of service",
+    "addService": "Add service",
+    "removeService": "Remove service",
+    "termsAndConditions": "Terms and conditions",
+    "termsAndConditionsCaption": "One term per line — badges show up below as you type. Printed as a bullet list; leave this empty to skip that section in the PDF.",
+    "termsAndConditionsPlaceholder": "The deposit is non-refundable\nPrices may vary based on availability",
+    "validityNote": "Validity note",
+    "validityNoteCaption": "Shown next to the totals in the PDF (e.g. \"Prices are valid for...\").",
+    "dietaryNote": "Dietary note",
+    "dietaryNoteCaption": "Shown at the bottom of the \"Services Included\" page (only if the quote has items with details)."
+  },
+  "quoteStages": {
+    "title": "Quote stages",
+    "label": "Label",
+    "color": "Color",
+    "descriptionPlaceholder": "Description (optional) — when this stage applies"
+  },
+  "quoteDefaults": {
+    "title": "Quotes",
+    "depositRate": "Default deposit",
+    "depositRateCaption": "Percentage of the total charged as a deposit when a quote is confirmed.",
+    "quoteValidityMonths": "Validity",
+    "quoteValidityMonthsCaption": "How many months a quote stays valid before it expires.",
+    "months": "months",
+    "minPersonsPerLine": "Min persons/line",
+    "minPersonsPerLineCaption": "Minimum number of people required per station on a quote.",
+    "quoteSeqStart": "Sequence start",
+    "quoteSeqStartCaption": "Number the next quote sequence will start from.",
+    "lastUsedSeqHint": "Last used: {{seq}}",
+    "currency": "Currency",
+    "currencyCaption": "Currency used to display quote amounts.",
+    "optionsSelectionDeadlineDays": "Options selection deadline",
+    "optionsSelectionDeadlineDaysCaption": "Days before the event date by which the client's option choices should be confirmed.",
+    "days": "days",
+    "cardSurchargeRate": "Card/check surcharge",
+    "cardSurchargeRateCaption": "Percentage added to the quote total when the surcharge switch is on."
+  },
+  "permissions": {
+    "title": "Permissions",
+    "description": "Read-only view of what each role can do. Roles and permissions can't be created, edited, or assigned here.",
+    "groups": {
+      "configurations": "Configurations"
+    },
+    "actions": {
+      "create": "Create",
+      "read": "View",
+      "update": "Edit",
+      "delete": "Delete",
+      "upload_attachment": "Upload receipt",
+      "view": "View",
+      "manage_selections": "Choose event options",
+      "view_summary": "View monthly metrics",
+      "view_quotes_chart": "View quotes chart",
+      "view_top_products": "View top requested stations"
+    },
+    "resources": {
+      "dashboard": {
+        "label": "Dashboard",
+        "caption": "Overview metrics and KPIs on the home screen."
+      },
+      "event": {
+        "label": "Events",
+        "caption": "Venue events, their scheduling and details."
+      },
+      "payment": {
+        "label": "Payments",
+        "caption": "Registering payments, viewing amounts, and the general payments list."
+      },
+      "client": {
+        "label": "Clients",
+        "caption": "Client records and their contact information."
+      },
+      "quote": {
+        "label": "Quotes",
+        "caption": "Price quotes and the quote builder."
+      },
+      "pipeline": {
+        "label": "Pipeline",
+        "caption": "Quote pipeline stages and tracking."
+      },
+      "staff": {
+        "label": "Staff",
+        "caption": "Staff members and their assignments."
+      },
+      "product": {
+        "label": "Products",
+        "caption": "Catalog products, options and pricing."
+      },
+      "event_type": {
+        "label": "Event types",
+        "caption": "Event type definitions used across the catalog."
+      },
+      "tax_rates": {
+        "label": "Tax rates",
+        "caption": "Tax rates applied to quotes, by state."
+      },
+      "quote_defaults": {
+        "label": "Quote defaults",
+        "caption": "Default deposit, validity, minimum persons, sequence and currency for new quotes."
+      },
+      "quote_stages": {
+        "label": "Quote stages",
+        "caption": "Labels, colors and descriptions of the quote pipeline stages."
+      },
+      "catalog_preferences": {
+        "label": "Catalog preferences",
+        "caption": "Whether the product catalog can be reordered by dragging."
+      },
+      "quote_pdf_template": {
+        "label": "Quote PDF template",
+        "caption": "Fixed text and services printed on the PDF of every generated quote."
+      },
+      "quote_builder_preferences": {
+        "label": "Quote builder preferences",
+        "caption": "Whether staff can choose options at quote time instead of deferring them to the event."
+      }
+    }
+  },
+  "validation": {
+    "taxRateInvalid": "Invalid rate",
+    "taxRatesAllZeroInvalid": "At least one rate must be greater than 0",
+    "depositRateInvalid": "Invalid deposit",
+    "quoteValidityInvalid": "Invalid validity",
+    "minPersonsInvalid": "Invalid minimum",
+    "quoteSeqStartInvalid": "Invalid sequence start",
+    "currencyInvalid": "Invalid currency",
+    "optionsSelectionDeadlineDaysInvalid": "Invalid number of days",
+    "cardSurchargeRateInvalid": "Invalid rate",
+    "quoteStagesLabelInvalid": "Label required",
+    "serviceLabelRequired": "Station is required",
+    "serviceDurationRequired": "Duration is required"
+  }
+}

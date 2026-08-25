@@ -1,0 +1,33 @@
+{
+  "title": "Event types",
+  "index": {
+    "add": "New type"
+  },
+  "columns": {
+    "name": "Name",
+    "status": "Status"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "actions": {
+    "activate": "Activate",
+    "deactivate": "Deactivate"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "E.g. Wedding, Birthday, Corporate",
+    "save": "Save"
+  },
+  "create": {
+    "title": "New event type"
+  },
+  "edit": {
+    "title": "Edit event type"
+  },
+  "empty": "No event types",
+  "validation": {
+    "nameRequired": "Name is required"
+  }
+}

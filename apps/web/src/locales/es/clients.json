@@ -1,0 +1,57 @@
+{
+  "title": "Clientes",
+  "index": {
+    "add": "Nuevo cliente"
+  },
+  "columns": {
+    "name": "Nombre",
+    "phone": "Teléfono",
+    "location": "Ubicación",
+    "status": "Estado",
+    "createdAt": "Creado"
+  },
+  "status": {
+    "lead": "Prospecto",
+    "active": "Activo"
+  },
+  "form": {
+    "name": "Nombre",
+    "namePlaceholder": "Nombre y apellido",
+    "email": "Email",
+    "emailPlaceholder": "correo@ejemplo.com",
+    "phone": "Teléfono",
+    "phonePlaceholder": "(212) 555-0100",
+    "city": "Ciudad",
+    "cityPlaceholder": "Ciudad",
+    "state": "Estado",
+    "statePlaceholder": "Seleccioná un estado",
+    "address": "Dirección",
+    "addressPlaceholder": "Calle, número, apto",
+    "notes": "Notas",
+    "notesPlaceholder": "Notas internas sobre el cliente",
+    "save": "Guardar"
+  },
+  "create": {
+    "title": "Nuevo cliente"
+  },
+  "edit": {
+    "title": "Editar cliente"
+  },
+  "delete": {
+    "confirmTitle": "¿Eliminar cliente?",
+    "confirmContent": "¿Estás seguro que deseas eliminar a {{name}}?"
+  },
+  "empty": "No hay clientes",
+  "validation": {
+    "nameRequired": "Nombre requerido",
+    "emailInvalid": "Email inválido"
+  },
+  "detail": {
+    "edit": "Editar",
+    "tabs": {
+      "quotes": "Cotizaciones",
+      "events": "Eventos"
+    },
+    "newQuote": "Nueva cotización"
+  }
+}

@@ -5,5 +5,42 @@
   "save": "Guardar",
   "cancel": "Cancelar",
   "delete": "Eliminar",
-  "edit": "Editar"
+  "edit": "Editar",
+  "back": "Volver",
+  "close": "Cerrar",
+  "detail": "Detalle",
+  "logout": "Salir",
+  "yes": "Sí",
+  "no": "No",
+  "table": {
+    "actions": "Acciones",
+    "copyId": "Copiar ID",
+    "copied": "ID copiado",
+    "search": "Buscar",
+    "total": "{{total}} registros",
+    "results": "{{count}} resultados",
+    "clearFilters": "Limpiar filtros"
+  },
+  "share": {
+    "action": "Compartir",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "copyLink": "Copiar enlace",
+    "linkCopied": "Enlace copiado al portapapeles"
+  },
+  "confirm": {
+    "title": "Advertencia",
+    "irreversible": "Esta acción no se puede deshacer"
+  },
+  "confirmAction": "Confirmar",
+  "states": {
+    "NY": "Nueva York",
+    "NJ": "Nueva Jersey",
+    "CT": "Connecticut"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "subtitle": "La página que buscás no existe o fue movida.",
+    "home": "Ir al inicio"
+  }
 }

@@ -1,7 +1,11 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
-    "build": { "dependsOn": ["^build"], "outputs": ["dist/**", ".next/**"] },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "public/sw.js", "public/sw.js.map", "public/swe-worker-*.js"],
+      "env": ["API_URL"]
+    },
     "dev": { "cache": false, "persistent": true },
     "lint": {},
     "check-types": { "dependsOn": ["^check-types"] },

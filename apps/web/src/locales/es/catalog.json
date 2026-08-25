@@ -1,0 +1,75 @@
+{
+  "breadcrumbRoot": "Productos",
+  "title": "Estaciones",
+  "empty": "No hay estaciones",
+  "status": {
+    "inactive": "Inactivo"
+  },
+  "actions": {
+    "activate": "Activar",
+    "deactivate": "Desactivar"
+  },
+  "form": {
+    "save": "Guardar"
+  },
+  "product": {
+    "add": "Nueva estación",
+    "premium": "Premium",
+    "tiersSummary": "{{count}} paquetes · desde {{from}}",
+    "noTiers": "Sin paquetes",
+    "create": { "title": "Nueva estación" },
+    "edit": { "title": "Editar estación" },
+    "form": {
+      "name": "Nombre",
+      "namePlaceholder": "Nombre de la estación",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Descripción breve (opcional)",
+      "isPremium": "Premium"
+    }
+  },
+  "prices": {
+    "title": "Precios",
+    "numPersonsShort": "Personas",
+    "addTier": "Agregar paquete",
+    "removeTier": "Quitar paquete"
+  },
+  "optionGroup": {
+    "add": "Nueva sección",
+    "maxSelectShort": "elige hasta {{count}}",
+    "noLimitShort": "sin límite",
+    "includedShort": "incluido",
+    "create": { "title": "Nueva sección" },
+    "edit": { "title": "Editar sección" },
+    "selectionType": {
+      "select": "Seleccionable",
+      "included": "Incluido"
+    },
+    "form": {
+      "label": "Nombre",
+      "labelPlaceholder": "Nombre de la sección",
+      "selectionType": "Tipo",
+      "maxSelect": "Selección máxima",
+      "maxSelectPlaceholder": "Sin límite",
+      "maxSelectHelp": "Máximo de ítems que el cliente puede elegir"
+    }
+  },
+  "option": {
+    "add": "Nuevo ítem",
+    "create": { "title": "Nuevo ítem" },
+    "edit": { "title": "Editar ítem" },
+    "form": {
+      "name": "Nombre",
+      "namePlaceholder": "Nombre del ítem",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Detalle o ingredientes (opcional)"
+    }
+  },
+  "validation": {
+    "nameRequired": "Nombre requerido",
+    "labelRequired": "Nombre requerido",
+    "numPersonsInvalid": "Cantidad inválida",
+    "priceInvalid": "Precio inválido",
+    "tiersDuplicate": "Hay paquetes con la misma cantidad de personas",
+    "maxSelectInvalid": "Selección máxima inválida"
+  }
+}
