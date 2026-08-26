@@ -1,12 +1,12 @@
 'use client';
-import { Button, Card, Descriptions, Divider, Empty, Typography } from 'antd';
+import { Button, Card, Descriptions, Divider, Typography } from 'antd';
 import { AlertCircle, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
-import { useConfig } from '@/features/settings';
 import { AddressLines } from '@/components/shared/AddressLines';
 import { WrapperAlert } from '@/components/shared/WrapperAlert';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 import { IconTag } from '@/components/shared/IconTag';
 import { Logo } from '@/components/shared/Logo';
 import { ShareButton } from '@/components/shared/ShareButton';
@@ -14,10 +14,10 @@ import { isPastDate } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import type { QuoteDetail } from '../../types';
-import { QuickLineCard } from '../builder/QuickLineBuilder/QuickLineCard';
 import { QuoteStageTagDropdown } from '../QuoteStageTagDropdown';
 import { QuoteSummary } from '../QuoteSummary';
 import { QuoteClientCard } from './QuoteClientCard';
+import { QuoteLinesCard } from './QuoteLinesCard';
 import { IconBadge } from '@/components/shared/IconBadge';
 
 interface QuoteDetailCardProps {
@@ -28,8 +28,6 @@ interface QuoteDetailCardProps {
   showPdfAction?: boolean;
 }
 
-type LineRow = QuoteDetail['lines'][number] & { product: Product };
-
 export function QuoteDetailCard({
   detail,
   catalog,
@@ -39,16 +37,8 @@ export function QuoteDetailCard({
 }: QuoteDetailCardProps) {
   const { t } = useTranslation('quotes');
   const { date } = useDateFormatter();
-  const { data: config } = useConfig();
   const isDesktop = useIsDesktop();
   const hasPdf = Boolean(detail.pdfUrl);
-
-  const lineRows = detail.lines
-    .map((line) => {
-      const product = catalog.find((p) => p.id === line.productId);
-      return product ? { ...line, product } : null;
-    })
-    .filter((row): row is LineRow => row !== null);
 
   const eventDateTime = detail.eventDate
     ? `${date(detail.eventDate)}${detail.eventTime ? `, ${detail.eventTime}` : ''}`
@@ -66,22 +56,6 @@ export function QuoteDetailCard({
       {t('pipeline.draftTag')}
     </IconTag>
   );
-
-  const linesGrid =
-    lineRows.length === 0 ? (
-      <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('builder.lines.empty')} />
-    ) : (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {lineRows.map((row) => (
-          <QuickLineCard
-            key={row.id}
-            mode="readOnly"
-            line={{ numPersons: row.numPersons, subtotal: row.subtotal }}
-            product={row.product}
-          />
-        ))}
-      </div>
-    );
 
   const summary = (
     <QuoteSummary
@@ -147,44 +121,28 @@ export function QuoteDetailCard({
   );
 
   const eventSection = (
-    <div className="flex flex-col gap-3">
-      <Typography.Title level={4} className="font-heading text-brown m-0!">
-        {t('builder.event.eventDetailsGroupTitle')}
-      </Typography.Title>
-      <Descriptions column={{ xs: 1, sm: 2 }} size="small">
-        <Descriptions.Item label={t('detail.dateLabel')}>{eventDateTime}</Descriptions.Item>
-        <Descriptions.Item label={t('detail.typeLabel')}>
-          {detail.eventTypeName ?? '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label={t('detail.addressLabel')} span={{ xs: 1, sm: 2 }}>
-          {detail.address || detail.city ? (
-            <AddressLines address={detail.address} city={detail.city} lines={1} />
-          ) : (
-            '—'
-          )}
-        </Descriptions.Item>
-      </Descriptions>
-    </div>
-  );
-
-  const productsSection = (
-    <div className="flex flex-col gap-3">
-      <Typography.Title level={4} className="font-heading text-brown m-0!">
-        {t('builder.lines.title')}
-        {lineRows.length > 0 && ` (${lineRows.length})`}
-      </Typography.Title>
-      {detail.validUntil && (
-        <WrapperAlert
-          type="info"
-          showIcon
-          title={t('detail.validUntil', {
-            date: date(detail.validUntil),
-            count: config?.appSettings.quoteValidityMonths ?? 0,
-          })}
-        />
-      )}
-      {linesGrid}
-    </div>
+    <WrapperCard
+      variant={isDesktop ? 'plain' : 'card'}
+      title={t('builder.event.eventDetailsGroupTitle')}
+    >
+      <div className="flex flex-col gap-3">
+        <Descriptions column={{ xs: 1, sm: 2 }} size="small">
+          <Descriptions.Item label={t('detail.dateLabel')}>{eventDateTime}</Descriptions.Item>
+          <Descriptions.Item label={t('detail.typeLabel')}>
+            {detail.eventTypeName ?? '—'}
+          </Descriptions.Item>
+        </Descriptions>
+        <Descriptions column={1} size="small" layout={isDesktop ? 'horizontal' : 'vertical'}>
+          <Descriptions.Item label={t('detail.addressLabel')}>
+            {detail.address || detail.city ? (
+              <AddressLines address={detail.address} city={detail.city} />
+            ) : (
+              '—'
+            )}
+          </Descriptions.Item>
+        </Descriptions>
+      </div>
+    </WrapperCard>
   );
 
   return (
@@ -193,17 +151,11 @@ export function QuoteDetailCard({
 
       {isDesktop && <Divider className="my-4" />}
 
-      {isDesktop ? (
-        <QuoteClientCard detail={detail} />
-      ) : (
-        <Card>
-          <QuoteClientCard detail={detail} />
-        </Card>
-      )}
+      <QuoteClientCard detail={detail} variant={isDesktop ? 'plain' : 'card'} />
 
       {isDesktop && <Divider className="my-4" />}
 
-      {isDesktop ? eventSection : <Card>{eventSection}</Card>}
+      {eventSection}
 
       {isDesktop && <Divider className="mt-4 mb-0" />}
 
@@ -211,7 +163,9 @@ export function QuoteDetailCard({
         <WrapperAlert className="mt-4 mb-4" type="warning" showIcon title={t('detail.pastDue')} />
       )}
 
-      <div className="flex-1">{isDesktop ? productsSection : <Card>{productsSection}</Card>}</div>
+      <div className="flex-1">
+        <QuoteLinesCard detail={detail} catalog={catalog} variant={isDesktop ? 'plain' : 'card'} />
+      </div>
 
       {isDesktop && <Divider className="my-3" />}
 

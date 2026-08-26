@@ -1,7 +1,7 @@
 'use client';
-import { Divider, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 import { getStationIcon } from '../../helpers';
 import type { QuoteDetail } from '../../types';
 import { QuoteLineItem } from '../QuoteLineItem';
@@ -15,12 +15,7 @@ export function QuoteIncludedServicesCard({ detail, catalog }: QuoteIncludedServ
   const { t } = useTranslation('quotes');
 
   return (
-    <div>
-      <Typography.Title level={5} className="font-heading text-brown m-0!">
-        {t('detail.includedServices')}
-      </Typography.Title>
-      <Divider className="mt-3 mb-3" />
-
+    <WrapperCard title={t('detail.includedServices')} showDivider dividerClassName="mt-3 mb-3">
       <div className="flex flex-col">
         {detail.lines.map((line) => {
           const product = catalog.find((p) => p.id === line.productId);
@@ -51,6 +46,6 @@ export function QuoteIncludedServicesCard({ detail, catalog }: QuoteIncludedServ
           );
         })}
       </div>
-    </div>
+    </WrapperCard>
   );
 }

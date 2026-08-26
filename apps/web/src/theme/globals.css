@@ -56,6 +56,16 @@
     justify-content: center;
   }
 
+  /* Card's ComponentToken (AntD v6) has no border-color or shadow slot: bordered
+     Cards (the default, used everywhere in this app) get colorBorderSecondary
+     (barely visible) and no shadow at all. Bump the border to the app's regular
+     colorBorder token and add the tertiary shadow (the one AntD reserves for
+     unbordered cards) so every Card reads as a raised surface. */
+  .ant-card {
+    border-color: var(--ant-color-border);
+    box-shadow: var(--ant-box-shadow-tertiary);
+  }
+
   /* AntD's Tabs theme tokens (theme/antd.ts) only cover color, not weight —
      there's no itemActiveFontWeight token, so the active tab label is bolded here. */
   .ant-tabs-tab-active .ant-tabs-tab-btn {

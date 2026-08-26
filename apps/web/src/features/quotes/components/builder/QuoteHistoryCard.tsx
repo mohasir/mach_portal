@@ -1,7 +1,8 @@
 'use client';
-import { Timeline, Typography } from 'antd';
+import { Timeline } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useQuoteStages } from '@/features/settings';
 import type { QuoteDetail } from '../../types';
@@ -50,10 +51,7 @@ export function QuoteHistoryCard({
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
-    <div>
-      <Typography.Title level={5} className="font-heading text-brown m-0!">
-        {t('history.title')}
-      </Typography.Title>
+    <WrapperCard title={t('history.title')}>
       <Timeline
         className="mt-4"
         items={events.map((event) => ({
@@ -67,6 +65,6 @@ export function QuoteHistoryCard({
           ),
         }))}
       />
-    </div>
+    </WrapperCard>
   );
 }

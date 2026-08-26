@@ -1,5 +1,4 @@
 'use client';
-import { useEffect } from 'react';
 import { Col, Row } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +6,6 @@ import { ACTIONS, RESOURCES } from '@repo/guards';
 import { UpcomingEventsCard } from '@/features/events';
 import { Can } from '@/lib/auth/Can';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
-import { useLayoutStore } from '@/lib/stores/layout.store';
 import {
   useDashboardQuotesByMonth,
   useDashboardSummary,
@@ -26,12 +24,6 @@ const YEAR = now.year();
 export function DashboardPage() {
   const { t } = useTranslation('dashboard');
   const { money } = useMoneyFormatter();
-  const setContentBg = useLayoutStore((s) => s.setContentBg);
-
-  useEffect(() => {
-    setContentBg('white');
-    return () => setContentBg('grey');
-  }, [setContentBg]);
 
   const { data: summary, isLoading: summaryLoading } = useDashboardSummary({
     month: MONTH,

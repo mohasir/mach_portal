@@ -14,15 +14,18 @@ export function BottomNav() {
   const router = useRouter();
 
   const canCreateQuote = can({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] });
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+
+  const isActive = (href: string) =>
+    href === '/admin' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 
   const renderTab = (item: NavItem) => {
     if (item.guard && !can(item.guard)) return null;
+    const active = isActive(item.href!);
     return (
       <button
         key={item.href}
         onClick={() => router.push(item.href!)}
-        className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-4 ${isActive(item.href!) ? 'text-primary' : 'text-muted'}`}
+        className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-4 ${active ? 'text-primary font-semibold' : 'text-muted'}`}
       >
         {IconMap[item.icon!]}
         <span className="text-xs">{t(item.label)}</span>
