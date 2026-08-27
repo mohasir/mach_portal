@@ -11,3 +11,8 @@ export function useProductCatalog() {
   const trpc = useTRPC();
   return useQuery(trpc.products.list.queryOptions());
 }
+
+export function useProduct(id: string) {
+  const { data, ...rest } = useCatalog();
+  return { data: data?.find((p) => p.id === id), ...rest };
+}

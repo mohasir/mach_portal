@@ -116,6 +116,7 @@
       "read": "View",
       "update": "Edit",
       "delete": "Delete",
+      "disable": "Activate/Deactivate",
       "upload_attachment": "Upload receipt",
       "view": "View",
       "manage_selections": "Choose event options",

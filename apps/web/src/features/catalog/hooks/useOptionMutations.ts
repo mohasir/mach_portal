@@ -11,15 +11,19 @@ export function useOptionMutations() {
 
   const create = useMutation(trpc.products.options.create.mutationOptions({ onSuccess: invalidate, onError }));
   const update = useMutation(trpc.products.options.update.mutationOptions({ onSuccess: invalidate, onError }));
-  const toggleActive = useMutation(
-    trpc.products.options.toggleActive.mutationOptions({ onSuccess: invalidate, onError }),
+  const disable = useMutation(
+    trpc.products.options.disable.mutationOptions({ onSuccess: invalidate, onError }),
+  );
+  const enable = useMutation(
+    trpc.products.options.enable.mutationOptions({ onSuccess: invalidate, onError }),
   );
   const reorder = useMutation(trpc.products.options.reorder.mutationOptions({ onSuccess: invalidate, onError }));
 
   return {
     createOption: (data: CreateOptionInput) => create.mutateAsync(data),
     updateOption: (id: string, data: UpdateOptionInput) => update.mutateAsync({ id, data }),
-    toggleOptionActive: (id: string, isActive: boolean) => toggleActive.mutateAsync({ id, isActive }),
+    disableOption: (id: string) => disable.mutateAsync({ id }),
+    enableOption: (id: string) => enable.mutateAsync({ id }),
     reorderOptions: (ids: string[]) => reorder.mutateAsync({ ids }),
     isPending: create.isPending || update.isPending,
   };

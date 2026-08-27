@@ -1,25 +1,25 @@
 'use client';
-import { Button, Form, Input, Switch } from 'antd';
+import { Form, Input, Switch, type FormInstance } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { PriceTierInput, UpdateProductInput } from '@repo/schemas';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
 
-interface ProductFormValues {
+export interface ProductFormValues {
   name: string;
   description?: string;
   isPremium: boolean;
 }
 
 interface ProductFormProps {
+  form: FormInstance<ProductFormValues>;
   initialValues?: Partial<ProductFormValues>;
   tiers?: PriceTierInput[];
   onSubmit: (values: UpdateProductInput) => Promise<void> | void;
-  isPending: boolean;
 }
 
-export function ProductForm({ initialValues, tiers = [], onSubmit, isPending }: ProductFormProps) {
+export function ProductForm({ form, initialValues, tiers = [], onSubmit }: ProductFormProps) {
   const { t } = useTranslation('catalog');
-  const [form] = Form.useForm<ProductFormValues>();
 
   const handleFinish = (values: ProductFormValues) =>
     onSubmit({
@@ -56,19 +56,14 @@ export function ProductForm({ initialValues, tiers = [], onSubmit, isPending }: 
         />
       </Form.Item>
 
-      <Form.Item
-        name="isPremium"
-        label={<FieldLabel title={t('product.form.isPremium')} />}
-        valuePropName="checked"
-      >
-        <Switch />
-      </Form.Item>
-
-      <Form.Item className="mb-0">
-        <Button type="primary" htmlType="submit" loading={isPending} block>
-          {t('form.save')}
-        </Button>
-      </Form.Item>
+      <SwitchRow
+        title={t('product.form.isPremium')}
+        control={
+          <Form.Item name="isPremium" valuePropName="checked" noStyle>
+            <Switch />
+          </Form.Item>
+        }
+      />
     </Form>
   );
 }

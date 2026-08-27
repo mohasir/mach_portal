@@ -6,10 +6,9 @@ import type { Product } from '../types';
 
 interface ProductListProps {
   products: Product[];
-  onEdit: (product: Product) => void;
 }
 
-export function ProductList({ products, onEdit }: ProductListProps) {
+export function ProductList({ products }: ProductListProps) {
   const { reorderProducts } = useProductMutations();
   const ids = products.map((p) => p.id);
 
@@ -17,7 +16,7 @@ export function ProductList({ products, onEdit }: ProductListProps) {
     <SortableList ids={ids} onReorder={reorderProducts}>
       <div className="flex flex-col gap-3">
         {products.map((product) => (
-          <ProductPanel key={product.id} product={product} onEdit={onEdit} />
+          <ProductPanel key={product.id} product={product} />
         ))}
       </div>
     </SortableList>

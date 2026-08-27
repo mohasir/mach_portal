@@ -10,7 +10,7 @@ interface WrapperCardProps {
   dividerClassName?: string;
   className?: string;
   children: ReactNode;
-  variant?: 'card' | 'plain';
+  variant?: 'card' | 'plain' | 'outlined';
   showDivider?: boolean;
 }
 
@@ -55,5 +55,9 @@ export function WrapperCard({
     return <div className={className}>{content}</div>;
   }
 
-  return <Card className={className}>{content}</Card>;
+  return (
+    <Card className={`${resolvedVariant === 'outlined' ? 'shadow-none' : ''} ${className ?? ''}`}>
+      {content}
+    </Card>
+  );
 }

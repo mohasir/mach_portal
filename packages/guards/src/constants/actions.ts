@@ -3,6 +3,8 @@ export const ACTIONS = {
   READ: 'read',
   UPDATE: 'update',
   DELETE: 'delete',
+  DISABLE: 'disable',
+  ENABLE: 'enable',
   UPLOAD_ATTACHMENT: 'upload_attachment',
   VIEW: 'view',
   MANAGE_SELECTIONS: 'manage_selections',
