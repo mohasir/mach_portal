@@ -1,16 +1,23 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { SectionMenuItem } from '@/components/shared/SectionMenu';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useIsSuperAdmin } from '@/lib/auth/useIsSuperAdmin';
 import { useCan } from '@/lib/auth/useCan';
+import { useLayoutStore } from '@/lib/stores/layout.store';
 import { SettingsPageDesktop } from './SettingsPageDesktop';
 import { SettingsPageMobile } from './SettingsPageMobile';
 
 export type SettingsSection =
-  'profile' | 'security' | 'general' | 'preferences' | 'quotePdfTemplate' | 'permissions';
+  | 'profile'
+  | 'security'
+  | 'general'
+  | 'preferences'
+  | 'quotePdfTemplate'
+  | 'permissions'
+  | 'about';
 export type MobileSettingsSection = Exclude<SettingsSection, 'profile'> | 'profileEdit';
 
 export function SettingsPage() {
@@ -20,6 +27,14 @@ export function SettingsPage() {
   const isDesktop = useIsDesktop();
   const [section, setSection] = useState<SettingsSection>('profile');
   const [mobileSection, setMobileSection] = useState<MobileSettingsSection | null>(null);
+  const setFillViewport = useLayoutStore((s) => s.setFillViewport);
+
+  // The "about" section pins its copyright block to the bottom of the screen
+  // (see AboutSettingsForm) instead of following normal document flow.
+  useEffect(() => {
+    setFillViewport(section === 'about' || mobileSection === 'about');
+    return () => setFillViewport(false);
+  }, [section, mobileSection, setFillViewport]);
 
   const canViewGeneral =
     can({ [RESOURCES.TAX_RATES]: [ACTIONS.VIEW] }) ||
@@ -49,6 +64,7 @@ export function SettingsPage() {
           },
         ]
       : []),
+    { key: 'about', label: t('about.title'), group: t('groups.about') },
   ];
 
   if (!isDesktop) {

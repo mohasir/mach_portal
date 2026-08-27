@@ -6,7 +6,8 @@
   "groups": {
     "account": "Account",
     "system": "System",
-    "access": "Access"
+    "access": "Access",
+    "about": "About"
   },
   "profile": {
     "title": "Profile",
@@ -186,6 +187,11 @@
         "caption": "Whether staff can choose options at quote time instead of deferring them to the event."
       }
     }
+  },
+  "about": {
+    "title": "About",
+    "description": "Quote, event, and client management system for Mach Snack Bar & Drinks",
+    "version": "v{{version}}"
   },
   "validation": {
     "taxRateInvalid": "Invalid rate",

@@ -42,5 +42,9 @@
     "title": "Page not found",
     "subtitle": "The page you're looking for doesn't exist or was moved.",
     "home": "Go to home"
+  },
+  "footer": {
+    "copyright": "© {{year}} {{appName}}. All rights reserved.",
+    "developedBy": "Developed by Oravitech"
   }
 }

@@ -6,7 +6,8 @@
   "groups": {
     "account": "Cuenta",
     "system": "Sistema",
-    "access": "Acceso"
+    "access": "Acceso",
+    "about": "Acerca de"
   },
   "profile": {
     "title": "Perfil",
@@ -186,6 +187,11 @@
         "caption": "Si el staff puede elegir opciones al momento de cotizar en vez de diferirlas al evento."
       }
     }
+  },
+  "about": {
+    "title": "Acerca de",
+    "description": "Sistema de gestión de cotizaciones, eventos y clientes de Mach Snack Bar & Drinks",
+    "version": "v{{version}}"
   },
   "validation": {
     "taxRateInvalid": "Tasa inválida",
