@@ -15,8 +15,8 @@
   "product": {
     "add": "Nueva estación",
     "premium": "Premium",
-    "tiersSummary": "{{count}} paquetes · desde {{from}}",
-    "noTiers": "Sin paquetes",
+    "optionGroupsCount": "{{count}} servicios",
+    "priceTiersCount": "{{count}} paquetes",
     "create": { "title": "Nueva estación" },
     "edit": { "title": "Editar estación" },
     "form": {
@@ -25,13 +25,33 @@
       "description": "Descripción",
       "descriptionPlaceholder": "Descripción breve (opcional)",
       "isPremium": "Premium"
+    },
+    "disableConfirm": {
+      "title": "¿Desactivar esta estación?",
+      "content": "Dejará de estar disponible para nuevas cotizaciones."
+    },
+    "enableConfirm": {
+      "title": "¿Activar esta estación?",
+      "content": "Volverá a estar disponible para nuevas cotizaciones."
     }
   },
   "prices": {
     "title": "Precios",
+    "tabDescription": "Definí los paquetes de precio de esta estación según la cantidad de personas.",
     "numPersonsShort": "Personas",
     "addTier": "Agregar paquete",
-    "removeTier": "Quitar paquete"
+    "removeTier": "Quitar paquete",
+    "removeTierConfirm": {
+      "title": "¿Quitar este paquete?",
+      "content": "Se eliminará este paquete de precio de la estación."
+    }
+  },
+  "detail": {
+    "tabs": {
+      "details": "Servicios",
+      "detailsDescription": "Organizá los servicios de esta estación en secciones y agregá los ítems disponibles dentro de cada una.",
+      "prices": "Precios"
+    }
   },
   "optionGroup": {
     "add": "Nueva sección",
@@ -51,10 +71,19 @@
       "maxSelect": "Selección máxima",
       "maxSelectPlaceholder": "Sin límite",
       "maxSelectHelp": "Máximo de ítems que el cliente puede elegir"
+    },
+    "disableConfirm": {
+      "title": "¿Desactivar esta sección?",
+      "content": "Sus ítems dejarán de estar disponibles para nuevas cotizaciones."
+    },
+    "enableConfirm": {
+      "title": "¿Activar esta sección?",
+      "content": "Sus ítems volverán a estar disponibles para nuevas cotizaciones."
     }
   },
   "option": {
     "add": "Nuevo ítem",
+    "empty": "Sin ítems",
     "create": { "title": "Nuevo ítem" },
     "edit": { "title": "Editar ítem" },
     "form": {
@@ -62,6 +91,14 @@
       "namePlaceholder": "Nombre del ítem",
       "description": "Descripción",
       "descriptionPlaceholder": "Detalle o ingredientes (opcional)"
+    },
+    "disableConfirm": {
+      "title": "¿Desactivar este ítem?",
+      "content": "Dejará de estar disponible para nuevas cotizaciones."
+    },
+    "enableConfirm": {
+      "title": "¿Activar este ítem?",
+      "content": "Volverá a estar disponible para nuevas cotizaciones."
     }
   },
   "validation": {

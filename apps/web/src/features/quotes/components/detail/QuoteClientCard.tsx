@@ -5,23 +5,21 @@ import { useTranslation } from 'react-i18next';
 import { useClient } from '@/features/clients';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { FormattedPhone } from '@/components/shared/Inputs/PhoneInput';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 import type { QuoteDetail } from '../../types';
 
 interface QuoteClientCardProps {
   detail: QuoteDetail;
+  variant?: 'card' | 'plain';
 }
 
-export function QuoteClientCard({ detail }: QuoteClientCardProps) {
+export function QuoteClientCard({ detail, variant }: QuoteClientCardProps) {
   const { t } = useTranslation('quotes');
   const router = useRouter();
   const { data: client } = useClient(detail.clientId ?? undefined);
 
   return (
-    <div>
-      <Typography.Title level={4} className="font-heading text-brown m-0! mb-3">
-        {t('builder.client.label')}
-      </Typography.Title>
-
+    <WrapperCard variant={variant} title={t('builder.client.label')}>
       <button
         type="button"
         onClick={() => router.push(`/admin/clients/${detail.clientId}`)}
@@ -39,6 +37,6 @@ export function QuoteClientCard({ detail }: QuoteClientCardProps) {
           }
         />
       </button>
-    </div>
+    </WrapperCard>
   );
 }

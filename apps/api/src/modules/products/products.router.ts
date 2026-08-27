@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import {
+  catalogIdSchema,
   catalogReorderSchema,
-  catalogToggleActiveSchema,
   createOptionGroupSchema,
   createOptionSchema,
   createProductSchema,
@@ -21,6 +21,8 @@ const service = new ProductsService(new ProductsRepository(db));
 const read = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.READ] });
 const create = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.CREATE] });
 const update = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.UPDATE] });
+const disable = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.DISABLE] });
+const enable = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.ENABLE] });
 
 const groupsRouter = router({
   create: create
@@ -29,9 +31,12 @@ const groupsRouter = router({
   update: update
     .input(z.object({ id: z.uuid(), data: updateOptionGroupSchema }))
     .mutation(({ input }) => service.updateOptionGroup(input.id, input.data)),
-  toggleActive: update
-    .input(catalogToggleActiveSchema)
-    .mutation(({ input }) => service.toggleOptionGroupActive(input.id, input.isActive)),
+  disable: disable
+    .input(catalogIdSchema)
+    .mutation(({ input }) => service.toggleOptionGroupActive(input.id, false)),
+  enable: enable
+    .input(catalogIdSchema)
+    .mutation(({ input }) => service.toggleOptionGroupActive(input.id, true)),
   reorder: update
     .input(catalogReorderSchema)
     .mutation(({ input }) => service.reorderOptionGroups(input.ids)),
@@ -42,9 +47,12 @@ const optionsRouter = router({
   update: update
     .input(z.object({ id: z.uuid(), data: updateOptionSchema }))
     .mutation(({ input }) => service.updateOption(input.id, input.data)),
-  toggleActive: update
-    .input(catalogToggleActiveSchema)
-    .mutation(({ input }) => service.toggleOptionActive(input.id, input.isActive)),
+  disable: disable
+    .input(catalogIdSchema)
+    .mutation(({ input }) => service.toggleOptionActive(input.id, false)),
+  enable: enable
+    .input(catalogIdSchema)
+    .mutation(({ input }) => service.toggleOptionActive(input.id, true)),
   reorder: update
     .input(catalogReorderSchema)
     .mutation(({ input }) => service.reorderOptions(input.ids)),
@@ -67,9 +75,12 @@ export const productsRouter = router({
   update: update
     .input(z.object({ id: z.uuid(), data: updateProductSchema }))
     .mutation(({ input }) => service.updateProduct(input.id, input.data)),
-  toggleActive: update
-    .input(catalogToggleActiveSchema)
-    .mutation(({ input }) => service.toggleProductActive(input.id, input.isActive)),
+  disable: disable
+    .input(catalogIdSchema)
+    .mutation(({ input }) => service.toggleProductActive(input.id, false)),
+  enable: enable
+    .input(catalogIdSchema)
+    .mutation(({ input }) => service.toggleProductActive(input.id, true)),
   reorder: update
     .input(catalogReorderSchema)
     .mutation(({ input }) => service.reorderProducts(input.ids)),

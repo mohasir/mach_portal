@@ -14,6 +14,7 @@ interface DeleteConfirmOptions {
 
 interface DeleteConfirmModalProps {
   open: boolean;
+  title?: ReactNode;
   content?: ReactNode;
   okText?: string;
   cancelText?: string;
@@ -23,6 +24,7 @@ interface DeleteConfirmModalProps {
 
 export function DeleteConfirmModal({
   open,
+  title,
   content,
   okText,
   cancelText,
@@ -46,8 +48,13 @@ export function DeleteConfirmModal({
             <TbAlertSquareRoundedFilled size={28} className="text-error" />
           </div>
         </div>
+        {title && (
+          <Typography.Title level={4} className="font-heading font-bold text-brown m-0!">
+            {title}
+          </Typography.Title>
+        )}
         {content && (
-          <Typography.Text type="secondary" className="text-base text-brown font-medium">
+          <Typography.Text type="secondary" className="text-base">
             {content}
           </Typography.Text>
         )}
@@ -88,6 +95,7 @@ export function useDeleteConfirm() {
   const contextHolder = (
     <DeleteConfirmModal
       open={state.open}
+      title={state.title}
       content={state.content}
       okText={state.okText}
       cancelText={state.cancelText}

@@ -83,6 +83,7 @@ export function NotificationMenu() {
       placement="bottomRight"
       open={open}
       onOpenChange={setOpen}
+      overlayClassName="notification-popover"
     >
       <Badge dot={unreadCount > 0} offset={[-10, 10]}>
         <Button

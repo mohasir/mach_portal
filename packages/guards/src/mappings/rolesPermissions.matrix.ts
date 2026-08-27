@@ -20,6 +20,8 @@ const {
   READ,
   UPDATE,
   DELETE,
+  DISABLE,
+  ENABLE,
   UPLOAD_ATTACHMENT,
   VIEW,
   MANAGE_SELECTIONS,
@@ -29,6 +31,10 @@ const {
 } = ACTIONS;
 
 const CRUD = [CREATE, READ, UPDATE, DELETE];
+// Superadmin gets both DISABLE and ENABLE; admin can disable but not re-enable
+// (a soft-deleted product/section/item needs superadmin to bring back).
+const PRODUCT_FULL = [...CRUD, DISABLE, ENABLE];
+const PRODUCT_ADMIN = [...CRUD, DISABLE];
 const READ_ONLY = [READ];
 const VIEW_UPDATE = [VIEW, UPDATE];
 const VIEW_ONLY = [VIEW];
@@ -48,7 +54,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.QUOTE]: CRUD,
       [RESOURCES.PIPELINE]: CRUD,
       [RESOURCES.STAFF]: CRUD,
-      [RESOURCES.PRODUCT]: CRUD,
+      [RESOURCES.PRODUCT]: PRODUCT_FULL,
       [RESOURCES.EVENT_TYPE]: CRUD,
       [RESOURCES.TAX_RATES]: VIEW_UPDATE,
       [RESOURCES.QUOTE_DEFAULTS]: VIEW_UPDATE,
@@ -68,7 +74,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.QUOTE]: CRUD,
       [RESOURCES.PIPELINE]: CRUD,
       [RESOURCES.STAFF]: CRUD,
-      [RESOURCES.PRODUCT]: CRUD,
+      [RESOURCES.PRODUCT]: PRODUCT_ADMIN,
       [RESOURCES.EVENT_TYPE]: CRUD,
       [RESOURCES.TAX_RATES]: VIEW_UPDATE,
       [RESOURCES.QUOTE_DEFAULTS]: VIEW_UPDATE,

@@ -116,6 +116,7 @@
       "read": "Ver",
       "update": "Editar",
       "delete": "Eliminar",
+      "disable": "Activar/Desactivar",
       "upload_attachment": "Subir comprobante",
       "view": "Ver",
       "manage_selections": "Elegir opciones del evento",

@@ -11,15 +11,19 @@ export function useOptionGroupMutations() {
 
   const create = useMutation(trpc.products.groups.create.mutationOptions({ onSuccess: invalidate, onError }));
   const update = useMutation(trpc.products.groups.update.mutationOptions({ onSuccess: invalidate, onError }));
-  const toggleActive = useMutation(
-    trpc.products.groups.toggleActive.mutationOptions({ onSuccess: invalidate, onError }),
+  const disable = useMutation(
+    trpc.products.groups.disable.mutationOptions({ onSuccess: invalidate, onError }),
+  );
+  const enable = useMutation(
+    trpc.products.groups.enable.mutationOptions({ onSuccess: invalidate, onError }),
   );
   const reorder = useMutation(trpc.products.groups.reorder.mutationOptions({ onSuccess: invalidate, onError }));
 
   return {
     createOptionGroup: (data: CreateOptionGroupInput) => create.mutateAsync(data),
     updateOptionGroup: (id: string, data: UpdateOptionGroupInput) => update.mutateAsync({ id, data }),
-    toggleOptionGroupActive: (id: string, isActive: boolean) => toggleActive.mutateAsync({ id, isActive }),
+    disableOptionGroup: (id: string) => disable.mutateAsync({ id }),
+    enableOptionGroup: (id: string) => enable.mutateAsync({ id }),
     reorderOptionGroups: (ids: string[]) => reorder.mutateAsync({ ids }),
     isPending: create.isPending || update.isPending,
   };

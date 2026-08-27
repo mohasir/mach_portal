@@ -1,5 +1,4 @@
 'use client';
-import { useRouter } from 'next/navigation';
 import { App, Button, Card, Skeleton, Tooltip, Typography } from 'antd';
 import { Copy, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -24,19 +23,16 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
   const { t } = useTranslation('quotes');
   const { t: tc } = useTranslation('common');
   const { message } = App.useApp();
-  const router = useRouter();
   const isDesktop = useIsDesktop();
   const { dateTime } = useDateFormatter();
   const { data: detail, isLoading: quoteLoading } = useQuote(quoteId);
   const { data: catalog, isLoading: catalogLoading } = useProductCatalog();
   const { generatePdf, isPending: isGeneratingPdf } = useGenerateQuotePdf();
 
-  const onBack = () => router.back();
-
   if (quoteLoading || catalogLoading || !detail || !catalog) {
     return (
       <div>
-        <PageHeader title={t('detail.title')} titleSize="sm" onBack={onBack} />
+        <PageHeader title={t('detail.title')} titleSize="sm" onBack />
         <Skeleton active paragraph={{ rows: 12 }} />
       </div>
     );
@@ -77,7 +73,7 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
             />
           </Tooltip>
         }
-        onBack={onBack}
+        onBack
         actions={
           isDesktop &&
           showPdfAction && (
@@ -125,16 +121,12 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
           />
         )}
         <div className="flex flex-col gap-6 self-start">
-          <Card>
-            <QuoteIncludedServicesCard detail={detail} catalog={catalog} />
-          </Card>
-          <Card>
-            <QuoteHistoryCard
-              createdByName={detail.createdByName}
-              createdAt={detail.createdAt}
-              stageHistory={detail.stageHistory}
-            />
-          </Card>
+          <QuoteIncludedServicesCard detail={detail} catalog={catalog} />
+          <QuoteHistoryCard
+            createdByName={detail.createdByName}
+            createdAt={detail.createdAt}
+            stageHistory={detail.stageHistory}
+          />
         </div>
       </div>
     </div>

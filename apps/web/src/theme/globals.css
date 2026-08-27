@@ -56,6 +56,16 @@
     justify-content: center;
   }
 
+  /* Card's ComponentToken (AntD v6) has no border-color or shadow slot: bordered
+     Cards (the default, used everywhere in this app) get colorBorderSecondary
+     (barely visible) and no shadow at all. Bump the border to the app's regular
+     colorBorder token and add the tertiary shadow (the one AntD reserves for
+     unbordered cards) so every Card reads as a raised surface. */
+  .ant-card {
+    border-color: var(--ant-color-border);
+    box-shadow: var(--ant-box-shadow-tertiary);
+  }
+
   /* AntD's Tabs theme tokens (theme/antd.ts) only cover color, not weight —
      there's no itemActiveFontWeight token, so the active tab label is bolded here. */
   .ant-tabs-tab-active .ant-tabs-tab-btn {
@@ -73,6 +83,22 @@
   .ant-tabs-tab-icon {
     display: inline-flex;
     align-items: center;
+  }
+
+  /* Same root cause again: Tag is `display: inline-block` (antd/es/tag/style),
+     and its `icon` prop renders as a direct child SVG with no wrapper — the
+     block svg from Tailwind's preflight stacks above the label instead of
+     sitting next to it. */
+  .ant-tag {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* AntD only adds icon-to-label spacing for its own @ant-design/icons (via an
+     internal .anticon class) — dropped in this app for lucide-react, so a
+     Tag's `icon` prop renders flush against the label with no gap at all. */
+  .ant-tag > svg {
+    margin-inline-end: 4px;
   }
 
   /* Phones collapse the DataTable to a single card column; drop the now-empty header row. */
@@ -194,5 +220,12 @@
   .ant-segmented,
   .ant-segmented-item-selected {
     border-radius: 10px;
+  }
+
+  /* Popover's inner padding (12px) is hardcoded in antd/es/popover/style, not a
+     themeable token or a classNames/styles slot — scoped to NotificationMenu's
+     popover (`overlayClassName`) so other Popover instances stay untouched. */
+  .notification-popover .ant-popover-container {
+    padding: 18px;
   }
 }

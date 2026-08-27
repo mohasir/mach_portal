@@ -3,13 +3,8 @@ import { Empty, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useCatalog } from '../hooks/useCatalog';
 import { ProductList } from './ProductList';
-import type { Product } from '../types';
 
-interface CatalogPageProps {
-  onEdit: (product: Product) => void;
-}
-
-export function CatalogPage({ onEdit }: CatalogPageProps) {
+export function CatalogPage() {
   const { t } = useTranslation('catalog');
   const { data, isLoading } = useCatalog();
 
@@ -22,7 +17,7 @@ export function CatalogPage({ onEdit }: CatalogPageProps) {
           ))}
         </div>
       ) : data && data.length > 0 ? (
-        <ProductList products={data} onEdit={onEdit} />
+        <ProductList products={data} />
       ) : (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('empty')} className="mt-16" />
       )}
