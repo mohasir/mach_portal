@@ -5,6 +5,7 @@ const HIDE_BOTTOM_NAV_PATTERNS = [
   /^\/admin\/settings/,
   /^\/admin\/quotes\/preview\/[^/]+$/,
   /^\/admin\/events\/[^/]+$/,
+  /^\/admin\/products\/[^/]+$/,
 ];
 
 export function useHideBottomNav(): boolean {

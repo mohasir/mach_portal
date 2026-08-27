@@ -35,7 +35,7 @@ const TYPE_STYLES: Record<
   },
 };
 
-interface ConfirmOptions {
+export interface ConfirmOptions {
   title: ReactNode;
   content?: ReactNode;
   okText?: string;

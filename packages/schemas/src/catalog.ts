@@ -80,8 +80,7 @@ export const catalogReorderSchema = z.object({
 });
 export type CatalogReorderInput = z.infer<typeof catalogReorderSchema>;
 
-export const catalogToggleActiveSchema = z.object({
+export const catalogIdSchema = z.object({
   id: z.uuid(),
-  isActive: z.boolean(),
 });
-export type CatalogToggleActiveInput = z.infer<typeof catalogToggleActiveSchema>;
+export type CatalogIdInput = z.infer<typeof catalogIdSchema>;

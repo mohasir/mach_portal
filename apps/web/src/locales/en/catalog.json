@@ -15,8 +15,8 @@
   "product": {
     "add": "New station",
     "premium": "Premium",
-    "tiersSummary": "{{count}} packages · from {{from}}",
-    "noTiers": "No packages",
+    "optionGroupsCount": "{{count}} services",
+    "priceTiersCount": "{{count}} packages",
     "create": { "title": "New station" },
     "edit": { "title": "Edit station" },
     "form": {
@@ -25,13 +25,33 @@
       "description": "Description",
       "descriptionPlaceholder": "Short description (optional)",
       "isPremium": "Premium"
+    },
+    "disableConfirm": {
+      "title": "Deactivate this station?",
+      "content": "It will no longer be available for new quotes."
+    },
+    "enableConfirm": {
+      "title": "Activate this station?",
+      "content": "It will be available for new quotes again."
     }
   },
   "prices": {
     "title": "Prices",
+    "tabDescription": "Define this station's price packages by number of people.",
     "numPersonsShort": "People",
     "addTier": "Add package",
-    "removeTier": "Remove package"
+    "removeTier": "Remove package",
+    "removeTierConfirm": {
+      "title": "Remove this package?",
+      "content": "This price package will be removed from the station."
+    }
+  },
+  "detail": {
+    "tabs": {
+      "details": "Services",
+      "detailsDescription": "Organize this station's services into sections and add the available items within each one.",
+      "prices": "Prices"
+    }
   },
   "optionGroup": {
     "add": "New section",
@@ -51,10 +71,19 @@
       "maxSelect": "Max selection",
       "maxSelectPlaceholder": "No limit",
       "maxSelectHelp": "Max items the client can choose"
+    },
+    "disableConfirm": {
+      "title": "Deactivate this section?",
+      "content": "Its items will no longer be available for new quotes."
+    },
+    "enableConfirm": {
+      "title": "Activate this section?",
+      "content": "Its items will be available for new quotes again."
     }
   },
   "option": {
     "add": "New item",
+    "empty": "No items",
     "create": { "title": "New item" },
     "edit": { "title": "Edit item" },
     "form": {
@@ -62,6 +91,14 @@
       "namePlaceholder": "Item name",
       "description": "Description",
       "descriptionPlaceholder": "Detail or ingredients (optional)"
+    },
+    "disableConfirm": {
+      "title": "Deactivate this item?",
+      "content": "It will no longer be available for new quotes."
+    },
+    "enableConfirm": {
+      "title": "Activate this item?",
+      "content": "It will be available for new quotes again."
     }
   },
   "validation": {
