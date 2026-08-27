@@ -19,5 +19,8 @@
     "prettier": "^3",
     "turbo": "^2",
     "typescript": "^5.7"
+  },
+  "pnpm": {
+    "neverBuiltDependencies": ["better-sqlite3"]
   }
 }
