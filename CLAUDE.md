@@ -14,6 +14,12 @@ Monorepo Turborepo + pnpm.
   una restricción) o el *propósito* de un bloque no evidente. **Prohibido**: comentarios que
   narran lo que el código ya expresa, y comentarios que mencionan decisiones habladas en el chat
   o cualquier contexto de la sesión (ej. "como pediste", "según lo acordado", "TODO de la charla").
+  Esto **incluye comentarios que no citan el chat literalmente pero igual solo justifican una
+  decisión de implementación tomada para la tarea actual** (ej. explicar por qué un default o
+  una cantidad puntual son ese valor y no otro, cuando la única razón real es "porque así se
+  pidió"). Test rápido: si la razón del comentario dejaría de ser válida en cuanto cambie el
+  pedido que lo originó, es metadata de sesión disfrazada de comentario y no va. **Ante la duda,
+  no comentar** — default a omitir, no a justificar de más.
   El comentario debe tener sentido para quien lea el repo sin haber estado en la conversación.
 
 ---

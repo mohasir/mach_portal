@@ -31,7 +31,7 @@ export function EditEventTypeModal({ eventType, open, onClose }: EditEventTypeMo
       {eventType && (
         <EventTypeForm
           key={eventType.id}
-          initialValues={{ name: eventType.name }}
+          initialValues={{ name: eventType.name, color: eventType.color }}
           onSubmit={onSubmit}
           isPending={isPending}
         />

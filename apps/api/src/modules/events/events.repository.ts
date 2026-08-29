@@ -62,6 +62,7 @@ export class EventsRepository {
         ...publicEventColumns,
         clientName: clients.name,
         eventTypeName: eventTypes.name,
+        eventTypeColor: eventTypes.color,
         quoteNumber: quotes.number,
         quoteCancelled: sql<boolean>`${quotes.stageId} = ${QUOTE_STAGE.CANCELLED}`,
         totalPaid: sql<number>`(${totalPaidSubquery})`,
