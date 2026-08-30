@@ -5,6 +5,7 @@
   },
   "columns": {
     "name": "Nombre",
+    "color": "Color",
     "status": "Estado"
   },
   "status": {
@@ -18,6 +19,8 @@
   "form": {
     "name": "Nombre",
     "namePlaceholder": "Ej. Boda, Cumpleaños, Corporativo",
+    "color": "Color",
+    "colorPresets": "Colores",
     "save": "Guardar"
   },
   "create": {
@@ -28,6 +31,7 @@
   },
   "empty": "No hay tipos de evento",
   "validation": {
-    "nameRequired": "Nombre requerido"
+    "nameRequired": "Nombre requerido",
+    "colorInvalid": "Color inválido"
   }
 }

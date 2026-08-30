@@ -597,6 +597,6 @@ export async function seedCatalog() {
       );
     }
 
-    console.log(`  ✅ ${p.name} (${p.tiers.length} tramos, ${p.groups.length} secciones)`);
+    console.log(`  ✅ ${p.name} (${p.tiers.length} paquetes, ${p.groups.length} secciones)`);
   }
 }

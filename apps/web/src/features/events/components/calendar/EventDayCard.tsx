@@ -11,11 +11,11 @@ interface EventDayCardProps {
   style?: CSSProperties;
 }
 
-const ACCENT_BAR_CLASS = 'bg-link';
-const ACCENT_BG_CLASS = 'bg-link/10';
+export const DEFAULT_EVENT_ACCENT_COLOR = 'var(--color-link)';
 
 export function EventDayCard({ event, onSelect, className, style }: EventDayCardProps) {
   const { time } = useDateFormatter();
+  const accentColor = event.eventTypeColor ?? DEFAULT_EVENT_ACCENT_COLOR;
 
   return (
     <button
@@ -24,10 +24,13 @@ export function EventDayCard({ event, onSelect, className, style }: EventDayCard
         e.stopPropagation();
         onSelect(event.id);
       }}
-      className={`overflow-hidden rounded-md py-2 pr-2 pl-4 text-left text-xs leading-tight ${ACCENT_BG_CLASS} ${className}`}
-      style={style}
+      className={`overflow-hidden rounded-md py-2 pr-2 pl-4 text-left text-xs leading-tight ${className}`}
+      style={{ backgroundColor: `color-mix(in srgb, ${accentColor} 10%, transparent)`, ...style }}
     >
-      <span className={`absolute top-1 bottom-1 left-1 w-1 rounded-full ${ACCENT_BAR_CLASS}`} />
+      <span
+        className="absolute top-1 bottom-1 left-1 w-1 rounded-full"
+        style={{ backgroundColor: accentColor }}
+      />
       <div>
         <span className="block truncate font-medium mb-1">{event.clientName}</span>
         <span className="block text-muted truncate mb-1">{event.eventTypeName}</span>

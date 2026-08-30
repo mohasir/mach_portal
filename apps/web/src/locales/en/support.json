@@ -1,0 +1,184 @@
+{
+  "title": "Help Center",
+  "hero": {
+    "title": "How can we help you?",
+    "searchPlaceholder": "Search for articles...",
+    "noResults": "No articles found for your search"
+  },
+  "relatedArticles": "Related articles",
+  "tableOfContents": "In this article",
+  "note": "Note",
+  "lastUpdated": "Last updated: {{date}}",
+  "categories": {
+    "cotizaciones": {
+      "label": "Quotes",
+      "caption": "Build, send, and follow up on quotes"
+    },
+    "eventos": {
+      "label": "Events",
+      "caption": "Manage confirmed events: staff, payments and more"
+    },
+    "calendario": {
+      "label": "Calendar",
+      "caption": "See scheduled events by month or week"
+    },
+    "catalogo": {
+      "label": "Catalog",
+      "caption": "Stations, services, options and pricing"
+    },
+    "tipos-de-evento": {
+      "label": "Event types",
+      "caption": "Event categories and their color on the calendar"
+    },
+    "clientes": {
+      "label": "Clients",
+      "caption": "Add clients and view their history"
+    },
+    "personal": {
+      "label": "Staff",
+      "caption": "Adding staff and assigning them to events"
+    },
+    "configuracion": {
+      "label": "Settings",
+      "caption": "Profile, taxes, templates and system preferences"
+    },
+    "usuarios": {
+      "label": "Users",
+      "caption": "Accounts, roles and permissions"
+    },
+    "instalacion": {
+      "label": "Installation",
+      "caption": "Add Mach Portal as an app on your phone or tablet"
+    }
+  },
+  "articles": {
+    "crear-una-cotizacion": {
+      "title": "How to create a quote step by step",
+      "description": "Client, event details, stations, charges, discount and deposit"
+    },
+    "estados-de-una-cotizacion": {
+      "title": "Quote stages explained",
+      "description": "What Pendiente, Enviada, Aprobada and Cancelada mean"
+    },
+    "enviar-una-cotizacion": {
+      "title": "How to send a quote and generate the PDF",
+      "description": "Why sending isn't the same as creating, and how the PDF works"
+    },
+    "elegir-opciones-al-cotizar": {
+      "title": "Choosing options when quoting or leaving them for the event",
+      "description": "The builder's two modes and what happens when the quote is confirmed"
+    },
+    "pipeline-de-cotizaciones": {
+      "title": "How to use the Quotes Pipeline",
+      "description": "Columns, drag & drop, and why Cancelada shows fewer cards"
+    },
+    "cancelar-reabrir-archivar-cotizacion": {
+      "title": "Cancelling, reopening and archiving a quote",
+      "description": "Three different actions and when to use each one"
+    },
+    "como-se-crea-un-evento": {
+      "title": "How an event is created",
+      "description": "It's born when a quote is confirmed, and what data it inherits"
+    },
+    "estados-de-un-evento": {
+      "title": "Event statuses explained",
+      "description": "Upcoming, Completed and Cancelled, and how they relate to the quote"
+    },
+    "ficha-del-evento": {
+      "title": "The event's page: its tabs",
+      "description": "Services included, Staff, Payments and Attachments"
+    },
+    "completar-opciones-pendientes": {
+      "title": "Completing an event's pending options",
+      "description": "Where to choose them, the deadline, and an important detail"
+    },
+    "asignar-personal-a-un-evento": {
+      "title": "Assigning staff to an event",
+      "description": "How date-based availability works"
+    },
+    "registrar-pagos-de-un-evento": {
+      "title": "Registering payments and receipts",
+      "description": "Methods, amounts, attachments, and what can't be corrected"
+    },
+    "ver-eventos-en-el-calendario": {
+      "title": "The events calendar",
+      "description": "Month view, week view, and colors by event type"
+    },
+    "crear-estacion-y-precios": {
+      "title": "How to create a station and load its prices",
+      "description": "Packages by number of people"
+    },
+    "armar-servicios-y-opciones": {
+      "title": "How to build a station's services and options",
+      "description": "Selectable vs included sections"
+    },
+    "activar-desactivar-reordenar-catalogo": {
+      "title": "Activating, deactivating and reordering the catalog",
+      "description": "There's no delete, and reactivating is handled by support"
+    },
+    "crear-tipo-de-evento-y-color": {
+      "title": "How to create an event type and pick its color",
+      "description": "Presets, custom colors, and where it shows up"
+    },
+    "cargar-un-cliente": {
+      "title": "How to add a client",
+      "description": "The full form, or a quick add from the builder"
+    },
+    "historial-y-estado-del-cliente": {
+      "title": "A client's history and status",
+      "description": "Quotes, events, and why they're a Lead or Active"
+    },
+    "no-puedo-eliminar-un-cliente": {
+      "title": "Why can't I delete a client",
+      "description": "The restriction from linked quotes or events"
+    },
+    "alta-y-asignacion-de-personal": {
+      "title": "Adding staff and assigning them to an event",
+      "description": "The role is set per event, not per person"
+    },
+    "desactivar-vs-eliminar-personal": {
+      "title": "Deactivating vs deleting a staff member",
+      "description": "What's best depending on whether they have assigned events"
+    },
+    "perfil-contrasena-y-sesiones": {
+      "title": "My profile, password and active sessions",
+      "description": "Editing your account and logging out other devices"
+    },
+    "impuestos-y-valores-por-defecto": {
+      "title": "Taxes by State and quote defaults",
+      "description": "Rates, deposit, validity and quote sequence"
+    },
+    "personalizar-estados-del-pipeline": {
+      "title": "Customizing the pipeline stages",
+      "description": "Names, colors and descriptions (handled by support)"
+    },
+    "plantilla-del-pdf-de-cotizacion": {
+      "title": "How to edit the quote's PDF template",
+      "description": "Service duration, terms and notes"
+    },
+    "preferencias-del-sistema": {
+      "title": "System preferences",
+      "description": "Sortable catalog and choosing options when quoting (handled by support)"
+    },
+    "crear-usuario-y-asignar-rol": {
+      "title": "How to request a new user or a role change",
+      "description": "Handled by support, not from your account"
+    },
+    "roles-y-permisos-explicados": {
+      "title": "The system's roles explained",
+      "description": "Full reference: what each role can do"
+    },
+    "reglas-de-seguridad-de-usuarios": {
+      "title": "Security rules when managing accounts",
+      "description": "Protections so nobody locks themselves out"
+    },
+    "instalar-en-ios": {
+      "title": "How to install the app on iPhone or iPad",
+      "description": "Add it to your home screen from Safari"
+    },
+    "instalar-en-android": {
+      "title": "How to install the app on Android",
+      "description": "Add it to your home screen from Chrome"
+    }
+  }
+}
