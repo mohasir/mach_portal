@@ -5,6 +5,40 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.9.0] - 2026-08-30
+
+### Added
+
+- Centro de ayuda (`/admin/settings/support`): acordeón de categorías con
+  buscador, contenido en Markdown (es/en, con imágenes y notas) por
+  artículo, y tabla de contenidos / "artículos relacionados" autogenerados
+  a partir de los encabezados. 9 categorías y 23 artículos (Cotizaciones,
+  Eventos, Calendario, Catálogo, Tipos de evento, Clientes, Personal,
+  Configuración, Instalación); cada artículo se filtra con el mismo
+  permiso (`useCan`) de la acción que documenta, así cada rol ve solo lo
+  que puede hacer. La categoría que se dejó abierta se recuerda al volver
+  de un artículo (`support.store.ts`, Zustand).
+- Página "Acerca de" en Configuración (`AboutSettingsForm`, sección
+  `about`): nombre y versión de la app.
+- Selector de color por tipo de evento (`EventTypeForm`, `ColorPicker` de
+  AntD con 15 presets de marca + hex libre): columna de color en el
+  listado de Tipos de evento; el calendario de eventos ahora pinta cada
+  evento con el color de su tipo (`EventDayCard`, `CalendarDayEvents`) en
+  vez de un color fijo por estado.
+
+### Changed
+
+- Login (`AuthPage`): se quita el modo de registro (self-signup) — la
+  pantalla ahora es solo inicio de sesión, con logo y card rediseñados
+  (`WrapperCard`).
+- Pie de copyright (`Copy`) rediseñado y movido a un componente `Footer`
+  reutilizable, fijo al fondo del login; ya no muestra versión/commit
+  (antes leía `env.NEXT_PUBLIC_APP_VERSION`/`NEXT_PUBLIC_APP_COMMIT`
+  directo) — ese dato se ve ahora en la página "Acerca de".
+- Fondo de contenido del layout (`useContentBg`) simplificado a un solo
+  color fijo para toda la app, en vez de alternar blanco/gris según la
+  ruta.
+
 ## [0.8.0] - 2026-08-25
 
 ### Added

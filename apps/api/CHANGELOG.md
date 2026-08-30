@@ -5,6 +5,17 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.8.0] - 2026-08-30
+
+### Added
+
+- Columna `color` en `event_types` (hex, default `#1677ff`), con 15
+  presets de marca (`EVENT_TYPE_COLOR_PRESETS` en `@repo/schemas`) y
+  validación de hex libre (`hexColor`, nuevo helper compartido en
+  `fields.ts`); expuesta en `eventTypeResource` y, para el calendario,
+  como `eventTypeColor` en `eventCalendarItemResource`/
+  `EventsRepository`.
+
 ## [0.7.0] - 2026-08-25
 
 ### Added
