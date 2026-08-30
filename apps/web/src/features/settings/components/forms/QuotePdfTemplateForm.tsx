@@ -8,7 +8,6 @@ import { useCan } from '@/lib/auth/useCan';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
 import { useQuotePdfTemplate } from '../../hooks/useQuotePdfTemplate';
 import { useUpdateQuotePdfTemplate } from '../../hooks/useUpdateQuotePdfTemplate';
-import { WrapperCard } from '@/components/shared/WrapperCard';
 import { TermsAndConditionsEditor } from './TermsAndConditionsEditor';
 import { ServiceDurationsEditor } from './ServiceDurationsEditor';
 import { NoteCardEditor } from './NoteCardEditor';
