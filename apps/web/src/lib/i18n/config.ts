@@ -16,6 +16,7 @@ import esQuotes from '@/locales/es/quotes.json';
 import esEvents from '@/locales/es/events.json';
 import esPayments from '@/locales/es/payments.json';
 import esNotifications from '@/locales/es/notifications.json';
+import esSupport from '@/locales/es/support.json';
 import enCommon from '@/locales/en/common.json';
 import enApi from '@/locales/en/api.json';
 import enAuth from '@/locales/en/auth.json';
@@ -31,6 +32,7 @@ import enQuotes from '@/locales/en/quotes.json';
 import enEvents from '@/locales/en/events.json';
 import enPayments from '@/locales/en/payments.json';
 import enNotifications from '@/locales/en/notifications.json';
+import enSupport from '@/locales/en/support.json';
 
 export const locales = ['es', 'en'] as const;
 export type Locale = (typeof locales)[number];
@@ -54,6 +56,7 @@ i18n.use(initReactI18next).init({
       events: esEvents,
       payments: esPayments,
       notifications: esNotifications,
+      support: esSupport,
     },
     en: {
       common: enCommon,
@@ -71,6 +74,7 @@ i18n.use(initReactI18next).init({
       events: enEvents,
       payments: enPayments,
       notifications: enNotifications,
+      support: enSupport,
     },
   },
   lng: defaultLocale,
@@ -91,6 +95,7 @@ i18n.use(initReactI18next).init({
     'events',
     'payments',
     'notifications',
+    'support',
   ],
   defaultNS: 'common',
   interpolation: { escapeValue: false },

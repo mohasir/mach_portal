@@ -1,9 +1,8 @@
 'use client';
 import { Badge } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { EVENT_STATUS_COLORS } from '../../helpers';
 import type { EventCalendarItem } from '../../types';
-import { EventDayCard } from './EventDayCard';
+import { DEFAULT_EVENT_ACCENT_COLOR, EventDayCard } from './EventDayCard';
 
 interface CalendarDayEventsProps {
   events: EventCalendarItem[];
@@ -21,11 +20,13 @@ export function CalendarDayEvents({
   const { t } = useTranslation('events');
 
   if (compact) {
-    const statuses = [...new Set(events.map((event) => event.status))].slice(0, 3);
+    const colors = [
+      ...new Set(events.map((event) => event.eventTypeColor ?? DEFAULT_EVENT_ACCENT_COLOR)),
+    ].slice(0, 3);
     return (
       <div className="flex h-2 items-center justify-center gap-1">
-        {statuses.map((status) => (
-          <Badge key={status} color={EVENT_STATUS_COLORS[status]} />
+        {colors.map((color) => (
+          <Badge key={color} color={color} />
         ))}
       </div>
     );

@@ -59,11 +59,12 @@
   /* Card's ComponentToken (AntD v6) has no border-color or shadow slot: bordered
      Cards (the default, used everywhere in this app) get colorBorderSecondary
      (barely visible) and no shadow at all. Bump the border to the app's regular
-     colorBorder token and add the tertiary shadow (the one AntD reserves for
-     unbordered cards) so every Card reads as a raised surface. */
+     colorBorder token so every Card reads as a raised surface. The shadow is a
+     brand-tinted olive instead of AntD's flat gray tertiary shadow, and softer
+     (single layer, wide blur) than AntD's default triple-layer shadow. */
   .ant-card {
     border-color: var(--ant-color-border);
-    box-shadow: var(--ant-box-shadow-tertiary);
+    box-shadow: 3px 6px 30px -15px color-mix(in oklab, black 20%, transparent);
   }
 
   /* AntD's Tabs theme tokens (theme/antd.ts) only cover color, not weight —

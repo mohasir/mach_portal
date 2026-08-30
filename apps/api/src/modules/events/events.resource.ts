@@ -47,6 +47,7 @@ export const derivePaymentStatus = (totalAmount: number, totalPaid: number): Pay
 export type EventWithNames = PublicEvent & {
   clientName: string;
   eventTypeName: string | null;
+  eventTypeColor: string | null;
   quoteNumber: string;
   quoteCancelled: boolean;
   totalPaid: number;
@@ -86,6 +87,7 @@ export type EventCalendarRow = Pick<
   | 'eventTime'
   | 'clientName'
   | 'eventTypeName'
+  | 'eventTypeColor'
   | 'completedAt'
   | 'quoteCancelled'
 >;
@@ -96,6 +98,7 @@ export const eventCalendarItemResource = (row: EventCalendarRow) => ({
   eventTime: row.eventTime,
   clientName: row.clientName,
   eventTypeName: row.eventTypeName,
+  eventTypeColor: row.eventTypeColor,
   status: deriveStatus(row),
 });
 export type EventCalendarItemResource = ReturnType<typeof eventCalendarItemResource>;

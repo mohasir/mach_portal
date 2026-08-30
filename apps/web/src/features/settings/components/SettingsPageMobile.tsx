@@ -1,5 +1,14 @@
 'use client';
-import { FileText, KeyRound, ListOrdered, Shield, SlidersHorizontal, UserPen } from 'lucide-react';
+import {
+  FileText,
+  Info,
+  KeyRound,
+  LifeBuoy,
+  ListOrdered,
+  Shield,
+  SlidersHorizontal,
+  UserPen,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/shared/PageHeader';
 import type { SectionMenuItem } from '@/components/shared/SectionMenu';
@@ -10,6 +19,7 @@ import { GeneralSettingsForm } from './GeneralSettingsForm';
 import { PreferencesSettingsForm } from './PreferencesSettingsForm';
 import { PermissionsSettingsForm } from './PermissionsSettingsForm';
 import { QuotePdfTemplateForm } from './forms/QuotePdfTemplateForm';
+import { AboutSettingsForm } from './AboutSettingsForm';
 import { SettingsMenuMobile } from './SettingsMenuMobile';
 import type { MobileSettingsSection } from './SettingsPage';
 
@@ -20,6 +30,8 @@ const MOBILE_SECTION_ICONS: Record<MobileSettingsSection, typeof UserPen> = {
   general: SlidersHorizontal,
   preferences: ListOrdered,
   quotePdfTemplate: FileText,
+  support: LifeBuoy,
+  about: Info,
 };
 
 interface SettingsPageMobileProps {
@@ -40,14 +52,15 @@ export function SettingsPageMobile({
   const { t } = useTranslation('settings');
 
   const mobileMenuItems = [
-    { key: 'profileEdit' as const, label: t('profile.editTitle') },
+    { key: 'profileEdit' as const, label: t('profile.editTitle'), group: t('groups.account') },
     ...menuItems.filter((item) => item.key !== 'profile'),
   ].map((item) => ({ ...item, icon: MOBILE_SECTION_ICONS[item.key as MobileSettingsSection] }));
 
   if (section) {
     const label = mobileMenuItems.find((item) => item.key === section)?.label ?? '';
+    const isAbout = section === 'about';
     return (
-      <div className="px-2 py-4">
+      <div className={`px-2 py-4 ${isAbout ? 'flex min-h-0 flex-1 flex-col' : ''}`}>
         <PageHeader title={label} onBack={onBack} />
         {section === 'profileEdit' && <ProfileEditFormMobile />}
         {section === 'security' && <SecuritySettingsForm />}
@@ -55,6 +68,7 @@ export function SettingsPageMobile({
         {section === 'preferences' && <PreferencesSettingsForm />}
         {section === 'quotePdfTemplate' && <QuotePdfTemplateForm />}
         {section === 'permissions' && isSuperAdmin && <PermissionsSettingsForm />}
+        {section === 'about' && <AboutSettingsForm />}
       </div>
     );
   }

@@ -9,6 +9,7 @@ interface WrapperCardProps {
   extra?: ReactNode;
   dividerClassName?: string;
   className?: string;
+  classNames?: { body?: string };
   children: ReactNode;
   variant?: 'card' | 'plain' | 'outlined';
   showDivider?: boolean;
@@ -20,6 +21,7 @@ export function WrapperCard({
   extra,
   dividerClassName = 'mt-3 mb-6',
   className,
+  classNames,
   children,
   variant = 'card',
   showDivider = false,
@@ -52,11 +54,14 @@ export function WrapperCard({
   );
 
   if (resolvedVariant === 'plain') {
-    return <div className={className}>{content}</div>;
+    return <div className={`${className ?? ''} ${classNames?.body ?? ''}`}>{content}</div>;
   }
 
   return (
-    <Card className={`${resolvedVariant === 'outlined' ? 'shadow-none' : ''} ${className ?? ''}`}>
+    <Card
+      className={`${resolvedVariant === 'outlined' ? 'shadow-none' : ''} ${className ?? ''}`}
+      classNames={{ body: classNames?.body }}
+    >
       {content}
     </Card>
   );

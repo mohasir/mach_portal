@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
@@ -37,7 +37,9 @@
     "react-i18next": "^15",
     "react-icons": "^5.7.0",
     "react-international-phone": "^4.8.0",
+    "react-markdown": "^10.1.0",
     "recharts": "^3.10.1",
+    "remark-gfm": "^4.0.1",
     "serwist": "^9.5.12",
     "tailwindcss": "^4",
     "zod": "^4",

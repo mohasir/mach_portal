@@ -6,7 +6,8 @@
   "groups": {
     "account": "Cuenta",
     "system": "Sistema",
-    "access": "Acceso"
+    "access": "Acceso",
+    "about": "Ayuda"
   },
   "profile": {
     "title": "Perfil",
@@ -71,13 +72,35 @@
     "serviceDurationPlaceholder": "Ej: Up to 2 hours of service",
     "addService": "Agregar servicio",
     "removeService": "Quitar servicio",
+    "removeServiceConfirm": {
+      "title": "¿Quitar este servicio?",
+      "content": "Se eliminará de la duración de servicios del PDF."
+    },
     "termsAndConditions": "Términos y condiciones",
-    "termsAndConditionsCaption": "Un término por línea — a medida que escribís se muestran como badges debajo. Se imprimen como una lista de viñetas; si no cargás ninguno, esa sección no aparece en el PDF.",
-    "termsAndConditionsPlaceholder": "El depósito no es reembolsable\nLos precios pueden variar según disponibilidad",
+    "termsAndConditionsCaption": "Se imprimen como una lista de viñetas en el PDF; si no cargás ninguno, esa sección no aparece. Hacé clic en un término para editarlo.",
+    "termPlaceholder": "Ej: El depósito no es reembolsable",
+    "addTerm": "Agregar término",
+    "removeTerm": "Quitar término",
+    "removeTermConfirm": {
+      "title": "¿Quitar este término?",
+      "content": "Se eliminará de los términos y condiciones del PDF."
+    },
     "validityNote": "Nota de validez",
     "validityNoteCaption": "Aparece junto a los totales del PDF (ej. \"Los precios son válidos por...\").",
+    "addValidityNote": "Agregar nota de validez",
+    "removeValidityNote": "Quitar nota de validez",
+    "removeValidityNoteConfirm": {
+      "title": "¿Quitar la nota de validez?",
+      "content": "Dejará de imprimirse en el PDF."
+    },
     "dietaryNote": "Nota dietética",
-    "dietaryNoteCaption": "Aparece al pie de la página \"Services Included\" (solo si la cotización tiene ítems con detalle)."
+    "dietaryNoteCaption": "Aparece al pie de la página \"Services Included\" (solo si la cotización tiene ítems con detalle).",
+    "addDietaryNote": "Agregar nota dietética",
+    "removeDietaryNote": "Quitar nota dietética",
+    "removeDietaryNoteConfirm": {
+      "title": "¿Quitar la nota dietética?",
+      "content": "Dejará de imprimirse en el PDF."
+    }
   },
   "quoteStages": {
     "title": "Estados de cotización",
@@ -187,6 +210,14 @@
       }
     }
   },
+  "support": {
+    "title": "Centro de ayuda"
+  },
+  "about": {
+    "title": "Acerca de",
+    "description": "Sistema de gestión de cotizaciones, eventos y clientes de Mach Snack Bar & Drinks",
+    "version": "v{{version}}"
+  },
   "validation": {
     "taxRateInvalid": "Tasa inválida",
     "taxRatesAllZeroInvalid": "Al menos una tasa debe ser mayor a 0",
@@ -197,8 +228,6 @@
     "currencyInvalid": "Moneda inválida",
     "optionsSelectionDeadlineDaysInvalid": "Cantidad de días inválida",
     "cardSurchargeRateInvalid": "Tasa inválida",
-    "quoteStagesLabelInvalid": "Nombre requerido",
-    "serviceLabelRequired": "La estación es obligatoria",
-    "serviceDurationRequired": "La duración es obligatoria"
+    "quoteStagesLabelInvalid": "Nombre requerido"
   }
 }

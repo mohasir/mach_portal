@@ -18,6 +18,18 @@ export function useEventTypesColumns({
 
   return [
     {
+      title: t('columns.color'),
+      dataIndex: 'color',
+      key: 'color',
+      width: 64,
+      render: (color: string) => (
+        <span
+          className="inline-block size-4 rounded-full border border-black/10"
+          style={{ backgroundColor: color }}
+        />
+      ),
+    },
+    {
       title: t('columns.name'),
       dataIndex: 'name',
       key: 'name',

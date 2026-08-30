@@ -1,9 +1,10 @@
 'use client';
-import { Card, Layout } from 'antd';
+import { Layout } from 'antd';
 import { AppSidebar } from '@/components/shared/Sidebar';
 import { Topbar } from '@/components/shared/Topbar';
 import { useLayoutMode } from '@/lib/navigation';
 import { useLayoutStore } from '@/lib/stores/layout.store';
+import { WrapperCard } from '../shared/WrapperCard';
 
 export function AdminLayoutDesktop({ children }: { children: React.ReactNode }) {
   const layoutMode = useLayoutMode();
@@ -24,7 +25,7 @@ export function AdminLayoutDesktop({ children }: { children: React.ReactNode }) 
           {layoutMode === 'bare' ? (
             <div>{children}</div>
           ) : (
-            <Card
+            <WrapperCard
               className={
                 fillViewport
                   ? 'flex h-full flex-col overflow-hidden rounded-t-2xl! rounded-b-none!'
@@ -37,7 +38,7 @@ export function AdminLayoutDesktop({ children }: { children: React.ReactNode }) 
               }}
             >
               {children}
-            </Card>
+            </WrapperCard>
           )}
         </Layout.Content>
       </Layout>

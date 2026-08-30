@@ -668,7 +668,7 @@ function resolveLine(line: SeedLine, ctx: Context) {
   );
   if (!tier)
     throw new Error(
-      `seedQuotes: "${line.productName}" no tiene tramo para ${line.numPersons} personas`,
+      `seedQuotes: "${line.productName}" no tiene paquete para ${line.numPersons} personas`,
     );
 
   const selections = (line.selections ?? []).map((sel) => {
