@@ -6,7 +6,7 @@ interface FieldLabelProps {
 
 export function FieldLabel({ title, caption, required }: FieldLabelProps) {
   return (
-    <span className="flex flex-col gap-0.5 py-1">
+    <span className="flex flex-col gap-0.5">
       {title && (
         <span>
           {title}
