@@ -1,5 +1,5 @@
 'use client';
-import { Card, Layout } from 'antd';
+import { Layout } from 'antd';
 import { AppSidebar } from '@/components/shared/Sidebar';
 import { Topbar } from '@/components/shared/Topbar';
 import { useLayoutMode } from '@/lib/navigation';

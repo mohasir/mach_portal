@@ -2,7 +2,6 @@
 import { Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { Copy } from '@/components/shared/Copy';
-import { WrapperCard } from '@/components/shared/WrapperCard';
 import { env } from '@/env';
 
 export function AboutSettingsForm() {

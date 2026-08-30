@@ -1,7 +1,6 @@
 'use client';
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 import { IconBadge } from '@/components/shared/IconBadge';
-import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface SettingsMenuMobileItem {
   key: string;

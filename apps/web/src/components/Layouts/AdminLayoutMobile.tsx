@@ -2,12 +2,11 @@
 import { Layout } from 'antd';
 import { BottomNav } from '@/components/shared/BottomNav';
 import { MobileTopbar } from '@/components/shared/Topbar';
-import { useContentBg, useHideBottomNav } from '@/lib/navigation';
+import { useHideBottomNav } from '@/lib/navigation';
 import { useLayoutStore } from '@/lib/stores/layout.store';
 
 export function AdminLayoutMobile({ children }: { children: React.ReactNode }) {
   const fillViewport = useLayoutStore((s) => s.fillViewport);
-  const contentBg = useContentBg();
   const hideBottomNav = useHideBottomNav();
 
   return (
