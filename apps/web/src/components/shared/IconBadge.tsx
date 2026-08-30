@@ -20,11 +20,11 @@ export function IconBadge({
   size = 16,
   shape = 'circle',
   badgeSize = 'md',
-  className = 'bg-olive-faint text-brown',
+  className = 'bg-primary/10 text-brown',
 }: IconBadgeProps) {
   return (
     <span
-      className={`flex ${BADGE_SIZE_CLASSES[badgeSize]} shrink-0 items-center justify-center ${shape === 'circle' ? 'rounded-full' : 'rounded-lg'} ${className}`}
+      className={`flex ${BADGE_SIZE_CLASSES[badgeSize]} shrink-0 items-center justify-center ${shape === 'circle' ? 'rounded-full' : 'rounded-xl'} ${className}`}
     >
       <Icon size={size} />
     </span>

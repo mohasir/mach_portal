@@ -7,7 +7,7 @@
     "account": "Cuenta",
     "system": "Sistema",
     "access": "Acceso",
-    "about": "Acerca de"
+    "about": "Ayuda"
   },
   "profile": {
     "title": "Perfil",
@@ -187,6 +187,9 @@
         "caption": "Si el staff puede elegir opciones al momento de cotizar en vez de diferirlas al evento."
       }
     }
+  },
+  "support": {
+    "title": "Centro de ayuda"
   },
   "about": {
     "title": "Acerca de",

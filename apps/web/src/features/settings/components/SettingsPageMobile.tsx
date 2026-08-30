@@ -3,6 +3,7 @@ import {
   FileText,
   Info,
   KeyRound,
+  LifeBuoy,
   ListOrdered,
   Shield,
   SlidersHorizontal,
@@ -29,6 +30,7 @@ const MOBILE_SECTION_ICONS: Record<MobileSettingsSection, typeof UserPen> = {
   general: SlidersHorizontal,
   preferences: ListOrdered,
   quotePdfTemplate: FileText,
+  support: LifeBuoy,
   about: Info,
 };
 
@@ -50,7 +52,7 @@ export function SettingsPageMobile({
   const { t } = useTranslation('settings');
 
   const mobileMenuItems = [
-    { key: 'profileEdit' as const, label: t('profile.editTitle') },
+    { key: 'profileEdit' as const, label: t('profile.editTitle'), group: t('groups.account') },
     ...menuItems.filter((item) => item.key !== 'profile'),
   ].map((item) => ({ ...item, icon: MOBILE_SECTION_ICONS[item.key as MobileSettingsSection] }));
 

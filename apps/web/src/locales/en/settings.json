@@ -7,7 +7,7 @@
     "account": "Account",
     "system": "System",
     "access": "Access",
-    "about": "About"
+    "about": "Help"
   },
   "profile": {
     "title": "Profile",
@@ -187,6 +187,9 @@
         "caption": "Whether staff can choose options at quote time instead of deferring them to the event."
       }
     }
+  },
+  "support": {
+    "title": "Help Center"
   },
   "about": {
     "title": "About",

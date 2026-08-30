@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { SectionMenuItem } from '@/components/shared/SectionMenu';
@@ -17,17 +18,27 @@ export type SettingsSection =
   | 'preferences'
   | 'quotePdfTemplate'
   | 'permissions'
+  // Not a rendered section: selecting it navigates to /admin/settings/support
+  // instead of setting state (it's its own routed page, not a form panel).
+  | 'support'
   | 'about';
 export type MobileSettingsSection = Exclude<SettingsSection, 'profile'> | 'profileEdit';
 
 export function SettingsPage() {
   const { t } = useTranslation('settings');
+  const router = useRouter();
   const isSuperAdmin = useIsSuperAdmin();
   const can = useCan();
   const isDesktop = useIsDesktop();
   const [section, setSection] = useState<SettingsSection>('profile');
   const [mobileSection, setMobileSection] = useState<MobileSettingsSection | null>(null);
   const setFillViewport = useLayoutStore((s) => s.setFillViewport);
+
+  const goToSupport = () => router.push('/admin/settings/support');
+  const selectSection = (key: SettingsSection) =>
+    key === 'support' ? goToSupport() : setSection(key);
+  const selectMobileSection = (key: MobileSettingsSection) =>
+    key === 'support' ? goToSupport() : setMobileSection(key);
 
   // The "about" section pins its copyright block to the bottom of the screen
   // (see AboutSettingsForm) instead of following normal document flow.
@@ -64,6 +75,7 @@ export function SettingsPage() {
           },
         ]
       : []),
+    { key: 'support', label: t('support.title'), group: t('groups.about') },
     { key: 'about', label: t('about.title'), group: t('groups.about') },
   ];
 
@@ -73,7 +85,7 @@ export function SettingsPage() {
         menuItems={menuItems}
         isSuperAdmin={isSuperAdmin}
         section={mobileSection}
-        onSelectSection={setMobileSection}
+        onSelectSection={selectMobileSection}
         onBack={() => setMobileSection(null)}
       />
     );
@@ -84,7 +96,7 @@ export function SettingsPage() {
       menuItems={menuItems}
       isSuperAdmin={isSuperAdmin}
       section={section}
-      onSelectSection={setSection}
+      onSelectSection={selectSection}
     />
   );
 }

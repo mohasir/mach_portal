@@ -1,0 +1,184 @@
+{
+  "title": "Centro de ayuda",
+  "hero": {
+    "title": "¿En qué te podemos ayudar?",
+    "searchPlaceholder": "Buscar artículos...",
+    "noResults": "No encontramos artículos para tu búsqueda"
+  },
+  "relatedArticles": "Artículos relacionados",
+  "tableOfContents": "En este artículo",
+  "note": "Nota",
+  "lastUpdated": "Última actualización: {{date}}",
+  "categories": {
+    "cotizaciones": {
+      "label": "Cotizaciones",
+      "caption": "Armar, enviar y dar seguimiento a cotizaciones"
+    },
+    "eventos": {
+      "label": "Eventos",
+      "caption": "Gestionar eventos ya confirmados: staff, pagos y más"
+    },
+    "calendario": {
+      "label": "Calendario",
+      "caption": "Ver los eventos agendados por mes o semana"
+    },
+    "catalogo": {
+      "label": "Catálogo",
+      "caption": "Estaciones, servicios, opciones y precios"
+    },
+    "tipos-de-evento": {
+      "label": "Tipos de evento",
+      "caption": "Categorías de evento y su color en el calendario"
+    },
+    "clientes": {
+      "label": "Clientes",
+      "caption": "Cargar clientes y ver su historial"
+    },
+    "personal": {
+      "label": "Personal",
+      "caption": "Alta de staff y asignación a eventos"
+    },
+    "configuracion": {
+      "label": "Configuración",
+      "caption": "Perfil, impuestos, plantillas y preferencias del sistema"
+    },
+    "usuarios": {
+      "label": "Usuarios",
+      "caption": "Cuentas, roles y permisos"
+    },
+    "instalacion": {
+      "label": "Instalación",
+      "caption": "Agregar Mach Portal como app en el celular o la tablet"
+    }
+  },
+  "articles": {
+    "crear-una-cotizacion": {
+      "title": "Cómo crear una cotización paso a paso",
+      "description": "Cliente, datos del evento, estaciones, cargos, descuento y depósito"
+    },
+    "estados-de-una-cotizacion": {
+      "title": "Estados de una cotización",
+      "description": "Qué significa Pendiente, Enviada, Aprobada y Cancelada"
+    },
+    "enviar-una-cotizacion": {
+      "title": "Cómo enviar una cotización y generar el PDF",
+      "description": "Por qué enviar no es lo mismo que crear, y cómo funciona el PDF"
+    },
+    "elegir-opciones-al-cotizar": {
+      "title": "Elegir las opciones al cotizar o dejarlas para el evento",
+      "description": "Los dos modos del armador y qué pasa al aprobar la cotización"
+    },
+    "pipeline-de-cotizaciones": {
+      "title": "Cómo usar el Pipeline de cotizaciones",
+      "description": "Columnas, drag & drop y por qué Cancelada muestra menos"
+    },
+    "cancelar-reabrir-archivar-cotizacion": {
+      "title": "Cancelar, reabrir y archivar una cotización",
+      "description": "Tres acciones distintas y cuándo usar cada una"
+    },
+    "como-se-crea-un-evento": {
+      "title": "Cómo se crea un evento",
+      "description": "Nace al aprobar una cotización, y qué datos hereda"
+    },
+    "estados-de-un-evento": {
+      "title": "Estados de un evento",
+      "description": "Próximo, Realizado y Cancelado, y cómo se relacionan con la cotización"
+    },
+    "ficha-del-evento": {
+      "title": "La ficha del evento: sus pestañas",
+      "description": "Servicios incluidos, Staff, Pagos y Adjuntos"
+    },
+    "completar-opciones-pendientes": {
+      "title": "Completar las opciones pendientes de un evento",
+      "description": "Dónde elegirlas, la fecha límite y un detalle importante"
+    },
+    "asignar-personal-a-un-evento": {
+      "title": "Asignar personal a un evento",
+      "description": "Cómo funciona la disponibilidad por fecha"
+    },
+    "registrar-pagos-de-un-evento": {
+      "title": "Registrar pagos y comprobantes",
+      "description": "Métodos, montos, adjuntos y qué no se puede corregir"
+    },
+    "ver-eventos-en-el-calendario": {
+      "title": "El calendario de eventos",
+      "description": "Vista mes, semana y los colores por tipo de evento"
+    },
+    "crear-estacion-y-precios": {
+      "title": "Cómo crear una estación y cargar sus precios",
+      "description": "Paquetes por cantidad de personas"
+    },
+    "armar-servicios-y-opciones": {
+      "title": "Cómo armar los servicios y opciones de una estación",
+      "description": "Secciones seleccionables e incluidas"
+    },
+    "activar-desactivar-reordenar-catalogo": {
+      "title": "Activar, desactivar y reordenar el catálogo",
+      "description": "No hay eliminar, y reactivar lo gestiona soporte"
+    },
+    "crear-tipo-de-evento-y-color": {
+      "title": "Cómo crear un tipo de evento y elegir su color",
+      "description": "Presets, color personalizado y dónde se ve"
+    },
+    "cargar-un-cliente": {
+      "title": "Cómo cargar un cliente",
+      "description": "Formulario completo o alta rápida desde el armador"
+    },
+    "historial-y-estado-del-cliente": {
+      "title": "Historial y estado del cliente",
+      "description": "Cotizaciones, eventos y por qué es Prospecto o Activo"
+    },
+    "no-puedo-eliminar-un-cliente": {
+      "title": "Por qué no puedo eliminar un cliente",
+      "description": "La restricción por cotizaciones o eventos asociados"
+    },
+    "alta-y-asignacion-de-personal": {
+      "title": "Alta de personal y cómo asignarlo a un evento",
+      "description": "El rol se define por evento, no por persona"
+    },
+    "desactivar-vs-eliminar-personal": {
+      "title": "Desactivar vs eliminar un miembro del staff",
+      "description": "Qué conviene según si tiene eventos asignados"
+    },
+    "perfil-contrasena-y-sesiones": {
+      "title": "Mi perfil, contraseña y sesiones activas",
+      "description": "Editar tu cuenta y cerrar sesión en otros dispositivos"
+    },
+    "impuestos-y-valores-por-defecto": {
+      "title": "Impuestos por Estado y valores por defecto",
+      "description": "Tasas, depósito, validez y consecutivo de cotización"
+    },
+    "personalizar-estados-del-pipeline": {
+      "title": "Personalizar los estados del pipeline",
+      "description": "Nombres, colores y descripciones (gestionado por soporte)"
+    },
+    "plantilla-del-pdf-de-cotizacion": {
+      "title": "Cómo editar la plantilla del PDF de cotización",
+      "description": "Duración de servicios, términos y notas"
+    },
+    "preferencias-del-sistema": {
+      "title": "Preferencias del sistema",
+      "description": "Catálogo ordenable y elegir opciones al cotizar (gestionado por soporte)"
+    },
+    "crear-usuario-y-asignar-rol": {
+      "title": "Cómo pedir un usuario nuevo o cambiar un rol",
+      "description": "Se gestiona por soporte, no desde tu cuenta"
+    },
+    "roles-y-permisos-explicados": {
+      "title": "Los roles del sistema explicados",
+      "description": "Referencia completa: qué puede hacer cada rol"
+    },
+    "reglas-de-seguridad-de-usuarios": {
+      "title": "Reglas de seguridad al gestionar cuentas",
+      "description": "Protecciones para no bloquear el acceso sin querer"
+    },
+    "instalar-en-ios": {
+      "title": "Cómo instalar la app en iPhone o iPad",
+      "description": "Agregarla a la pantalla de inicio desde Safari"
+    },
+    "instalar-en-android": {
+      "title": "Cómo instalar la app en Android",
+      "description": "Agregarla a la pantalla de inicio desde Chrome"
+    }
+  }
+}
