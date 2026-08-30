@@ -72,13 +72,35 @@
     "serviceDurationPlaceholder": "E.g. Up to 2 hours of service",
     "addService": "Add service",
     "removeService": "Remove service",
+    "removeServiceConfirm": {
+      "title": "Remove this service?",
+      "content": "It will be removed from the PDF's service duration list."
+    },
     "termsAndConditions": "Terms and conditions",
-    "termsAndConditionsCaption": "One term per line — badges show up below as you type. Printed as a bullet list; leave this empty to skip that section in the PDF.",
-    "termsAndConditionsPlaceholder": "The deposit is non-refundable\nPrices may vary based on availability",
+    "termsAndConditionsCaption": "Printed as a bullet list in the PDF; leave this empty to skip that section. Click a term to edit it.",
+    "termPlaceholder": "E.g. The deposit is non-refundable",
+    "addTerm": "Add term",
+    "removeTerm": "Remove term",
+    "removeTermConfirm": {
+      "title": "Remove this term?",
+      "content": "It will be removed from the PDF's terms and conditions."
+    },
     "validityNote": "Validity note",
     "validityNoteCaption": "Shown next to the totals in the PDF (e.g. \"Prices are valid for...\").",
+    "addValidityNote": "Add validity note",
+    "removeValidityNote": "Remove validity note",
+    "removeValidityNoteConfirm": {
+      "title": "Remove the validity note?",
+      "content": "It will no longer be printed on the PDF."
+    },
     "dietaryNote": "Dietary note",
-    "dietaryNoteCaption": "Shown at the bottom of the \"Services Included\" page (only if the quote has items with details)."
+    "dietaryNoteCaption": "Shown at the bottom of the \"Services Included\" page (only if the quote has items with details).",
+    "addDietaryNote": "Add dietary note",
+    "removeDietaryNote": "Remove dietary note",
+    "removeDietaryNoteConfirm": {
+      "title": "Remove the dietary note?",
+      "content": "It will no longer be printed on the PDF."
+    }
   },
   "quoteStages": {
     "title": "Quote stages",
@@ -206,8 +228,6 @@
     "currencyInvalid": "Invalid currency",
     "optionsSelectionDeadlineDaysInvalid": "Invalid number of days",
     "cardSurchargeRateInvalid": "Invalid rate",
-    "quoteStagesLabelInvalid": "Label required",
-    "serviceLabelRequired": "Station is required",
-    "serviceDurationRequired": "Duration is required"
+    "quoteStagesLabelInvalid": "Label required"
   }
 }

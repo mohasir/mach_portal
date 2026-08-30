@@ -72,6 +72,7 @@ export function OptionRow({ option, onEdit }: OptionRowProps) {
                 shape="square"
                 badgeSize="sm"
                 size={14}
+                rounded="rounded-lg"
                 className="bg-primary/20 text-primary"
               />
             }
@@ -92,6 +93,7 @@ export function OptionRow({ option, onEdit }: OptionRowProps) {
                     shape="square"
                     badgeSize="sm"
                     size={14}
+                    rounded="rounded-lg"
                     className="bg-salmon/20 text-error"
                   />
                 }
