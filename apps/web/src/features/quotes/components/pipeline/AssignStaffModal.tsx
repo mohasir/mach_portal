@@ -1,10 +1,11 @@
 'use client';
-import { Button, Empty, Form, Input, Modal, Select } from 'antd';
+import { Button, Empty, Form, Input, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { AssignStaffInput } from '@repo/schemas';
 import { useStaffAvailability } from '@/features/staff';
 import { useAssignStaff } from '@/features/events';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { WrapperModal } from '@/components/shared/WrapperModal';
 import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 
 interface AssignStaffModalProps {
@@ -41,13 +42,7 @@ export function AssignStaffModal({ eventId, eventDate, open, onClose }: AssignSt
   };
 
   return (
-    <Modal
-      open={open}
-      onCancel={onCancel}
-      footer={null}
-      title={t('assignStaff.title')}
-      destroyOnHidden
-    >
+    <WrapperModal open={open} onCancel={onCancel} title={t('assignStaff.title')} destroyOnHidden>
       {!isLoading && !available?.length ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('assignStaff.empty')} />
       ) : (
@@ -81,6 +76,6 @@ export function AssignStaffModal({ eventId, eventDate, open, onClose }: AssignSt
           </Form.Item>
         </Form>
       )}
-    </Modal>
+    </WrapperModal>
   );
 }

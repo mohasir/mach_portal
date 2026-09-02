@@ -1,10 +1,11 @@
 'use client';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { App, Modal, Upload } from 'antd';
+import { App, Upload } from 'antd';
 import type { UploadFile, UploadProps } from 'antd';
 import { UploadCloud } from 'lucide-react';
 import { ATTACHMENT_ALLOWED_MIME_TYPES, ATTACHMENT_MAX_SIZE_BYTES } from '@repo/schemas';
+import { WrapperModal } from '@/components/shared/WrapperModal';
 import { AttachmentUploadItem } from './AttachmentUploadItem';
 
 interface AttachmentUploadModalProps {
@@ -53,13 +54,7 @@ export function AttachmentUploadModal({
   };
 
   return (
-    <Modal
-      open={open}
-      onCancel={onClose}
-      title={title}
-      footer={null}
-      afterClose={() => setFileList([])}
-    >
+    <WrapperModal open={open} onCancel={onClose} title={title} afterClose={() => setFileList([])}>
       {open && (
         <Upload.Dragger
           name="file"
@@ -90,6 +85,6 @@ export function AttachmentUploadModal({
           <p className="ant-upload-hint">{hintText(maxSizeMb)}</p>
         </Upload.Dragger>
       )}
-    </Modal>
+    </WrapperModal>
   );
 }

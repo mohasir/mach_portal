@@ -7,6 +7,7 @@ export const publicUserColumns = {
   emailVerified: user.emailVerified,
   role: user.role,
   banned: user.banned,
+  mustChangePassword: user.mustChangePassword,
   createdAt: user.createdAt,
 } as const;
 
@@ -21,6 +22,7 @@ export const userResource = (user: UserWithSessions) => ({
   emailVerified: user.emailVerified,
   role: user.role,
   banned: user.banned ?? false,
+  mustChangePassword: user.mustChangePassword ?? false,
   sessionsCount: user.sessionsCount,
   createdAt: user.createdAt,
 });

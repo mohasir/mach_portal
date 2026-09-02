@@ -1,7 +1,8 @@
-import { asc, count, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
+import { asc, and, count, desc, eq, ilike, like, or, sql, type SQL } from 'drizzle-orm';
 import type { UsersListQuery } from '@repo/schemas';
 import type { Database } from '../../db';
-import { session, user } from '../../db/schema';
+import { session, user, verification } from '../../db/schema';
 import { resolvePagination } from '../../lib/utils/pagination';
 import { publicUserColumns } from './users.resource';
 
@@ -57,6 +58,15 @@ export class UsersRepository {
       .then((r) => r[0]);
   }
 
+  findById(id: string) {
+    return this.db
+      .select({ id: user.id, mustChangePassword: user.mustChangePassword })
+      .from(user)
+      .where(eq(user.id, id))
+      .limit(1)
+      .then((r) => r[0]);
+  }
+
   updateById(id: string, data: Partial<typeof user.$inferInsert>) {
     return this.db
       .update(user)
@@ -72,5 +82,25 @@ export class UsersRepository {
       .where(eq(user.id, id))
       .returning({ id: user.id })
       .then((r) => r[0]);
+  }
+
+  // Password setup/reset tokens ride on Better Auth's own `verification` table
+  // (same `reset-password:<token>` identifier its native `/reset-password` endpoint
+  // consumes) so the consuming side needs no custom code.
+  deletePendingPasswordSetupTokens(userId: string) {
+    return this.db
+      .delete(verification)
+      .where(
+        and(eq(verification.value, userId), like(verification.identifier, 'reset-password:%')),
+      );
+  }
+
+  createPasswordSetupToken(userId: string, token: string, expiresAt: Date) {
+    return this.db.insert(verification).values({
+      id: randomUUID(),
+      identifier: `reset-password:${token}`,
+      value: userId,
+      expiresAt,
+    });
   }
 }

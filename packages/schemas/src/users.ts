@@ -11,7 +11,6 @@ export type UsersListQuery = z.infer<typeof usersListQuerySchema>;
 export const createUserSchema = z.object({
   name: z.string().min(1, 'users.validation.nameRequired').max(120),
   email: z.email('users.validation.emailInvalid'),
-  password: z.string().min(8, 'users.validation.passwordMin').max(128),
   role: roleEnum,
 });
 

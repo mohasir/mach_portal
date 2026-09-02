@@ -1,7 +1,7 @@
 'use client';
-import { Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CreateStaffInput } from '@repo/schemas';
+import { WrapperModal } from '@/components/shared/WrapperModal';
 import { useCreateStaff } from '../hooks/useStaff';
 import { StaffForm } from './StaffForm';
 
@@ -24,8 +24,8 @@ export function CreateStaffModal({ open, onClose }: CreateStaffModalProps) {
   };
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} title={t('create.title')}>
+    <WrapperModal open={open} onCancel={onClose} title={t('create.title')}>
       {open && <StaffForm onSubmit={onSubmit} isPending={isPending} />}
-    </Modal>
+    </WrapperModal>
   );
 }

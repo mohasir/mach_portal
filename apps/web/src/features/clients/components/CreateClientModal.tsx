@@ -1,7 +1,8 @@
 'use client';
-import { Form, Modal } from 'antd';
+import { Form } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CreateClientInput } from '@repo/schemas';
+import { WrapperModal } from '@/components/shared/WrapperModal';
 import { useCreateClient } from '../hooks/useClients';
 import { ClientForm } from './ClientForm';
 
@@ -25,8 +26,8 @@ export function CreateClientModal({ open, onClose }: CreateClientModalProps) {
   };
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} title={t('create.title')}>
+    <WrapperModal open={open} onCancel={onClose} title={t('create.title')}>
       {open && <ClientForm form={form} onSubmit={onSubmit} isPending={isPending} />}
-    </Modal>
+    </WrapperModal>
   );
 }

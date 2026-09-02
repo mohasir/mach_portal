@@ -1,7 +1,7 @@
 'use client';
-import { Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CreateEventTypeInput } from '@repo/schemas';
+import { WrapperModal } from '@/components/shared/WrapperModal';
 import { useCreateEventType } from '../hooks/useEventTypes';
 import { EventTypeForm } from './EventTypeForm';
 
@@ -24,8 +24,8 @@ export function CreateEventTypeModal({ open, onClose }: CreateEventTypeModalProp
   };
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} title={t('create.title')}>
+    <WrapperModal open={open} onCancel={onClose} title={t('create.title')}>
       {open && <EventTypeForm onSubmit={onSubmit} isPending={isPending} />}
-    </Modal>
+    </WrapperModal>
   );
 }

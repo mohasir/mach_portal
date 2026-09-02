@@ -1,6 +1,6 @@
 'use client';
 import { useState, type ReactNode } from 'react';
-import { Button, Modal, Typography } from 'antd';
+import { Button, Typography } from 'antd';
 import type { IconType } from 'react-icons';
 import {
   TbAlertTriangleFilled,
@@ -8,6 +8,7 @@ import {
   TbInfoSquareRoundedFilled,
 } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
+import { WrapperModal } from '@/components/shared/WrapperModal';
 
 export type ConfirmModalType = 'info' | 'help' | 'warning';
 
@@ -72,14 +73,7 @@ export function ConfirmModal({
   const { icon: Icon, bg, bgStrong, text } = TYPE_STYLES[type];
 
   return (
-    <Modal
-      open={open}
-      onCancel={onCancel}
-      footer={null}
-      centered
-      width={{ xs: '90%', md: 340 }}
-      classNames={{ container: 'rounded-3xl!' }}
-    >
+    <WrapperModal open={open} onCancel={onCancel} width={{ xs: '90%', md: 340 }}>
       <div className="flex flex-col items-center gap-3 py-2 text-center">
         <div className={`flex size-16 items-center justify-center rounded-full ${bg}`}>
           <div className={`flex size-11 items-center justify-center rounded-full ${bgStrong}`}>
@@ -108,7 +102,7 @@ export function ConfirmModal({
           </Button>
         </div>
       </div>
-    </Modal>
+    </WrapperModal>
   );
 }
 
