@@ -12,6 +12,7 @@ interface LineCardProps {
   line: LineDraft;
   product: Product;
   readOnly?: boolean;
+  canEditPricing: boolean;
   onRemove: () => void;
   onChange: (payload: Partial<Pick<LineDraft, 'numPersons' | 'subtotal'>>) => void;
   onSelectionChange: (optionGroupId: string, optionIds: string[]) => void;
@@ -21,6 +22,7 @@ export function LineCard({
   line,
   product,
   readOnly,
+  canEditPricing,
   onRemove,
   onChange,
   onSelectionChange,
@@ -72,7 +74,7 @@ export function LineCard({
                 <div className="flex flex-col gap-1">
                   <span className="text-xs text-gray-500">{t('builder.lines.price')}</span>
                   <MoneyInput
-                    disabled={readOnly}
+                    disabled={readOnly || !canEditPricing}
                     className="w-full"
                     min={0}
                     value={line.subtotal}

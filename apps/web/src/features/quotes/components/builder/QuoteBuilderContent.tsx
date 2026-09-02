@@ -201,7 +201,7 @@ export function QuoteBuilderContent({
         <>
           <LinesBuilderSection catalog={catalog} readOnly={readOnly} />
           <ExtraChargesSection readOnly={readOnly} />
-          <Card className="border-line border-2">
+          <Card className="border-line border-2 bg-primary/5">
             <QuoteSummary
               subtotal={totals.subtotal}
               discountAmount={totals.discountAmount}
@@ -216,7 +216,7 @@ export function QuoteBuilderContent({
           </Card>
         </>
       )}
-      <EventSection eventTypes={eventTypes} readOnly={readOnly} />
+      <EventSection eventTypes={eventTypes} readOnly={readOnly} quoteId={quoteId} />
       {isDesktop && <ExtraChargesSection readOnly={readOnly} />}
       {isDesktop && <LinesBuilderSection catalog={catalog} readOnly={readOnly} />}
       <NotesSection readOnly={readOnly} />

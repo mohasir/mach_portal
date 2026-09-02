@@ -13,13 +13,14 @@ interface UserCardProps {
   user: User;
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
+  onPasswordSetupLink: (url: string, reason: 'create' | 'reset') => void;
 }
 
-export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
+export function UserCard({ user, onEdit, onDelete, onPasswordSetupLink }: UserCardProps) {
   const { t } = useTranslation('users');
   const { t: tc } = useTranslation('common');
   const { date } = useDateFormatter();
-  const rowActions = useUserRowActions({ onEdit, onDelete });
+  const rowActions = useUserRowActions({ onEdit, onDelete, onPasswordSetupLink });
 
   return (
     <Card>
@@ -30,6 +31,7 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
 
       <Flex wrap gap={8} align="center" className="mt-3">
         <RoleTag role={user.role} />
+        {user.mustChangePassword ? <Tag color="orange">{t('pending.badge')}</Tag> : null}
         {user.emailVerified ? (
           <Tag color="green" icon={<BadgeCheck size={14} />}>
             {t('columns.emailVerified')}

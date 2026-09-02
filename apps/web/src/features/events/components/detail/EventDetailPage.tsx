@@ -13,6 +13,7 @@ import { EventHeader } from './EventHeader';
 import { EventComposition } from './EventComposition';
 import { EventPayments, type EventDetailWithPayments } from './EventPayments';
 import { EventStaffPanel } from './EventStaffPanel';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface EventDetailPageProps {
   eventId: string;
@@ -73,7 +74,9 @@ export function EventDetailPage({ eventId }: EventDetailPageProps) {
       <PageHeader title={title} onBack={onBack} />
       <div className="flex flex-col gap-4">
         <EventHeader event={event} />
-        <Tabs items={tabItems} />
+        <WrapperCard>
+          <Tabs items={tabItems} />
+        </WrapperCard>
       </div>
     </div>
   );

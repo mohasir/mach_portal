@@ -73,6 +73,8 @@
       "cityPlaceholder": "Event city",
       "date": "Event date",
       "time": "Time",
+      "availabilityWarning": "Warning",
+      "availabilityConflictDescription": "There are already quotes for this date and time:",
       "address": "Address",
       "addressPlaceholder": "Event address",
       "longDistance": "Long distance fee",

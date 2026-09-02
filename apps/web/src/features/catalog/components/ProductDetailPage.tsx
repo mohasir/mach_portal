@@ -153,7 +153,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                 {
                   key: 'prices',
                   label: t('detail.tabs.prices'),
-                  children: <PriceTiersForm product={product} canEdit={canEdit} />,
+                  children: <PriceTiersForm product={product} />,
                 },
               ]}
             />

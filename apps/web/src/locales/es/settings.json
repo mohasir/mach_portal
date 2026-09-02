@@ -143,6 +143,8 @@
       "upload_attachment": "Subir comprobante",
       "view": "Ver",
       "manage_selections": "Elegir opciones del evento",
+      "manage_line_pricing": "Personalizar cantidad y precio de línea",
+      "manage_staff_assignments": "Asignar/quitar staff del evento",
       "view_summary": "Ver métricas del mes",
       "view_quotes_chart": "Ver gráfica de cotizaciones",
       "view_top_products": "Ver estaciones más pedidas"
@@ -178,7 +180,11 @@
       },
       "product": {
         "label": "Productos",
-        "caption": "Productos del catálogo, opciones y precios."
+        "caption": "Productos del catálogo y sus opciones."
+      },
+      "price_tiers": {
+        "label": "Tarifas de precio",
+        "caption": "Paquetes de precio por cantidad de personas de cada estación."
       },
       "event_type": {
         "label": "Tipos de evento",

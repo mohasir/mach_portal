@@ -1,7 +1,8 @@
 'use client';
-import { Form, Modal } from 'antd';
+import { Form } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CreateClientInput } from '@repo/schemas';
+import { WrapperModal } from '@/components/shared/WrapperModal';
 import { useUpdateClient } from '../hooks/useClients';
 import { ClientForm } from './ClientForm';
 import type { Client } from '../types';
@@ -28,7 +29,7 @@ export function EditClientModal({ client, open, onClose }: EditClientModalProps)
   };
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} title={t('edit.title')}>
+    <WrapperModal open={open} onCancel={onClose} title={t('edit.title')}>
       {client && (
         <ClientForm
           key={client.id}
@@ -46,6 +47,6 @@ export function EditClientModal({ client, open, onClose }: EditClientModalProps)
           isPending={isPending}
         />
       )}
-    </Modal>
+    </WrapperModal>
   );
 }

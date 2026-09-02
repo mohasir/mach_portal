@@ -5,6 +5,7 @@ import {
   paginationMeta,
   QUOTE_STAGE,
   TEMPLATE_TYPES,
+  type CheckQuoteAvailabilityQuery,
   type CreateQuoteInput,
   type QuoteLineInput,
   type QuoteStageId,
@@ -28,6 +29,7 @@ import {
   buildQuoteDetail,
   buildQuoteLineDetails,
   isQuoteComplete,
+  quoteAvailabilityConflictResource,
   quoteCardResource,
   quoteListItemResource,
   quoteResource,
@@ -46,6 +48,12 @@ function invalidLines() {
     cause: new AppError(ErrorCodes.quote.INVALID_LINES),
   });
 }
+function pricingNotAllowed() {
+  return new TRPCError({
+    code: 'FORBIDDEN',
+    cause: new AppError(ErrorCodes.quote.PRICING_NOT_ALLOWED),
+  });
+}
 
 export class QuotesService {
   constructor(
@@ -56,15 +64,18 @@ export class QuotesService {
     private notificationsRepo: NotificationsRepository,
   ) {}
 
-  async list(query: QuotesListQuery) {
-    const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(query);
+  async list(query: QuotesListQuery, ownerId?: string) {
+    const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(
+      query,
+      ownerId,
+    );
     const resource = items.map(quoteListItemResource);
     if (!paginate) return { items: resource };
     return { items: resource, pagination: paginationMeta(total, page, pageSize) };
   }
 
-  async getById(id: string) {
-    const result = await this.repo.findById(id);
+  async getById(id: string, ownerId?: string) {
+    const result = await this.repo.findById(id, ownerId);
     if (!result) throw notFound();
     return buildQuoteDetail(
       result.quoteRow,
@@ -74,8 +85,8 @@ export class QuotesService {
     );
   }
 
-  async generatePdf(id: string) {
-    const result = await this.repo.findById(id);
+  async generatePdf(id: string, ownerId?: string) {
+    const result = await this.repo.findById(id, ownerId);
     if (!result) throw notFound();
     if (!PDF_ALLOWED_STAGES.includes(result.quoteRow.stageId as QuoteStageId)) {
       throw new TRPCError({
@@ -108,8 +119,8 @@ export class QuotesService {
     return quoteResource(updated);
   }
 
-  async board(query: QuotesBoardQuery) {
-    const rows = await this.repo.findBoard(query);
+  async board(query: QuotesBoardQuery, ownerId?: string) {
+    const rows = await this.repo.findBoard(query, ownerId);
     const grouped: Record<QuoteStageId, ReturnType<typeof quoteCardResource>[]> = {
       [QUOTE_STAGE.PENDING]: [],
       [QUOTE_STAGE.QUOTED]: [],
@@ -120,8 +131,17 @@ export class QuotesService {
     return grouped;
   }
 
-  async create(input: CreateQuoteInput, userId: string) {
-    await this.validateLines(input.lines);
+  async checkAvailability(query: CheckQuoteAvailabilityQuery) {
+    const rows = await this.repo.findByDateTime(
+      query.eventDate,
+      query.eventTime,
+      query.excludeQuoteId,
+    );
+    return { conflicts: rows.map(quoteAvailabilityConflictResource) };
+  }
+
+  async create(input: CreateQuoteInput, userId: string, canManagePricing: boolean) {
+    await this.validateLines(input.lines, canManagePricing);
 
     const [stateRows, appRow, maxSeq] = await Promise.all([
       this.configRepo.findStateSettings(),
@@ -177,8 +197,13 @@ export class QuotesService {
     return quoteResource(created);
   }
 
-  async update(id: string, input: UpdateQuoteInput) {
-    const current = await this.repo.findQuoteRow(id);
+  async update(
+    id: string,
+    input: UpdateQuoteInput,
+    canManagePricing: boolean,
+    ownerId?: string,
+  ) {
+    const current = await this.repo.findQuoteRow(id, ownerId);
     if (!current) throw notFound();
     if (!EDITABLE_STAGES.includes(current.stageId as QuoteStageId)) {
       throw new TRPCError({
@@ -186,7 +211,7 @@ export class QuotesService {
         cause: new AppError(ErrorCodes.quote.NOT_EDITABLE),
       });
     }
-    await this.validateLines(input.lines);
+    await this.validateLines(input.lines, canManagePricing);
 
     const totals = await this.resolveTotals(current, input);
 
@@ -255,8 +280,8 @@ export class QuotesService {
     });
   }
 
-  async updateStage(id: string, stageId: QuoteStageId, userId: string) {
-    const current = await this.repo.findQuoteRow(id);
+  async updateStage(id: string, stageId: QuoteStageId, userId: string, ownerId?: string) {
+    const current = await this.repo.findQuoteRow(id, ownerId);
     if (!current) throw notFound();
     const fromStageId = current.stageId as QuoteStageId;
     this.assertTransition(fromStageId, stageId);
@@ -267,8 +292,8 @@ export class QuotesService {
     return quoteResource(updated);
   }
 
-  async approve(id: string, userId: string, actor: NotificationActor) {
-    const current = await this.repo.findQuoteRow(id);
+  async approve(id: string, userId: string, actor: NotificationActor, ownerId?: string) {
+    const current = await this.repo.findQuoteRow(id, ownerId);
     if (!current) throw notFound();
     const fromStageId = current.stageId as QuoteStageId;
     this.assertTransition(fromStageId, QUOTE_STAGE.CONFIRMED);
@@ -298,8 +323,8 @@ export class QuotesService {
     return quoteResource(updated);
   }
 
-  async cancel(id: string, userId: string, actor: NotificationActor) {
-    const current = await this.repo.findQuoteRow(id);
+  async cancel(id: string, userId: string, actor: NotificationActor, ownerId?: string) {
+    const current = await this.repo.findQuoteRow(id, ownerId);
     if (!current) throw notFound();
     const fromStageId = current.stageId as QuoteStageId;
     this.assertTransition(fromStageId, QUOTE_STAGE.CANCELLED);
@@ -315,10 +340,16 @@ export class QuotesService {
     return quoteResource(updated);
   }
 
-  async archive(id: string) {
-    const archived = await this.repo.archiveById(id);
+  async archive(id: string, ownerId?: string) {
+    const archived = await this.repo.archiveById(id, ownerId);
     if (!archived) throw notFound();
     return archived;
+  }
+
+  async assign(id: string, assignedToId: string | null) {
+    const updated = await this.repo.assignById(id, assignedToId);
+    if (!updated) throw notFound();
+    return quoteResource(updated);
   }
 
   private assertTransition(from: QuoteStageId, to: QuoteStageId) {
@@ -342,18 +373,29 @@ export class QuotesService {
 
   // Revalidates every line against the live catalog (mach-bar-domain.md D16/D17) — the
   // builder UI already prevents this, this is the server-side boundary.
-  private async validateLines(lines: QuoteLineInput[]) {
+  private async validateLines(lines: QuoteLineInput[], canManagePricing: boolean) {
     if (lines.length === 0) return;
     const ctx = await this.repo.loadCatalogContext(lines.map((l) => l.productId));
-    for (const line of lines) this.validateLine(line, ctx);
+    for (const line of lines) this.validateLine(line, ctx, canManagePricing);
   }
 
-  private validateLine(line: QuoteLineInput, ctx: CatalogContext) {
+  private validateLine(line: QuoteLineInput, ctx: CatalogContext, canManagePricing: boolean) {
     const product = ctx.products.find((p) => p.id === line.productId);
     if (!product?.isActive) throw invalidLines();
 
-    // numPersons doesn't have to match a catalog tier — the builder also allows a custom
-    // quantity/price override per line; numPersons/subtotal bounds are enforced by the schema.
+    // Only MANAGE_LINE_PRICING (admin/superadmin) may set a numPersons/subtotal pair that
+    // deviates from the catalog's price tiers — everyone else's lines must land exactly on
+    // one (the builder UI's tier picker already only ever produces exact matches; this is
+    // the server-side boundary against a hand-crafted payload).
+    if (!canManagePricing) {
+      const matchesTier = ctx.tiers.some(
+        (tier) =>
+          tier.productId === line.productId &&
+          tier.numPersons === line.numPersons &&
+          tier.price === line.subtotal,
+      );
+      if (!matchesTier) throw pricingNotAllowed();
+    }
 
     if (!validateLineSelections(line.productId, line.selections, ctx)) throw invalidLines();
   }

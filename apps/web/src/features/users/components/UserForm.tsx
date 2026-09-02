@@ -37,29 +37,16 @@ export function UserForm({ mode, initialValues, onSubmit, isPending }: UserFormP
       </Form.Item>
 
       {mode === 'create' && (
-        <>
-          <Form.Item
-            name="email"
-            label={<FieldLabel title={t('form.email')} required />}
-            rules={[
-              { required: true, message: t('validation.emailInvalid') },
-              { type: 'email', message: t('validation.emailInvalid') },
-            ]}
-          >
-            <Input placeholder={t('form.emailPlaceholder')} />
-          </Form.Item>
-
-          <Form.Item
-            name="password"
-            label={<FieldLabel title={t('form.password')} required />}
-            rules={[
-              { required: true, message: t('validation.passwordMin') },
-              { min: 8, message: t('validation.passwordMin') },
-            ]}
-          >
-            <Input.Password placeholder={t('form.passwordPlaceholder')} />
-          </Form.Item>
-        </>
+        <Form.Item
+          name="email"
+          label={<FieldLabel title={t('form.email')} required />}
+          rules={[
+            { required: true, message: t('validation.emailInvalid') },
+            { type: 'email', message: t('validation.emailInvalid') },
+          ]}
+        >
+          <Input placeholder={t('form.emailPlaceholder')} />
+        </Form.Item>
       )}
 
       <Form.Item

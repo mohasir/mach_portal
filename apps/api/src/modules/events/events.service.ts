@@ -59,21 +59,30 @@ export class EventsService {
     private storage: StorageProvider = getStorageProvider(),
   ) {}
 
-  async list(query: EventsListQuery) {
-    const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(query);
+  // scope 'own' (resolveResourceScope) → 404 instead of leaking that an event exists
+  // for a quote the caller neither created nor is assigned to.
+  private async assertOwner(eventId: string, ownerId?: string) {
+    if (ownerId && !(await this.repo.belongsToOwner(eventId, ownerId))) throw notFound();
+  }
+
+  async list(query: EventsListQuery, ownerId?: string) {
+    const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(
+      query,
+      ownerId,
+    );
     const resource = eventCollectionResource(items);
     if (!paginate) return { items: resource };
     return { items: resource, pagination: paginationMeta(total, page, pageSize) };
   }
 
-  async calendar(query: EventsCalendarQuery) {
-    const rows = await this.repo.findCalendarRange(query);
+  async calendar(query: EventsCalendarQuery, ownerId?: string) {
+    const rows = await this.repo.findCalendarRange(query, ownerId);
     return rows.map(eventCalendarItemResource);
   }
 
-  async getById(id: string) {
+  async getById(id: string, ownerId?: string) {
     const [result, appRow] = await Promise.all([
-      this.repo.findById(id),
+      this.repo.findById(id, ownerId),
       this.configRepo.findAppSettings(),
     ]);
     if (!result) throw notFound();
@@ -88,7 +97,13 @@ export class EventsService {
     );
   }
 
-  async updateSelections(eventId: string, input: UpdateEventSelectionsInput, userId: string) {
+  async updateSelections(
+    eventId: string,
+    input: UpdateEventSelectionsInput,
+    userId: string,
+    ownerId?: string,
+  ) {
+    await this.assertOwner(eventId, ownerId);
     const event = await this.repo.findForSelectionsUpdate(eventId);
     if (!event) throw notFound();
     if (event.completedAt) {
@@ -124,7 +139,13 @@ export class EventsService {
     return eventResource(updated);
   }
 
-  async registerPayment(id: string, input: RegisterEventPaymentInput, createdById: string | null) {
+  async registerPayment(
+    id: string,
+    input: RegisterEventPaymentInput,
+    createdById: string | null,
+    ownerId?: string,
+  ) {
+    await this.assertOwner(id, ownerId);
     const result = await this.repo.registerPayment(id, input, createdById);
     if (result === undefined) throw notFound();
     if (result === 'exceeds-balance') {
@@ -169,7 +190,8 @@ export class EventsService {
     return eventPaymentAttachmentResource({ ...row!, createdByName: null });
   }
 
-  async removePaymentAttachment(input: RemoveEventPaymentAttachmentInput) {
+  async removePaymentAttachment(input: RemoveEventPaymentAttachmentInput, ownerId?: string) {
+    await this.assertOwner(input.eventId, ownerId);
     const deleted = await this.repo.deleteAttachment(input.eventId, input.attachmentId);
     if (!deleted) {
       throw new TRPCError({
@@ -185,13 +207,15 @@ export class EventsService {
     return { ok: true };
   }
 
-  async markCompleted(id: string) {
+  async markCompleted(id: string, ownerId?: string) {
+    await this.assertOwner(id, ownerId);
     const updated = await this.repo.markCompleted(id);
     if (!updated) throw notFound();
     return eventResource(updated);
   }
 
-  async assignStaff(input: AssignStaffInput) {
+  async assignStaff(input: AssignStaffInput, ownerId?: string) {
+    await this.assertOwner(input.eventId, ownerId);
     const completed = await this.repo.isCompleted(input.eventId);
     if (completed) {
       throw new TRPCError({
@@ -209,7 +233,8 @@ export class EventsService {
     return this.repo.assignStaff(input);
   }
 
-  async removeStaff(input: RemoveStaffInput) {
+  async removeStaff(input: RemoveStaffInput, ownerId?: string) {
+    await this.assertOwner(input.eventId, ownerId);
     const removed = await this.repo.removeStaff(input);
     if (!removed) {
       throw new TRPCError({

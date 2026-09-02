@@ -16,8 +16,6 @@
     "namePlaceholder": "Full name",
     "email": "Email",
     "emailPlaceholder": "you@example.com",
-    "password": "Password",
-    "passwordPlaceholder": "At least 8 characters",
     "role": "Role",
     "rolePlaceholder": "Select a role",
     "save": "Save"
@@ -25,7 +23,7 @@
   "roles": {
     "superadmin": "Superadmin",
     "admin": "Admin",
-    "manager": "Manager",
+    "operator": "Operator",
     "member": "Member"
   },
   "create": {
@@ -42,7 +40,27 @@
   "validation": {
     "nameRequired": "Name is required",
     "emailInvalid": "Invalid email",
-    "passwordMin": "At least 8 characters",
     "roleRequired": "Role is required"
+  },
+  "pending": {
+    "badge": "Pending activation"
+  },
+  "rowActions": {
+    "sendPasswordLink": "Send password link"
+  },
+  "passwordSetupLink": {
+    "create": {
+      "title": "Send activation link",
+      "description": "By sharing this link, the user will be able to activate their account and sign in for the first time. This link is personal and shouldn't be shared with anyone else."
+    },
+    "reset": {
+      "title": "Send password reset link",
+      "description": "By sharing this link, the user will be able to create a new password and sign in again. This link is personal and shouldn't be shared with anyone else."
+    },
+    "directLink": "Direct link",
+    "copyLink": "Copy link",
+    "copied": "Link copied",
+    "expiryNotice": "This link expires in 24 hours. If it's not used, you'll need to generate a new one.",
+    "shareVia": "Share via"
   }
 }

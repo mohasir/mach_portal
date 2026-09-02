@@ -58,9 +58,11 @@ const optionsRouter = router({
     .mutation(({ input }) => service.reorderOptions(input.ids)),
 });
 
+const priceTiersUpdate = guardedProcedure({ [RESOURCES.PRICE_TIERS]: [ACTIONS.UPDATE] });
+
 const pricesRouter = router({
   list: read.query(() => service.pricesList()),
-  update: update
+  update: priceTiersUpdate
     .input(z.object({ id: z.uuid(), data: updateProductTiersSchema }))
     .mutation(({ input }) => service.updateProductTiers(input.id, input.data.tiers)),
 });

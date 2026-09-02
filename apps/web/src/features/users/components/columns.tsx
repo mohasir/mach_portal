@@ -12,22 +12,36 @@ import type { User } from '../types';
 interface UseUsersColumnsParams {
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
+  onPasswordSetupLink: (url: string, reason: 'create' | 'reset') => void;
 }
 
 export function useUsersColumns({
   onEdit,
   onDelete,
+  onPasswordSetupLink,
 }: UseUsersColumnsParams): TableColumnsType<User> {
   const { t } = useTranslation('users');
   const { t: tc } = useTranslation('common');
   const { date } = useDateFormatter();
-  const rowActions = useUserRowActions({ onEdit, onDelete });
+  const rowActions = useUserRowActions({ onEdit, onDelete, onPasswordSetupLink });
 
   return [
     {
       title: t('columns.name'),
       key: 'name',
-      render: (_, user) => <AvatarUser name={user.name} email={user.email} />,
+      render: (_, user) => (
+        <AvatarUser
+          name={user.name}
+          email={user.email}
+          extra={
+            user.mustChangePassword ? (
+              <Tag color="orange" className="mt-1">
+                {t('pending.badge')}
+              </Tag>
+            ) : undefined
+          }
+        />
+      ),
     },
     {
       title: t('columns.emailVerified'),

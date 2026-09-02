@@ -10,9 +10,10 @@ import { QuickLineCard } from './QuickLineCard';
 interface QuickLineBuilderProps {
   catalog: Product[];
   readOnly?: boolean;
+  canEditPricing: boolean;
 }
 
-export function QuickLineBuilder({ catalog, readOnly }: QuickLineBuilderProps) {
+export function QuickLineBuilder({ catalog, readOnly, canEditPricing }: QuickLineBuilderProps) {
   const { t } = useTranslation('quotes');
   const { state, addLine, removeLine, updateLine } = useQuoteBuilder();
 
@@ -46,6 +47,7 @@ export function QuickLineBuilder({ catalog, readOnly }: QuickLineBuilderProps) {
                 mode="edit"
                 line={line}
                 product={product}
+                canEditPricing={canEditPricing}
                 onRemove={() => removeLine(line.key)}
                 onChange={(payload) => updateLine(line.key, payload)}
               />

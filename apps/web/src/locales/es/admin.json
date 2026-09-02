@@ -1,6 +1,6 @@
 {
   "nav": {
-    "dashboard": "Dashboard",
+    "home": "Inicio",
     "newQuote": "Nueva cotización",
     "events": "Eventos",
     "calendarTab": "Calendario",
@@ -43,7 +43,8 @@
   "welcome": {
     "title": "¡Te damos la bienvenida!",
     "titleNamed": "¡Hola, {{name}}!",
-    "subtitle": "Tu sesión está activa. Usá el menú lateral para navegar por las secciones disponibles para tu cuenta."
+    "subtitle": "Tu sesión está activa. Usá el menú lateral para navegar por las secciones disponibles para tu cuenta.",
+    "subtitleMobile": "Tu sesión está activa. Usá el menú de abajo para navegar por las secciones disponibles para tu cuenta."
   },
   "placeholder": {
     "comingSoon": "Esta sección está en construcción."

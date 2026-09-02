@@ -19,7 +19,7 @@ export function BottomNav() {
     href === '/admin' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 
   const renderTab = (item: NavItem) => {
-    if (item.guard && !can(item.guard)) return null;
+    if (!item.alwaysVisible && item.guard && !can(item.guard)) return null;
     const active = isActive(item.href!);
     return (
       <button

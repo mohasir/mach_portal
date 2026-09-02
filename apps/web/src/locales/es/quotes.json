@@ -73,6 +73,8 @@
       "cityPlaceholder": "Ciudad del evento",
       "date": "Fecha del evento",
       "time": "Hora",
+      "availabilityWarning": "Advertencia",
+      "availabilityConflictDescription": "Ya hay cotizaciones para esta fecha y hora:",
       "address": "Dirección",
       "addressPlaceholder": "Dirección del evento",
       "longDistance": "Cargo por larga distancia",

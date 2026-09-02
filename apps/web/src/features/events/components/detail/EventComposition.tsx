@@ -5,7 +5,6 @@ import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { Product } from '@/features/catalog';
 import { useCan } from '@/lib/auth/useCan';
 import { QuickLineCard } from '@/features/quotes';
-import { WrapperCard } from '@/components/shared/WrapperCard';
 import type { EventDetail } from '../../types';
 import { StationSelectionDetailSheet } from './StationSelectionDetailSheet';
 import { StationSelectionsSheet } from './StationSelectionsSheet';
@@ -41,7 +40,7 @@ export function EventComposition({ event, lines, catalog }: EventCompositionProp
   };
 
   return (
-    <WrapperCard>
+    <>
       {lines.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
       ) : (
@@ -82,6 +81,6 @@ export function EventComposition({ event, lines, catalog }: EventCompositionProp
           onClose={() => setViewingOpen(false)}
         />
       )}
-    </WrapperCard>
+    </>
   );
 }

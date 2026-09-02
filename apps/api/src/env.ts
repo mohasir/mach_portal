@@ -12,6 +12,8 @@ const schema = z.object({
     .min(1)
     .transform((value) => value.split(',').map((origin) => origin.trim()))
     .pipe(z.array(z.url()).min(1)),
+  // Canonical web origin used to build password setup/reset links
+  WEB_APP_URL: z.url(),
   PORT: z.coerce.number().default(8080),
   STORAGE_PROVIDER: z.enum(['r2']).default('r2'),
   R2_ACCOUNT_ID: z.string().min(1),

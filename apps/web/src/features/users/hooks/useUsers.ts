@@ -44,6 +44,24 @@ export function useUpdateUser() {
   };
 }
 
+export function useGeneratePasswordSetupLink() {
+  const trpc = useTRPC();
+  const qc = useQueryClient();
+  const onError = useApiError();
+
+  const mutation = useMutation(
+    trpc.users.generatePasswordSetupLink.mutationOptions({
+      onSuccess: () => qc.invalidateQueries(trpc.users.list.queryFilter()),
+      onError,
+    }),
+  );
+
+  return {
+    generatePasswordSetupLink: (id: string) => mutation.mutateAsync({ id }),
+    isPending: mutation.isPending,
+  };
+}
+
 export function useDeleteUser() {
   const trpc = useTRPC();
   const qc = useQueryClient();

@@ -1,11 +1,13 @@
 'use client';
 import { useState } from 'react';
-import { App, Button, Card, Empty, Typography } from 'antd';
+import { App, Button, Empty, Typography } from 'antd';
 import { UserPlus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ACTIONS, RESOURCES } from '@repo/guards';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { AssignStaffModal } from '@/features/quotes/components/pipeline/AssignStaffModal';
+import { useCan } from '@/lib/auth/useCan';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useRemoveStaff } from '../../hooks/useEventStaff';
 import type { EventDetail } from '../../types';
@@ -18,6 +20,8 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
   const { t } = useTranslation('events');
   const { modal } = App.useApp();
   const isDesktop = useIsDesktop();
+  const can = useCan();
+  const canManageStaff = can({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_STAFF_ASSIGNMENTS] });
   const [confirmDelete, deleteContextHolder] = useDeleteConfirm();
   const [assignOpen, setAssignOpen] = useState(false);
   const { removeStaff, isPending } = useRemoveStaff();
@@ -32,19 +36,21 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
     modal.confirm({ ...options, okButtonProps: { danger: true } });
   };
 
-  const canAssign = event.status !== 'completed';
+  const canAssign = canManageStaff && event.status !== 'completed';
 
   return (
-    <Card
-      title={t('detail.staff.title')}
-      extra={
-        canAssign && (
+    <>
+      <div className="flex justify-between">
+        <Typography.Title className="font-heading text-lg text-brown m-0!">
+          {t('detail.staff.title')}
+        </Typography.Title>
+        {canAssign && (
           <Button size="small" icon={<UserPlus size={14} />} onClick={() => setAssignOpen(true)}>
             {t('detail.staff.assign')}
           </Button>
-        )
-      }
-    >
+        )}
+      </div>
+
       {event.staff.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('detail.staff.empty')} />
       ) : (
@@ -66,16 +72,18 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
                   ) : undefined
                 }
               />
-              <Button
-                type="link"
-                danger
-                size="small"
-                icon={<X size={14} />}
-                loading={isPending}
-                onClick={() => onRemove(member.staffId, member.staffName)}
-              >
-                {t('detail.staff.remove')}
-              </Button>
+              {canManageStaff && (
+                <Button
+                  type="link"
+                  danger
+                  size="small"
+                  icon={<X size={14} />}
+                  loading={isPending}
+                  onClick={() => onRemove(member.staffId, member.staffName)}
+                >
+                  {t('detail.staff.remove')}
+                </Button>
+              )}
             </div>
           ))}
         </div>
@@ -88,6 +96,6 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
         onClose={() => setAssignOpen(false)}
       />
       {deleteContextHolder}
-    </Card>
+    </>
   );
 }

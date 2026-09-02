@@ -5,7 +5,7 @@ import type { WrapperAlertIconType } from './types';
 interface AlertContentProps {
   iconType: WrapperAlertIconType;
   iconColorClass: string;
-  title: ReactNode;
+  title?: ReactNode;
   description?: ReactNode;
   showIcon?: boolean;
 }
@@ -17,6 +17,19 @@ export function AlertContent({
   description,
   showIcon = true,
 }: AlertContentProps) {
+  if (!title) {
+    return (
+      <div className="flex items-start gap-2.5">
+        {showIcon && (
+          <span className={`mt-0.5 shrink-0 ${iconColorClass}`}>{TYPE_ICONS[iconType]}</span>
+        )}
+        {description && (
+          <div className={`text-sm leading-4.5 ${DESCRIPTION_TEXT_CLASS}`}>{description}</div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="mb-1.5 flex items-center gap-1.5">

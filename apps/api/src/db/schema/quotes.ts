@@ -64,6 +64,7 @@ export const quotes = pgTable('quotes', {
   selectOptionsAtQuote: boolean('select_options_at_quote').notNull().default(false),
   validUntil: date('valid_until', { mode: 'string' }),
   createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
+  assignedToId: text('assigned_to_id').references(() => user.id, { onDelete: 'set null' }),
   pdfUrl: text('pdf_url'),
   pdfKey: text('pdf_key'),
   pdfGeneratedAt: timestamp('pdf_generated_at'),

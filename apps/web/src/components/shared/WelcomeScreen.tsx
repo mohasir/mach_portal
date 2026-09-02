@@ -3,12 +3,14 @@ import { Flex, Typography } from 'antd';
 import { Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '@/lib/auth/client';
+import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 
 const { Title, Paragraph } = Typography;
 
 export function WelcomeScreen() {
   const { t } = useTranslation('admin');
   const { data } = useSession();
+  const isDesktop = useIsDesktop();
   const name = data?.user?.name ?? data?.user?.email ?? '';
 
   return (
@@ -19,7 +21,9 @@ export function WelcomeScreen() {
       <Title level={2} className="font-heading text-brown mt-6 mb-2">
         {name ? t('welcome.titleNamed', { name }) : t('welcome.title')}
       </Title>
-      <Paragraph className="text-muted m-0 max-w-md">{t('welcome.subtitle')}</Paragraph>
+      <Paragraph className="text-muted m-0 max-w-md">
+        {t(isDesktop ? 'welcome.subtitle' : 'welcome.subtitleMobile')}
+      </Paragraph>
     </Flex>
   );
 }

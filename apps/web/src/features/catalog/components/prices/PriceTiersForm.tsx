@@ -3,9 +3,11 @@ import { Button, Form, InputNumber, Space, Typography } from 'antd';
 import { Plus } from 'lucide-react';
 import { TbTrashFilled } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
+import { ACTIONS, RESOURCES } from '@repo/guards';
 import { useActionConfirm } from '@/components/shared/ConfirmDialogs';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
+import { useCan } from '@/lib/auth/useCan';
 import { useUpdatePriceTiers } from '../../hooks/usePrices';
 import type { Product } from '../../types';
 
@@ -20,11 +22,14 @@ interface PriceTiersFormValues {
 
 interface PriceTiersFormProps {
   product: Product;
-  canEdit: boolean;
 }
 
-export function PriceTiersForm({ product, canEdit }: PriceTiersFormProps) {
+export function PriceTiersForm({ product }: PriceTiersFormProps) {
   const { t } = useTranslation('catalog');
+  const can = useCan();
+  const canCreate = can({ [RESOURCES.PRICE_TIERS]: [ACTIONS.CREATE] });
+  const canEdit = can({ [RESOURCES.PRICE_TIERS]: [ACTIONS.UPDATE] });
+  const canDelete = can({ [RESOURCES.PRICE_TIERS]: [ACTIONS.DELETE] });
   const { updateTiers, isPending } = useUpdatePriceTiers();
   const [form] = Form.useForm<PriceTiersFormValues>();
   const [confirm, confirmContextHolder] = useActionConfirm();
@@ -51,7 +56,7 @@ export function PriceTiersForm({ product, canEdit }: PriceTiersFormProps) {
 
   return (
     <div>
-      <Typography.Text type="secondary" className="text-sm">
+      <Typography.Text type="secondary" className="block text-sm mb-4">
         {t('prices.tabDescription')}
       </Typography.Text>
 
@@ -72,7 +77,7 @@ export function PriceTiersForm({ product, canEdit }: PriceTiersFormProps) {
         <Form.List name="tiers">
           {(fields, { add, remove }) => (
             <div className="mb-2 flex flex-col gap-2">
-              {canEdit && (
+              {canCreate && (
                 <button
                   type="button"
                   onClick={() => add()}
@@ -101,20 +106,22 @@ export function PriceTiersForm({ product, canEdit }: PriceTiersFormProps) {
                   >
                     <MoneyInput min={0} step={5} className="w-full" placeholder="0.00" />
                   </Form.Item>
-                  <Button
-                    type="text"
-                    danger
-                    shape="square"
-                    aria-label={t('prices.removeTier')}
-                    icon={
-                      <IconBadge
-                        icon={TbTrashFilled}
-                        shape="square"
-                        className="bg-salmon/20 text-error"
-                      />
-                    }
-                    onClick={() => handleRemove(field.name, remove)}
-                  />
+                  {canDelete && (
+                    <Button
+                      type="text"
+                      danger
+                      shape="square"
+                      aria-label={t('prices.removeTier')}
+                      icon={
+                        <IconBadge
+                          icon={TbTrashFilled}
+                          shape="square"
+                          className="bg-salmon/20 text-error"
+                        />
+                      }
+                      onClick={() => handleRemove(field.name, remove)}
+                    />
+                  )}
                 </div>
               ))}
             </div>
