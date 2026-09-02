@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { App, Button, Card, Empty, Typography } from 'antd';
+import { App, Button, Empty, Typography } from 'antd';
 import { UserPlus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
@@ -11,7 +11,6 @@ import { useCan } from '@/lib/auth/useCan';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useRemoveStaff } from '../../hooks/useEventStaff';
 import type { EventDetail } from '../../types';
-import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface EventStaffPanelProps {
   event: EventDetail;

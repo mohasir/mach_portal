@@ -5,7 +5,6 @@ import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { Product } from '@/features/catalog';
 import { useCan } from '@/lib/auth/useCan';
 import { QuickLineCard } from '@/features/quotes';
-import { WrapperCard } from '@/components/shared/WrapperCard';
 import type { EventDetail } from '../../types';
 import { StationSelectionDetailSheet } from './StationSelectionDetailSheet';
 import { StationSelectionsSheet } from './StationSelectionsSheet';
