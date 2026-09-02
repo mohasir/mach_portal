@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { and, asc, count, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, inArray, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import {
   QUOTE_STAGE,
   type CreateClientInput,
@@ -45,10 +46,17 @@ const sortColumns = {
 const OPEN_STAGES = [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED, QUOTE_STAGE.CONFIRMED] as const;
 const TERMINAL_STAGES = [QUOTE_STAGE.CANCELLED] as const;
 
+const assignedToUser = alias(user, 'assigned_to_user');
+
 export class QuotesRepository {
   constructor(private db: Database) {}
 
-  async findPaginated(query: QuotesListQuery) {
+  // 'own' scope (resolveResourceScope) = created it OR it's assigned to me.
+  private ownerFilter(ownerId?: string): SQL | undefined {
+    return ownerId ? or(eq(quotes.createdById, ownerId), eq(quotes.assignedToId, ownerId)) : undefined;
+  }
+
+  async findPaginated(query: QuotesListQuery, ownerId?: string) {
     const { search, sortBy, sortDir, month, year, stageId, state, clientId } = query;
     const where = and(
       isNull(quotes.archivedAt),
@@ -60,6 +68,7 @@ export class QuotesRepository {
       stageId ? eq(quotes.stageId, stageId) : undefined,
       state ? eq(quotes.state, state) : undefined,
       clientId ? eq(quotes.clientId, clientId) : undefined,
+      this.ownerFilter(ownerId),
     );
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
     const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
@@ -93,19 +102,21 @@ export class QuotesRepository {
     return row?.value ?? 0;
   }
 
-  async findById(id: string) {
+  async findById(id: string, ownerId?: string) {
     const [quoteRow] = await this.db
       .select({
         ...publicQuoteColumns,
         clientName: clients.name,
         eventTypeName: eventTypes.name,
         createdByName: user.name,
+        assignedToName: assignedToUser.name,
       })
       .from(quotes)
       .innerJoin(clients, eq(quotes.clientId, clients.id))
       .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
       .leftJoin(user, eq(quotes.createdById, user.id))
-      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt)))
+      .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id))
+      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt), this.ownerFilter(ownerId)))
       .limit(1);
     if (!quoteRow) return undefined;
 
@@ -150,21 +161,30 @@ export class QuotesRepository {
       .then((r) => r[0]);
   }
 
-  findQuoteRow(id: string) {
+  findQuoteRow(id: string, ownerId?: string) {
     return this.db
       .select(publicQuoteColumns)
       .from(quotes)
-      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt)))
+      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt), this.ownerFilter(ownerId)))
       .limit(1)
       .then((r) => r[0]);
   }
 
-  archiveById(id: string) {
+  archiveById(id: string, ownerId?: string) {
     return this.db
       .update(quotes)
       .set({ archivedAt: new Date() })
-      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt)))
+      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt), this.ownerFilter(ownerId)))
       .returning({ id: quotes.id })
+      .then((r) => r[0]);
+  }
+
+  assignById(id: string, assignedToId: string | null) {
+    return this.db
+      .update(quotes)
+      .set({ assignedToId })
+      .where(eq(quotes.id, id))
+      .returning(publicQuoteColumns)
       .then((r) => r[0]);
   }
 
@@ -176,7 +196,7 @@ export class QuotesRepository {
       .then((r) => r[0]?.value ?? 0);
   }
 
-  async findBoard(query: QuotesBoardQuery) {
+  async findBoard(query: QuotesBoardQuery, ownerId?: string) {
     const now = new Date();
     const month = query.month ?? now.getMonth() + 1;
     const year = query.year ?? now.getFullYear();
@@ -204,9 +224,10 @@ export class QuotesRepository {
         .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
         .leftJoin(events, eq(events.quoteId, quotes.id));
 
+    const ownerWhere = this.ownerFilter(ownerId);
     const [openRows, terminalRows] = await Promise.all([
       baseSelect()
-        .where(and(inArray(quotes.stageId, OPEN_STAGES), isNull(quotes.archivedAt)))
+        .where(and(inArray(quotes.stageId, OPEN_STAGES), isNull(quotes.archivedAt), ownerWhere))
         .orderBy(desc(quotes.createdAt)),
       baseSelect()
         .where(
@@ -215,6 +236,7 @@ export class QuotesRepository {
             isNull(quotes.archivedAt),
             sql`extract(month from ${quotes.updatedAt}) = ${month}`,
             sql`extract(year from ${quotes.updatedAt}) = ${year}`,
+            ownerWhere,
           ),
         )
         .orderBy(desc(quotes.createdAt)),
@@ -233,6 +255,30 @@ export class QuotesRepository {
       .where(inArray(quoteLines.quoteId, quoteIds))
       .groupBy(quoteLines.quoteId);
     return new Map(rows.map((r) => [r.quoteId, r.value]));
+  }
+
+  // Advisory availability check (quotes.service.ts checkAvailability) — deliberately not
+  // scoped by ownerFilter: the whole point is surfacing OTHER people's bookings too.
+  findByDateTime(eventDate: string, eventTime: string, excludeQuoteId?: string) {
+    return this.db
+      .select({
+        id: quotes.id,
+        number: quotes.number,
+        clientName: clients.name,
+        eventTypeName: eventTypes.name,
+      })
+      .from(quotes)
+      .innerJoin(clients, eq(quotes.clientId, clients.id))
+      .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
+      .where(
+        and(
+          eq(quotes.eventDate, eventDate),
+          eq(quotes.eventTime, eventTime),
+          ne(quotes.stageId, QUOTE_STAGE.CANCELLED),
+          isNull(quotes.archivedAt),
+          excludeQuoteId ? ne(quotes.id, excludeQuoteId) : undefined,
+        ),
+      );
   }
 
   async getMaxSeq(): Promise<number> {
@@ -264,6 +310,7 @@ export class QuotesRepository {
         .select({
           productId: productPriceTiers.productId,
           numPersons: productPriceTiers.numPersons,
+          price: productPriceTiers.price,
         })
         .from(productPriceTiers)
         .where(inArray(productPriceTiers.productId, uniqueIds)),

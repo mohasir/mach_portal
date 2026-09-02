@@ -5,7 +5,8 @@ import { IconMap, type NavGroup, type NavItem } from '@/lib/navigation';
 
 type CanFn = (permissions: PermissionCheck) => boolean;
 
-const isItemVisible = (item: NavItem, can: CanFn): boolean => !item.guard || can(item.guard);
+const isItemVisible = (item: NavItem, can: CanFn): boolean =>
+  !!item.alwaysVisible || !item.guard || can(item.guard);
 
 /** Un grupo es visible si al menos uno de sus ítems (o subítems) lo es. */
 export const isGroupVisible = (group: NavGroup, can: CanFn): boolean =>

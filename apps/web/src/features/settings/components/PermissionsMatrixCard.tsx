@@ -15,7 +15,7 @@ import {
 } from '@repo/guards';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 
-const VISIBLE_ROLES: RoleType[] = [ROLES.MEMBER, ROLES.MANAGER, ROLES.ADMIN];
+const VISIBLE_ROLES: RoleType[] = [ROLES.MEMBER, ROLES.OPERATOR, ROLES.ADMIN];
 
 const CONFIGURATION_RESOURCES = new Set<ResourceType>([
   RESOURCES.TAX_RATES,
@@ -31,11 +31,13 @@ const permissionsByRole = Object.fromEntries(
 ) as Record<RoleType, RolePermissions>;
 
 function isGranted(role: RoleType, resource: ResourceType, action: ActionType) {
+  const grant = permissionsByRole[role]?.[resource];
+  if (!grant) return false;
   // Widen to `ActionType[]` first — `resource` isn't a literal here, so TS sees a
   // union of each resource's own narrower action-array type and can't resolve
   // `.includes(action)` directly against it.
-  const actions: ActionType[] | undefined = permissionsByRole[role]?.[resource];
-  return !!actions?.includes(action);
+  const actions: ActionType[] = Array.isArray(grant) ? grant : grant.actions;
+  return actions.includes(action);
 }
 
 export function PermissionsMatrixCard() {

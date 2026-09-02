@@ -6,15 +6,18 @@ import { STATE_NAMES, stateSchema, type StateValue } from '@repo/schemas';
 import type { EventType } from '@/features/event-types';
 import { AutoCloseTimePicker } from '@/components/shared/Inputs/AutoCloseTimePicker';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useConfig } from '@/features/settings';
 import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 import CITIES_BY_STATE from '../../citiesByState.json';
 import { useQuoteBuilder, type QuoteBuilderState } from '../../hooks/useQuoteBuilder';
+import { useQuoteAvailability } from '../../hooks/useQuotes';
 
 interface EventSectionProps {
   eventTypes: EventType[];
   readOnly?: boolean;
+  quoteId?: string;
 }
 
 interface EventFormValues {
@@ -29,13 +32,32 @@ interface EventFormValues {
 
 const CITIES_BY_STATE_MAP = CITIES_BY_STATE as Record<StateValue, string[]>;
 
-export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
+export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProps) {
   const { t } = useTranslation('quotes');
   const { state, setFields } = useQuoteBuilder();
   const { data: config } = useConfig();
   const [form] = Form.useForm<EventFormValues>();
   const eventDate = Form.useWatch('eventDate', form);
+  const eventTime = Form.useWatch('eventTime', form);
   const selectedState = Form.useWatch('state', form);
+
+  const eventDateStr = eventDate?.format('YYYY-MM-DD');
+  const eventTimeStr = eventTime?.format('HH:mm');
+  const { data: availability, isFetching: isCheckingAvailability } = useQuoteAvailability(
+    eventDateStr,
+    eventTimeStr,
+    quoteId,
+  );
+  const conflicts = availability?.conflicts ?? [];
+  const hasConflicts = !!availability && conflicts.length > 0;
+  const availabilityStatus =
+    !eventDateStr || !eventTimeStr
+      ? undefined
+      : isCheckingAvailability
+        ? ('validating' as const)
+        : hasConflicts
+          ? undefined
+          : ('success' as const);
 
   const cityOptions = (selectedState ? (CITIES_BY_STATE_MAP[selectedState] ?? []) : []).map(
     (city) => ({ value: city, label: city }),
@@ -108,13 +130,23 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
   );
 
   const eventDateField = (
-    <Form.Item name="eventDate" label={<FieldLabel title={t('builder.event.date')} />}>
+    <Form.Item
+      name="eventDate"
+      label={<FieldLabel title={t('builder.event.date')} />}
+      hasFeedback={!!availabilityStatus}
+      validateStatus={availabilityStatus}
+    >
       <DatePicker className="w-full" disabledDate={disabledDate} />
     </Form.Item>
   );
 
   const eventTimeField = (
-    <Form.Item name="eventTime" label={<FieldLabel title={t('builder.event.time')} />}>
+    <Form.Item
+      name="eventTime"
+      label={<FieldLabel title={t('builder.event.time')} />}
+      hasFeedback={!!availabilityStatus}
+      validateStatus={availabilityStatus}
+    >
       <AutoCloseTimePicker
         className="w-full"
         format="HH:mm"
@@ -181,6 +213,24 @@ export function EventSection({ eventTypes, readOnly }: EventSectionProps) {
           {eventDateField}
           {eventTimeField}
         </div>
+        {hasConflicts && (
+          <WrapperAlert
+            type="warning"
+            closeable={false}
+            description={
+              <div className="flex flex-col gap-2">
+                <span>{t('builder.event.availabilityConflictDescription')}</span>
+                <ul className="list-disc pl-4">
+                  {conflicts.map((conflict) => (
+                    <li key={conflict.id}>
+                      {conflict.clientName} — {conflict.eventTypeName ?? '—'}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            }
+          />
+        )}
       </WrapperCard>
 
       <WrapperCard title={t('builder.event.addressGroupTitle')}>

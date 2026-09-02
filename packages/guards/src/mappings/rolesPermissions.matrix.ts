@@ -1,13 +1,24 @@
 import { ACTIONS, RESOURCES, ROLES, type RoleType } from '../constants/index';
 import { permissionsMatrix } from './permissions.matrix';
 
+// 'own' = row-level scoping (createdBy/assignedTo) applies when reading/writing that
+// resource; 'all' = unrestricted, the default when a plain actions array is given.
+export type ResourceScope = 'own' | 'all';
+
+// A resource grant is either a plain actions array (implicit scope 'all', the common
+// case) or an explicit { actions, scope } — lets one role mix scopes per resource
+// (ej. QUOTE: 'own' pero PIPELINE: 'all' en el mismo rol).
+export type ResourceGrant<Action> = Action[] | { actions: Action[]; scope: ResourceScope };
+
 // Derived from `permissionsMatrix` (same pattern as `domainStatements` in
 // core/access-control.ts) so each resource's array type is pinned to exactly the
 // actions declared for THAT resource — not the full cross-resource action union.
 // Without this, granting `upload_attachment` on `event` would widen every other
 // resource's allowed values too, and better-auth's `ac.newRole()` rejects that.
 export type RolePermissions = Partial<{
-  [Item in (typeof permissionsMatrix)[number] as Item['resource']]: Item['actions'][number][];
+  [Item in (typeof permissionsMatrix)[number] as Item['resource']]: ResourceGrant<
+    Item['actions'][number]
+  >;
 }>;
 
 export type RolesPermissionsMatrixItem = {
@@ -25,6 +36,8 @@ const {
   UPLOAD_ATTACHMENT,
   VIEW,
   MANAGE_SELECTIONS,
+  MANAGE_LINE_PRICING,
+  MANAGE_STAFF_ASSIGNMENTS,
   VIEW_SUMMARY,
   VIEW_QUOTES_CHART,
   VIEW_TOP_PRODUCTS,
@@ -37,11 +50,13 @@ const PRODUCT_FULL = [...CRUD, DISABLE, ENABLE];
 const PRODUCT_ADMIN = [...CRUD, DISABLE];
 const READ_ONLY = [READ];
 const VIEW_UPDATE = [VIEW, UPDATE];
-const VIEW_ONLY = [VIEW];
 
 const PAYMENT_FULL = [CREATE, READ, DELETE, UPLOAD_ATTACHMENT];
-const EVENT_FULL = [...CRUD, MANAGE_SELECTIONS];
+const EVENT_FULL = [...CRUD, MANAGE_SELECTIONS, MANAGE_STAFF_ASSIGNMENTS];
 const DASHBOARD_FULL = [READ, VIEW_SUMMARY, VIEW_QUOTES_CHART, VIEW_TOP_PRODUCTS];
+// Only admin/superadmin can override a quote line's numPersons/price away from the
+// catalog's price tiers — operator (scope 'own') stays plain CRUD.
+const QUOTE_FULL = [...CRUD, MANAGE_LINE_PRICING];
 
 export const rolesPermissionsMatrix = [
   {
@@ -51,10 +66,11 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.EVENT]: EVENT_FULL,
       [RESOURCES.PAYMENT]: PAYMENT_FULL,
       [RESOURCES.CLIENT]: CRUD,
-      [RESOURCES.QUOTE]: CRUD,
+      [RESOURCES.QUOTE]: QUOTE_FULL,
       [RESOURCES.PIPELINE]: CRUD,
       [RESOURCES.STAFF]: CRUD,
       [RESOURCES.PRODUCT]: PRODUCT_FULL,
+      [RESOURCES.PRICE_TIERS]: CRUD,
       [RESOURCES.EVENT_TYPE]: CRUD,
       [RESOURCES.TAX_RATES]: VIEW_UPDATE,
       [RESOURCES.QUOTE_DEFAULTS]: VIEW_UPDATE,
@@ -71,10 +87,11 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.EVENT]: EVENT_FULL,
       [RESOURCES.PAYMENT]: PAYMENT_FULL,
       [RESOURCES.CLIENT]: CRUD,
-      [RESOURCES.QUOTE]: CRUD,
+      [RESOURCES.QUOTE]: QUOTE_FULL,
       [RESOURCES.PIPELINE]: CRUD,
       [RESOURCES.STAFF]: CRUD,
       [RESOURCES.PRODUCT]: PRODUCT_ADMIN,
+      [RESOURCES.PRICE_TIERS]: CRUD,
       [RESOURCES.EVENT_TYPE]: CRUD,
       [RESOURCES.TAX_RATES]: VIEW_UPDATE,
       [RESOURCES.QUOTE_DEFAULTS]: VIEW_UPDATE,
@@ -85,21 +102,15 @@ export const rolesPermissionsMatrix = [
     },
   },
   {
-    role: ROLES.MANAGER,
+    role: ROLES.OPERATOR,
     permissions: {
-      [RESOURCES.DASHBOARD]: DASHBOARD_FULL,
-      [RESOURCES.EVENT]: READ_ONLY,
-      [RESOURCES.CLIENT]: READ_ONLY,
-      [RESOURCES.QUOTE]: READ_ONLY,
-      [RESOURCES.PIPELINE]: READ_ONLY,
-      [RESOURCES.STAFF]: READ_ONLY,
+      [RESOURCES.EVENT]: { actions: [READ, MANAGE_STAFF_ASSIGNMENTS], scope: 'own' },
+      [RESOURCES.CLIENT]: CRUD,
+      [RESOURCES.QUOTE]: { actions: CRUD, scope: 'own' },
+      [RESOURCES.PIPELINE]: CRUD,
       [RESOURCES.PRODUCT]: READ_ONLY,
       [RESOURCES.EVENT_TYPE]: READ_ONLY,
-      /* [RESOURCES.TAX_RATES]: VIEW_ONLY,
-      [RESOURCES.QUOTE_DEFAULTS]: VIEW_ONLY,
-      [RESOURCES.QUOTE_STAGES]: VIEW_ONLY,
-      [RESOURCES.CATALOG_PREFERENCES]: VIEW_ONLY,
-      [RESOURCES.QUOTE_PDF_TEMPLATE]: VIEW_ONLY, */
+      [RESOURCES.STAFF]: READ_ONLY,
     },
   },
   {

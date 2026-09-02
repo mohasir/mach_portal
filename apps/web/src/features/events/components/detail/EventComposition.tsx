@@ -41,7 +41,7 @@ export function EventComposition({ event, lines, catalog }: EventCompositionProp
   };
 
   return (
-    <WrapperCard>
+    <>
       {lines.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
       ) : (
@@ -82,6 +82,6 @@ export function EventComposition({ event, lines, catalog }: EventCompositionProp
           onClose={() => setViewingOpen(false)}
         />
       )}
-    </WrapperCard>
+    </>
   );
 }

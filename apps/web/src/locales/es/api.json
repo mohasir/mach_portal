@@ -18,6 +18,7 @@
     "QUOTE_NOT_FOUND": "La cotización no existe",
     "QUOTE_NOT_EDITABLE": "La cotización ya no se puede editar",
     "QUOTE_INVALID_LINES": "Alguna línea de la cotización tiene datos inválidos",
+    "QUOTE_PRICING_NOT_ALLOWED": "No tenés permiso para personalizar la cantidad o el precio de una línea",
     "QUOTE_INCOMPLETE": "Faltan datos para enviar la cotización",
     "QUOTE_INVALID_TRANSITION": "Ese cambio de estado no está permitido",
     "QUOTE_PDF_GENERATION_FAILED": "No se pudo generar el PDF de la cotización. Intentá de nuevo en unos minutos",

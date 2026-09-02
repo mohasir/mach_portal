@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { listQuerySchema } from './pagination';
 
-const roleEnum = z.enum(['superadmin', 'admin', 'manager', 'member']);
+const roleEnum = z.enum(['superadmin', 'admin', 'operator', 'member']);
 
 export const usersListQuerySchema = listQuerySchema.extend({
   sortBy: z.enum(['name', 'email', 'role', 'createdAt']).default('createdAt'),

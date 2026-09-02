@@ -8,7 +8,7 @@ import {
   removeStaffSchema,
   updateEventSelectionsSchema,
 } from '@repo/schemas';
-import { RESOURCES, ACTIONS, hasPermission } from '@repo/guards';
+import { RESOURCES, ACTIONS, hasPermission, resolveResourceScope } from '@repo/guards';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { db } from '../../db';
 import { ConfigRepository } from '../config/config.repository';
@@ -22,19 +22,27 @@ const service = new EventsService(
   new ConfigRepository(db),
 );
 
+// scope 'own' (resolveResourceScope) → solo ve/gestiona eventos cuya cotización creó o
+// tiene asignada (events.repository.ts ownerFilter/belongsToOwner); scope 'all' → todos.
+// Siempre se resuelve contra RESOURCES.EVENT, sea cual sea el permiso que gatea el
+// procedure puntual (PAYMENT, MANAGE_SELECTIONS...) — lo que se está filtrando es el evento.
+function ownerScope(ctx: { user: { id: string; role?: string | null } }) {
+  return resolveResourceScope(ctx.user.role, RESOURCES.EVENT) === 'own' ? ctx.user.id : undefined;
+}
+
 export const eventsRouter = router({
   list: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.READ] })
     .input(eventsListQuerySchema)
-    .query(({ input }) => service.list(input)),
+    .query(({ input, ctx }) => service.list(input, ownerScope(ctx))),
 
   calendar: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.READ] })
     .input(eventsCalendarQuerySchema)
-    .query(({ input }) => service.calendar(input)),
+    .query(({ input, ctx }) => service.calendar(input, ownerScope(ctx))),
 
   getById: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.READ] })
     .input(z.object({ id: z.uuid() }))
     .query(async ({ input, ctx }) => {
-      const detail = await service.getById(input.id);
+      const detail = await service.getById(input.id, ownerScope(ctx));
       const role = (ctx.user as { role?: string | null }).role;
       const canViewPayments = hasPermission(role, { [RESOURCES.PAYMENT]: [ACTIONS.READ] });
       return {
@@ -47,25 +55,29 @@ export const eventsRouter = router({
 
   registerPayment: guardedProcedure({ [RESOURCES.PAYMENT]: [ACTIONS.CREATE] })
     .input(z.object({ id: z.uuid(), data: registerEventPaymentSchema }))
-    .mutation(({ input, ctx }) => service.registerPayment(input.id, input.data, ctx.user.id)),
+    .mutation(({ input, ctx }) =>
+      service.registerPayment(input.id, input.data, ctx.user.id, ownerScope(ctx)),
+    ),
 
   markCompleted: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] })
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input }) => service.markCompleted(input.id)),
+    .mutation(({ input, ctx }) => service.markCompleted(input.id, ownerScope(ctx))),
 
-  assignStaff: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] })
+  assignStaff: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_STAFF_ASSIGNMENTS] })
     .input(assignStaffSchema)
-    .mutation(({ input }) => service.assignStaff(input)),
+    .mutation(({ input, ctx }) => service.assignStaff(input, ownerScope(ctx))),
 
-  removeStaff: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] })
+  removeStaff: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_STAFF_ASSIGNMENTS] })
     .input(removeStaffSchema)
-    .mutation(({ input }) => service.removeStaff(input)),
+    .mutation(({ input, ctx }) => service.removeStaff(input, ownerScope(ctx))),
 
   removePaymentAttachment: guardedProcedure({ [RESOURCES.PAYMENT]: [ACTIONS.DELETE] })
     .input(removeEventPaymentAttachmentSchema)
-    .mutation(({ input }) => service.removePaymentAttachment(input)),
+    .mutation(({ input, ctx }) => service.removePaymentAttachment(input, ownerScope(ctx))),
 
   updateSelections: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_SELECTIONS] })
     .input(updateEventSelectionsSchema)
-    .mutation(({ input, ctx }) => service.updateSelections(input.eventId, input, ctx.user.id)),
+    .mutation(({ input, ctx }) =>
+      service.updateSelections(input.eventId, input, ctx.user.id, ownerScope(ctx)),
+    ),
 });

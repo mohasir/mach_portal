@@ -16,7 +16,7 @@ export interface AlertColorSet {
 export interface WrapperAlertProps {
   type?: WrapperAlertType;
   icon?: WrapperAlertIconType;
-  title: ReactNode;
+  title?: ReactNode;
   description?: ReactNode;
   showIcon?: boolean;
   closeable?: boolean;

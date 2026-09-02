@@ -7,6 +7,7 @@ export const RESOURCES = {
   PIPELINE: 'pipeline',
   STAFF: 'staff',
   PRODUCT: 'product',
+  PRICE_TIERS: 'price_tiers',
   EVENT_TYPE: 'event_type',
   TAX_RATES: 'tax_rates',
   QUOTE_DEFAULTS: 'quote_defaults',

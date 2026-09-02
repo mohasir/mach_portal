@@ -30,6 +30,7 @@ export const publicQuoteColumns = {
   selectOptionsAtQuote: quotes.selectOptionsAtQuote,
   validUntil: quotes.validUntil,
   createdById: quotes.createdById,
+  assignedToId: quotes.assignedToId,
   pdfUrl: quotes.pdfUrl,
   pdfGeneratedAt: quotes.pdfGeneratedAt,
   createdAt: quotes.createdAt,
@@ -92,6 +93,7 @@ export const quoteResource = (row: PublicQuote) => ({
   selectOptionsAtQuote: row.selectOptionsAtQuote,
   validUntil: row.validUntil,
   createdById: row.createdById,
+  assignedToId: row.assignedToId,
   pdfUrl: row.pdfUrl,
   pdfGeneratedAt: row.pdfGeneratedAt,
   createdAt: row.createdAt,
@@ -156,7 +158,10 @@ export type QuoteLineDetail = {
   selections: QuoteLineSelection[];
 };
 
-export type QuoteDetailRow = QuoteWithNames & { createdByName: string | null };
+export type QuoteDetailRow = QuoteWithNames & {
+  createdByName: string | null;
+  assignedToName: string | null;
+};
 
 export type StageHistoryRow = {
   fromStageId: number | null;
@@ -199,9 +204,24 @@ export const buildQuoteDetail = (
   clientName: quoteRow.clientName,
   eventTypeName: quoteRow.eventTypeName,
   createdByName: quoteRow.createdByName,
+  assignedToName: quoteRow.assignedToName,
   isComplete: isQuoteComplete(quoteRow, lineRows.length),
   stageHistory: historyRows,
   lines: buildQuoteLineDetails(lineRows, optionRows),
 });
 
 export type QuoteDetailResource = ReturnType<typeof buildQuoteDetail>;
+
+export type QuoteAvailabilityConflictRow = {
+  id: string;
+  number: string;
+  clientName: string;
+  eventTypeName: string | null;
+};
+
+export const quoteAvailabilityConflictResource = (row: QuoteAvailabilityConflictRow) => ({
+  id: row.id,
+  number: row.number,
+  clientName: row.clientName,
+  eventTypeName: row.eventTypeName,
+});

@@ -21,6 +21,24 @@ export function useQuote(id: string | undefined) {
   return useQuery({ ...trpc.quotes.getById.queryOptions({ id: id! }), enabled: !!id });
 }
 
+// Advisory only (see quotes.router.ts checkAvailability) — never blocks the builder, just
+// feeds the green-check/warning UI once both eventDate and eventTime are filled in.
+export function useQuoteAvailability(
+  eventDate: string | undefined,
+  eventTime: string | undefined,
+  excludeQuoteId: string | undefined,
+) {
+  const trpc = useTRPC();
+  return useQuery({
+    ...trpc.quotes.checkAvailability.queryOptions({
+      eventDate: eventDate!,
+      eventTime: eventTime!,
+      excludeQuoteId,
+    }),
+    enabled: !!eventDate && !!eventTime,
+  });
+}
+
 // create/update don't wire onError here — the client (and quote) fields it can fail on live
 // across two components (ClientSection, EventSection), so QuoteBuilderContent owns routing the
 // error to the right one instead of a single generic toast.

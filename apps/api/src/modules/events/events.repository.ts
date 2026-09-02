@@ -51,6 +51,25 @@ const sortColumns = {
 export class EventsRepository {
   constructor(private db: Database) {}
 
+  // Events have no owner of their own — they're 1:1 with the quote that spawned them,
+  // so 'own' scope (resolveResourceScope) means "quote I created OR quote assigned to me".
+  private ownerFilter(ownerId?: string): SQL | undefined {
+    return ownerId ? or(eq(quotes.createdById, ownerId), eq(quotes.assignedToId, ownerId)) : undefined;
+  }
+
+  // Pre-check for mutations that don't already join `quotes` (staff, payments,
+  // attachments, selections) — centralizes the "own" gate so each service method
+  // just calls this once instead of re-deriving ownership per query.
+  async belongsToOwner(eventId: string, ownerId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: events.id })
+      .from(events)
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
+      .where(and(eq(events.id, eventId), this.ownerFilter(ownerId)))
+      .limit(1);
+    return !!row;
+  }
+
   private baseSelect() {
     const totalPaidSubquery = this.db
       .select({ value: sql<number>`coalesce(sum(${eventPayments.amount}), 0)` })
@@ -73,7 +92,7 @@ export class EventsRepository {
       .leftJoin(eventTypes, eq(events.eventTypeId, eventTypes.id));
   }
 
-  async findPaginated(query: EventsListQuery) {
+  async findPaginated(query: EventsListQuery, ownerId?: string) {
     const { search, sortBy, sortDir, clientId, segment } = query;
 
     const today = new Date().toISOString().slice(0, 10);
@@ -88,6 +107,7 @@ export class EventsRepository {
       search ? ilike(clients.name, `%${search}%`) : undefined,
       clientId ? eq(events.clientId, clientId) : undefined,
       segmentWhere,
+      this.ownerFilter(ownerId),
     );
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
     const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
@@ -103,21 +123,25 @@ export class EventsRepository {
       .select({ value: count() })
       .from(events)
       .innerJoin(clients, eq(events.clientId, clients.id))
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
       .where(where);
     return row?.value ?? 0;
   }
 
-  findCalendarRange(query: EventsCalendarQuery) {
+  findCalendarRange(query: EventsCalendarQuery, ownerId?: string) {
     return this.baseSelect().where(
       and(
         sql`extract(month from ${events.eventDate}) = ${query.month}`,
         sql`extract(year from ${events.eventDate}) = ${query.year}`,
+        this.ownerFilter(ownerId),
       ),
     );
   }
 
-  async findById(id: string) {
-    const [eventRow] = await this.baseSelect().where(eq(events.id, id)).limit(1);
+  async findById(id: string, ownerId?: string) {
+    const [eventRow] = await this.baseSelect()
+      .where(and(eq(events.id, id), this.ownerFilter(ownerId)))
+      .limit(1);
     if (!eventRow) return undefined;
 
     const lineRows = await this.db

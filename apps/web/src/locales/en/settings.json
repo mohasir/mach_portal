@@ -143,6 +143,8 @@
       "upload_attachment": "Upload receipt",
       "view": "View",
       "manage_selections": "Choose event options",
+      "manage_line_pricing": "Customize line quantity and price",
+      "manage_staff_assignments": "Assign/remove event staff",
       "view_summary": "View monthly metrics",
       "view_quotes_chart": "View quotes chart",
       "view_top_products": "View top requested stations"
@@ -178,7 +180,11 @@
       },
       "product": {
         "label": "Products",
-        "caption": "Catalog products, options and pricing."
+        "caption": "Catalog products and their options."
+      },
+      "price_tiers": {
+        "label": "Price tiers",
+        "caption": "Price packages by number of people for each station."
       },
       "event_type": {
         "label": "Event types",
