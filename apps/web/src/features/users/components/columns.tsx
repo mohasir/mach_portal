@@ -12,7 +12,12 @@ import type { User } from '../types';
 interface UseUsersColumnsParams {
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
-  onPasswordSetupLink: (url: string, reason: 'create' | 'reset') => void;
+  onPasswordSetupLink: (
+    url: string,
+    name: string,
+    email: string,
+    reason: 'create' | 'reset',
+  ) => void;
 }
 
 export function useUsersColumns({

@@ -16,17 +16,17 @@ export function CreateUserModal({ open, onClose }: CreateUserModalProps) {
   const { t } = useTranslation('users');
   const { t: tc } = useTranslation('common');
   const { createUser, isPending } = useCreateUser();
-  const [setupUrl, setSetupUrl] = useState<string | null>(null);
+  const [setup, setSetup] = useState<{ url: string; name: string; email: string } | null>(null);
 
   const handleClose = () => {
-    setSetupUrl(null);
+    setSetup(null);
     onClose();
   };
 
   const onSubmit = async (values: CreateUserInput) => {
     try {
       const { setupUrl } = await createUser(values);
-      setSetupUrl(setupUrl);
+      setSetup({ url: setupUrl, name: values.name, email: values.email });
     } catch {
       // error notificado por useApiError
     }
@@ -36,13 +36,18 @@ export function CreateUserModal({ open, onClose }: CreateUserModalProps) {
     <WrapperModal
       open={open}
       onCancel={handleClose}
-      title={setupUrl ? tc('share.action') : t('create.title')}
-      width={setupUrl ? { xs: '90%', md: 340 } : undefined}
-      classNames={setupUrl ? { title: 'text-2xl' } : undefined}
+      title={setup ? tc('share.action') : t('create.title')}
+      width={setup ? { xs: '90%', md: 340 } : undefined}
+      classNames={setup ? { title: 'text-2xl' } : undefined}
     >
       {open &&
-        (setupUrl ? (
-          <PasswordSetupLinkResult url={setupUrl} variant="create" />
+        (setup ? (
+          <PasswordSetupLinkResult
+            url={setup.url}
+            name={setup.name}
+            email={setup.email}
+            variant="create"
+          />
         ) : (
           <UserForm mode="create" onSubmit={onSubmit} isPending={isPending} />
         ))}

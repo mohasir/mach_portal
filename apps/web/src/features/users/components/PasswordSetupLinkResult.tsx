@@ -6,13 +6,22 @@ import { copyToClipboard } from '@/lib/utils/clipboard';
 
 interface PasswordSetupLinkResultProps {
   url: string;
+  name: string;
+  email: string;
   variant: 'create' | 'reset';
 }
 
-export function PasswordSetupLinkResult({ url, variant }: PasswordSetupLinkResultProps) {
+export function PasswordSetupLinkResult({
+  url,
+  name,
+  email,
+  variant,
+}: PasswordSetupLinkResultProps) {
   const { t } = useTranslation('users');
   const { t: tc } = useTranslation('common');
   const { message } = App.useApp();
+
+  const shareText = t(`passwordSetupLink.${variant}.message`, { name, email, url });
 
   const handleCopy = async () => {
     const ok = await copyToClipboard(url);
@@ -24,13 +33,13 @@ export function PasswordSetupLinkResult({ url, variant }: PasswordSetupLinkResul
     // installed (WhatsApp, Instagram, etc), no need for per-network buttons.
     if (navigator.share) {
       try {
-        await navigator.share({ url, title: t(`passwordSetupLink.${variant}.title`) });
+        await navigator.share({ text: shareText, title: t(`passwordSetupLink.${variant}.title`) });
         return;
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') return;
       }
     }
-    const ok = await copyToClipboard(url);
+    const ok = await copyToClipboard(shareText);
     if (ok) message.success(t('passwordSetupLink.copied'));
   };
 

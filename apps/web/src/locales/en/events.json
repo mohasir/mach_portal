@@ -1,6 +1,10 @@
 {
   "title": "Events",
   "empty": "No events yet",
+  "card": {
+    "createdBy": "Created by {{name}}",
+    "numberCopied": "Number copied to clipboard"
+  },
   "validation": {
     "amountRequired": "Amount must be greater than 0"
   },
@@ -37,6 +41,7 @@
     }
   },
   "detail": {
+    "eventDetailsTitle": "Event details",
     "backToQuote": "View quote",
     "pastDueTitle": "Past due",
     "pastDue": "This event's date has already passed. Do you want to mark it as completed?",

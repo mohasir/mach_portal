@@ -1,5 +1,18 @@
 import { randomUUID } from 'node:crypto';
-import { and, asc, count, desc, eq, ilike, inArray, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNull,
+  ne,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import {
   QUOTE_STAGE,
@@ -53,7 +66,9 @@ export class QuotesRepository {
 
   // 'own' scope (resolveResourceScope) = created it OR it's assigned to me.
   private ownerFilter(ownerId?: string): SQL | undefined {
-    return ownerId ? or(eq(quotes.createdById, ownerId), eq(quotes.assignedToId, ownerId)) : undefined;
+    return ownerId
+      ? or(eq(quotes.createdById, ownerId), eq(quotes.assignedToId, ownerId))
+      : undefined;
   }
 
   async findPaginated(query: QuotesListQuery, ownerId?: string) {
@@ -207,6 +222,7 @@ export class QuotesRepository {
           ...publicQuoteColumns,
           clientName: clients.name,
           eventTypeName: eventTypes.name,
+          createdByName: user.name,
           eventId: events.id,
           depositPaid: events.depositPaid,
           staffMembers: sql<{ id: string; name: string }[]>`(
@@ -222,7 +238,8 @@ export class QuotesRepository {
         .from(quotes)
         .innerJoin(clients, eq(quotes.clientId, clients.id))
         .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
-        .leftJoin(events, eq(events.quoteId, quotes.id));
+        .leftJoin(events, eq(events.quoteId, quotes.id))
+        .leftJoin(user, eq(quotes.createdById, user.id));
 
     const ownerWhere = this.ownerFilter(ownerId);
     const [openRows, terminalRows] = await Promise.all([
