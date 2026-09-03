@@ -39,6 +39,7 @@ export const quotes = pgTable('quotes', {
   address: text('address'),
   city: text('city'),
   notes: text('notes'),
+  clientNotes: text('client_notes'),
   subtotal: integer('subtotal').notNull().default(0),
   discountType: discountTypeEnum('discount_type'),
   discountValue: numeric('discount_value', { mode: 'number', precision: 10, scale: 5 }),

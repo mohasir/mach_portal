@@ -82,7 +82,11 @@
       "cardSurcharge": "Card/check surcharge",
       "cardSurchargeHint": "Adds {{rate}}% on top of the quote total",
       "notes": "Notes",
-      "notesPlaceholder": "Internal notes"
+      "internalNotesLabel": "Internal notes",
+      "internalNotesPlaceholder": "Only visible to your team",
+      "clientNotesLabel": "Client notes",
+      "clientNotesCaption": "Appears on the quote PDF",
+      "clientNotesPlaceholder": "Visible to the client on the PDF"
     },
     "selectionsMode": {
       "label": "Choose options now",

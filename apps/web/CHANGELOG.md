@@ -5,6 +5,14 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.13.0] - 2026-09-03
+
+### Added
+
+- Campo "Notas para el cliente" en el builder de cotización (`NotesSection`),
+  separado de las notas internas existentes — su contenido aparece en el PDF de la
+  cotización.
+
 ## [0.12.0] - 2026-09-03
 
 ### Added
