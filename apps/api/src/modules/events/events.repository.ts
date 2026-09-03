@@ -15,6 +15,7 @@ import {
   sql,
   type SQL,
 } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import {
   QUOTE_STAGE,
   type AssignStaffInput,
@@ -48,13 +49,17 @@ const sortColumns = {
   createdAt: events.createdAt,
 } as const;
 
+const assignedToUser = alias(user, 'assigned_to_user');
+
 export class EventsRepository {
   constructor(private db: Database) {}
 
   // Events have no owner of their own — they're 1:1 with the quote that spawned them,
   // so 'own' scope (resolveResourceScope) means "quote I created OR quote assigned to me".
   private ownerFilter(ownerId?: string): SQL | undefined {
-    return ownerId ? or(eq(quotes.createdById, ownerId), eq(quotes.assignedToId, ownerId)) : undefined;
+    return ownerId
+      ? or(eq(quotes.createdById, ownerId), eq(quotes.assignedToId, ownerId))
+      : undefined;
   }
 
   // Pre-check for mutations that don't already join `quotes` (staff, payments,
@@ -86,12 +91,14 @@ export class EventsRepository {
         quoteCancelled: sql<boolean>`${quotes.stageId} = ${QUOTE_STAGE.CANCELLED}`,
         totalPaid: sql<number>`(${totalPaidSubquery})`,
         createdByName: user.name,
+        assignedToName: assignedToUser.name,
       })
       .from(events)
       .innerJoin(clients, eq(events.clientId, clients.id))
       .innerJoin(quotes, eq(events.quoteId, quotes.id))
       .leftJoin(eventTypes, eq(events.eventTypeId, eventTypes.id))
-      .leftJoin(user, eq(quotes.createdById, user.id));
+      .leftJoin(user, eq(quotes.createdById, user.id))
+      .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id));
   }
 
   async findPaginated(query: EventsListQuery, ownerId?: string) {

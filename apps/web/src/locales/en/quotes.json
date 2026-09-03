@@ -125,6 +125,8 @@
       "cardSurcharge": "Card/check surcharge ({{rate}}%)",
       "total": "Total",
       "deposit": "Deposit ({{rate}}%)",
+      "editDeposit": "Edit deposit",
+      "editDepositTitle": "Edit deposit",
       "balance": "Balance"
     },
     "preview": {
@@ -148,10 +150,20 @@
     "pastDue": "Past due",
     "noDate": "No date",
     "moveTo": "Move to…",
-    "assignStaff": "Assign staff",
-    "noStaff": "Unassigned",
+    "assignQuote": {
+      "action": "Assign quote",
+      "title": "Assign quote",
+      "userPlaceholder": "Search user...",
+      "empty": "No users found",
+      "success": "Quote assigned successfully",
+      "unassignSuccess": "Assignment removed successfully",
+      "remove": "Remove assignment",
+      "currentLabel": "Currently selected",
+      "otherLabel": "Select another"
+    },
     "linesCount": "{{count}} lines",
     "createdBy": "Created by {{name}}",
+    "assignedTo": "Assigned to {{name}}",
     "draftTag": "Draft",
     "cloneNumber": "Clone quote number",
     "numberCopied": "Number copied to clipboard",
@@ -179,6 +191,8 @@
     "title": "Activity",
     "createdSuffix": "created this quote",
     "movedTo": "moved this quote to",
+    "assignedTo": "assigned this quote to",
+    "unassigned": "removed the assignment from this quote",
     "unknownUser": "a user"
   },
   "detail": {

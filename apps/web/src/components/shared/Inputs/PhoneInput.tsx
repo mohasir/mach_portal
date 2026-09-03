@@ -21,16 +21,21 @@ interface FormattedPhoneProps {
   value?: string | null;
 }
 
+// `forceDialCode` always renders "+1" even with no digits entered — a phone whose only
+// digits are the dial code itself has nothing else to show, so treat it as empty.
+const isDialCodeOnly = (phone: string, dialCode: string) => phone.replace(/\D/g, '') === dialCode;
+
 /** Renders a stored phone number using the same country mask as `PhoneInput`, e.g. "+1 (131) 321-3123". */
 export function FormattedPhone({ value }: FormattedPhoneProps) {
-  const { inputValue } = usePhoneInput({
+  const { inputValue, country } = usePhoneInput({
     defaultCountry: 'us',
     value: value ?? '',
     countries: US_COUNTRIES,
     forceDialCode: true,
   });
 
-  return value ? <>{inputValue}</> : null;
+  if (!value || isDialCodeOnly(value, country.dialCode)) return null;
+  return <>{inputValue}</>;
 }
 
 export function PhoneInput({ value, onChange, disabled, placeholder }: PhoneInputProps) {
@@ -39,7 +44,10 @@ export function PhoneInput({ value, onChange, disabled, placeholder }: PhoneInpu
     value,
     countries: US_COUNTRIES,
     forceDialCode: true,
-    onChange: (data) => onChange?.(data.phone),
+    // Fires once on mount even without user input (forceDialCode always computes at least
+    // "+1") — collapse that no-op case to '' so it doesn't get saved as a real phone number.
+    onChange: (data) =>
+      onChange?.(isDialCodeOnly(data.phone, data.country.dialCode) ? '' : data.phone),
   });
 
   return (

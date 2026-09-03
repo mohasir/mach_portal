@@ -20,6 +20,7 @@ export function useAssignStaff() {
         return Promise.all([
           qc.invalidateQueries(trpc.events.pathFilter()),
           qc.invalidateQueries(trpc.quotes.pathFilter()),
+          qc.invalidateQueries(trpc.staff.pathFilter()),
         ]);
       },
       onError,
@@ -43,6 +44,7 @@ export function useRemoveStaff() {
         Promise.all([
           qc.invalidateQueries(trpc.events.pathFilter()),
           qc.invalidateQueries(trpc.quotes.pathFilter()),
+          qc.invalidateQueries(trpc.staff.pathFilter()),
         ]),
       onError,
     }),

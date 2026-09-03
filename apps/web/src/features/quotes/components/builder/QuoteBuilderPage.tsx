@@ -71,6 +71,9 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
         number={detail?.number}
         stageId={stageId}
         isDraft={detail?.isDraft}
+        createdByName={detail?.createdByName}
+        assignedToId={detail?.assignedToId}
+        assignedToName={detail?.assignedToName}
         catalog={catalog}
         eventTypes={eventTypesData.items}
       />

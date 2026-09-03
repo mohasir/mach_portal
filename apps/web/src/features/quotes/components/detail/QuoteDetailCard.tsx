@@ -118,6 +118,10 @@ export function QuoteDetailCard({
             detail.createdByName && t('pipeline.createdBy', { name: detail.createdByName })
           }
           onCopy={() => void handleCopyNumber()}
+          quoteId={detail.id}
+          createdByName={detail.createdByName}
+          assignedToId={detail.assignedToId}
+          assignedToName={detail.assignedToName}
         />
         {stageRow}
       </div>

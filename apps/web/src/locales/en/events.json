@@ -134,12 +134,10 @@
   },
   "assignStaff": {
     "title": "Assign staff",
-    "staffLabel": "Available staff",
-    "staffPlaceholder": "Pick a staff member",
-    "roleLabel": "Role (optional)",
-    "rolePlaceholder": "E.g. Bartender",
+    "searchPlaceholder": "Search staff...",
+    "currentLabel": "Assigned staff",
+    "otherLabel": "Select another",
     "empty": "No staff available for this date",
-    "submit": "Assign",
     "success": "Staff assigned"
   },
   "paymentMethods": {

@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { Avatar, Button, Flex, Typography } from 'antd';
-import { ArrowLeft, User } from 'lucide-react';
+import { Button, Flex, Typography } from 'antd';
+import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { AvatarUser } from '@/components/shared/AvatarUser';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { LogoutButton } from '@/components/shared/LogoutButton';
 import { NotificationMenu } from '@/components/NotificationMenu/NotificationMenu';
@@ -46,7 +47,11 @@ export function MobileTopbar() {
             className="min-w-0 cursor-pointer"
             onClick={() => setDrawerOpen(true)}
           >
-            <Avatar src={user?.image ?? undefined} icon={<User size={16} />} />
+            <AvatarUser
+              name={user?.name ?? user?.email ?? ''}
+              image={user?.image}
+              showDetails={false}
+            />
             <div className="min-w-0">
               <Typography.Text className="text-brown block truncate text-base font-medium">
                 {t('topbar.greeting', { name: user?.name ?? user?.email ?? '' })}

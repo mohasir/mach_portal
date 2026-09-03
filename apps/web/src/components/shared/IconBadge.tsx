@@ -3,6 +3,7 @@ import type { ComponentType } from 'react';
 type IconComponent = ComponentType<{ size?: number }>;
 
 const BADGE_SIZE_CLASSES = {
+  xs: 'size-6',
   sm: 'size-7',
   md: 'size-9',
 } as const;

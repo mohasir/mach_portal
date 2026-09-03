@@ -38,6 +38,7 @@ const {
   MANAGE_SELECTIONS,
   MANAGE_LINE_PRICING,
   MANAGE_STAFF_ASSIGNMENTS,
+  MANAGE_ASSIGNMENT,
   VIEW_SUMMARY,
   VIEW_QUOTES_CHART,
   VIEW_TOP_PRODUCTS,
@@ -55,8 +56,9 @@ const PAYMENT_FULL = [CREATE, READ, DELETE, UPLOAD_ATTACHMENT];
 const EVENT_FULL = [...CRUD, MANAGE_SELECTIONS, MANAGE_STAFF_ASSIGNMENTS];
 const DASHBOARD_FULL = [READ, VIEW_SUMMARY, VIEW_QUOTES_CHART, VIEW_TOP_PRODUCTS];
 // Only admin/superadmin can override a quote line's numPersons/price away from the
-// catalog's price tiers — operator (scope 'own') stays plain CRUD.
-const QUOTE_FULL = [...CRUD, MANAGE_LINE_PRICING];
+// catalog's price tiers, or reassign a quote to another user — operator (scope 'own')
+// stays plain CRUD.
+const QUOTE_FULL = [...CRUD, MANAGE_LINE_PRICING, MANAGE_ASSIGNMENT];
 
 export const rolesPermissionsMatrix = [
   {

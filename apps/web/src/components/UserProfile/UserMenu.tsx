@@ -1,8 +1,9 @@
 'use client';
-import { Avatar, Dropdown, Flex, Typography, type MenuProps } from 'antd';
-import { LogOut, User } from 'lucide-react';
+import { Dropdown, Flex, Typography, type MenuProps } from 'antd';
+import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
+import { AvatarUser } from '@/components/shared/AvatarUser';
 import { signOut, useSession } from '@/lib/auth/client';
 
 export function UserMenu() {
@@ -28,7 +29,11 @@ export function UserMenu() {
   return (
     <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
       <Flex align="center" gap={8} className="cursor-pointer">
-        <Avatar src={user?.image ?? undefined} icon={<User size={18} />} />
+        <AvatarUser
+          name={user?.name ?? user?.email ?? ''}
+          image={user?.image}
+          showDetails={false}
+        />
         <Typography.Text className="text-brown hidden font-medium md:inline">
           {user?.name ?? user?.email}
         </Typography.Text>

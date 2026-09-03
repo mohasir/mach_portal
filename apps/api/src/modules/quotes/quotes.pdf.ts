@@ -8,19 +8,13 @@ import type {
 import type { ProductWithGroups } from '../products/products.resource';
 import type { QuoteDetailRow, QuoteLineDetail } from './quotes.resource';
 
-function buildItemDetails(
-  line: QuoteLineDetail,
-  product: ProductWithGroups,
-): QuotePdfDetailBlock[] {
+// The quote PDF is a sales document, not a record of what was actually picked — a
+// line's options may still be unresolved at quote time (chosen later, at the event) or
+// already resolved, but either way the client sees the station's full menu, not just
+// whatever happens to be selected internally.
+function buildItemDetails(product: ProductWithGroups): QuotePdfDetailBlock[] {
   return product.optionGroups
-    .map((group) => {
-      const isIncluded = group.selectionType === 'included';
-      const selection = line.selections.find((s) => s.optionGroupId === group.id);
-      const options = isIncluded
-        ? group.options
-        : group.options.filter((o) => selection?.optionIds.includes(o.id));
-      return { title: group.label, options: options.map((o) => o.name) };
-    })
+    .map((group) => ({ title: group.label, options: group.options.map((o) => o.name) }))
     .filter((block) => block.options.length > 0);
 }
 
@@ -34,7 +28,7 @@ function buildItems(lines: QuoteLineDetail[], catalog: ProductWithGroups[]): Quo
         description: product.name,
         quantity: line.numPersons,
         total: line.subtotal / 100,
-        details: buildItemDetails(line, product),
+        details: buildItemDetails(product),
       },
     ];
   });

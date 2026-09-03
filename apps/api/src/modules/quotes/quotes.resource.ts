@@ -120,14 +120,12 @@ export const quoteListItemResource = (row: QuoteListItemRow) => ({
   isComplete: isQuoteComplete(row, row.linesCount),
 });
 
-export type QuoteCardStaffMember = { id: string; name: string };
-
 export type QuoteCardRow = QuoteWithNames & {
   linesCount: number;
   createdByName: string | null;
+  assignedToName: string | null;
   eventId: string | null;
   depositPaid: boolean | null;
-  staffMembers: QuoteCardStaffMember[];
 };
 
 export const quoteCardResource = (row: QuoteCardRow) => ({
@@ -143,9 +141,10 @@ export const quoteCardResource = (row: QuoteCardRow) => ({
   validUntil: row.validUntil,
   linesCount: row.linesCount,
   createdByName: row.createdByName,
+  assignedToId: row.assignedToId,
+  assignedToName: row.assignedToName,
   eventId: row.eventId,
   depositPaid: row.depositPaid,
-  staffMembers: row.staffMembers,
 });
 
 export type QuoteCardResource = ReturnType<typeof quoteCardResource>;
@@ -168,6 +167,13 @@ export type QuoteDetailRow = QuoteWithNames & {
 export type StageHistoryRow = {
   fromStageId: number | null;
   toStageId: number;
+  changedByName: string | null;
+  changedAt: Date;
+};
+
+export type AssignmentHistoryRow = {
+  fromUserName: string | null;
+  toUserName: string | null;
   changedByName: string | null;
   changedAt: Date;
 };
@@ -201,6 +207,7 @@ export const buildQuoteDetail = (
   lineRows: PublicQuoteLine[],
   optionRows: PublicQuoteLineOption[],
   historyRows: StageHistoryRow[],
+  assignmentHistoryRows: AssignmentHistoryRow[],
 ) => ({
   ...quoteResource(quoteRow),
   clientName: quoteRow.clientName,
@@ -209,6 +216,7 @@ export const buildQuoteDetail = (
   assignedToName: quoteRow.assignedToName,
   isComplete: isQuoteComplete(quoteRow, lineRows.length),
   stageHistory: historyRows,
+  assignmentHistory: assignmentHistoryRows,
   lines: buildQuoteLineDetails(lineRows, optionRows),
 });
 

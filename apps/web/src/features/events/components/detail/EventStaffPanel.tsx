@@ -1,16 +1,17 @@
 'use client';
 import { useState } from 'react';
 import { App, Button, Empty, Typography } from 'antd';
-import { UserPlus, X } from 'lucide-react';
+import { UserMinus, UserPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
-import { AssignStaffModal } from '@/features/quotes/components/pipeline/AssignStaffModal';
+import { IconBadge } from '@/components/shared/IconBadge';
 import { useCan } from '@/lib/auth/useCan';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useRemoveStaff } from '../../hooks/useEventStaff';
 import type { EventDetail } from '../../types';
+import { AssignStaffSheet } from './AssignStaffSheet';
 
 interface EventStaffPanelProps {
   event: EventDetail;
@@ -40,12 +41,17 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
 
   return (
     <>
-      <div className="flex justify-between">
+      <div className="flex justify-between mb-4">
         <Typography.Title className="font-heading text-lg text-brown m-0!">
           {t('detail.staff.title')}
         </Typography.Title>
         {canAssign && (
-          <Button size="small" icon={<UserPlus size={14} />} onClick={() => setAssignOpen(true)}>
+          <Button
+            type="primary"
+            size="small"
+            icon={<UserPlus size={14} />}
+            onClick={() => setAssignOpen(true)}
+          >
             {t('detail.staff.assign')}
           </Button>
         )}
@@ -54,14 +60,9 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
       {event.staff.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('detail.staff.empty')} />
       ) : (
-        <div className="flex flex-col">
-          {event.staff.map((member, index) => (
-            <div
-              key={member.id}
-              className={`flex items-center justify-between gap-3 py-3 ${
-                index > 0 ? 'border-line border-t' : ''
-              }`}
-            >
+        <div className="flex flex-col bg-primary/5 rounded-2xl p-3">
+          {event.staff.map((member) => (
+            <div key={member.id} className={`flex items-center justify-between gap-3 py-3`}>
               <AvatarUser
                 name={member.staffName}
                 extra={
@@ -74,24 +75,32 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
               />
               {canManageStaff && (
                 <Button
-                  type="link"
+                  type="text"
                   danger
-                  size="small"
-                  icon={<X size={14} />}
+                  disabled={isPending}
                   loading={isPending}
                   onClick={() => onRemove(member.staffId, member.staffName)}
-                >
-                  {t('detail.staff.remove')}
-                </Button>
+                  icon={
+                    <IconBadge
+                      icon={UserMinus}
+                      shape="square"
+                      badgeSize="sm"
+                      size={14}
+                      rounded="rounded-lg"
+                      className="bg-salmon/20 text-error"
+                    />
+                  }
+                />
               )}
             </div>
           ))}
         </div>
       )}
 
-      <AssignStaffModal
+      <AssignStaffSheet
         eventId={event.id}
         eventDate={event.eventDate}
+        assignedStaff={event.staff}
         open={assignOpen}
         onClose={() => setAssignOpen(false)}
       />
