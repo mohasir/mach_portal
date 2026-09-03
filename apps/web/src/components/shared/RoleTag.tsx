@@ -6,7 +6,7 @@ import { ROLES, type RoleType } from '@repo/guards';
 const ROLE_COLORS: Record<RoleType, string> = {
   [ROLES.SUPERADMIN]: 'gold',
   [ROLES.ADMIN]: 'geekblue',
-  [ROLES.MANAGER]: 'purple',
+  [ROLES.OPERATOR]: 'purple',
   [ROLES.MEMBER]: 'cyan',
 };
 

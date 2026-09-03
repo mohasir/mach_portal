@@ -5,9 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useCan } from '@/lib/auth/useCan';
-import { ADMIN_MENU, IconCardOptionsMap, type NavItem } from '@/lib/navigation';
-
-const PRIMARY_HREFS = new Set(['/admin', '/admin/calendar', '/admin/quotes']);
+import { ADMIN_MENU, IconCardOptionsMap, PRIMARY_HREFS, type NavItem } from '@/lib/navigation';
 
 export function OptionsPage() {
   const { t } = useTranslation('admin');
@@ -27,7 +25,7 @@ export function OptionsPage() {
       <Card
         hoverable
         onClick={() => router.push(item.href!)}
-        className="aspect-square text-center"
+        className="bg-primary/5 aspect-square text-center"
         classNames={{ body: 'flex h-full flex-col items-center justify-center gap-2' }}
       >
         <div className="flex h-22.5 w-9 items-center justify-center">

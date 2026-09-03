@@ -31,7 +31,7 @@ export function WrapperAlert({
 
   return (
     <div
-      className={`relative flex flex-col gap-3 rounded-2xl border p-4 pl-5 ${colors.bg} ${colors.border} ${className ?? ''}`}
+      className={`relative flex flex-col gap-3 rounded-2xl border p-4 pl-3 ${colors.bg} ${colors.border} ${className ?? ''}`}
     >
       {closeable && (
         <AlertCloseButton

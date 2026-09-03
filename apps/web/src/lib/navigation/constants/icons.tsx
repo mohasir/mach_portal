@@ -8,7 +8,7 @@ import {
   CircleHelp,
   DollarSign,
   Headset,
-  LayoutDashboard,
+  Home,
   LayoutGrid,
   LogOut,
   Package,
@@ -27,7 +27,7 @@ import optionStationIcon from '@/assets/icons/option_station_icon.svg';
 const iconSize = 18;
 
 export const IconMap: Record<string, ReactNode> = {
-  dashboard: <LayoutDashboard size={iconSize} />,
+  home: <Home size={iconSize} />,
   calendar: <Calendar size={iconSize} />,
   events: <CalendarDays size={iconSize} />,
   clients: <Users size={iconSize} />,

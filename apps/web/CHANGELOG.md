@@ -5,6 +5,98 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.11.0] - 2026-09-02
+
+### Added
+
+- "Creado por" en la card de cotización del pipeline (`QuoteCardBody`), en la card
+  de evento (`EventCard`) y en el detalle de cotización/evento — quién creó la
+  cotización de origen.
+- Componente compartido `QuoteNumberHeader` (número, botón de copiar y "Creado
+  por", con acceso rápido opcional a la cotización) usado en el detalle de
+  cotización y de evento.
+- Nueva sección "Detalle del evento" en el detalle de evento: tipo de evento,
+  fecha junto al tag de estado (Próximo/Realizado/Cancelado) y dirección.
+- `EventCard` soporta un modo `plain` (sin card propia) y ocultar el "Creado
+  por" — usado en "Próximos eventos" del dashboard, con un divider entre
+  eventos en vez de cards individuales.
+
+### Changed
+
+- El header del detalle de cotización se reorganiza: el título de la página
+  pasa a ser fijo ("Detalle de cotización"), y el número de cotización, el
+  botón de copiar y la descarga/compartir del PDF se mudan a la misma card
+  que el dropdown de cambio de estado (antes el número vivía en el header de
+  la página, y la descarga solo aparecía ahí en desktop).
+- El header del detalle de evento se reorganiza con la misma estructura:
+  número de cotización + copiar + acceso a "Ver cotización" (ahora un ícono,
+  antes un botón con texto) en una fila, "Creado por" debajo.
+- Al crear un usuario o reenviar el link de contraseña, el mensaje para
+  copiar/compartir ahora saluda por nombre e incluye el correo (antes
+  mostraba solo el link pelado); "Copiar link" vuelve a copiar solo la URL,
+  "Compartir" comparte el mensaje completo por la hoja nativa.
+- El dashboard muestra "Próximos eventos" primero (antes iba al final,
+  compartiendo fila con "Productos más pedidos", que ahora ocupa el ancho
+  completo).
+- El ítem "Asignar staff" del menú de acciones del listado de Eventos ahora
+  requiere el permiso `manage_staff_assignments` en vez del genérico de
+  edición de evento, consistente con el detalle del evento — así el rol
+  Operador (que solo tiene ese permiso, con scope propio) también lo ve ahí.
+
+### Fixed
+
+- El bottom nav mobile se ocultaba solo en Configuración y en el detalle de
+  Eventos/Productos; ahora se deriva de la lista real de secciones de
+  "Opciones" (`ADMIN_MENU`), así que también se oculta en Clientes, Staff,
+  Pagos, Tipos de evento, Usuarios y los listados de Productos/Eventos.
+
+## [0.10.0] - 2026-09-02
+
+### Added
+
+- Flujo de configuración de contraseña para usuarios nuevos (o reset): al crear un
+  usuario, o pedir que reestablezca su contraseña desde Usuarios, el superadmin ya
+  no ve ni fija la contraseña real — se genera un link de un solo uso
+  (`/set-password`, `SetPasswordPage`) que se copia o se comparte por la hoja
+  nativa del dispositivo (`PasswordSetupLinkResult`, mismo fallback que
+  `ShareButton`) para mandarlo manualmente (WhatsApp, etc). Mientras el usuario no
+  lo use, su cuenta queda bloqueada al iniciar sesión (`AccountLocked`). Nuevo
+  `WrapperModal` (modal propio con header y botón de cierre de marca), usado en el
+  modal de creación de usuario y en el nuevo `PasswordSetupLinkModal` (reenviar
+  link desde el listado de Usuarios).
+- Aviso de disponibilidad al elegir fecha y hora en el builder de cotización
+  (`EventSection`, `useQuoteAvailability`): si ya hay otra cotización con evento en
+  ese mismo horario, se muestra un aviso no bloqueante con el cliente y tipo de
+  evento en conflicto (la doble reserva sigue permitida, es solo un heads-up).
+- Editores propios para servicios, términos y condiciones, y notas de la plantilla
+  de PDF de cotización (`ServiceDurationsEditor`, `TermsAndConditionsEditor`,
+  `NoteCardEditor`, en Configuración > Plantilla PDF): cada ítem se agrega, edita o
+  quita individualmente en una card con confirmación al eliminar, en vez de filas
+  de formulario o un textarea de líneas separadas por salto.
+
+### Changed
+
+- Rol "Manager" pasa a llamarse "Operador" en la UI (`RoleTag`, matriz de permisos
+  de Configuración) — ya estaba renombrado como `operator` en el backend, faltaba
+  actualizar estos dos lugares.
+- Cotizaciones y eventos ahora respetan el scope de permisos del rol (own/all): un
+  rol con scope propio (ej. Operador) solo ve y gestiona las cotizaciones que creó
+  o tiene asignadas, y los eventos de esas cotizaciones — listados, detalle,
+  pipeline, pagos, selecciones y staff quedan fuera de su alcance en el servidor,
+  no solo ocultos en la UI.
+- Fijar en una línea del builder un `numPersons`/precio que no corresponda a un
+  tramo del catálogo (precio personalizado) pasa a requerir permiso de admin o
+  superadmin — sin él, la vista rápida de estaciones (`QuickLineCard`) ya no
+  muestra el botón de editar precio.
+- Asignar o quitar staff de un evento (`EventStaffPanel`) pasa a requerir un
+  permiso propio en vez del genérico de edición de evento; el panel además deja
+  de envolverse en su propia card (vivía ya dentro de una).
+- Tarifas por tramo del catálogo (`PriceTiersForm`): agregar, editar y quitar un
+  tramo ahora se controlan con permisos independientes (antes un solo flag
+  gobernaba los tres botones).
+- El ítem "Dashboard" de la navegación pasa a llamarse "Inicio" (ícono `Home`) y
+  queda siempre visible, sin importar el permiso de lectura del dashboard.
+
 ## [0.9.0] - 2026-08-30
 
 ### Added

@@ -1,7 +1,7 @@
 'use client';
-import { Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CreateUserInput, UserRole } from '@repo/schemas';
+import { WrapperModal } from '@/components/shared/WrapperModal';
 import { useUpdateUser } from '../hooks/useUsers';
 import { UserForm } from './UserForm';
 import type { User } from '../types';
@@ -27,16 +27,19 @@ export function EditUserModal({ user, open, onClose }: EditUserModalProps) {
   };
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} title={t('edit.title')}>
+    <WrapperModal open={open} onCancel={onClose} title={t('edit.title')}>
       {user && (
         <UserForm
           key={user.id}
           mode="edit"
-          initialValues={{ name: user.name, role: (user.role ?? undefined) as UserRole | undefined }}
+          initialValues={{
+            name: user.name,
+            role: (user.role ?? undefined) as UserRole | undefined,
+          }}
           onSubmit={onSubmit}
           isPending={isPending}
         />
       )}
-    </Modal>
+    </WrapperModal>
   );
 }

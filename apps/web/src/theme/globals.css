@@ -167,6 +167,74 @@
     color: var(--ant-color-text-light-solid);
   }
 
+  /* DatePicker/TimePicker render their own calendar/clock icon then, when the
+     Form.Item has hasFeedback, append the validating/success feedback icon right
+     after it (antd's useSuffixIcon) as a normal flex sibling — so the feedback
+     icon showing up, going away, or changing shape (spinner vs check) shifts the
+     picker's own icon sideways every time. Taking the feedback icon out of flex
+     flow (absolutely positioned just left of the suffix, vertically centered)
+     keeps the picker's own icon at a fixed spot no matter the feedback state. */
+  .ant-picker-suffix {
+    position: relative;
+  }
+  /* AntD margins every non-last suffix child (assuming siblings sit side by side
+     in flow) — the feedback icon is pulled out via absolute positioning below, but
+     the picker's own icon is still ":not(:last-child)" by DOM order alone, so it
+     kept getting that margin (shifting it left) even with nothing left to space
+     itself from. Zero it: the feedback icon's own margin below is the real gap now. */
+  .ant-picker-suffix > .anticon:not(:last-child) {
+    margin-inline-end: 0;
+  }
+  .ant-picker-suffix > .ant-form-item-feedback-icon {
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    transform: translateY(-50%);
+    margin-inline-end: 8px;
+    font-size: 14px;
+  }
+
+  /* Idle border for form controls only, a bit darker than the default — without
+     touching the shared colorBorder token (Card and the app's own border-line
+     Tailwind utility read that same token/var directly, so a token-level override
+     under `components.Input` etc. darkens those too; colorBorder has no per-component
+     slot in AntD's ComponentToken, ie. there's nothing to override that's actually
+     scoped to just inputs — see theme/antd.ts history). Input/InputNumber/DatePicker
+     share the exact same outlined-variant generator (genOutlinedStyle) with hover/focus
+     as plain :hover/:focus pseudo-classes, so those are re-declared here too — this
+     layer's declaration would otherwise win outright over antd's (cascade layers
+     ignore specificity), silently flattening the hover/focus feedback to this same
+     idle color. Select instead drives its border through its own CSS var
+     (--ant-select-border-color, from antd's genCssVar) and a JS-toggled
+     .ant-select-focused class rather than :focus, hence the different selectors below. */
+  .ant-input-outlined,
+  .ant-input-number-outlined,
+  .ant-picker-outlined {
+    border-color: rgba(0, 0, 0, 0.35);
+  }
+  .ant-input-outlined:hover,
+  .ant-input-number-outlined:hover,
+  .ant-picker-outlined:hover {
+    border-color: #6b6c1f; /* MB.oliveDark (theme/antd.ts) */
+  }
+  .ant-input-outlined:focus,
+  .ant-input-outlined:focus-within,
+  .ant-input-number-outlined:focus,
+  .ant-input-number-outlined:focus-within,
+  .ant-picker-outlined:focus,
+  .ant-picker-outlined:focus-within {
+    border-color: var(--ant-color-primary);
+  }
+  .ant-select-outlined {
+    --ant-select-border-color: rgba(0, 0, 0, 0.35);
+  }
+  .ant-select-outlined:hover {
+    --ant-select-border-color: #6b6c1f; /* MB.oliveDark (theme/antd.ts) */
+  }
+  .ant-select-outlined.ant-select-focused {
+    --ant-select-border-color: var(--ant-color-primary);
+  }
+
   /* Kill the browser-y overscroll bounce and tap-highlight flash so the
      installed PWA feels like a native app rather than a website. */
   html,

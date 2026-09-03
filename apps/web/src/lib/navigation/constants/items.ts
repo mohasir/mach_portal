@@ -5,10 +5,11 @@ import type { NavItem } from '../types';
 const { READ } = ACTIONS;
 
 export const DASHBOARD_ITEM: NavItem = {
-  label: 'nav.dashboard',
+  label: 'nav.home',
   href: '/admin',
-  icon: 'dashboard',
+  icon: 'home',
   guard: { [RESOURCES.DASHBOARD]: [READ] },
+  alwaysVisible: true,
 };
 
 export const CALENDAR_ITEM: NavItem = {

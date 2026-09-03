@@ -73,6 +73,8 @@
       "cityPlaceholder": "Event city",
       "date": "Event date",
       "time": "Time",
+      "availabilityWarning": "Warning",
+      "availabilityConflictDescription": "There are already quotes for this date and time:",
       "address": "Address",
       "addressPlaceholder": "Event address",
       "longDistance": "Long distance fee",
@@ -149,6 +151,7 @@
     "assignStaff": "Assign staff",
     "noStaff": "Unassigned",
     "linesCount": "{{count}} lines",
+    "createdBy": "Created by {{name}}",
     "draftTag": "Draft",
     "cloneNumber": "Clone quote number",
     "numberCopied": "Number copied to clipboard",
@@ -179,7 +182,7 @@
     "unknownUser": "a user"
   },
   "detail": {
-    "title": "Service Quotation",
+    "title": "Quote detail",
     "number": "No.",
     "client": "Name",
     "services": "Services",

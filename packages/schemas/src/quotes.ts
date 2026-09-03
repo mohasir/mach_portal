@@ -127,6 +127,23 @@ export const updateQuoteStageSchema = z.object({
 });
 export type UpdateQuoteStageInput = z.infer<typeof updateQuoteStageSchema>;
 
+// `assignedToId: null` un-assigns the quote — kept apart from `updateQuoteSchema` since
+// only an unrestricted (scope 'all') role may reassign, never the owner/assignee itself.
+export const assignQuoteSchema = z.object({
+  id: z.uuid(),
+  assignedToId: z.string().nullable(),
+});
+export type AssignQuoteInput = z.infer<typeof assignQuoteSchema>;
+
+// Advisory only — the business allows two quotes/events at the same date and time, so this
+// is never enforced server-side on create/update, just surfaced to the builder as a heads-up.
+export const checkQuoteAvailabilitySchema = z.object({
+  eventDate: z.iso.date(),
+  eventTime: z.string().min(1),
+  excludeQuoteId: z.uuid().optional(),
+});
+export type CheckQuoteAvailabilityQuery = z.infer<typeof checkQuoteAvailabilitySchema>;
+
 // ── list / board queries ──
 export const quotesListQuerySchema = listQuerySchema.extend({
   sortBy: z.enum(['number', 'eventDate', 'total', 'stage', 'createdAt']).default('createdAt'),

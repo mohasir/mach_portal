@@ -30,7 +30,7 @@ export function useEventRowActions({ onAssignStaff }: UseEventRowActionsParams) 
           key: 'assignStaff',
           label: t('detail.staff.assign'),
           icon: <UserPlus size={16} />,
-          guard: { [RESOURCES.EVENT]: [ACTIONS.UPDATE] },
+          guard: { [RESOURCES.EVENT]: [ACTIONS.MANAGE_STAFF_ASSIGNMENTS] },
           onClick: () => onAssignStaff(event),
         },
         {

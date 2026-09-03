@@ -1,6 +1,6 @@
 {
   "nav": {
-    "dashboard": "Dashboard",
+    "home": "Home",
     "newQuote": "New quote",
     "events": "Events",
     "calendarTab": "Calendar",
@@ -43,7 +43,8 @@
   "welcome": {
     "title": "Welcome!",
     "titleNamed": "Hi, {{name}}!",
-    "subtitle": "Your session is active. Use the side menu to explore the sections available to your account."
+    "subtitle": "Your session is active. Use the side menu to explore the sections available to your account.",
+    "subtitleMobile": "Your session is active. Use the bottom menu to explore the sections available to your account."
   },
   "placeholder": {
     "comingSoon": "This section is under construction."

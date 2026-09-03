@@ -9,9 +9,15 @@ import type { User } from '../types';
 
 interface UsersTableProps {
   onEdit: (user: User) => void;
+  onPasswordSetupLink: (
+    url: string,
+    name: string,
+    email: string,
+    reason: 'create' | 'reset',
+  ) => void;
 }
 
-export function UsersTable({ onEdit }: UsersTableProps) {
+export function UsersTable({ onEdit, onPasswordSetupLink }: UsersTableProps) {
   const { t } = useTranslation('users');
   const { t: tc } = useTranslation('common');
   const table = useDataTable<UsersListQuery['sortBy']>({ defaultSortBy: 'createdAt' });
@@ -19,7 +25,7 @@ export function UsersTable({ onEdit }: UsersTableProps) {
   const { deleteUser } = useDeleteUser();
 
   const onDelete = (user: User) => deleteUser(user.id);
-  const columns = useUsersColumns({ onEdit, onDelete });
+  const columns = useUsersColumns({ onEdit, onDelete, onPasswordSetupLink });
 
   return (
     <DataTable<User>
@@ -27,7 +33,14 @@ export function UsersTable({ onEdit }: UsersTableProps) {
       rowKey="id"
       columns={columns}
       mobileRenderType="card"
-      renderCard={(user) => <UserCard user={user} onEdit={onEdit} onDelete={onDelete} />}
+      renderCard={(user) => (
+        <UserCard
+          user={user}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onPasswordSetupLink={onPasswordSetupLink}
+        />
+      )}
       dataSource={data?.items}
       loading={isLoading}
       total={paginationOf(data)?.total}

@@ -1,5 +1,5 @@
 'use client';
-import { Button, Card, Descriptions, Divider, Typography } from 'antd';
+import { App, Button, Card, Descriptions, Divider, Typography } from 'antd';
 import { AlertCircle, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
@@ -8,11 +8,12 @@ import { AddressLines } from '@/components/shared/AddressLines';
 import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { IconTag } from '@/components/shared/IconTag';
-import { Logo } from '@/components/shared/Logo';
+import { QuoteNumberHeader } from '@/components/shared/QuoteNumberHeader';
 import { ShareButton } from '@/components/shared/ShareButton';
 import { isPastDate } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
+import { copyToClipboard } from '@/lib/utils/clipboard';
 import type { QuoteDetail } from '../../types';
 import { QuoteStageTagDropdown } from '../QuoteStageTagDropdown';
 import { QuoteSummary } from '../QuoteSummary';
@@ -36,9 +37,15 @@ export function QuoteDetailCard({
   showPdfAction,
 }: QuoteDetailCardProps) {
   const { t } = useTranslation('quotes');
-  const { date } = useDateFormatter();
+  const { message } = App.useApp();
+  const { date, dateTime } = useDateFormatter();
   const isDesktop = useIsDesktop();
   const hasPdf = Boolean(detail.pdfUrl);
+
+  const handleCopyNumber = async () => {
+    const ok = await copyToClipboard(detail.number);
+    if (ok) message.success(t('pipeline.numberCopied'));
+  };
 
   const eventDateTime = detail.eventDate
     ? `${date(detail.eventDate)}${detail.eventTime ? `, ${detail.eventTime}` : ''}`
@@ -71,13 +78,9 @@ export function QuoteDetailCard({
     />
   );
 
-  const headerRow = (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-      <div className="hidden h-16 items-center justify-center sm:flex">
-        <Logo />
-      </div>
-
-      <div className="flex items-center justify-between gap-2 sm:hidden">
+  const stageRow = (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <QuoteStageTagDropdown
             quoteId={detail.id}
@@ -86,7 +89,7 @@ export function QuoteDetailCard({
           />
           {draftTag}
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           {hasPdf && <ShareButton url={detail.pdfUrl!} title={detail.number} iconOnly />}
           {showPdfAction && (
             <Button
@@ -98,24 +101,25 @@ export function QuoteDetailCard({
           )}
         </div>
       </div>
-
-      <div className="hidden sm:flex sm:flex-col sm:items-end sm:text-right">
-        <div className="mb-1 flex items-center gap-2">
-          <QuoteStageTagDropdown
-            quoteId={detail.id}
-            stageId={detail.stageId as QuoteStageId}
-            isDraft={detail.isDraft}
-          />
-          {draftTag}
-        </div>
-        <Typography.Text type="secondary" className="text-xs tracking-wide">
-          {t('detail.title')}
+      {detail.pdfGeneratedAt && (
+        <Typography.Text type="secondary" className="text-xs">
+          {t('detail.pdfGeneratedAt', { date: dateTime(detail.pdfGeneratedAt) })}
         </Typography.Text>
-        <div className="text-base mt-1">
-          <span className="text-gray-500">{t('detail.number')} </span>
-          <span className="font-semibold">{detail.number}</span>
-        </div>
-        <div className="text-xs text-gray-500">{date(detail.createdAt)}</div>
+      )}
+    </div>
+  );
+
+  const headerRow = (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+      <div className="flex flex-1 flex-col gap-2">
+        <QuoteNumberHeader
+          number={detail.number}
+          createdBy={
+            detail.createdByName && t('pipeline.createdBy', { name: detail.createdByName })
+          }
+          onCopy={() => void handleCopyNumber()}
+        />
+        {stageRow}
       </div>
     </div>
   );

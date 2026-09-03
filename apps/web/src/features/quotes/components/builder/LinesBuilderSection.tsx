@@ -1,9 +1,11 @@
 'use client';
 import { Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { Product } from '@/features/catalog';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
 import { WrapperCard } from '@/components/shared/WrapperCard';
+import { useCan } from '@/lib/auth/useCan';
 import { useConfig } from '@/features/settings';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { LineBuilder } from './LineBuilder';
@@ -23,6 +25,8 @@ export function LinesBuilderSection({ catalog, readOnly }: LinesBuilderSectionPr
   const { t } = useTranslation('quotes');
   const { state, setFields } = useQuoteBuilder();
   const { data: config } = useConfig();
+  const can = useCan();
+  const canEditPricing = can({ [RESOURCES.QUOTE]: [ACTIONS.MANAGE_LINE_PRICING] });
   const allowToggle = !!config?.appSettings.allowSelectOptionsAtQuote;
   const title = `${t('builder.lines.title')}${state.lines.length > 0 ? ` (${state.lines.length})` : ''}`;
 
@@ -43,9 +47,9 @@ export function LinesBuilderSection({ catalog, readOnly }: LinesBuilderSectionPr
           />
         )}
         {state.selectOptionsAtQuote ? (
-          <LineBuilder catalog={catalog} readOnly={readOnly} />
+          <LineBuilder catalog={catalog} readOnly={readOnly} canEditPricing={canEditPricing} />
         ) : (
-          <QuickLineBuilder catalog={catalog} readOnly={readOnly} />
+          <QuickLineBuilder catalog={catalog} readOnly={readOnly} canEditPricing={canEditPricing} />
         )}
       </div>
     </WrapperCard>

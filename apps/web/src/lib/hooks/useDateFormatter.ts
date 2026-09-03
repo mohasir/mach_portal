@@ -9,6 +9,8 @@ import {
   formatMonthYear,
   formatRelative,
   formatTime,
+  formatTimeHourMinute,
+  formatTimeMeridiem,
   type DateInput,
 } from '@/lib/date';
 import { useLocaleStore } from '@/lib/stores/locale.store';
@@ -29,6 +31,10 @@ export function useDateFormatter() {
       relative: (value: DateInput) => formatRelative(value, locale),
       /** "12:30 pm" */
       time: (value: string) => formatTime(value),
+      /** "12:30" */
+      timeHourMinute: (value: string) => formatTimeHourMinute(value),
+      /** "pm" */
+      timeMeridiem: (value: string) => formatTimeMeridiem(value),
       /** "12" */
       dayOfMonth: (value: DateInput) => formatDayOfMonth(value, locale),
       /** "Jan" */

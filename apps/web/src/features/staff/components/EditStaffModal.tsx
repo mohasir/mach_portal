@@ -1,7 +1,7 @@
 'use client';
-import { Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CreateStaffInput } from '@repo/schemas';
+import { WrapperModal } from '@/components/shared/WrapperModal';
 import { useUpdateStaff } from '../hooks/useStaff';
 import { StaffForm } from './StaffForm';
 import type { Staff } from '../types';
@@ -27,7 +27,7 @@ export function EditStaffModal({ member, open, onClose }: EditStaffModalProps) {
   };
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} title={t('edit.title')}>
+    <WrapperModal open={open} onCancel={onClose} title={t('edit.title')}>
       {member && (
         <StaffForm
           key={member.id}
@@ -41,6 +41,6 @@ export function EditStaffModal({ member, open, onClose }: EditStaffModalProps) {
           isPending={isPending}
         />
       )}
-    </Modal>
+    </WrapperModal>
   );
 }

@@ -37,6 +37,12 @@ export const formatDateTime = (value: DateInput, locale: AppLocale) =>
 // 12h/am-pm is a fixed display choice here (not locale-dependent like the formatters above).
 export const formatTime = (value: string) => dayjs(value, 'HH:mm').format('h:mm a');
 
+/** "6:30" — hour/minute only, no am/pm (paired with formatTimeMeridiem). */
+export const formatTimeHourMinute = (value: string) => dayjs(value, 'HH:mm').format('h:mm');
+
+/** "pm" */
+export const formatTimeMeridiem = (value: string) => dayjs(value, 'HH:mm').format('a');
+
 export const formatDayOfMonth = (value: DateInput, locale: AppLocale) =>
   toDayjs(value, locale).format('D');
 

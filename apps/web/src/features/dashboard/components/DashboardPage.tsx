@@ -40,6 +40,12 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Row gutter={[16, 16]}>
+        <Col xs={24}>
+          <UpcomingEventsCard />
+        </Col>
+      </Row>
+
       <Can allowed={{ [RESOURCES.DASHBOARD]: [ACTIONS.VIEW_SUMMARY] }}>
         <Row gutter={[16, 16]}>
           <Col xs={12} md={6}>
@@ -81,21 +87,14 @@ export function DashboardPage() {
         <QuotesByMonthChart year={YEAR} data={quotesByMonth} isLoading={quotesByMonthLoading} />
       </Can>
 
-      <Row gutter={[16, 16]}>
-        <Can allowed={{ [RESOURCES.DASHBOARD]: [ACTIONS.VIEW_TOP_PRODUCTS] }}>
-          <Col xs={24} lg={12}>
-            <TopProductsList
-              data={topProducts}
-              isLoading={topProductsLoading}
-              month={MONTH}
-              year={YEAR}
-            />
-          </Col>
-        </Can>
-        <Col xs={24} lg={12}>
-          <UpcomingEventsCard />
-        </Col>
-      </Row>
+      <Can allowed={{ [RESOURCES.DASHBOARD]: [ACTIONS.VIEW_TOP_PRODUCTS] }}>
+        <TopProductsList
+          data={topProducts}
+          isLoading={topProductsLoading}
+          month={MONTH}
+          year={YEAR}
+        />
+      </Can>
     </div>
   );
 }

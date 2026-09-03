@@ -10,9 +10,10 @@ import { ProductPicker } from './ProductPicker';
 interface LineBuilderProps {
   catalog: Product[];
   readOnly?: boolean;
+  canEditPricing: boolean;
 }
 
-export function LineBuilder({ catalog, readOnly }: LineBuilderProps) {
+export function LineBuilder({ catalog, readOnly, canEditPricing }: LineBuilderProps) {
   const { t } = useTranslation('quotes');
   const { state, addLine, removeLine, updateLine, setSelection } = useQuoteBuilder();
 
@@ -43,6 +44,7 @@ export function LineBuilder({ catalog, readOnly }: LineBuilderProps) {
               line={line}
               product={product}
               readOnly={readOnly}
+              canEditPricing={canEditPricing}
               onRemove={() => removeLine(line.key)}
               onChange={(payload) => updateLine(line.key, payload)}
               onSelectionChange={(groupId, optionIds) => setSelection(line.key, groupId, optionIds)}

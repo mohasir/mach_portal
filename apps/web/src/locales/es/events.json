@@ -1,6 +1,10 @@
 {
   "title": "Eventos",
   "empty": "No hay eventos",
+  "card": {
+    "createdBy": "Creado por {{name}}",
+    "numberCopied": "Número copiado al portapapeles"
+  },
   "validation": {
     "amountRequired": "El monto debe ser mayor a 0"
   },
@@ -37,6 +41,7 @@
     }
   },
   "detail": {
+    "eventDetailsTitle": "Detalle del evento",
     "backToQuote": "Ver cotización",
     "pastDueTitle": "Vencido",
     "pastDue": "La fecha de este evento ya pasó. ¿Deseás marcarlo como realizado?",

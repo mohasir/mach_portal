@@ -18,6 +18,7 @@ type QuickLineCardProps = QuickLineCardBaseProps &
   (
     | {
         mode: 'edit';
+        canEditPricing: boolean;
         onRemove: () => void;
         onChange: (payload: { numPersons?: number; subtotal?: number }) => void;
       }
@@ -127,7 +128,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
             </span>
           )}
           <div className="flex items-center gap-2">
-            {mode === 'edit' && (
+            {mode === 'edit' && props.canEditPricing && (
               <Button
                 type="text"
                 size="small"

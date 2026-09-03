@@ -44,4 +44,8 @@ export const usersRouter = router({
       }
       return service.remove(input.id);
     }),
+
+  generatePasswordSetupLink: guardedProcedure({ user: ['set-password'] })
+    .input(z.object({ id: z.string() }))
+    .mutation(({ input }) => service.regeneratePasswordSetupLink(input.id)),
 });

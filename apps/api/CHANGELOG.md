@@ -5,6 +5,57 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.10.0] - 2026-09-02
+
+### Added
+
+- `createdByName` en `quotes.board` (`quoteCardResource`) y en los recursos de
+  eventos (`eventListItemResource`, usado por `events.list`/`calendar`/
+  `getById`): el nombre de quien creó la cotización de origen. El evento no
+  tiene creador propio, se resuelve vía `quotes.createdById`.
+
+## [0.9.0] - 2026-09-02
+
+### Added
+
+- Flujo de configuración de contraseña de usuario (`users.generatePasswordSetupLink`,
+  columna `mustChangePassword` en `user`): crear un usuario ya no le fija una
+  contraseña utilizable por quien lo crea — Better Auth recibe una contraseña
+  aleatoria que se descarta al toque, y se emite un link de un solo uso (token con
+  vencimiento de 24h, sobre la propia tabla `verification` de Better Auth) para que
+  el usuario fije la suya vía su endpoint nativo de reset. Mientras
+  `mustChangePassword` sea `true`, cualquier request autenticado (`protectedProcedure`)
+  se rechaza con `USER_MUST_CHANGE_PASSWORD`; al resetear la contraseña, el flag se
+  limpia y se revocan las demás sesiones. Nueva variable de entorno requerida
+  `WEB_APP_URL` (origen canónico usado para construir el link).
+- Scope de permisos `own`/`all` por recurso (`resolveResourceScope`, tipo
+  `ResourceGrant` en `@repo/guards`): un rol puede declarar `{ actions, scope: 'own' }`
+  en vez de solo un array de acciones — aplicado por ahora a `quote` y `event`
+  (filtro por dueño/asignado en los repositorios), en el nuevo rol `operator`
+  (reemplaza a `manager`).
+- Nueva acción `manage_line_pricing` (recurso `quote`): solo admin/superadmin puede
+  guardar una línea con `numPersons`/precio que no coincida con un tramo del
+  catálogo; el resto recibe `QUOTE_PRICING_NOT_ALLOWED` si lo intenta con un
+  payload armado a mano.
+- Nueva acción `manage_staff_assignments` (recurso `event`), separada del `update`
+  genérico, para asignar o quitar staff de un evento.
+- Endpoint `quotes.assign` (reasignar `assignedToId`, o desasignar con `null`) —
+  solo para roles con scope `all` sobre `quote`; un rol con scope propio no puede
+  reasignarse cotizaciones a sí mismo ni a otros.
+- Endpoint `quotes.checkAvailability`: devuelve las cotizaciones que ya tienen
+  evento en la misma fecha/hora. Deliberadamente sin scope de dueño (muestra
+  conflictos de cualquier usuario) y no bloquea `create`/`update` — la doble
+  reserva está permitida por negocio, esto es solo un aviso para el builder.
+
+### Changed
+
+- `quotes.list`/`getById`/`board`/`generatePdf`/`update`/`updateStage`/`approve`/
+  `cancel`/`archive` y `events.list`/`calendar`/`getById`/`registerPayment`/
+  `markCompleted`/`assignStaff`/`removeStaff`/`removePaymentAttachment`/
+  `updateSelections` ahora filtran o devuelven 404 según el scope del rol que
+  llama (antes cualquier rol con el permiso podía operar sobre cualquier fila,
+  la restricción solo vivía en la UI).
+
 ## [0.8.0] - 2026-08-30
 
 ### Added
