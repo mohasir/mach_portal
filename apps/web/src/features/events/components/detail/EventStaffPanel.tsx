@@ -61,7 +61,7 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('detail.staff.empty')} />
       ) : (
         <div className="flex flex-col bg-primary/5 rounded-2xl p-3">
-          {event.staff.map((member, index) => (
+          {event.staff.map((member) => (
             <div key={member.id} className={`flex items-center justify-between gap-3 py-3`}>
               <AvatarUser
                 name={member.staffName}
