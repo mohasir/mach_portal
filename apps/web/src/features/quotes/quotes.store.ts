@@ -26,6 +26,7 @@ export interface QuoteBuilderState {
   address: string;
   city: string;
   notes: string;
+  clientNotes: string;
   lines: LineDraft[];
   discountType: DiscountType | null;
   discountValue: number | null;
@@ -51,6 +52,7 @@ export function emptyBuilderState(
     address: '',
     city: '',
     notes: '',
+    clientNotes: '',
     lines: [],
     discountType: null,
     discountValue: null,

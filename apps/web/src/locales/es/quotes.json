@@ -82,7 +82,11 @@
       "cardSurcharge": "Recargo tarjeta/cheque",
       "cardSurchargeHint": "Agrega un {{rate}}% sobre el total de la cotización",
       "notes": "Notas",
-      "notesPlaceholder": "Notas internas"
+      "internalNotesLabel": "Notas internas",
+      "internalNotesPlaceholder": "Solo visible para tu equipo",
+      "clientNotesLabel": "Notas para el cliente",
+      "clientNotesCaption": "Aparece en el PDF de la cotización",
+      "clientNotesPlaceholder": "Visible para el cliente en el PDF"
     },
     "selectionsMode": {
       "label": "Elegir opciones ahora",

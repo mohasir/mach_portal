@@ -8,6 +8,7 @@ export interface QuotePdfEventInfo {
 export interface QuotePdfDetailBlock {
   title: string;
   options: string[];
+  emoji?: string;
 }
 
 export interface QuotePdfServiceInfo {
@@ -40,6 +41,7 @@ export interface QuotePdfRequest {
   terms_and_conditions?: string[];
   validity_note?: string;
   dietary_note?: string;
+  additional_notes?: string;
 }
 
 export interface QuotePdfResponse {
