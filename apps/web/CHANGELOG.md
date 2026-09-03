@@ -5,6 +5,51 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.11.0] - 2026-09-02
+
+### Added
+
+- "Creado por" en la card de cotización del pipeline (`QuoteCardBody`), en la card
+  de evento (`EventCard`) y en el detalle de cotización/evento — quién creó la
+  cotización de origen.
+- Componente compartido `QuoteNumberHeader` (número, botón de copiar y "Creado
+  por", con acceso rápido opcional a la cotización) usado en el detalle de
+  cotización y de evento.
+- Nueva sección "Detalle del evento" en el detalle de evento: tipo de evento,
+  fecha junto al tag de estado (Próximo/Realizado/Cancelado) y dirección.
+- `EventCard` soporta un modo `plain` (sin card propia) y ocultar el "Creado
+  por" — usado en "Próximos eventos" del dashboard, con un divider entre
+  eventos en vez de cards individuales.
+
+### Changed
+
+- El header del detalle de cotización se reorganiza: el título de la página
+  pasa a ser fijo ("Detalle de cotización"), y el número de cotización, el
+  botón de copiar y la descarga/compartir del PDF se mudan a la misma card
+  que el dropdown de cambio de estado (antes el número vivía en el header de
+  la página, y la descarga solo aparecía ahí en desktop).
+- El header del detalle de evento se reorganiza con la misma estructura:
+  número de cotización + copiar + acceso a "Ver cotización" (ahora un ícono,
+  antes un botón con texto) en una fila, "Creado por" debajo.
+- Al crear un usuario o reenviar el link de contraseña, el mensaje para
+  copiar/compartir ahora saluda por nombre e incluye el correo (antes
+  mostraba solo el link pelado); "Copiar link" vuelve a copiar solo la URL,
+  "Compartir" comparte el mensaje completo por la hoja nativa.
+- El dashboard muestra "Próximos eventos" primero (antes iba al final,
+  compartiendo fila con "Productos más pedidos", que ahora ocupa el ancho
+  completo).
+- El ítem "Asignar staff" del menú de acciones del listado de Eventos ahora
+  requiere el permiso `manage_staff_assignments` en vez del genérico de
+  edición de evento, consistente con el detalle del evento — así el rol
+  Operador (que solo tiene ese permiso, con scope propio) también lo ve ahí.
+
+### Fixed
+
+- El bottom nav mobile se ocultaba solo en Configuración y en el detalle de
+  Eventos/Productos; ahora se deriva de la lista real de secciones de
+  "Opciones" (`ADMIN_MENU`), así que también se oculta en Clientes, Staff,
+  Pagos, Tipos de evento, Usuarios y los listados de Productos/Eventos.
+
 ## [0.10.0] - 2026-09-02
 
 ### Added
