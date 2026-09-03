@@ -5,6 +5,15 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.10.0] - 2026-09-02
+
+### Added
+
+- `createdByName` en `quotes.board` (`quoteCardResource`) y en los recursos de
+  eventos (`eventListItemResource`, usado por `events.list`/`calendar`/
+  `getById`): el nombre de quien creó la cotización de origen. El evento no
+  tiene creador propio, se resuelve vía `quotes.createdById`.
+
 ## [0.9.0] - 2026-09-02
 
 ### Added

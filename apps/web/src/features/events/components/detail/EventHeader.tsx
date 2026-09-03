@@ -1,15 +1,17 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { App, Button, Card, Space, Tag, Typography } from 'antd';
-import { CheckCircle, ExternalLink, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AddressLines } from '@/components/shared/AddressLines';
 import { useConfirmModal, useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
+import { QuoteNumberHeader } from '@/components/shared/QuoteNumberHeader';
 import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { useCancelQuote } from '@/features/quotes';
 import { isPastDate } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
+import { copyToClipboard } from '@/lib/utils/clipboard';
 import { EVENT_STATUS_COLORS } from '../../helpers';
 import { useMarkEventCompleted } from '../../hooks/useEventPayments';
 import type { EventDetail } from '../../types';
@@ -21,7 +23,7 @@ interface EventHeaderProps {
 export function EventHeader({ event }: EventHeaderProps) {
   const { t } = useTranslation('events');
   const router = useRouter();
-  const { modal } = App.useApp();
+  const { modal, message } = App.useApp();
   const isDesktop = useIsDesktop();
   const [confirmAction, actionContextHolder] = useConfirmModal();
   const [confirmDelete, deleteContextHolder] = useDeleteConfirm();
@@ -54,6 +56,11 @@ export function EventHeader({ event }: EventHeaderProps) {
     modal.confirm({ ...options, okButtonProps: { danger: true } });
   };
 
+  const handleCopyNumber = async () => {
+    const ok = await copyToClipboard(event.quoteNumber);
+    if (ok) message.success(t('card.numberCopied'));
+  };
+
   return (
     <div>
       <div className="mb-4">
@@ -84,34 +91,42 @@ export function EventHeader({ event }: EventHeaderProps) {
       </div>
 
       <Card>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <Typography.Title level={4} className="m-0">
-                {event.quoteNumber}
-              </Typography.Title>
-              <Tag color={EVENT_STATUS_COLORS[event.status]}>{t(`status.${event.status}`)}</Tag>
-              {event.eventTypeName && <Tag>{event.eventTypeName}</Tag>}
-            </div>
-            <div className="mt-1 text-base text-gray-500">
-              {event.eventDate ? date(event.eventDate) : '—'}
-              {event.eventTime ? ` · ${event.eventTime}` : ''}
-            </div>
-            <AddressLines
-              address={event.address}
-              city={event.city}
-              state={event.state}
-              className="mt-1 text-base text-gray-500"
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <QuoteNumberHeader
+              number={event.quoteNumber}
+              createdBy={event.createdByName && t('card.createdBy', { name: event.createdByName })}
+              onCopy={() => void handleCopyNumber()}
+              showQuoteLink
+              onViewQuote={() => router.push(`/admin/quotes/${event.quoteId}`)}
             />
+
+            <div>
+              <Typography.Title className="font-heading text-lg text-brown m-0! mb-3">
+                {t('detail.eventDetailsTitle')}
+              </Typography.Title>
+              <div className="flex flex-col gap-1">
+                {event.eventTypeName && (
+                  <span className="text-base text-gray-500">{event.eventTypeName}</span>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-base text-gray-500">
+                    {event.eventDate ? date(event.eventDate) : '—'}
+                    {event.eventTime ? ` · ${event.eventTime}` : ''}
+                  </span>
+                  <Tag color={EVENT_STATUS_COLORS[event.status]}>{t(`status.${event.status}`)}</Tag>
+                </div>
+                <AddressLines
+                  address={event.address}
+                  city={event.city}
+                  state={event.state}
+                  className="text-base text-gray-500"
+                />
+              </div>
+            </div>
           </div>
 
           <Space wrap>
-            <Button
-              icon={<ExternalLink size={14} />}
-              onClick={() => router.push(`/admin/quotes/${event.quoteId}`)}
-            >
-              {t('detail.backToQuote')}
-            </Button>
             {isUpcoming && (
               <>
                 <Button

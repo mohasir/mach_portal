@@ -5,11 +5,19 @@ import { PasswordSetupLinkResult } from './PasswordSetupLinkResult';
 
 interface PasswordSetupLinkModalProps {
   url: string | null;
+  name: string;
+  email: string;
   reason: 'create' | 'reset';
   onClose: () => void;
 }
 
-export function PasswordSetupLinkModal({ url, reason, onClose }: PasswordSetupLinkModalProps) {
+export function PasswordSetupLinkModal({
+  url,
+  name,
+  email,
+  reason,
+  onClose,
+}: PasswordSetupLinkModalProps) {
   const { t: tc } = useTranslation('common');
 
   return (
@@ -20,7 +28,7 @@ export function PasswordSetupLinkModal({ url, reason, onClose }: PasswordSetupLi
       width={{ xs: '90%', md: 340 }}
       classNames={{ title: 'text-2xl' }}
     >
-      {url && <PasswordSetupLinkResult url={url} variant={reason} />}
+      {url && <PasswordSetupLinkResult url={url} name={name} email={email} variant={reason} />}
     </WrapperModal>
   );
 }

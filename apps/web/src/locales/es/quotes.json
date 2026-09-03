@@ -151,6 +151,7 @@
     "assignStaff": "Asignar staff",
     "noStaff": "Sin asignar",
     "linesCount": "{{count}} líneas",
+    "createdBy": "Creado por {{name}}",
     "draftTag": "Borrador",
     "cloneNumber": "Clonar número de cotización",
     "numberCopied": "Número copiado al portapapeles",
@@ -181,7 +182,7 @@
     "unknownUser": "un usuario"
   },
   "detail": {
-    "title": "Cotización de servicio",
+    "title": "Detalle de cotización",
     "number": "No.",
     "client": "Nombre",
     "services": "Servicios",

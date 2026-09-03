@@ -28,6 +28,10 @@ interface EventCardProps {
   showActions?: boolean;
   /** Event type line — hidden on the dashboard widget. */
   showEventType?: boolean;
+  /** 'plain' drops the card chrome — for lists already nested inside another card. */
+  variant?: 'card' | 'plain';
+  /** Hidden on the dashboard widget — redundant once every row is the caller's own event. */
+  showCreatedBy?: boolean;
 }
 
 export function EventCard({
@@ -38,15 +42,18 @@ export function EventCard({
   colorDateBadge = 'olive',
   showActions = true,
   showEventType = true,
+  variant = 'card',
+  showCreatedBy = true,
 }: EventCardProps) {
   const { t } = useTranslation('events');
   const { t: tc } = useTranslation('common');
   const { dayOfMonth, monthShort, time } = useDateFormatter();
   const rowActions = useEventRowActions({ onAssignStaff });
   const badgeClass = DATE_BADGE_CLASSES[colorDateBadge];
+  const CardWrapper: React.ElementType = variant === 'plain' ? 'div' : Card;
 
   return (
-    <Card
+    <CardWrapper
       onClick={onClick}
       className={`relative cursor-pointer ${showPaymentStatus ? 'pl-2' : ''}`}
     >
@@ -90,6 +97,11 @@ export function EventCard({
               state={row.state}
               className="mt-0.5 text-sm text-gray-500"
             />
+            {showCreatedBy && row.createdByName && (
+              <div className="mt-0.5 truncate text-xs text-gray-500 italic">
+                {t('card.createdBy', { name: row.createdByName })}
+              </div>
+            )}
           </div>
         </div>
         {showActions && (
@@ -98,6 +110,6 @@ export function EventCard({
           </div>
         )}
       </div>
-    </Card>
+    </CardWrapper>
   );
 }

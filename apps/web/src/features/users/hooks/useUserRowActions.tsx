@@ -9,7 +9,12 @@ import type { User } from '../types';
 interface UseUserRowActionsParams {
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
-  onPasswordSetupLink: (url: string, reason: 'create' | 'reset') => void;
+  onPasswordSetupLink: (
+    url: string,
+    name: string,
+    email: string,
+    reason: 'create' | 'reset',
+  ) => void;
 }
 
 export function useUserRowActions({
@@ -39,7 +44,7 @@ export function useUserRowActions({
       onClick: async () => {
         try {
           const { setupUrl, reason } = await generatePasswordSetupLink(user.id);
-          onPasswordSetupLink(setupUrl, reason);
+          onPasswordSetupLink(setupUrl, user.name, user.email, reason);
         } catch {
           // error notificado por useApiError
         }

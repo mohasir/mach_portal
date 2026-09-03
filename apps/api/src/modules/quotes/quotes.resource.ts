@@ -124,6 +124,7 @@ export type QuoteCardStaffMember = { id: string; name: string };
 
 export type QuoteCardRow = QuoteWithNames & {
   linesCount: number;
+  createdByName: string | null;
   eventId: string | null;
   depositPaid: boolean | null;
   staffMembers: QuoteCardStaffMember[];
@@ -141,6 +142,7 @@ export const quoteCardResource = (row: QuoteCardRow) => ({
   isComplete: isQuoteComplete(row, row.linesCount),
   validUntil: row.validUntil,
   linesCount: row.linesCount,
+  createdByName: row.createdByName,
   eventId: row.eventId,
   depositPaid: row.depositPaid,
   staffMembers: row.staffMembers,

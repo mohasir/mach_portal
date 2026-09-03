@@ -85,11 +85,13 @@ export class EventsRepository {
         quoteNumber: quotes.number,
         quoteCancelled: sql<boolean>`${quotes.stageId} = ${QUOTE_STAGE.CANCELLED}`,
         totalPaid: sql<number>`(${totalPaidSubquery})`,
+        createdByName: user.name,
       })
       .from(events)
       .innerJoin(clients, eq(events.clientId, clients.id))
       .innerJoin(quotes, eq(events.quoteId, quotes.id))
-      .leftJoin(eventTypes, eq(events.eventTypeId, eventTypes.id));
+      .leftJoin(eventTypes, eq(events.eventTypeId, eventTypes.id))
+      .leftJoin(user, eq(quotes.createdById, user.id));
   }
 
   async findPaginated(query: EventsListQuery, ownerId?: string) {

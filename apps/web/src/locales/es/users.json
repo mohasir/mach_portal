@@ -51,11 +51,13 @@
   "passwordSetupLink": {
     "create": {
       "title": "Enviar link de activación",
-      "description": "Al compartir este link, el usuario podrá activar su cuenta e iniciar sesión por primera vez. Este enlace es personal y no debería compartirse con nadie más."
+      "description": "Al compartir este link, el usuario podrá activar su cuenta e iniciar sesión por primera vez. Este enlace es personal y no debería compartirse con nadie más.",
+      "message": "Hola {{name}}, te hemos creado una cuenta en Mach Portal con el correo {{email}}. Para empezar, configurá tu contraseña acá: {{url}}\n\nEste enlace es personal y vence en 24 horas."
     },
     "reset": {
       "title": "Enviar link para restablecer contraseña",
-      "description": "Al compartir este link, el usuario podrá crear una nueva contraseña e iniciar sesión nuevamente. Este enlace es personal y no debería compartirse con nadie más."
+      "description": "Al compartir este link, el usuario podrá crear una nueva contraseña e iniciar sesión nuevamente. Este enlace es personal y no debería compartirse con nadie más.",
+      "message": "Hola {{name}}, recibimos tu pedido para restablecer la contraseña de tu cuenta de Mach Portal ({{email}}). Para continuar, creá tu nueva contraseña acá: {{url}}\n\nEste enlace es personal y vence en 24 horas."
     },
     "directLink": "Enlace directo",
     "copyLink": "Copiar link",

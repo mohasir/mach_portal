@@ -17,6 +17,8 @@ export function UsersPage() {
   const [editing, setEditing] = useState<User | null>(null);
   const [passwordLink, setPasswordLink] = useState<{
     url: string;
+    name: string;
+    email: string;
     reason: 'create' | 'reset';
   } | null>(null);
 
@@ -30,12 +32,16 @@ export function UsersPage() {
       />
       <UsersTable
         onEdit={setEditing}
-        onPasswordSetupLink={(url, reason) => setPasswordLink({ url, reason })}
+        onPasswordSetupLink={(url, name, email, reason) =>
+          setPasswordLink({ url, name, email, reason })
+        }
       />
       <CreateUserModal open={isCreateOpen} onClose={() => setCreateOpen(false)} />
       <EditUserModal user={editing} open={!!editing} onClose={() => setEditing(null)} />
       <PasswordSetupLinkModal
         url={passwordLink?.url ?? null}
+        name={passwordLink?.name ?? ''}
+        email={passwordLink?.email ?? ''}
         reason={passwordLink?.reason ?? 'reset'}
         onClose={() => setPasswordLink(null)}
       />
