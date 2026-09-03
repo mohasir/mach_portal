@@ -125,6 +125,8 @@
       "cardSurcharge": "Recargo tarjeta/cheque ({{rate}}%)",
       "total": "Total",
       "deposit": "Depósito ({{rate}}%)",
+      "editDeposit": "Editar depósito",
+      "editDepositTitle": "Editar depósito",
       "balance": "Saldo"
     },
     "preview": {
@@ -148,10 +150,20 @@
     "pastDue": "Fecha vencida",
     "noDate": "Sin fecha",
     "moveTo": "Mover a…",
-    "assignStaff": "Asignar staff",
-    "noStaff": "Sin asignar",
+    "assignQuote": {
+      "action": "Asignar cotización",
+      "title": "Asignar cotización",
+      "userPlaceholder": "Buscar usuario...",
+      "empty": "No se encontraron usuarios",
+      "success": "Cotización asignada correctamente",
+      "unassignSuccess": "Asignación quitada correctamente",
+      "remove": "Quitar asignación",
+      "currentLabel": "Actualmente seleccionado",
+      "otherLabel": "Seleccionar otro"
+    },
     "linesCount": "{{count}} líneas",
     "createdBy": "Creado por {{name}}",
+    "assignedTo": "Asignado a {{name}}",
     "draftTag": "Borrador",
     "cloneNumber": "Clonar número de cotización",
     "numberCopied": "Número copiado al portapapeles",
@@ -179,6 +191,8 @@
     "title": "Actividad",
     "createdSuffix": "creó esta cotización",
     "movedTo": "movió la cotización a",
+    "assignedTo": "asignó la cotización a",
+    "unassigned": "quitó la asignación de la cotización",
     "unknownUser": "un usuario"
   },
   "detail": {

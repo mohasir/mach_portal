@@ -1,8 +1,8 @@
 'use client';
-import { Avatar, Button, Flex, Result, Typography } from 'antd';
-import { User } from 'lucide-react';
+import { Button, Flex, Result, Typography } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
+import { AvatarUser } from '@/components/shared/AvatarUser';
 import { RoleTag } from '@/components/shared/RoleTag';
 import { signOut, useSession } from '@/lib/auth/client';
 
@@ -26,7 +26,11 @@ export function AccountLocked() {
         gap={10}
         className="shadow-xs min-h-16 bg-white px-4 pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)]"
       >
-        <Avatar src={user?.image ?? undefined} icon={<User size={16} />} />
+        <AvatarUser
+          name={user?.name ?? user?.email ?? ''}
+          image={user?.image}
+          showDetails={false}
+        />
         <div className="min-w-0">
           <Typography.Text className="text-brown block truncate text-base font-medium">
             {ta('topbar.greeting', { name: user?.name ?? user?.email ?? '' })}

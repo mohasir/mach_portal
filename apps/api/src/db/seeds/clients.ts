@@ -17,7 +17,7 @@ const SEED_CLIENTS: SeedClient[] = [
   {
     name: 'Laura Jiménez',
     email: 'laura.jimenez@example.com',
-    phone: '(212) 555-0134',
+    phone: '+12125550134',
     city: 'New York',
     state: 'NY',
     address: '145 W 57th St, Apt 12B',
@@ -26,7 +26,7 @@ const SEED_CLIENTS: SeedClient[] = [
   {
     name: 'Marcus Bennett',
     email: 'marcus.bennett@example.com',
-    phone: '(201) 555-0198',
+    phone: '+12015550198',
     city: 'Jersey City',
     state: 'NJ',
     address: '88 Morgan St',
@@ -34,7 +34,7 @@ const SEED_CLIENTS: SeedClient[] = [
   {
     name: 'Priya Nair',
     email: 'priya.nair@example.com',
-    phone: '(203) 555-0176',
+    phone: '+12035550176',
     city: 'Stamford',
     state: 'CT',
     notes: 'Cumpleaños corporativo, ~60 personas.',
@@ -42,7 +42,7 @@ const SEED_CLIENTS: SeedClient[] = [
   {
     name: 'Diego Fernández',
     email: 'diego.fernandez@example.com',
-    phone: '(347) 555-0112',
+    phone: '+13475550112',
     city: 'Brooklyn',
     state: 'NY',
     address: '210 Bedford Ave',
@@ -50,7 +50,7 @@ const SEED_CLIENTS: SeedClient[] = [
   {
     name: 'Emily Carter',
     email: 'emily.carter@example.com',
-    phone: '(908) 555-0155',
+    phone: '+19085550155',
     city: 'Princeton',
     state: 'NJ',
     notes: 'Pidió cotización para baby shower.',
@@ -58,7 +58,7 @@ const SEED_CLIENTS: SeedClient[] = [
   {
     name: 'Sofía Ramírez',
     email: 'sofia.ramirez@example.com',
-    phone: '(203) 555-0143',
+    phone: '+12035550143',
     city: 'New Haven',
     state: 'CT',
     address: '19 Elm St',
@@ -66,14 +66,14 @@ const SEED_CLIENTS: SeedClient[] = [
   {
     name: 'James O’Connor',
     email: 'james.oconnor@example.com',
-    phone: '(646) 555-0187',
+    phone: '+16465550187',
     city: 'Queens',
     state: 'NY',
   },
   {
     name: 'Hannah Weiss',
     email: 'hannah.weiss@example.com',
-    phone: '(551) 555-0169',
+    phone: '+15515550169',
     city: 'Hoboken',
     state: 'NJ',
     address: '400 Washington St',
@@ -82,14 +82,14 @@ const SEED_CLIENTS: SeedClient[] = [
   {
     name: 'Tomás Álvarez',
     email: 'tomas.alvarez@example.com',
-    phone: '(475) 555-0121',
+    phone: '+14755550121',
     city: 'Bridgeport',
     state: 'CT',
   },
   {
     name: 'Rachel Kim',
     email: 'rachel.kim@example.com',
-    phone: '(917) 555-0102',
+    phone: '+19175550102',
     city: 'Manhattan',
     state: 'NY',
     notes: 'Corporativo trimestral recurrente.',

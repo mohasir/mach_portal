@@ -28,11 +28,10 @@ import {
   quoteLines,
   quoteLineOptions,
   quoteStageHistory,
+  quoteAssignmentHistory,
   clients,
   eventTypes,
   events,
-  eventStaff,
-  staff,
   products,
   productPriceTiers,
   optionGroups,
@@ -60,6 +59,9 @@ const OPEN_STAGES = [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED, QUOTE_STAGE.CONFIR
 const TERMINAL_STAGES = [QUOTE_STAGE.CANCELLED] as const;
 
 const assignedToUser = alias(user, 'assigned_to_user');
+const assignmentFromUser = alias(user, 'assignment_from_user');
+const assignmentToUser = alias(user, 'assignment_to_user');
+const assignmentChangedByUser = alias(user, 'assignment_changed_by_user');
 
 export class QuotesRepository {
   constructor(private db: Database) {}
@@ -149,8 +151,9 @@ export class QuotesRepository {
       : [];
 
     const historyRows = await this.findStageHistory(id);
+    const assignmentHistoryRows = await this.findAssignmentHistory(id);
 
-    return { quoteRow, lineRows, optionRows, historyRows };
+    return { quoteRow, lineRows, optionRows, historyRows, assignmentHistoryRows };
   }
 
   findStageHistory(quoteId: string) {
@@ -165,6 +168,25 @@ export class QuotesRepository {
       .leftJoin(user, eq(quoteStageHistory.changedById, user.id))
       .where(eq(quoteStageHistory.quoteId, quoteId))
       .orderBy(asc(quoteStageHistory.changedAt));
+  }
+
+  findAssignmentHistory(quoteId: string) {
+    return this.db
+      .select({
+        fromUserName: assignmentFromUser.name,
+        toUserName: assignmentToUser.name,
+        changedByName: assignmentChangedByUser.name,
+        changedAt: quoteAssignmentHistory.changedAt,
+      })
+      .from(quoteAssignmentHistory)
+      .leftJoin(assignmentFromUser, eq(quoteAssignmentHistory.fromUserId, assignmentFromUser.id))
+      .leftJoin(assignmentToUser, eq(quoteAssignmentHistory.toUserId, assignmentToUser.id))
+      .leftJoin(
+        assignmentChangedByUser,
+        eq(quoteAssignmentHistory.changedById, assignmentChangedByUser.id),
+      )
+      .where(eq(quoteAssignmentHistory.quoteId, quoteId))
+      .orderBy(asc(quoteAssignmentHistory.changedAt));
   }
 
   setPdfInfo(id: string, { url, key }: { url: string; key: string }) {
@@ -194,13 +216,31 @@ export class QuotesRepository {
       .then((r) => r[0]);
   }
 
-  assignById(id: string, assignedToId: string | null) {
-    return this.db
-      .update(quotes)
-      .set({ assignedToId })
-      .where(eq(quotes.id, id))
-      .returning(publicQuoteColumns)
-      .then((r) => r[0]);
+  assignById(id: string, assignedToId: string | null, changedById: string) {
+    return this.db.transaction(async (tx) => {
+      const [current] = await tx
+        .select({ assignedToId: quotes.assignedToId })
+        .from(quotes)
+        .where(eq(quotes.id, id))
+        .limit(1);
+      if (!current) return undefined;
+
+      const [updated] = await tx
+        .update(quotes)
+        .set({ assignedToId })
+        .where(eq(quotes.id, id))
+        .returning(publicQuoteColumns);
+      if (!updated) return undefined;
+
+      await tx.insert(quoteAssignmentHistory).values({
+        quoteId: id,
+        fromUserId: current.assignedToId,
+        toUserId: assignedToId,
+        changedById,
+      });
+
+      return updated;
+    });
   }
 
   countLines(quoteId: string) {
@@ -223,23 +263,16 @@ export class QuotesRepository {
           clientName: clients.name,
           eventTypeName: eventTypes.name,
           createdByName: user.name,
+          assignedToName: assignedToUser.name,
           eventId: events.id,
           depositPaid: events.depositPaid,
-          staffMembers: sql<{ id: string; name: string }[]>`(
-            select coalesce(
-              json_agg(json_build_object('id', ${staff.id}, 'name', ${staff.name}) order by ${eventStaff.assignedAt}),
-              '[]'
-            )
-            from ${eventStaff}
-            inner join ${staff} on ${staff.id} = ${eventStaff.staffId}
-            where ${eventStaff.eventId} = ${events.id}
-          )`,
         })
         .from(quotes)
         .innerJoin(clients, eq(quotes.clientId, clients.id))
         .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
         .leftJoin(events, eq(events.quoteId, quotes.id))
-        .leftJoin(user, eq(quotes.createdById, user.id));
+        .leftJoin(user, eq(quotes.createdById, user.id))
+        .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id));
 
     const ownerWhere = this.ownerFilter(ownerId);
     const [openRows, terminalRows] = await Promise.all([

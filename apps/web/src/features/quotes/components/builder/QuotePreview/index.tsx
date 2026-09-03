@@ -21,7 +21,7 @@ interface QuotePreviewProps {
 export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePreviewProps) {
   const { t } = useTranslation('quotes');
   const { date } = useDateFormatter();
-  const { state, removeLine } = useQuoteBuilder();
+  const { state, removeLine, setFields } = useQuoteBuilder();
 
   const eventType = eventTypes.find((e) => e.id === state.eventTypeId);
 
@@ -111,6 +111,7 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
         total={totals.total}
         depositRate={totals.depositRate}
         depositAmount={totals.depositAmount}
+        onChangeDepositRate={readOnly ? undefined : (rate) => setFields({ depositRate: rate })}
       />
     </div>
   );

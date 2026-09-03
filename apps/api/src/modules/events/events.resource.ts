@@ -52,6 +52,7 @@ export type EventWithNames = PublicEvent & {
   quoteCancelled: boolean;
   totalPaid: number;
   createdByName: string | null;
+  assignedToName: string | null;
 };
 
 export const eventListItemResource = (row: EventWithNames) => ({
@@ -75,6 +76,7 @@ export const eventListItemResource = (row: EventWithNames) => ({
   status: deriveStatus(row),
   paymentStatus: derivePaymentStatus(row.totalAmount, row.totalPaid),
   createdByName: row.createdByName,
+  assignedToName: row.assignedToName,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });

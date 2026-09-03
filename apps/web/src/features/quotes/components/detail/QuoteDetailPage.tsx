@@ -76,6 +76,7 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
             createdByName={detail.createdByName}
             createdAt={detail.createdAt}
             stageHistory={detail.stageHistory}
+            assignmentHistory={detail.assignmentHistory}
           />
         </div>
       </div>

@@ -82,6 +82,7 @@ export class QuotesService {
       result.lineRows,
       result.optionRows,
       result.historyRows,
+      result.assignmentHistoryRows,
     );
   }
 
@@ -236,6 +237,17 @@ export class QuotesService {
       input.newClient,
     );
     if (!updated) throw notFound();
+
+    // Editing a quote already in a PDF_ALLOWED_STAGES stage (quoted/confirmed) leaves its
+    // PDF out of date — regenerate it in the background so the save itself doesn't wait on
+    // the external PDF service; a failure here shouldn't fail the edit the caller is
+    // actually waiting on.
+    if (PDF_ALLOWED_STAGES.includes(updated.stageId as QuoteStageId)) {
+      void this.generatePdf(id).catch((err) => {
+        console.error('background pdf regeneration failed', err);
+      });
+    }
+
     return quoteResource(updated);
   }
 
@@ -346,8 +358,8 @@ export class QuotesService {
     return archived;
   }
 
-  async assign(id: string, assignedToId: string | null) {
-    const updated = await this.repo.assignById(id, assignedToId);
+  async assign(id: string, assignedToId: string | null, changedById: string) {
+    const updated = await this.repo.assignById(id, assignedToId, changedById);
     if (!updated) throw notFound();
     return quoteResource(updated);
   }

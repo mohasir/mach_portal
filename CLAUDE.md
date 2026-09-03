@@ -96,3 +96,5 @@ pnpm check-types                  # type-check monorepo
   el browser para comprobarlo.
 - **`check-types` (`pnpm check-types` / `pnpm --filter <app> check-types`) sí se puede correr
   libremente**, sin pedir permiso — no es una prueba en vivo, solo type-check estático.
+- **Nunca leer archivos `.env`** (`.env`, `.env.local`, `.env.*`) ni imprimir su contenido,
+  aunque el usuario lo pida explícitamente para debuggear. Contienen secretos.

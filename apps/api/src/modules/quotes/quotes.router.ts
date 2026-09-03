@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { TRPCError } from '@trpc/server';
 import {
   assignQuoteSchema,
   checkQuoteAvailabilitySchema,
@@ -98,12 +97,7 @@ export const quotesRouter = router({
     .input(z.object({ id: z.uuid() }))
     .mutation(({ input, ctx }) => service.archive(input.id, ownerScope(ctx))),
 
-  // Reassigning is only for unrestricted (scope 'all') roles — an 'own'-scoped role
-  // reassigning would let it hand its own quotes to someone else, defeating the scope.
-  assign: update.input(assignQuoteSchema).mutation(({ input, ctx }) => {
-    if (resolveResourceScope(ctx.user.role, RESOURCES.QUOTE) !== 'all') {
-      throw new TRPCError({ code: 'FORBIDDEN' });
-    }
-    return service.assign(input.id, input.assignedToId);
-  }),
+  assign: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.MANAGE_ASSIGNMENT] })
+    .input(assignQuoteSchema)
+    .mutation(({ input, ctx }) => service.assign(input.id, input.assignedToId, ctx.user.id)),
 });

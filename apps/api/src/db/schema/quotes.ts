@@ -114,3 +114,14 @@ export const quoteStageHistory = pgTable('quote_stage_history', {
   changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
   changedAt: timestamp('changed_at').defaultNow().notNull(),
 });
+
+export const quoteAssignmentHistory = pgTable('quote_assignment_history', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  quoteId: uuid('quote_id')
+    .notNull()
+    .references(() => quotes.id, { onDelete: 'cascade' }),
+  fromUserId: text('from_user_id').references(() => user.id, { onDelete: 'set null' }),
+  toUserId: text('to_user_id').references(() => user.id, { onDelete: 'set null' }),
+  changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
+  changedAt: timestamp('changed_at').defaultNow().notNull(),
+});

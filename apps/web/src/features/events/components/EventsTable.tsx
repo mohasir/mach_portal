@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { paginationOf, type EventsListQuery, type EventsSegment } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
-import { AssignStaffModal } from '@/features/quotes/components/pipeline/AssignStaffModal';
+import { AssignStaffSheet } from './detail/AssignStaffSheet';
 import { useEventsList } from '../hooks/useEvents';
 import { useEventsColumns } from './columns';
 import { EventCard } from './EventCard';
@@ -51,7 +51,7 @@ export function EventsTable({ clientId, segment = 'all' }: EventsTableProps) {
         searchPlaceholder={tc('table.search')}
         emptyText={t('empty')}
       />
-      <AssignStaffModal
+      <AssignStaffSheet
         eventId={assigningEvent?.id ?? null}
         eventDate={assigningEvent?.eventDate ?? null}
         open={!!assigningEvent}
