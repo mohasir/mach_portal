@@ -218,6 +218,9 @@
     "includedLabel": "Included",
     "generatePdf": "Generate PDF",
     "viewPdf": "View PDF",
-    "pdfGeneratedAt": "Generated on {{date}}"
+    "pdfGeneratedAt": "Generated on {{date}}",
+    "regeneratePdf": "Regenerate PDF",
+    "regeneratePdfConfirmTitle": "Regenerate PDF?",
+    "regeneratePdfConfirmContent": "This creates a new PDF and replaces the current one, even though it's already up to date."
   }
 }

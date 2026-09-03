@@ -217,6 +217,9 @@
     "includedServices": "Servicios incluidos",
     "includedLabel": "Incluido",
     "generatePdf": "Generar PDF",
+    "regeneratePdf": "Regenerar PDF",
+    "regeneratePdfConfirmTitle": "¿Regenerar PDF?",
+    "regeneratePdfConfirmContent": "Se crea un PDF nuevo y reemplaza al actual, aunque ya esté actualizado.",
     "viewPdf": "Ver PDF",
     "pdfGeneratedAt": "Generado el {{date}}"
   }

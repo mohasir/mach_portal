@@ -56,6 +56,11 @@ export const quotesRouter = router({
   generatePdf: read
     .input(z.object({ id: z.uuid() }))
     .mutation(({ input, ctx }) => service.generatePdf(input.id, ownerScope(ctx))),
+  // Same operation as `generatePdf`, gated to a stricter permission — forces a new PDF
+  // even when the current one isn't stale (superadmin only, see rolesPermissions.matrix.ts).
+  regeneratePdf: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.REGENERATE_PDF] })
+    .input(z.object({ id: z.uuid() }))
+    .mutation(({ input, ctx }) => service.generatePdf(input.id, ownerScope(ctx))),
   board: guardedProcedure({ [RESOURCES.PIPELINE]: [ACTIONS.READ] })
     .input(quotesBoardQuerySchema)
     .query(({ input, ctx }) => service.board(input, ownerScope(ctx))),
