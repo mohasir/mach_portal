@@ -11,16 +11,22 @@ export function getInitials(name: string): string {
 }
 
 const AVATAR_COLORS = [
-  'bg-orange-600',
-  'bg-green-600',
-  'bg-teal-600',
-  'bg-cyan-600',
-  'bg-blue-600',
-  'bg-indigo-600',
-  'bg-violet-600',
-  'bg-purple-600',
-  'bg-fuchsia-600',
-  'bg-pink-600',
+  'bg-brown text-ivory',
+  'bg-mustard text-foreground',
+  'bg-olive text-ivory',
+  'bg-ivory text-foreground',
+  'bg-red text-ivory',
+  'bg-salmon text-ivory',
+  'bg-cocoa text-ivory',
+  'bg-terracotta text-ivory',
+  'bg-copper text-ivory',
+  'bg-honey text-ivory',
+  'bg-moss text-ivory',
+  'bg-sage text-ivory',
+  'bg-slate-green text-ivory',
+  'bg-teal text-ivory',
+  'bg-violet-gray text-ivory',
+  'bg-mauve text-ivory',
 ] as const;
 
 export function getAvatarColor(initials: string): string {

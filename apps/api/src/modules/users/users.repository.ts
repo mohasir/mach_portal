@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { asc, and, count, desc, eq, ilike, like, or, sql, type SQL } from 'drizzle-orm';
+import { asc, and, count, desc, eq, ilike, isNull, like, ne, or, sql, type SQL } from 'drizzle-orm';
+import { ROLES } from '@repo/guards';
 import type { UsersListQuery } from '@repo/schemas';
 import type { Database } from '../../db';
 import { session, user, verification } from '../../db/schema';
@@ -24,11 +25,19 @@ const publicSelection = () => ({
 export class UsersRepository {
   constructor(private db: Database) {}
 
-  async findPaginated(query: UsersListQuery) {
+  // Only a superadmin caller can see other superadmin accounts in a list — everyone
+  // else (admin, operator, member) never gets superadmin rows back, e.g. in the quote
+  // reassignment user picker. `isNull` keeps rows with no role from being excluded by
+  // the `ne` comparison, since SQL's `<> 'superadmin'` is NULL (not true) for a NULL role.
+  async findPaginated(query: UsersListQuery, callerRole: string | null) {
     const { search, sortBy, sortDir } = query;
-    const where = search
-      ? or(ilike(user.name, `%${search}%`), ilike(user.email, `%${search}%`))
-      : undefined;
+    const conditions = [
+      search ? or(ilike(user.name, `%${search}%`), ilike(user.email, `%${search}%`)) : undefined,
+      callerRole === ROLES.SUPERADMIN
+        ? undefined
+        : or(isNull(user.role), ne(user.role, ROLES.SUPERADMIN)),
+    ].filter((c): c is SQL => c !== undefined);
+    const where = conditions.length ? and(...conditions) : undefined;
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
     const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
 
