@@ -26,6 +26,7 @@ import { ExtraChargesSection } from './ExtraChargesSection';
 import { NotesSection } from './NotesSection';
 import { QuotePreview } from './QuotePreview';
 import { LinesBuilderSection } from './LinesBuilderSection';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface QuoteBuilderContentProps {
   quoteId?: string;
@@ -220,7 +221,7 @@ export function QuoteBuilderContent({
         <>
           <LinesBuilderSection catalog={catalog} readOnly={readOnly} />
           <ExtraChargesSection readOnly={readOnly} />
-          <Card className="border-line border-2 bg-primary/5">
+          <WrapperCard className="border-line border-2 bg-primary/5">
             <QuoteSummary
               subtotal={totals.subtotal}
               discountAmount={totals.discountAmount}
@@ -235,7 +236,7 @@ export function QuoteBuilderContent({
                 readOnly ? undefined : (rate) => setFields({ depositRate: rate })
               }
             />
-          </Card>
+          </WrapperCard>
         </>
       )}
       <EventSection eventTypes={eventTypes} readOnly={readOnly} quoteId={quoteId} />
