@@ -30,7 +30,7 @@ export function AvatarUser({
       src={image || undefined}
       size={size}
       style={fontSize ? { fontSize } : undefined}
-      className={`${getAvatarColor(initial)} text-white shrink-0 font-medium`}
+      className={`${getAvatarColor(initial)} shrink-0 font-medium`}
     >
       {initial}
     </Avatar>

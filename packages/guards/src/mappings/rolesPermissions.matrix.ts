@@ -1,3 +1,4 @@
+import type { defaultStatements } from 'better-auth/plugins/admin/access';
 import { ACTIONS, RESOURCES, ROLES, type RoleType } from '../constants/index';
 import { permissionsMatrix } from './permissions.matrix';
 
@@ -15,11 +16,16 @@ export type ResourceGrant<Action> = Action[] | { actions: Action[]; scope: Resou
 // actions declared for THAT resource — not the full cross-resource action union.
 // Without this, granting `upload_attachment` on `event` would widen every other
 // resource's allowed values too, and better-auth's `ac.newRole()` rejects that.
+// `user` is better-auth's own resource (merged in separately via `defaultStatements`,
+// see access-control.ts) — it lives outside `permissionsMatrix`, so it's added here as
+// its own optional grant instead of widening the domain resources' mapped type above.
+type UserResourceGrant = ResourceGrant<(typeof defaultStatements)['user'][number]>;
+
 export type RolePermissions = Partial<{
   [Item in (typeof permissionsMatrix)[number] as Item['resource']]: ResourceGrant<
     Item['actions'][number]
   >;
-}>;
+}> & { user?: UserResourceGrant };
 
 export type RolesPermissionsMatrixItem = {
   role: RoleType;
@@ -89,6 +95,10 @@ export const rolesPermissionsMatrix = [
   {
     role: ROLES.ADMIN,
     permissions: {
+      // Needed to populate the user picker when reassigning a quote (QUOTE_FULL's
+      // MANAGE_ASSIGNMENT) — admin still can't create/set-role/ban/delete users, that
+      // stays superadmin-only.
+      user: ['list'],
       [RESOURCES.DASHBOARD]: DASHBOARD_FULL,
       [RESOURCES.EVENT]: EVENT_FULL,
       [RESOURCES.PAYMENT]: PAYMENT_FULL,
