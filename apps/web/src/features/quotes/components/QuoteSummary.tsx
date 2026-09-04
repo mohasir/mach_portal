@@ -91,7 +91,7 @@ export function QuoteSummary({
                   badgeSize="xs"
                   size={12}
                   rounded="rounded-md"
-                  className="bg-primary text-white"
+                  className="bg-primary text-ivory"
                 />
               }
               onClick={() => setDepositSheetOpen(true)}

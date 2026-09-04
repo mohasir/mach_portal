@@ -113,13 +113,19 @@ export const isQuoteComplete = (
   linesCount: number,
 ): boolean => !!row.state && !!row.address && !!row.city && linesCount > 0;
 
-export type QuoteListItemRow = QuoteWithNames & { linesCount: number };
+export type QuoteListItemRow = QuoteWithNames & {
+  linesCount: number;
+  createdByName: string | null;
+  assignedToName: string | null;
+};
 
 export const quoteListItemResource = (row: QuoteListItemRow) => ({
   ...quoteResource(row),
   clientName: row.clientName,
   eventTypeName: row.eventTypeName,
   isComplete: isQuoteComplete(row, row.linesCount),
+  createdByName: row.createdByName,
+  assignedToName: row.assignedToName,
 });
 
 export type QuoteCardRow = QuoteWithNames & {

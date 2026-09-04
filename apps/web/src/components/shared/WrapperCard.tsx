@@ -1,9 +1,13 @@
 'use client';
 import type { ReactNode } from 'react';
-import { Card, Divider, Typography } from 'antd';
+import { Card, Divider, Typography, type CardProps } from 'antd';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 
-interface WrapperCardProps {
+interface WrapperCardProps
+  extends Omit<
+    CardProps,
+    'title' | 'extra' | 'className' | 'classNames' | 'variant' | 'children'
+  > {
   title?: ReactNode;
   caption?: ReactNode;
   extra?: ReactNode;
@@ -25,6 +29,7 @@ export function WrapperCard({
   children,
   variant = 'card',
   showDivider = false,
+  ...cardProps
 }: WrapperCardProps) {
   const isDesktop = useIsDesktop();
   const resolvedVariant = variant ?? (isDesktop ? 'card' : 'plain');
@@ -59,6 +64,7 @@ export function WrapperCard({
 
   return (
     <Card
+      {...cardProps}
       className={`${resolvedVariant === 'outlined' ? 'shadow-none' : ''} ${className ?? ''}`}
       classNames={{ body: classNames?.body }}
     >

@@ -7,6 +7,7 @@ import { ACTIONS, RESOURCES } from '@repo/guards';
 import { useActionConfirm } from '@/components/shared/ConfirmDialogs';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
+import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { useCan } from '@/lib/auth/useCan';
 import { useUpdatePriceTiers } from '../../hooks/usePrices';
 import type { Product } from '../../types';
@@ -34,10 +35,11 @@ export function PriceTiersForm({ product }: PriceTiersFormProps) {
   const [form] = Form.useForm<PriceTiersFormValues>();
   const [confirm, confirmContextHolder] = useActionConfirm();
 
-  const handleFinish = (values: PriceTiersFormValues) =>
-    updateTiers(product.id, {
-      tiers: [...values.tiers].sort((a, b) => a.numPersons - b.numPersons),
-    });
+  const handleFinish = async (values: PriceTiersFormValues) => {
+    const tiers = [...values.tiers].sort((a, b) => a.numPersons - b.numPersons);
+    await updateTiers(product.id, { tiers });
+    form.setFieldsValue({ tiers });
+  };
 
   const handleRemove = (fieldName: number, remove: (name: number) => void) => {
     const tier = form.getFieldValue(['tiers', fieldName]) as TierFormValue | undefined;
@@ -129,11 +131,19 @@ export function PriceTiersForm({ product }: PriceTiersFormProps) {
         </Form.List>
 
         {canEdit && (
-          <Form.Item className="mb-0">
-            <Button type="primary" block htmlType="submit" loading={isPending}>
-              {t('form.save')}
-            </Button>
-          </Form.Item>
+          <div>
+            <Form.Item className="mb-0">
+              <Button type="primary" block htmlType="submit" loading={isPending}>
+                {t('form.save')}
+              </Button>
+            </Form.Item>
+            <WrapperAlert
+              type="info"
+              description={t('prices.autoSortNote')}
+              closeable={false}
+              className="mt-4"
+            />
+          </div>
         )}
       </Form>
 

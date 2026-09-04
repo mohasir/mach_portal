@@ -38,6 +38,7 @@
   "prices": {
     "title": "Prices",
     "tabDescription": "Define this station's price packages by number of people.",
+    "autoSortNote": "Packages are automatically reordered by number of people when you save.",
     "numPersonsShort": "People",
     "addTier": "Add package",
     "removeTier": "Remove package",

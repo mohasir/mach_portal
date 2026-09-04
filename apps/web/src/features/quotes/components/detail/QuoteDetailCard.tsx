@@ -201,7 +201,11 @@ export function QuoteDetailCard({
 
       {isDesktop && <Divider className="my-3" />}
 
-      {isDesktop ? summary : <Card className="border-line border-2">{summary}</Card>}
+      {isDesktop ? (
+        summary
+      ) : (
+        <WrapperCard className="border-line border-2 bg-primary/5">{summary}</WrapperCard>
+      )}
 
       {confirmContextHolder}
     </div>
