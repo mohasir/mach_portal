@@ -38,6 +38,7 @@
   "prices": {
     "title": "Precios",
     "tabDescription": "Definí los paquetes de precio de esta estación según la cantidad de personas.",
+    "autoSortNote": "Al guardar, los paquetes se reordenan automáticamente por cantidad de personas.",
     "numPersonsShort": "Personas",
     "addTier": "Agregar paquete",
     "removeTier": "Quitar paquete",

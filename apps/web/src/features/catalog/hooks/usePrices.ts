@@ -9,7 +9,7 @@ export function useUpdatePriceTiers() {
   const onError = useApiError();
   const mutation = useMutation(
     trpc.products.prices.update.mutationOptions({
-      onSuccess: () => qc.invalidateQueries(trpc.products.prices.list.queryFilter()),
+      onSuccess: () => qc.invalidateQueries(trpc.products.catalog.queryFilter()),
       onError,
     }),
   );

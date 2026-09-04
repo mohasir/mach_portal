@@ -1,8 +1,9 @@
 'use client';
-import { App, Button, Dropdown, Typography, type MenuProps } from 'antd';
+import { App, Button, Typography, type MenuProps } from 'antd';
 import { MoreHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useConfirmModal, useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
+import { WrapperDropdown } from '@/components/shared/WrapperDropdown';
 import { useCan } from '@/lib/auth/useCan';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { ACTION_PRESETS, isDivider, stripDividers } from './helpers';
@@ -87,9 +88,9 @@ export function DataTableRowActions({ actions, label }: DataTableRowActionsProps
 
   return (
     <>
-      <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
+      <WrapperDropdown menu={{ items }} trigger={['click']} placement="bottomRight">
         <Button type="text" size="small" aria-label={label} icon={<MoreHorizontal size={16} />} />
-      </Dropdown>
+      </WrapperDropdown>
       {deleteContextHolder}
       {actionContextHolder}
     </>

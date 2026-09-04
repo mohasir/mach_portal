@@ -91,10 +91,18 @@ export class QuotesRepository {
     const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
 
     const items = await this.db
-      .select({ ...publicQuoteColumns, clientName: clients.name, eventTypeName: eventTypes.name })
+      .select({
+        ...publicQuoteColumns,
+        clientName: clients.name,
+        eventTypeName: eventTypes.name,
+        createdByName: user.name,
+        assignedToName: assignedToUser.name,
+      })
       .from(quotes)
       .innerJoin(clients, eq(quotes.clientId, clients.id))
       .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
+      .leftJoin(user, eq(quotes.createdById, user.id))
+      .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id))
       .where(where)
       .orderBy(orderBy)
       .limit(limit)

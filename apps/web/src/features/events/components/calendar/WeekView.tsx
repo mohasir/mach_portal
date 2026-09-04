@@ -119,7 +119,7 @@ export function WeekView({
               <span
                 className={
                   isToday
-                    ? 'bg-primary flex h-7 w-7 items-center justify-center rounded-full text-base font-medium text-white'
+                    ? 'bg-primary flex h-7 w-7 items-center justify-center rounded-full text-base font-medium text-ivory'
                     : 'text-base font-medium'
                 }
               >

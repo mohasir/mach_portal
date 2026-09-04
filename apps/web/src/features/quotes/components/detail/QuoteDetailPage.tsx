@@ -74,7 +74,9 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
           />
         )}
         <div className="flex flex-col gap-6 self-start">
-          <QuoteIncludedServicesCard detail={detail} catalog={catalog} />
+          {detail.selectOptionsAtQuote && (
+            <QuoteIncludedServicesCard detail={detail} catalog={catalog} />
+          )}
           <QuoteHistoryCard
             createdByName={detail.createdByName}
             createdAt={detail.createdAt}
