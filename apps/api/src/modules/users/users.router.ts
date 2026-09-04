@@ -14,7 +14,7 @@ const currentRole = (ctx: { user: { role?: string | null } }) => ctx.user.role ?
 export const usersRouter = router({
   list: guardedProcedure({ user: ['list'] })
     .input(usersListQuerySchema)
-    .query(({ input }) => service.list(input)),
+    .query(({ ctx, input }) => service.list(input, currentRole(ctx))),
 
   create: guardedProcedure({ user: ['create'] })
     .input(createUserSchema)

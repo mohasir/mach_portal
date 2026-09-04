@@ -1,13 +1,12 @@
 'use client';
 import { useState } from 'react';
-import { App, Button, Empty, Input, Spin } from 'antd';
-import { UserMinus } from 'lucide-react';
+import { App } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useStaffAvailability } from '@/features/staff';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
-import { IconBadge } from '@/components/shared/IconBadge';
+import { WrapperAssign } from '@/components/shared/WrapperAssign';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useAssignStaff, useRemoveStaff } from '../../hooks/useEventStaff';
 import type { EventDetail } from '../../types';
@@ -70,80 +69,35 @@ export function AssignStaffSheet({
   return (
     <>
       <BottomSheet open={open} onClose={onClose} title={t('assignStaff.title')}>
-        <div className="flex flex-col gap-2 px-4 pb-4">
-          <Input.Search
-            autoFocus
-            allowClear
-            placeholder={t('assignStaff.searchPlaceholder')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {assignedStaff.length > 0 && (
-            <div className="mt-4 flex flex-col gap-2">
-              <span className="px-1 text-xs text-gray-500">{t('assignStaff.currentLabel')}</span>
-              <div className="flex flex-col gap-2">
-                {assignedStaff.map((member) => (
-                  <div
-                    key={member.id}
-                    className="bg-primary/5 flex items-center justify-between rounded-2xl py-2 px-3"
-                  >
-                    <AvatarUser
-                      name={member.staffName}
-                      extra={
-                        member.role ? (
-                          <span className="block truncate text-xs text-gray-500">
-                            {member.role}
-                          </span>
-                        ) : undefined
-                      }
-                    />
-                    <Button
-                      type="text"
-                      danger
-                      disabled={isRemoving}
-                      onClick={() => onRemove(member.staffId, member.staffName)}
-                      icon={
-                        <IconBadge
-                          icon={UserMinus}
-                          shape="square"
-                          badgeSize="sm"
-                          size={14}
-                          rounded="rounded-lg"
-                          className="bg-salmon/20 text-error"
-                        />
-                      }
-                      aria-label={t('detail.staff.remove')}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+        <WrapperAssign
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder={t('assignStaff.searchPlaceholder')}
+          assignedLabel={t('assignStaff.currentLabel')}
+          assignedItems={assignedStaff}
+          assignedItemKey={(member) => member.id}
+          renderAssignedItem={(member) => (
+            <AvatarUser
+              name={member.staffName}
+              extra={
+                member.role ? (
+                  <span className="block truncate text-xs text-gray-500">{member.role}</span>
+                ) : undefined
+              }
+            />
           )}
-          {isLoading ? (
-            <div className="flex justify-center py-6">
-              <Spin size="small" />
-            </div>
-          ) : candidates.length === 0 ? (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('assignStaff.empty')} />
-          ) : (
-            <div className="mt-4 flex flex-col gap-2">
-              <span className="px-1 text-xs text-gray-500">{t('assignStaff.otherLabel')}</span>
-              <div className="bg-primary/5 flex flex-col rounded-3xl p-4">
-                {candidates.map((member) => (
-                  <button
-                    key={member.id}
-                    type="button"
-                    disabled={isAssigning}
-                    onClick={() => void onSelect(member.id)}
-                    className="flex items-center gap-3 py-3 text-left disabled:opacity-50"
-                  >
-                    <AvatarUser name={member.name} />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+          onRemoveAssigned={(member) => onRemove(member.staffId, member.staffName)}
+          removeDisabled={isRemoving}
+          removeAriaLabel={t('detail.staff.remove')}
+          isLoading={isLoading}
+          items={candidates}
+          itemKey={(member) => member.id}
+          renderItem={(member) => <AvatarUser name={member.name} />}
+          onSelectItem={(member) => void onSelect(member.id)}
+          itemDisabled={isAssigning}
+          otherLabel={t('assignStaff.otherLabel')}
+          emptyDescription={t('assignStaff.empty')}
+        />
       </BottomSheet>
       {deleteContextHolder}
     </>

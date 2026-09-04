@@ -31,6 +31,19 @@
   --color-olive-faint: #f4f4e8;
   --color-taupe: #d8d4c8;
 
+  /* ── Avatar palette (lib/utils/name.ts) ── */
+  --color-red: #e13348;
+  --color-cocoa: #6f4e47;
+  --color-terracotta: #b86b5d;
+  --color-copper: #d58c62;
+  --color-honey: #e8b86a;
+  --color-moss: #727a3d;
+  --color-sage: #a7ad63;
+  --color-slate-green: #5f7a6b;
+  --color-teal: #66818a;
+  --color-violet-gray: #7b6f91;
+  --color-mauve: #b77b91;
+
   --font-sans: var(--font-work-sans);
   --font-heading: var(--font-marcellus);
 }
