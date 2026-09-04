@@ -156,6 +156,25 @@ export function useGenerateQuotePdf() {
   };
 }
 
+export function useRegenerateQuotePdf() {
+  const trpc = useTRPC();
+  const qc = useQueryClient();
+  const onError = useApiError();
+  const mutation = useMutation(
+    trpc.quotes.regeneratePdf.mutationOptions({
+      onSuccess: (data) => {
+        qc.invalidateQueries(trpc.quotes.pathFilter());
+        if (data.pdfUrl) window.open(data.pdfUrl, '_blank');
+      },
+      onError,
+    }),
+  );
+  return {
+    regeneratePdf: (id: string) => mutation.mutateAsync({ id }),
+    isPending: mutation.isPending,
+  };
+}
+
 export function useAssignQuote() {
   const trpc = useTRPC();
   const qc = useQueryClient();

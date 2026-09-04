@@ -39,6 +39,10 @@ import {
 const EDITABLE_STAGES: QuoteStageId[] = [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED];
 const PDF_ALLOWED_STAGES: QuoteStageId[] = [QUOTE_STAGE.QUOTED, QUOTE_STAGE.CONFIRMED];
 
+function canGeneratePdf(row: { stageId: number; isDraft: boolean }): boolean {
+  return !row.isDraft || PDF_ALLOWED_STAGES.includes(row.stageId as QuoteStageId);
+}
+
 function notFound() {
   return new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.quote.NOT_FOUND) });
 }
@@ -89,7 +93,7 @@ export class QuotesService {
   async generatePdf(id: string, ownerId?: string) {
     const result = await this.repo.findById(id, ownerId);
     if (!result) throw notFound();
-    if (!PDF_ALLOWED_STAGES.includes(result.quoteRow.stageId as QuoteStageId)) {
+    if (!canGeneratePdf(result.quoteRow)) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         cause: new AppError(ErrorCodes.quote.PDF_NOT_ALLOWED),
@@ -196,15 +200,17 @@ export class QuotesService {
       input.lines,
       input.newClient,
     );
+
+    if (canGeneratePdf(created)) {
+      void this.generatePdf(created.id).catch((err) => {
+        console.error('background pdf generation failed', err);
+      });
+    }
+
     return quoteResource(created);
   }
 
-  async update(
-    id: string,
-    input: UpdateQuoteInput,
-    canManagePricing: boolean,
-    ownerId?: string,
-  ) {
+  async update(id: string, input: UpdateQuoteInput, canManagePricing: boolean, ownerId?: string) {
     const current = await this.repo.findQuoteRow(id, ownerId);
     if (!current) throw notFound();
     if (!EDITABLE_STAGES.includes(current.stageId as QuoteStageId)) {
@@ -240,11 +246,11 @@ export class QuotesService {
     );
     if (!updated) throw notFound();
 
-    // Editing a quote already in a PDF_ALLOWED_STAGES stage (quoted/confirmed) leaves its
-    // PDF out of date — regenerate it in the background so the save itself doesn't wait on
-    // the external PDF service; a failure here shouldn't fail the edit the caller is
+    // Editing a quote that's already a finished sales document (see canGeneratePdf) leaves
+    // its PDF out of date — regenerate it in the background so the save itself doesn't wait
+    // on the external PDF service; a failure here shouldn't fail the edit the caller is
     // actually waiting on.
-    if (PDF_ALLOWED_STAGES.includes(updated.stageId as QuoteStageId)) {
+    if (canGeneratePdf(updated)) {
       void this.generatePdf(id).catch((err) => {
         console.error('background pdf regeneration failed', err);
       });
