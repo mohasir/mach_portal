@@ -1,6 +1,6 @@
 'use client';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { Button, Empty, Form, Input, Select, Spin, Typography, type FormInstance } from 'antd';
+import { Button, Form, Input, Select, Spin, Typography, type FormInstance } from 'antd';
 import { ArrowLeft, Plus, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useClient, useClientsList } from '@/features/clients';
@@ -8,6 +8,7 @@ import { AvatarUser } from '@/components/shared/AvatarUser';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { FormattedPhone, PhoneInput } from '@/components/shared/Inputs/PhoneInput';
+import { WrapperAssign } from '@/components/shared/WrapperAssign';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { blurActiveElementOnTouch } from '@/lib/utils/dom';
@@ -194,43 +195,27 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
 
           <BottomSheet open={sheetMode !== null} onClose={cancelSheet} title={sheetTitle}>
             {sheetMode === 'select' && (
-              <div className="flex flex-col gap-2 px-4 pb-4">
-                <Input.Search
-                  autoFocus
-                  allowClear
-                  placeholder={t('builder.client.placeholder')}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-                {isLoading ? (
-                  <div className="flex justify-center py-6">
-                    <Spin size="small" />
-                  </div>
-                ) : options.length === 0 ? (
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description={t('builder.client.noResults')}
-                  >
-                    <Button size="small" icon={<Plus size={14} />} onClick={startCreate}>
-                      {t('builder.client.addNew')}
-                    </Button>
-                  </Empty>
-                ) : (
-                  <div className="bg-primary/5 mt-2 flex flex-col rounded-3xl p-4">
-                    {options.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => selectClient(option.value, option.label)}
-                        className="flex items-center gap-3 py-3 text-left"
-                      >
-                        <AvatarUser name={option.label} showDetails={false} />
-                        <span className="text-base">{option.label}</span>
-                      </button>
-                    ))}
-                  </div>
+              <WrapperAssign
+                searchValue={search}
+                onSearchChange={setSearch}
+                searchPlaceholder={t('builder.client.placeholder')}
+                isLoading={isLoading}
+                items={options}
+                itemKey={(option) => option.value}
+                renderItem={(option) => (
+                  <>
+                    <AvatarUser name={option.label} showDetails={false} />
+                    <span className="text-base">{option.label}</span>
+                  </>
                 )}
-              </div>
+                onSelectItem={(option) => selectClient(option.value, option.label)}
+                emptyDescription={t('builder.client.noResults')}
+                emptyAction={
+                  <Button size="small" icon={<Plus size={14} />} onClick={startCreate}>
+                    {t('builder.client.addNew')}
+                  </Button>
+                }
+              />
             )}
 
             {sheetMode === 'create' && (

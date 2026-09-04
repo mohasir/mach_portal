@@ -29,8 +29,11 @@ export class UsersService {
     return `${env.WEB_APP_URL}/set-password?token=${token}&reason=${reason}`;
   }
 
-  async list(query: UsersListQuery) {
-    const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(query);
+  async list(query: UsersListQuery, callerRole: string | null) {
+    const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(
+      query,
+      callerRole,
+    );
     const resource = userCollectionResource(items);
     if (!paginate) return { items: resource };
     return { items: resource, pagination: paginationMeta(total, page, pageSize) };
