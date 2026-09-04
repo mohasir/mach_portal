@@ -39,6 +39,7 @@ export const quotes = pgTable('quotes', {
   address: text('address'),
   city: text('city'),
   notes: text('notes'),
+  clientNotes: text('client_notes'),
   subtotal: integer('subtotal').notNull().default(0),
   discountType: discountTypeEnum('discount_type'),
   discountValue: numeric('discount_value', { mode: 'number', precision: 10, scale: 5 }),
@@ -111,6 +112,17 @@ export const quoteStageHistory = pgTable('quote_stage_history', {
   toStageId: integer('to_stage_id')
     .notNull()
     .references(() => quoteStages.id),
+  changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
+  changedAt: timestamp('changed_at').defaultNow().notNull(),
+});
+
+export const quoteAssignmentHistory = pgTable('quote_assignment_history', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  quoteId: uuid('quote_id')
+    .notNull()
+    .references(() => quotes.id, { onDelete: 'cascade' }),
+  fromUserId: text('from_user_id').references(() => user.id, { onDelete: 'set null' }),
+  toUserId: text('to_user_id').references(() => user.id, { onDelete: 'set null' }),
   changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
   changedAt: timestamp('changed_at').defaultNow().notNull(),
 });

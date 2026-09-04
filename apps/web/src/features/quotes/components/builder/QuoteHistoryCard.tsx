@@ -11,12 +11,14 @@ interface QuoteHistoryCardProps {
   createdByName: QuoteDetail['createdByName'];
   createdAt: QuoteDetail['createdAt'];
   stageHistory: QuoteDetail['stageHistory'];
+  assignmentHistory: QuoteDetail['assignmentHistory'];
 }
 
 export function QuoteHistoryCard({
   createdByName,
   createdAt,
   stageHistory,
+  assignmentHistory,
 }: QuoteHistoryCardProps) {
   const { t } = useTranslation('quotes');
   const { dateTime } = useDateFormatter();
@@ -48,6 +50,21 @@ export function QuoteHistoryCard({
           </>
         ),
       })),
+    ...assignmentHistory.map((h, index) => ({
+      key: `assignment-${index}`,
+      date: h.changedAt,
+      color: undefined,
+      content: h.toUserName ? (
+        <>
+          <strong>{h.changedByName ?? unknownUser}</strong> {t('history.assignedTo')}{' '}
+          <strong>{h.toUserName}</strong>
+        </>
+      ) : (
+        <>
+          <strong>{h.changedByName ?? unknownUser}</strong> {t('history.unassigned')}
+        </>
+      ),
+    })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (

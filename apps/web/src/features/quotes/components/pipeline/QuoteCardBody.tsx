@@ -55,11 +55,6 @@ export function QuoteCardBody({ card }: QuoteCardBodyProps) {
       <div className="mt-1 text-xs text-gray-500">
         {t('pipeline.linesCount', { count: card.linesCount })}
       </div>
-      {card.createdByName && (
-        <div className="mt-1 text-xs text-gray-500 italic">
-          {t('pipeline.createdBy', { name: card.createdByName })}
-        </div>
-      )}
     </>
   );
 }

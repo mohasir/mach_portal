@@ -5,6 +5,61 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.12.0] - 2026-09-03
+
+### Added
+
+- Campo `clientNotes` en cotizaciones (columna `client_notes`), separado del `notes`
+  interno existente: notas pensadas para el cliente que se envían al servicio de PDF
+  como `additional_notes`.
+- El PDF de cotización manda un `emoji` por bloque de detalle
+  (`items[].details[].emoji`): mapeo curado por producto (`EMOJI_BY_PRODUCT` en
+  `quotes.pdf.ts`), con fallback por keyword sobre el label del grupo para productos
+  no cubiertos por la tabla.
+- El grupo "Signature Cocktails" de Craft Bar arma un `DetailBlock` por cóctel
+  (título = nombre, opciones = ingredientes parseados del `description` del option,
+  emoji propio) en vez de un solo bloque con los 8 nombres — el contrato del servicio
+  de PDF solo admite un emoji por bloque.
+
+### Changed
+
+- El título de cada bloque de detalle del PDF indica el tipo de selección del grupo:
+  sufijo `(Included)` si es `selectionType: 'included'`, o `(Choose any N)` si es
+  `select` con `maxSelect` definido.
+
+## [0.11.0] - 2026-09-03
+
+### Added
+
+- Historial de asignaciones de cotización (`quote_assignment_history`, análoga a
+  `quote_stage_history`): cada `quotes.assign` registra quién reasignó/desasignó,
+  de quién a quién y cuándo; expuesto en `quotes.getById` como `assignmentHistory`.
+- Nueva acción `manage_assignment` (recurso `quote`), separada de `update`, exclusiva
+  de admin/superadmin — reemplaza el chequeo ad-hoc de `resolveResourceScope(...) ===
+  'all'` que tenía el mutation `quotes.assign`.
+- `assignedToName` en `events.list`/`calendar`/`getById` (mismo patrón que
+  `createdByName`): quién tiene asignada la cotización de origen del evento.
+
+### Changed
+
+- El PDF de cotización ahora muestra el menú completo de cada estación (todas las
+  opciones del grupo), no solo las que están seleccionadas — es un documento de
+  venta, no un registro de lo elegido; la selección real puede resolverse después,
+  al momento del evento.
+- Editar una cotización que ya está en una etapa con PDF generado (quoted/confirmed)
+  regenera el PDF en segundo plano, para que no quede desactualizado tras el cambio.
+- `quotes.board` deja de traer `staffMembers` por evento (ese listado ahora vive
+  enteramente en el detalle de evento); en su lugar expone `assignedToId`/
+  `assignedToName` de la cotización.
+
+### Fixed
+
+- Los teléfonos de los clientes/staff sembrados (`db/seeds/clients.ts`,
+  `db/seeds/staff.ts`) venían sin código de país (ej. `(203) 555-0176`), lo que
+  hacía que `react-international-phone` con `forceDialCode` colapsara el valor a
+  solo `+1` en vez de mostrar el número completo. Normalizados los 17 registros al
+  formato `+1XXXXXXXXXX`.
+
 ## [0.10.0] - 2026-09-02
 
 ### Added

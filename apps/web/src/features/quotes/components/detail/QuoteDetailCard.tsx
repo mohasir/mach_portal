@@ -1,6 +1,6 @@
 'use client';
-import { App, Button, Card, Descriptions, Divider, Typography } from 'antd';
-import { AlertCircle, Download } from 'lucide-react';
+import { App, Button, Card, Descriptions, Divider, Tooltip, Typography } from 'antd';
+import { AlertCircle, Download, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
@@ -10,10 +10,13 @@ import { WrapperCard } from '@/components/shared/WrapperCard';
 import { IconTag } from '@/components/shared/IconTag';
 import { QuoteNumberHeader } from '@/components/shared/QuoteNumberHeader';
 import { ShareButton } from '@/components/shared/ShareButton';
+import { useActionConfirm } from '@/components/shared/ConfirmDialogs/useActionConfirm';
+import { useCanRegeneratePdf } from '@/lib/auth/useCan';
 import { isPastDate } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { copyToClipboard } from '@/lib/utils/clipboard';
+import { useRegenerateQuotePdf } from '../../hooks/useQuotes';
 import type { QuoteDetail } from '../../types';
 import { QuoteStageTagDropdown } from '../QuoteStageTagDropdown';
 import { QuoteSummary } from '../QuoteSummary';
@@ -41,10 +44,21 @@ export function QuoteDetailCard({
   const { date, dateTime } = useDateFormatter();
   const isDesktop = useIsDesktop();
   const hasPdf = Boolean(detail.pdfUrl);
+  const canRegeneratePdf = useCanRegeneratePdf();
+  const { regeneratePdf, isPending: isRegeneratingPdf } = useRegenerateQuotePdf();
+  const [confirm, confirmContextHolder] = useActionConfirm();
 
   const handleCopyNumber = async () => {
     const ok = await copyToClipboard(detail.number);
     if (ok) message.success(t('pipeline.numberCopied'));
+  };
+
+  const handleRegeneratePdf = () => {
+    confirm({
+      title: t('detail.regeneratePdfConfirmTitle'),
+      content: t('detail.regeneratePdfConfirmContent'),
+      onOk: () => regeneratePdf(detail.id),
+    });
   };
 
   const eventDateTime = detail.eventDate
@@ -91,6 +105,16 @@ export function QuoteDetailCard({
         </div>
         <div className="flex items-center gap-2">
           {hasPdf && <ShareButton url={detail.pdfUrl!} title={detail.number} iconOnly />}
+          {hasPdf && canRegeneratePdf && (
+            <Tooltip title={t('detail.regeneratePdf')}>
+              <Button
+                type="text"
+                icon={<IconBadge icon={RefreshCw} shape="square" />}
+                loading={isRegeneratingPdf}
+                onClick={handleRegeneratePdf}
+              />
+            </Tooltip>
+          )}
           {showPdfAction && (
             <Button
               type="text"
@@ -118,6 +142,10 @@ export function QuoteDetailCard({
             detail.createdByName && t('pipeline.createdBy', { name: detail.createdByName })
           }
           onCopy={() => void handleCopyNumber()}
+          quoteId={detail.id}
+          createdByName={detail.createdByName}
+          assignedToId={detail.assignedToId}
+          assignedToName={detail.assignedToName}
         />
         {stageRow}
       </div>
@@ -174,6 +202,8 @@ export function QuoteDetailCard({
       {isDesktop && <Divider className="my-3" />}
 
       {isDesktop ? summary : <Card className="border-line border-2">{summary}</Card>}
+
+      {confirmContextHolder}
     </div>
   );
 }

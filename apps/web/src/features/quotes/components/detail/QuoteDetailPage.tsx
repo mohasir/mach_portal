@@ -32,8 +32,11 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
   }
 
   const hasPdf = Boolean(detail.pdfUrl);
+
   const canGeneratePdf =
-    detail.stageId === QUOTE_STAGE.QUOTED || detail.stageId === QUOTE_STAGE.CONFIRMED;
+    !detail.isDraft ||
+    detail.stageId === QUOTE_STAGE.QUOTED ||
+    detail.stageId === QUOTE_STAGE.CONFIRMED;
   const isStale = hasPdf && isAfter(detail.updatedAt, detail.pdfGeneratedAt!);
 
   const handleClick = () => {
@@ -76,6 +79,7 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
             createdByName={detail.createdByName}
             createdAt={detail.createdAt}
             stageHistory={detail.stageHistory}
+            assignmentHistory={detail.assignmentHistory}
           />
         </div>
       </div>

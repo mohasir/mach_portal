@@ -3,6 +3,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { App } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type {
+  AssignQuoteInput,
   CreateQuoteInput,
   QuoteStageId,
   QuotesListQuery,
@@ -151,6 +152,50 @@ export function useGenerateQuotePdf() {
   );
   return {
     generatePdf: (id: string) => mutation.mutateAsync({ id }),
+    isPending: mutation.isPending,
+  };
+}
+
+export function useRegenerateQuotePdf() {
+  const trpc = useTRPC();
+  const qc = useQueryClient();
+  const onError = useApiError();
+  const mutation = useMutation(
+    trpc.quotes.regeneratePdf.mutationOptions({
+      onSuccess: (data) => {
+        qc.invalidateQueries(trpc.quotes.pathFilter());
+        if (data.pdfUrl) window.open(data.pdfUrl, '_blank');
+      },
+      onError,
+    }),
+  );
+  return {
+    regeneratePdf: (id: string) => mutation.mutateAsync({ id }),
+    isPending: mutation.isPending,
+  };
+}
+
+export function useAssignQuote() {
+  const trpc = useTRPC();
+  const qc = useQueryClient();
+  const onError = useApiError();
+  const { message } = App.useApp();
+  const { t } = useTranslation('quotes');
+  const mutation = useMutation(
+    trpc.quotes.assign.mutationOptions({
+      onSuccess: (_data, variables) => {
+        message.success(
+          variables.assignedToId
+            ? t('pipeline.assignQuote.success')
+            : t('pipeline.assignQuote.unassignSuccess'),
+        );
+        return qc.invalidateQueries(trpc.quotes.pathFilter());
+      },
+      onError,
+    }),
+  );
+  return {
+    assignQuote: (data: AssignQuoteInput) => mutation.mutateAsync(data),
     isPending: mutation.isPending,
   };
 }

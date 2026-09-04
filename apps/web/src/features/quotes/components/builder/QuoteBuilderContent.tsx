@@ -1,9 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { App, Button, Card, Tooltip } from 'antd';
-import { Copy } from 'lucide-react';
-import { TbLink } from 'react-icons/tb';
+import { App, Button, Card } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { TRPCClientError } from '@trpc/client';
 import { computeQuoteTotals, QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
@@ -11,6 +9,7 @@ import type { Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
 import { useConfirmModal, type ConfirmModalType } from '@/components/shared/ConfirmDialogs';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { QuoteNumberHeader } from '@/components/shared/QuoteNumberHeader';
 import { useConfig } from '@/features/settings';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
@@ -33,6 +32,9 @@ interface QuoteBuilderContentProps {
   number?: string;
   stageId?: QuoteStageId;
   isDraft?: boolean;
+  createdByName?: string | null;
+  assignedToId?: string | null;
+  assignedToName?: string | null;
   catalog: Product[];
   eventTypes: EventType[];
 }
@@ -42,6 +44,9 @@ export function QuoteBuilderContent({
   number,
   stageId,
   isDraft,
+  createdByName,
+  assignedToId,
+  assignedToName,
   catalog,
   eventTypes,
 }: QuoteBuilderContentProps) {
@@ -50,7 +55,7 @@ export function QuoteBuilderContent({
   const { message, modal } = App.useApp();
   const router = useRouter();
   const isDesktop = useIsDesktop();
-  const { state, initialState } = useQuoteBuilder();
+  const { state, initialState, setFields } = useQuoteBuilder();
   const { data: config } = useConfig();
   const { money } = useMoneyFormatter();
   const clientSectionRef = useRef<ClientSectionHandle>(null);
@@ -193,7 +198,21 @@ export function QuoteBuilderContent({
     <div className="flex flex-col gap-4">
       {quoteId && stageId && (
         <Card>
-          <QuoteStageTagDropdown quoteId={quoteId} stageId={stageId} isDraft={isDraft} />
+          <div className="flex flex-col gap-3">
+            {number && (
+              <QuoteNumberHeader
+                number={number}
+                onCopy={() => void handleCloneNumber()}
+                onCopyLink={() => void handleCopyLink()}
+                quoteId={quoteId}
+                createdByName={createdByName}
+                assignedToId={assignedToId}
+                assignedToName={assignedToName}
+                editableAssignment={!readOnly}
+              />
+            )}
+            <QuoteStageTagDropdown quoteId={quoteId} stageId={stageId} isDraft={isDraft} />
+          </div>
         </Card>
       )}
       <ClientSection ref={clientSectionRef} readOnly={readOnly} />
@@ -212,6 +231,9 @@ export function QuoteBuilderContent({
               total={totals.total}
               depositRate={totals.depositRate}
               depositAmount={totals.depositAmount}
+              onChangeDepositRate={
+                readOnly ? undefined : (rate) => setFields({ depositRate: rate })
+              }
             />
           </Card>
         </>
@@ -232,32 +254,8 @@ export function QuoteBuilderContent({
   return (
     <div className="pb-24 lg:pb-0">
       <PageHeader
-        title={
-          quoteId && number ? number : quoteId ? t('builder.editTitle') : t('builder.newTitle')
-        }
+        title={quoteId ? t('builder.editTitle') : t('builder.newTitle')}
         titleSize="sm"
-        titleSuffix={
-          quoteId && number ? (
-            <div className="flex items-center gap-1">
-              <Tooltip title={t('pipeline.cloneNumber')}>
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<Copy size={16} />}
-                  onClick={() => void handleCloneNumber()}
-                />
-              </Tooltip>
-              <Tooltip title={tc('share.copyLink')}>
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<TbLink size={18} />}
-                  onClick={() => void handleCopyLink()}
-                />
-              </Tooltip>
-            </div>
-          ) : undefined
-        }
         onBack={handleBack}
       />
       {isDesktop ? (

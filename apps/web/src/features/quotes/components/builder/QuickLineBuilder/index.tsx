@@ -35,7 +35,7 @@ export function QuickLineBuilder({ catalog, readOnly, canEditPricing }: QuickLin
       {state.lines.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('builder.lines.empty')} />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
           {state.lines.map((line) => {
             const product = catalog.find((p) => p.id === line.productId);
             if (!product) return null;

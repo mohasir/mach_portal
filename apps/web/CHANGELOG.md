@@ -5,6 +5,53 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.13.0] - 2026-09-03
+
+### Added
+
+- Campo "Notas para el cliente" en el builder de cotización (`NotesSection`),
+  separado de las notas internas existentes — su contenido aparece en el PDF de la
+  cotización.
+
+## [0.12.0] - 2026-09-03
+
+### Added
+
+- Asignar, reasignar y desasignar una cotización a un usuario interno: avatar
+  clickeable en la card del pipeline (`QuoteCardAssignment`/`QuoteAssignmentAvatars`)
+  y en el header de detalle/builder (`QuoteNumberHeader`), con bottom sheet
+  buscable (`AssignQuoteSheet`). Solo visible/editable para superadmin/admin
+  (`useCanReassignQuote`, atado al nuevo permiso `manage_assignment`).
+- Historial de asignaciones en la actividad de la cotización (`QuoteHistoryCard`):
+  quién asignó/reasignó/desasignó y a quién, junto al historial de etapas.
+- Depósito editable desde el builder y el preview de cotización (`QuoteSummary`):
+  bottom sheet para elegir 10/20/30/40/50% sin salir de la pantalla.
+- `getInitials`/`getAvatarColor` (`lib/utils/name`): las iniciales de un avatar
+  ahora ignoran tildes y caracteres no alfanuméricos (ej. "Álvaro Núñez" → "AN"),
+  y el color de fondo varía por usuario en vez de ser siempre olive.
+
+### Changed
+
+- El modal de "asignar staff" del pipeline (`AssignStaffModal`) se reemplaza por
+  `AssignStaffSheet` (bottom sheet, mismo patrón que el resto de la app), ahora
+  disponible también desde el listado de Eventos y no solo desde su detalle; la
+  card de cotización del pipeline deja de mostrar el staff del evento (queda
+  enteramente en el detalle de evento).
+- Todos los avatares de usuario de la app (menú de usuario, topbar mobile, cuenta
+  bloqueada, resumen de perfil mobile) pasan a usar el componente compartido
+  `AvatarUser` en vez de `Avatar` + lógica de inicial duplicada en cada uno.
+- El selector de cliente existente en el builder de cotización (`ClientSection`)
+  pasa de un `Select` con dropdown a una lista buscable en bottom sheet,
+  consistente con los nuevos sheets de asignación.
+- Ajustes visuales menores: nuevo tamaño `xs` en `IconBadge`, `borderRadiusSM` del
+  tema de 4 a 6px, padding/gap del `QuickLineCard` y del grid de `QuickLineBuilder`.
+
+### Fixed
+
+- El teléfono de clientes/staff sembrados se mostraba como solo "+1" (sin el resto
+  del número) en cards y avatares — causado por datos seed sin código de país
+  (ver CHANGELOG del API); corregido en el origen de los datos.
+
 ## [0.11.0] - 2026-09-02
 
 ### Added

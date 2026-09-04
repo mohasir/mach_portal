@@ -99,6 +99,9 @@ export function EventHeader({ event }: EventHeaderProps) {
               onCopy={() => void handleCopyNumber()}
               showQuoteLink
               onViewQuote={() => router.push(`/admin/quotes/${event.quoteId}`)}
+              quoteId={event.quoteId}
+              createdByName={event.createdByName}
+              assignedToName={event.assignedToName}
             />
 
             <div>

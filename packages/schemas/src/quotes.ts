@@ -99,6 +99,7 @@ const quoteMutationFields = {
   address: optionalText(240),
   city: optionalText(120),
   notes: optionalText(2000),
+  clientNotes: optionalText(2000),
   discountType: z.preprocess(blankToUndefined, discountTypeSchema.optional()),
   discountValue: z.number().min(0).optional(),
   longDistanceAmount: z.number().int().min(0).optional(),

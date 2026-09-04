@@ -5,6 +5,7 @@ import { Eye, ListChecks, Minus, Plus, SquarePen, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
 import { BottomSheet } from '@/components/shared/BottomSheet';
+import { IconBadge } from '@/components/shared/IconBadge';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { getStationIcon } from '../../../helpers';
@@ -67,7 +68,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
   };
 
   return (
-    <div className="border-line flex gap-3 rounded-lg border p-3">
+    <div className="border-line flex gap-3 rounded-xl border p-2">
       <div className="bg-olive-faint text-brown flex size-12 shrink-0 items-center justify-center rounded-lg">
         <Icon size={22} />
       </div>
@@ -84,7 +85,16 @@ export function QuickLineCard(props: QuickLineCardProps) {
               type="text"
               size="small"
               danger
-              icon={<X size={16} />}
+              icon={
+                <IconBadge
+                  icon={X}
+                  shape="square"
+                  badgeSize="xs"
+                  size={12}
+                  rounded="rounded-md"
+                  className="bg-salmon/20 text-error"
+                />
+              }
               onClick={props.onRemove}
               aria-label={t('builder.lines.remove')}
             />
@@ -110,7 +120,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col gap-2 min-[375px]:flex-row min-[375px]:items-center min-[375px]:justify-between">
           {mode === 'edit' ? (
             <Select
               className="w-36 py-1"
@@ -132,7 +142,16 @@ export function QuickLineCard(props: QuickLineCardProps) {
               <Button
                 type="text"
                 size="small"
-                icon={<SquarePen size={16} />}
+                icon={
+                  <IconBadge
+                    icon={SquarePen}
+                    shape="square"
+                    badgeSize="xs"
+                    size={12}
+                    rounded="rounded-md"
+                    className="bg-primary text-white"
+                  />
+                }
                 onClick={() => setEditOpen(true)}
                 aria-label={t('builder.lines.edit')}
               />

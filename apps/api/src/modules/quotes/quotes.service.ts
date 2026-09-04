@@ -39,6 +39,10 @@ import {
 const EDITABLE_STAGES: QuoteStageId[] = [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED];
 const PDF_ALLOWED_STAGES: QuoteStageId[] = [QUOTE_STAGE.QUOTED, QUOTE_STAGE.CONFIRMED];
 
+function canGeneratePdf(row: { stageId: number; isDraft: boolean }): boolean {
+  return !row.isDraft || PDF_ALLOWED_STAGES.includes(row.stageId as QuoteStageId);
+}
+
 function notFound() {
   return new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.quote.NOT_FOUND) });
 }
@@ -82,13 +86,14 @@ export class QuotesService {
       result.lineRows,
       result.optionRows,
       result.historyRows,
+      result.assignmentHistoryRows,
     );
   }
 
   async generatePdf(id: string, ownerId?: string) {
     const result = await this.repo.findById(id, ownerId);
     if (!result) throw notFound();
-    if (!PDF_ALLOWED_STAGES.includes(result.quoteRow.stageId as QuoteStageId)) {
+    if (!canGeneratePdf(result.quoteRow)) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         cause: new AppError(ErrorCodes.quote.PDF_NOT_ALLOWED),
@@ -183,6 +188,7 @@ export class QuotesService {
         address: input.address ?? null,
         city: input.city ?? null,
         notes: input.notes ?? null,
+        clientNotes: input.clientNotes ?? null,
         discountType: input.discountType ?? null,
         discountValue: input.discountValue ?? null,
         isDraft: input.isDraft,
@@ -194,15 +200,17 @@ export class QuotesService {
       input.lines,
       input.newClient,
     );
+
+    if (canGeneratePdf(created)) {
+      void this.generatePdf(created.id).catch((err) => {
+        console.error('background pdf generation failed', err);
+      });
+    }
+
     return quoteResource(created);
   }
 
-  async update(
-    id: string,
-    input: UpdateQuoteInput,
-    canManagePricing: boolean,
-    ownerId?: string,
-  ) {
+  async update(id: string, input: UpdateQuoteInput, canManagePricing: boolean, ownerId?: string) {
     const current = await this.repo.findQuoteRow(id, ownerId);
     if (!current) throw notFound();
     if (!EDITABLE_STAGES.includes(current.stageId as QuoteStageId)) {
@@ -226,6 +234,7 @@ export class QuotesService {
         address: input.address ?? null,
         city: input.city ?? null,
         notes: input.notes ?? null,
+        clientNotes: input.clientNotes ?? null,
         discountType: input.discountType ?? null,
         discountValue: input.discountValue ?? null,
         isDraft: input.isDraft,
@@ -236,6 +245,17 @@ export class QuotesService {
       input.newClient,
     );
     if (!updated) throw notFound();
+
+    // Editing a quote that's already a finished sales document (see canGeneratePdf) leaves
+    // its PDF out of date — regenerate it in the background so the save itself doesn't wait
+    // on the external PDF service; a failure here shouldn't fail the edit the caller is
+    // actually waiting on.
+    if (canGeneratePdf(updated)) {
+      void this.generatePdf(id).catch((err) => {
+        console.error('background pdf regeneration failed', err);
+      });
+    }
+
     return quoteResource(updated);
   }
 
@@ -346,8 +366,8 @@ export class QuotesService {
     return archived;
   }
 
-  async assign(id: string, assignedToId: string | null) {
-    const updated = await this.repo.assignById(id, assignedToId);
+  async assign(id: string, assignedToId: string | null, changedById: string) {
+    const updated = await this.repo.assignById(id, assignedToId, changedById);
     if (!updated) throw notFound();
     return quoteResource(updated);
   }

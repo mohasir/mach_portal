@@ -1,6 +1,6 @@
 'use client';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { Button, Form, Input, Select, Spin, Typography, type FormInstance } from 'antd';
+import { Button, Empty, Form, Input, Select, Spin, Typography, type FormInstance } from 'antd';
 import { ArrowLeft, Plus, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useClient, useClientsList } from '@/features/clients';
@@ -174,7 +174,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
                   type="button"
                   disabled={readOnly}
                   onClick={openSelect}
-                  className="border-line flex items-center justify-center gap-2 rounded-xl border border-dashed p-2.5 text-gray-400"
+                  className="border-primary flex items-center justify-center gap-2 rounded-xl border border-dashed p-2.5 text-gray-400"
                 >
                   <Users size={16} />
                   <span className="text-base">{t('builder.client.selectExisting')}</span>
@@ -183,7 +183,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
                   type="button"
                   disabled={readOnly}
                   onClick={startCreate}
-                  className="border-line flex items-center justify-center gap-2 rounded-xl border border-dashed p-2.5 text-gray-400"
+                  className="border-primary flex items-center justify-center gap-2 rounded-xl border border-dashed p-2.5 text-gray-400"
                 >
                   <Plus size={16} />
                   <span className="text-base">{t('builder.client.addNew')}</span>
@@ -194,40 +194,42 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
 
           <BottomSheet open={sheetMode !== null} onClose={cancelSheet} title={sheetTitle}>
             {sheetMode === 'select' && (
-              <div className="flex flex-col gap-3 p-4">
-                <Select
+              <div className="flex flex-col gap-2 px-4 pb-4">
+                <Input.Search
                   autoFocus
-                  showSearch={{ onSearch: setSearch, filterOption: false }}
                   allowClear
-                  className="w-full"
                   placeholder={t('builder.client.placeholder')}
-                  value={state.clientId ?? undefined}
-                  notFoundContent={
-                    isLoading ? (
-                      <Spin size="small" />
-                    ) : (
-                      <div className="flex flex-col items-center gap-2 py-2">
-                        <span className="text-muted text-base">
-                          {t('builder.client.noResults')}
-                        </span>
-                        <Button size="small" icon={<Plus size={14} />} onClick={startCreate}>
-                          {t('builder.client.addNew')}
-                        </Button>
-                      </div>
-                    )
-                  }
-                  options={options}
-                  onSelect={blurActiveElementOnTouch}
-                  onChange={(value, option) => {
-                    const label = Array.isArray(option)
-                      ? undefined
-                      : (option?.label as string | undefined);
-                    selectClient(value, label);
-                  }}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
                 />
-                <Button block onClick={cancelSheet}>
-                  {tc('cancel')}
-                </Button>
+                {isLoading ? (
+                  <div className="flex justify-center py-6">
+                    <Spin size="small" />
+                  </div>
+                ) : options.length === 0 ? (
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description={t('builder.client.noResults')}
+                  >
+                    <Button size="small" icon={<Plus size={14} />} onClick={startCreate}>
+                      {t('builder.client.addNew')}
+                    </Button>
+                  </Empty>
+                ) : (
+                  <div className="bg-primary/5 mt-2 flex flex-col rounded-3xl p-4">
+                    {options.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => selectClient(option.value, option.label)}
+                        className="flex items-center gap-3 py-3 text-left"
+                      >
+                        <AvatarUser name={option.label} showDetails={false} />
+                        <span className="text-base">{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -282,6 +284,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
             <div className="flex flex-col gap-2 p-4">
               <Button
                 block
+                type="primary"
                 onClick={() => {
                   setChangeOpen(false);
                   openSelect();
@@ -293,6 +296,7 @@ export const ClientSection = forwardRef<ClientSectionHandle, ClientSectionProps>
               </Button>
               <Button
                 block
+                type="primary"
                 onClick={() => {
                   setChangeOpen(false);
                   if (state.newClient) {
