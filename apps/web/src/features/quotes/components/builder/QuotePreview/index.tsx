@@ -10,6 +10,7 @@ import { getStationIcon } from '../../../helpers';
 import { useQuoteBuilder } from '../../../hooks/useQuoteBuilder';
 import { QuoteLineItem } from '../../QuoteLineItem';
 import { QuoteSummary } from '../../QuoteSummary';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface QuotePreviewProps {
   catalog: Product[];
@@ -100,19 +101,21 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
 
       <Divider className="my-3 shrink-0" />
 
-      <QuoteSummary
-        className="shrink-0"
-        subtotal={totals.subtotal}
-        discountAmount={totals.discountAmount}
-        longDistanceAmount={totals.longDistanceAmount}
-        taxAmount={totals.taxAmount}
-        cardSurchargeRate={totals.cardSurchargeRate}
-        cardSurchargeAmount={totals.cardSurchargeAmount}
-        total={totals.total}
-        depositRate={totals.depositRate}
-        depositAmount={totals.depositAmount}
-        onChangeDepositRate={readOnly ? undefined : (rate) => setFields({ depositRate: rate })}
-      />
+      <WrapperCard className="border-line border-2 bg-primary/5">
+        <QuoteSummary
+          className="shrink-0"
+          subtotal={totals.subtotal}
+          discountAmount={totals.discountAmount}
+          longDistanceAmount={totals.longDistanceAmount}
+          taxAmount={totals.taxAmount}
+          cardSurchargeRate={totals.cardSurchargeRate}
+          cardSurchargeAmount={totals.cardSurchargeAmount}
+          total={totals.total}
+          depositRate={totals.depositRate}
+          depositAmount={totals.depositAmount}
+          onChangeDepositRate={readOnly ? undefined : (rate) => setFields({ depositRate: rate })}
+        />
+      </WrapperCard>
     </div>
   );
 }
