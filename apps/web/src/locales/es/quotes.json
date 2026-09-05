@@ -18,7 +18,9 @@
   "archive": {
     "action": "Archivar",
     "confirmTitle": "¿Archivar cotización?",
-    "confirmContent": "La cotización {{number}} se quitará de la tabla y del pipeline. Esta acción no se puede deshacer."
+    "confirmContent": "La cotización {{number}} se quitará de la tabla y del pipeline. Esta acción no se puede deshacer.",
+    "blockedTitle": "No se puede archivar",
+    "blockedContent": "El evento de esta cotización ya tiene pagos registrados. Cancelá la cotización en su lugar."
   },
   "validation": {
     "clientRequired": "El cliente es obligatorio"
@@ -221,6 +223,7 @@
     "regeneratePdfConfirmTitle": "¿Regenerar PDF?",
     "regeneratePdfConfirmContent": "Se crea un PDF nuevo y reemplaza al actual, aunque ya esté actualizado.",
     "viewPdf": "Ver PDF",
+    "viewEvent": "Ver evento",
     "pdfGeneratedAt": "Generado el {{date}}"
   }
 }

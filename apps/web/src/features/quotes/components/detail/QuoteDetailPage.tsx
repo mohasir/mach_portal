@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE } from '@repo/schemas';
 import { useProductCatalog } from '@/features/catalog';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { showEnvBanner } from '@/env';
 import { isAfter } from '@/lib/date';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useGenerateQuotePdf, useQuote } from '../../hooks/useQuotes';
@@ -55,7 +56,10 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
         {isDesktop ? (
-          <Card className="min-h-[calc(100vh-88px)]" classNames={{ body: 'flex h-full flex-col' }}>
+          <Card
+            className={`min-h-[calc(100vh-${showEnvBanner ? '116px' : '88px'})]`}
+            classNames={{ body: 'flex h-full flex-col' }}
+          >
             <QuoteDetailCard
               detail={detail}
               catalog={catalog}

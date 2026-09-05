@@ -5,10 +5,18 @@ import {
   eventsListQuerySchema,
   registerEventPaymentSchema,
   removeEventPaymentAttachmentSchema,
+  removeEventPaymentSchema,
   removeStaffSchema,
   updateEventSelectionsSchema,
 } from '@repo/schemas';
-import { RESOURCES, ACTIONS, hasPermission, resolveResourceScope } from '@repo/guards';
+import {
+  RESOURCES,
+  ACTIONS,
+  DEFAULT_ROLE,
+  SUPERADMIN_ROLE,
+  hasPermission,
+  resolveResourceScope,
+} from '@repo/guards';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { db } from '../../db';
 import { ConfigRepository } from '../config/config.repository';
@@ -45,11 +53,14 @@ export const eventsRouter = router({
       const detail = await service.getById(input.id, ownerScope(ctx));
       const role = (ctx.user as { role?: string | null }).role;
       const canViewPayments = hasPermission(role, { [RESOURCES.PAYMENT]: [ACTIONS.READ] });
+      const isSuperAdmin = (role ?? DEFAULT_ROLE).split(',').includes(SUPERADMIN_ROLE);
       return {
         ...detail,
         payments: canViewPayments ? detail.payments : null,
         totalPaid: canViewPayments ? detail.totalPaid : null,
         paymentStatus: canViewPayments ? detail.paymentStatus : null,
+        // Activity log (staff/payments/selections/completion) is superadmin-only.
+        history: isSuperAdmin ? detail.history : null,
       };
     }),
 
@@ -61,19 +72,25 @@ export const eventsRouter = router({
 
   markCompleted: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] })
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input, ctx }) => service.markCompleted(input.id, ownerScope(ctx))),
+    .mutation(({ input, ctx }) => service.markCompleted(input.id, ctx.user.id, ownerScope(ctx))),
 
   assignStaff: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_STAFF_ASSIGNMENTS] })
     .input(assignStaffSchema)
-    .mutation(({ input, ctx }) => service.assignStaff(input, ownerScope(ctx))),
+    .mutation(({ input, ctx }) => service.assignStaff(input, ctx.user.id, ownerScope(ctx))),
 
   removeStaff: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_STAFF_ASSIGNMENTS] })
     .input(removeStaffSchema)
-    .mutation(({ input, ctx }) => service.removeStaff(input, ownerScope(ctx))),
+    .mutation(({ input, ctx }) => service.removeStaff(input, ctx.user.id, ownerScope(ctx))),
 
   removePaymentAttachment: guardedProcedure({ [RESOURCES.PAYMENT]: [ACTIONS.DELETE] })
     .input(removeEventPaymentAttachmentSchema)
     .mutation(({ input, ctx }) => service.removePaymentAttachment(input, ownerScope(ctx))),
+
+  removePayment: guardedProcedure({ [RESOURCES.PAYMENT]: [ACTIONS.DELETE] })
+    .input(removeEventPaymentSchema)
+    .mutation(({ input, ctx }) =>
+      service.removePayment(input.eventId, input.paymentId, ctx.user.id, ownerScope(ctx)),
+    ),
 
   updateSelections: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_SELECTIONS] })
     .input(updateEventSelectionsSchema)

@@ -34,6 +34,12 @@ export interface RowAction {
   onClick: () => void;
   guard?: PermissionCheck;
   confirm?: RowActionConfirm;
+  // Runs before `confirm`/`onClick` fire — for a server-side precondition that can't be
+  // known just from the row's own data (ie. isn't a plain `guard`). `allowed: false` blocks
+  // the action and shows an info-only dialog with this title/content instead.
+  validate?: () => Promise<
+    { allowed: true } | { allowed: false; title: ReactNode; content?: ReactNode }
+  >;
 }
 
 export type RowActionItem = RowAction | { type: 'divider' };

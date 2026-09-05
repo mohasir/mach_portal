@@ -11,6 +11,7 @@ import type { EventDetail } from '../../types';
 import { EventAttachments } from './EventAttachments';
 import { EventHeader } from './EventHeader';
 import { EventComposition } from './EventComposition';
+import { EventHistoryCard } from './EventHistoryCard';
 import { EventPayments, type EventDetailWithPayments } from './EventPayments';
 import { EventStaffPanel } from './EventStaffPanel';
 import { WrapperCard } from '@/components/shared/WrapperCard';
@@ -21,6 +22,12 @@ interface EventDetailPageProps {
 
 function hasPaymentsData(event: EventDetail): event is EventDetailWithPayments {
   return event.payments !== null;
+}
+
+function hasHistoryData(
+  event: EventDetail,
+): event is EventDetail & { history: NonNullable<EventDetail['history']> } {
+  return event.history !== null;
 }
 
 export function EventDetailPage({ eventId }: EventDetailPageProps) {
@@ -77,6 +84,7 @@ export function EventDetailPage({ eventId }: EventDetailPageProps) {
         <WrapperCard>
           <Tabs items={tabItems} />
         </WrapperCard>
+        {hasHistoryData(event) && <EventHistoryCard history={event.history} />}
       </div>
     </div>
   );

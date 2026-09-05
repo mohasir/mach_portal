@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { IconBadge } from '@/components/shared/IconBadge';
+import { IconButton } from '@/components/shared/IconButton';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { getStationIcon } from '../../../helpers';
@@ -158,19 +159,19 @@ export function QuickLineCard(props: QuickLineCardProps) {
             )}
             {mode === 'selection' && (
               <>
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<Eye size={16} />}
+                <IconButton
+                  icon={Eye}
+                  size="xs"
                   onClick={props.onShow}
                   aria-label={t('builder.lines.show')}
+                  className="bg-primary text-ivory"
                 />
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<ListChecks size={16} />}
+                <IconButton
+                  icon={ListChecks}
+                  size="xs"
                   onClick={props.onEditSelection}
                   aria-label={t('builder.lines.editSelections')}
+                  className="bg-primary text-ivory"
                 />
               </>
             )}

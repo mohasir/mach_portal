@@ -70,6 +70,7 @@ export const quotes = pgTable('quotes', {
   pdfKey: text('pdf_key'),
   pdfGeneratedAt: timestamp('pdf_generated_at'),
   archivedAt: timestamp('archived_at'),
+  archivedById: text('archived_by_id').references(() => user.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
     .defaultNow()

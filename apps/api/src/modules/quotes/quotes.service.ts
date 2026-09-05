@@ -360,8 +360,19 @@ export class QuotesService {
     return quoteResource(updated);
   }
 
-  async archive(id: string, ownerId?: string) {
-    const archived = await this.repo.archiveById(id, ownerId);
+  async canArchive(id: string, ownerId?: string) {
+    const hasPayments = await this.repo.hasEventPayments(id, ownerId);
+    return { canArchive: !hasPayments };
+  }
+
+  async archive(id: string, userId: string, ownerId?: string) {
+    if (await this.repo.hasEventPayments(id, ownerId)) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        cause: new AppError(ErrorCodes.quote.HAS_PAYMENTS),
+      });
+    }
+    const archived = await this.repo.archiveById(id, userId, ownerId);
     if (!archived) throw notFound();
     return archived;
   }

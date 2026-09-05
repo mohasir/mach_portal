@@ -10,8 +10,10 @@ export class DashboardRepository {
     const [row] = await this.db
       .select({ value: count() })
       .from(events)
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
       .where(
         and(
+          isNull(quotes.archivedAt),
           sql`extract(month from ${events.eventDate}) = ${month}`,
           sql`extract(year from ${events.eventDate}) = ${year}`,
         ),
@@ -23,8 +25,11 @@ export class DashboardRepository {
     const [row] = await this.db
       .select({ value: sql<number>`coalesce(sum(${eventPayments.amount}), 0)::int` })
       .from(eventPayments)
+      .innerJoin(events, eq(eventPayments.eventId, events.id))
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
       .where(
         and(
+          isNull(quotes.archivedAt),
           sql`extract(month from ${eventPayments.paidAt}) = ${month}`,
           sql`extract(year from ${eventPayments.paidAt}) = ${year}`,
         ),

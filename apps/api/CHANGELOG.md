@@ -5,6 +5,49 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.13.0] - 2026-09-05
+
+### Added
+
+- Archivar una cotización se bloquea si su evento ya tiene pagos registrados
+  (`quotes.canArchive`, chequeado antes de `quotes.archive`); se registra quién
+  archivó (`quotes.archivedById`).
+- Los eventos, pagos y disponibilidad de staff de una cotización archivada quedan
+  excluidos de listados, calendario, dashboard (conteo de eventos e ingresos) y
+  disponibilidad de staff — antes solo se ocultaba la cotización en sí.
+- Se bloquea cualquier mutation sobre un evento cuya cotización esté archivada
+  (asignar/quitar staff, registrar pago, marcar completado, actualizar selecciones,
+  sacar adjunto), para cualquier rol — antes el chequeo de "no archivado" no corría
+  para roles con scope `'all'` (admin/superadmin).
+- Historial de actividad por evento (`event_history`): asignación/remoción de staff,
+  actualización de selecciones, registro/eliminación de pagos, evento marcado como
+  realizado — expuesto en `events.getById`.
+- Endpoint para eliminar un pago de un evento (`events.removePayment`): recalcula el
+  estado de depósito/saldo pagado, limpia los adjuntos del storage, y registra el
+  historial. Restringido a admin/superadmin.
+- `events.list` ahora expone el staff asignado a cada evento.
+- `quotes.list` ahora expone el `eventId` asociado y `createdByName`/`assignedToName`.
+- Nueva acción `regenerate_pdf` (recurso `quote`), exclusiva de superadmin: fuerza la
+  regeneración del PDF de una cotización aunque el vigente no esté desactualizado
+  (`quotes.regeneratePdf`).
+- Las cuentas superadmin ya no aparecen en listados/selectores de usuarios
+  (`users.list`) para roles distintos de superadmin — ej. el selector de
+  reasignación de cotizaciones.
+
+### Changed
+
+- El PDF de cotización arma la ubicación del evento combinando dirección, ciudad y
+  estado (antes solo mandaba la dirección).
+- Se permite generar/regenerar el PDF de una cotización no-borrador sin importar su
+  etapa (antes solo aplicaba a "cotizado"/"confirmado").
+
+### Fixed
+
+- Reasignar (`quotes.assign`) una cotización ya archivada no estaba bloqueado.
+- El dashboard de eventos e ingresos (`countEvents`/`sumRevenue`) contaba eventos y
+  pagos de cotizaciones canceladas — no hacía join contra el estado de la cotización
+  en absoluto.
+
 ## [0.12.0] - 2026-09-03
 
 ### Added

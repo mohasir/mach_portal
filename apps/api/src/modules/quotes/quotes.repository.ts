@@ -32,6 +32,7 @@ import {
   clients,
   eventTypes,
   events,
+  eventPayments,
   products,
   productPriceTiers,
   optionGroups,
@@ -97,12 +98,14 @@ export class QuotesRepository {
         eventTypeName: eventTypes.name,
         createdByName: user.name,
         assignedToName: assignedToUser.name,
+        eventId: events.id,
       })
       .from(quotes)
       .innerJoin(clients, eq(quotes.clientId, clients.id))
       .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
       .leftJoin(user, eq(quotes.createdById, user.id))
       .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id))
+      .leftJoin(events, eq(events.quoteId, quotes.id))
       .where(where)
       .orderBy(orderBy)
       .limit(limit)
@@ -135,12 +138,14 @@ export class QuotesRepository {
         eventTypeName: eventTypes.name,
         createdByName: user.name,
         assignedToName: assignedToUser.name,
+        eventId: events.id,
       })
       .from(quotes)
       .innerJoin(clients, eq(quotes.clientId, clients.id))
       .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
       .leftJoin(user, eq(quotes.createdById, user.id))
       .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id))
+      .leftJoin(events, eq(events.quoteId, quotes.id))
       .where(and(eq(quotes.id, id), isNull(quotes.archivedAt), this.ownerFilter(ownerId)))
       .limit(1);
     if (!quoteRow) return undefined;
@@ -215,10 +220,25 @@ export class QuotesRepository {
       .then((r) => r[0]);
   }
 
-  archiveById(id: string, ownerId?: string) {
+  // Archiving is blocked once real money has been recorded against the quote's event —
+  // that history has to stay visible/counted, so the correct action there is cancel, not
+  // archive. Scoped by ownerId to avoid leaking a payment's existence on a quote the
+  // caller doesn't own (archiveById's own 404 handles that).
+  async hasEventPayments(quoteId: string, ownerId?: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: eventPayments.id })
+      .from(eventPayments)
+      .innerJoin(events, eq(eventPayments.eventId, events.id))
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
+      .where(and(eq(events.quoteId, quoteId), this.ownerFilter(ownerId)))
+      .limit(1);
+    return !!row;
+  }
+
+  archiveById(id: string, archivedById: string, ownerId?: string) {
     return this.db
       .update(quotes)
-      .set({ archivedAt: new Date() })
+      .set({ archivedAt: new Date(), archivedById })
       .where(and(eq(quotes.id, id), isNull(quotes.archivedAt), this.ownerFilter(ownerId)))
       .returning({ id: quotes.id })
       .then((r) => r[0]);
@@ -229,14 +249,14 @@ export class QuotesRepository {
       const [current] = await tx
         .select({ assignedToId: quotes.assignedToId })
         .from(quotes)
-        .where(eq(quotes.id, id))
+        .where(and(eq(quotes.id, id), isNull(quotes.archivedAt)))
         .limit(1);
       if (!current) return undefined;
 
       const [updated] = await tx
         .update(quotes)
         .set({ assignedToId })
-        .where(eq(quotes.id, id))
+        .where(and(eq(quotes.id, id), isNull(quotes.archivedAt)))
         .returning(publicQuoteColumns);
       if (!updated) return undefined;
 

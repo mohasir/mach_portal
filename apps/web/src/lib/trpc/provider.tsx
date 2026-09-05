@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createTRPCClient, httpBatchLink } from '@trpc/client';
+import { createTRPCClient, httpBatchLink, loggerLink } from '@trpc/client';
 import type { AppRouter } from 'api';
 import { TRPCProvider } from './client';
 
@@ -16,6 +16,7 @@ export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
   const [trpcClient] = useState(() =>
     createTRPCClient<AppRouter>({
       links: [
+        loggerLink({ enabled: () => process.env.NODE_ENV === 'development' }),
         httpBatchLink({
           url: '/trpc',
           fetch: (url, opts) => fetch(url, { ...opts, credentials: 'include' }),

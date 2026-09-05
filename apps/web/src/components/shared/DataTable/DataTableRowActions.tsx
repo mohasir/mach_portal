@@ -1,9 +1,11 @@
 'use client';
+import { useState } from 'react';
 import { App, Button, Typography, type MenuProps } from 'antd';
 import { MoreHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useConfirmModal, useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { WrapperDropdown } from '@/components/shared/WrapperDropdown';
+import { WrapperSpin } from '@/components/shared/WrapperSpin';
 import { useCan } from '@/lib/auth/useCan';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { ACTION_PRESETS, isDivider, stripDividers } from './helpers';
@@ -21,13 +23,33 @@ export function DataTableRowActions({ actions, label }: DataTableRowActionsProps
   const isDesktop = useIsDesktop();
   const [confirmDelete, deleteContextHolder] = useDeleteConfirm();
   const [confirmAction, actionContextHolder] = useConfirmModal();
+  const [validating, setValidating] = useState(false);
 
-  const run = (
+  const run = async (
     action: RowAction,
     preset: ActionPreset | undefined,
     okLabel: string,
     danger?: boolean,
   ) => {
+    if (action.validate) {
+      setValidating(true);
+      const result = await action.validate().finally(() => setValidating(false));
+      if (!result.allowed) {
+        if (!isDesktop) {
+          confirmAction({
+            title: result.title,
+            content: result.content,
+            type: 'info',
+            singleButton: true,
+            onOk: () => {},
+          });
+        } else {
+          modal.info({ title: result.title, content: result.content, okText: tc('accept') });
+        }
+        return;
+      }
+    }
+
     const c = action.confirm;
     const pc = preset?.confirm;
     if (!c && !pc) return action.onClick();
@@ -82,7 +104,7 @@ export function DataTableRowActions({ actions, label }: DataTableRowActionsProps
       label,
       icon: action.icon ?? (Icon ? <Icon size={16} /> : undefined),
       danger,
-      onClick: () => run(action, preset, label, danger),
+      onClick: () => void run(action, preset, label, danger),
     };
   });
 
@@ -93,6 +115,7 @@ export function DataTableRowActions({ actions, label }: DataTableRowActionsProps
       </WrapperDropdown>
       {deleteContextHolder}
       {actionContextHolder}
+      <WrapperSpin spinning={validating} />
     </>
   );
 }

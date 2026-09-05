@@ -1,6 +1,7 @@
 'use client';
 import { App, Button, Card, Descriptions, Divider, Tooltip, Typography } from 'antd';
-import { AlertCircle, Download, RefreshCw } from 'lucide-react';
+import { AlertCircle, CalendarDays, Download, RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
@@ -41,6 +42,7 @@ export function QuoteDetailCard({
 }: QuoteDetailCardProps) {
   const { t } = useTranslation('quotes');
   const { message } = App.useApp();
+  const router = useRouter();
   const { date, dateTime } = useDateFormatter();
   const isDesktop = useIsDesktop();
   const hasPdf = Boolean(detail.pdfUrl);
@@ -104,6 +106,15 @@ export function QuoteDetailCard({
           {draftTag}
         </div>
         <div className="flex items-center gap-2">
+          {detail.eventId && (
+            <Tooltip title={t('detail.viewEvent')}>
+              <Button
+                type="text"
+                icon={<IconBadge icon={CalendarDays} shape="square" />}
+                onClick={() => router.push(`/admin/events/${detail.eventId}`)}
+              />
+            </Tooltip>
+          )}
           {hasPdf && <ShareButton url={detail.pdfUrl!} title={detail.number} iconOnly />}
           {hasPdf && canRegeneratePdf && (
             <Tooltip title={t('detail.regeneratePdf')}>
@@ -167,7 +178,7 @@ export function QuoteDetailCard({
         <Descriptions column={1} size="small" layout={isDesktop ? 'horizontal' : 'vertical'}>
           <Descriptions.Item label={t('detail.addressLabel')}>
             {detail.address || detail.city ? (
-              <AddressLines address={detail.address} city={detail.city} />
+              <AddressLines address={detail.address} city={detail.city} state={detail.state} />
             ) : (
               '—'
             )}
