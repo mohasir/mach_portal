@@ -64,6 +64,17 @@
       "payments": "Pagos",
       "attachments": "Adjuntos"
     },
+    "history": {
+      "title": "Actividad",
+      "empty": "Sin actividad registrada",
+      "unknownUser": "Alguien",
+      "staffAssigned": "asignó a {{staffName}} como staff",
+      "staffRemoved": "quitó a {{staffName}} del staff",
+      "selectionsUpdated": "actualizó la selección de estaciones",
+      "paymentRegistered": "registró un pago de {{amount}}",
+      "paymentRemoved": "eliminó un pago de {{amount}}",
+      "completed": "marcó el evento como realizado"
+    },
     "composition": {
       "title": "Composición"
     },
@@ -104,6 +115,10 @@
         "registeredBy": "Registrado por {{name}}"
       },
       "registered": "Pago registrado",
+      "remove": "Eliminar pago",
+      "removed": "Pago eliminado",
+      "removeConfirmTitle": "¿Eliminar este pago?",
+      "removeConfirmContent": "Esta acción no se puede deshacer.",
       "attachments": {
         "upload": "Comprobante",
         "uploadModalTitle": "Subir comprobante",

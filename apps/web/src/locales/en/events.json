@@ -64,6 +64,17 @@
       "payments": "Payments",
       "attachments": "Attachments"
     },
+    "history": {
+      "title": "Activity",
+      "empty": "No activity recorded",
+      "unknownUser": "Someone",
+      "staffAssigned": "assigned {{staffName}} as staff",
+      "staffRemoved": "removed {{staffName}} from staff",
+      "selectionsUpdated": "updated the station selections",
+      "paymentRegistered": "registered a payment of {{amount}}",
+      "paymentRemoved": "removed a payment of {{amount}}",
+      "completed": "marked the event as completed"
+    },
     "composition": {
       "title": "Composition"
     },
@@ -104,6 +115,10 @@
         "registeredBy": "Registered by {{name}}"
       },
       "registered": "Payment registered",
+      "remove": "Delete payment",
+      "removed": "Payment deleted",
+      "removeConfirmTitle": "Delete this payment?",
+      "removeConfirmContent": "This action cannot be undone.",
       "attachments": {
         "upload": "Receipt",
         "uploadModalTitle": "Upload receipt",

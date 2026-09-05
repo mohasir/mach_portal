@@ -10,6 +10,7 @@ import type { EventType } from '@/features/event-types';
 import { useConfirmModal, type ConfirmModalType } from '@/components/shared/ConfirmDialogs';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { QuoteNumberHeader } from '@/components/shared/QuoteNumberHeader';
+import { showEnvBanner } from '@/env';
 import { useConfig } from '@/features/settings';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
@@ -263,7 +264,9 @@ export function QuoteBuilderContent({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_480px]">
           <Card classNames={{ body: 'p-0 lg:p-[22px]' }}>{formFields}</Card>
           <div>
-            <div className="sticky top-4 flex h-[calc(100vh-6rem)] flex-col gap-4">
+            <div
+              className={`sticky top-4 flex h-[calc(100vh-${showEnvBanner ? '7.75rem' : '6rem'})] flex-col gap-4`}
+            >
               <Card className="min-h-0 flex-1" classNames={{ body: 'flex h-full flex-col' }}>
                 {previewContent}
               </Card>

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { App, Button, DatePicker, Empty, Form, Image, Input, Select, Tag } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
-import { FileText, Paperclip, User, X } from 'lucide-react';
+import { FileText, Paperclip, Trash2, User, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { paymentMethodSchema, type PaymentMethod } from '@repo/schemas';
@@ -10,6 +10,7 @@ import { AttachmentUploadModal } from '@/components/shared/Attachment';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { IconButton } from '@/components/shared/IconButton';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useCan } from '@/lib/auth/useCan';
@@ -19,6 +20,7 @@ import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { PAYMENT_METHOD_ICONS, PAYMENT_STATUS_COLORS } from '../../helpers';
 import {
   useRegisterEventPayment,
+  useRemoveEventPayment,
   useRemoveEventPaymentAttachment,
   useUploadEventPaymentAttachment,
 } from '../../hooks/useEventPayments';
@@ -57,12 +59,14 @@ export function EventPayments({ event }: EventPaymentsProps) {
   const can = useCan();
   const canRegister = can({ [RESOURCES.PAYMENT]: [ACTIONS.CREATE] });
   const canUploadAttachment = can({ [RESOURCES.PAYMENT]: [ACTIONS.UPLOAD_ATTACHMENT] });
-  const canRemoveAttachment = can({ [RESOURCES.PAYMENT]: [ACTIONS.DELETE] });
+  // Same permission gates both deleting a payment and deleting one of its attachments.
+  const canDeletePayment = can({ [RESOURCES.PAYMENT]: [ACTIONS.DELETE] });
   const [confirmDelete, deleteContextHolder] = useDeleteConfirm();
   const [form] = Form.useForm<PaymentFormValues>();
   const { registerPayment, isPending } = useRegisterEventPayment();
   const { uploadUrl, onUploaded, onUploadError } = useUploadEventPaymentAttachment();
   const { removeAttachment } = useRemoveEventPaymentAttachment();
+  const { removePayment } = useRemoveEventPayment();
   const [uploadPaymentId, setUploadPaymentId] = useState<string | null>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
 
@@ -90,6 +94,16 @@ export function EventPayments({ event }: EventPaymentsProps) {
       title: t('detail.payments.attachments.removeConfirmTitle'),
       content: t('detail.payments.attachments.removeConfirmContent'),
       onOk: () => removeAttachment(event.id, attachmentId),
+    };
+    if (!isDesktop) return confirmDelete(options);
+    modal.confirm({ ...options, okButtonProps: { danger: true } });
+  };
+
+  const onRemovePayment = (paymentId: string) => {
+    const options = {
+      title: t('detail.payments.removeConfirmTitle'),
+      content: t('detail.payments.removeConfirmContent'),
+      onOk: () => removePayment(event.id, paymentId),
     };
     if (!isDesktop) return confirmDelete(options);
     modal.confirm({ ...options, okButtonProps: { danger: true } });
@@ -146,7 +160,19 @@ export function EventPayments({ event }: EventPaymentsProps) {
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{money(payment.amount)}</span>
-                    <span className="text-xs text-gray-500">{date(payment.paidAt)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500">{date(payment.paidAt)}</span>
+                      {canDeletePayment && (
+                        <IconButton
+                          icon={Trash2}
+                          size="xs"
+                          danger
+                          onClick={() => onRemovePayment(payment.id)}
+                          aria-label={t('detail.payments.remove')}
+                          className="bg-salmon/20 text-error"
+                        />
+                      )}
+                    </div>
                   </div>
                   <span className="flex items-center gap-1 text-xs text-gray-500">
                     <MethodIcon size={14} className="shrink-0" />
@@ -182,7 +208,7 @@ export function EventPayments({ event }: EventPaymentsProps) {
                             <FileText size={16} />
                           </a>
                         )}
-                        {canRemoveAttachment && (
+                        {canDeletePayment && (
                           <button
                             type="button"
                             onClick={() => onRemoveAttachment(attachment.id)}

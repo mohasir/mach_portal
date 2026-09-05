@@ -59,10 +59,11 @@ export class EventsService {
     private storage: StorageProvider = getStorageProvider(),
   ) {}
 
-  // scope 'own' (resolveResourceScope) → 404 instead of leaking that an event exists
-  // for a quote the caller neither created nor is assigned to.
-  private async assertOwner(eventId: string, ownerId?: string) {
-    if (ownerId && !(await this.repo.belongsToOwner(eventId, ownerId))) throw notFound();
+  // Blocks any mutation on an event whose quote is archived, for every role/scope —
+  // and, additionally, 404s scope 'own' (resolveResourceScope) callers instead of
+  // leaking that an event exists for a quote they neither created nor are assigned to.
+  private async assertAccessible(eventId: string, ownerId?: string) {
+    if (!(await this.repo.isAccessible(eventId, ownerId))) throw notFound();
   }
 
   async list(query: EventsListQuery, ownerId?: string) {
@@ -93,6 +94,7 @@ export class EventsService {
       result.staffRows,
       result.paymentRows,
       result.attachmentRows,
+      result.historyRows,
       appRow?.optionsSelectionDeadlineDays ?? 0,
     );
   }
@@ -103,7 +105,7 @@ export class EventsService {
     userId: string,
     ownerId?: string,
   ) {
-    await this.assertOwner(eventId, ownerId);
+    await this.assertAccessible(eventId, ownerId);
     const event = await this.repo.findForSelectionsUpdate(eventId);
     if (!event) throw notFound();
     if (event.completedAt) {
@@ -145,7 +147,7 @@ export class EventsService {
     createdById: string | null,
     ownerId?: string,
   ) {
-    await this.assertOwner(id, ownerId);
+    await this.assertAccessible(id, ownerId);
     const result = await this.repo.registerPayment(id, input, createdById);
     if (result === undefined) throw notFound();
     if (result === 'exceeds-balance') {
@@ -191,7 +193,7 @@ export class EventsService {
   }
 
   async removePaymentAttachment(input: RemoveEventPaymentAttachmentInput, ownerId?: string) {
-    await this.assertOwner(input.eventId, ownerId);
+    await this.assertAccessible(input.eventId, ownerId);
     const deleted = await this.repo.deleteAttachment(input.eventId, input.attachmentId);
     if (!deleted) {
       throw new TRPCError({
@@ -207,15 +209,34 @@ export class EventsService {
     return { ok: true };
   }
 
-  async markCompleted(id: string, ownerId?: string) {
-    await this.assertOwner(id, ownerId);
-    const updated = await this.repo.markCompleted(id);
+  async removePayment(eventId: string, paymentId: string, userId: string, ownerId?: string) {
+    await this.assertAccessible(eventId, ownerId);
+    const result = await this.repo.removePayment(eventId, paymentId, userId);
+    if (!result) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        cause: new AppError(ErrorCodes.eventPayment.NOT_FOUND),
+      });
+    }
+    // Same reasoning as removePaymentAttachment: the DB delete is the source of truth,
+    // a leftover R2 object is only logged, not surfaced to the caller.
+    await Promise.all(
+      result.attachmentKeys.map((key) =>
+        this.storage.delete(key).catch((err) => console.error('storage delete failed', err)),
+      ),
+    );
+    return { ok: true };
+  }
+
+  async markCompleted(id: string, userId: string, ownerId?: string) {
+    await this.assertAccessible(id, ownerId);
+    const updated = await this.repo.markCompleted(id, userId);
     if (!updated) throw notFound();
     return eventResource(updated);
   }
 
-  async assignStaff(input: AssignStaffInput, ownerId?: string) {
-    await this.assertOwner(input.eventId, ownerId);
+  async assignStaff(input: AssignStaffInput, userId: string, ownerId?: string) {
+    await this.assertAccessible(input.eventId, ownerId);
     const completed = await this.repo.isCompleted(input.eventId);
     if (completed) {
       throw new TRPCError({
@@ -230,12 +251,12 @@ export class EventsService {
         cause: new AppError(ErrorCodes.eventStaff.ALREADY_ASSIGNED),
       });
     }
-    return this.repo.assignStaff(input);
+    return this.repo.assignStaff(input, userId);
   }
 
-  async removeStaff(input: RemoveStaffInput, ownerId?: string) {
-    await this.assertOwner(input.eventId, ownerId);
-    const removed = await this.repo.removeStaff(input);
+  async removeStaff(input: RemoveStaffInput, userId: string, ownerId?: string) {
+    await this.assertAccessible(input.eventId, ownerId);
+    const removed = await this.repo.removeStaff(input, userId);
     if (!removed) {
       throw new TRPCError({
         code: 'NOT_FOUND',

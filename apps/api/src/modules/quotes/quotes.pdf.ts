@@ -197,8 +197,12 @@ export function buildQuotePdfPayload(
   catalog: ProductWithGroups[],
   template: QuotePdfTemplateContent | undefined,
 ): QuotePdfRequest {
+  // Same combining rule as AddressLines.tsx (street, then "city, state"), minus the
+  // state's translated display name — a US-facing PDF reads fine with the raw code.
+  const location =
+    [quoteRow.address, quoteRow.city, quoteRow.state].filter(Boolean).join(', ') || undefined;
   const hasEventInfo = Boolean(
-    quoteRow.eventDate ?? quoteRow.eventTypeName ?? quoteRow.eventTime ?? quoteRow.address,
+    quoteRow.eventDate ?? quoteRow.eventTypeName ?? quoteRow.eventTime ?? location,
   );
 
   return {
@@ -210,7 +214,7 @@ export function buildQuotePdfPayload(
           date: quoteRow.eventDate ?? undefined,
           type: quoteRow.eventTypeName ?? undefined,
           time: quoteRow.eventTime ?? undefined,
-          location: quoteRow.address ?? undefined,
+          location,
         }
       : undefined,
     services: template?.services.length ? template.services : undefined,

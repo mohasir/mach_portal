@@ -20,7 +20,11 @@
     "eventDate": "Event date",
     "method": "Method",
     "amount": "Amount",
-    "reference": "Reference"
+    "reference": "Reference",
+    "registeredBy": "Registered by"
+  },
+  "card": {
+    "registeredBy": "Registered by {{name}}"
   },
   "empty": "No payments for this filter",
   "income": {

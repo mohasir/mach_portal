@@ -12,9 +12,9 @@ export function AdminLayoutDesktop({ children }: { children: React.ReactNode }) 
   const toggleSidebarCollapsed = useLayoutStore((s) => s.toggleSidebarCollapsed);
 
   return (
-    <Layout hasSider className="bg-background h-screen overflow-hidden">
+    <Layout hasSider className="bg-background h-full overflow-hidden">
       <AppSidebar />
-      <Layout className="h-screen overflow-hidden">
+      <Layout className="h-full overflow-hidden">
         <Layout.Header className="flex h-16 items-center">
           <Topbar onToggleSidebar={toggleSidebarCollapsed} />
         </Layout.Header>

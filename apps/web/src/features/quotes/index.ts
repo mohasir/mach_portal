@@ -6,6 +6,7 @@ export { QuoteBuilderPage } from './components/builder/QuoteBuilderPage';
 export { QuoteDetailPage } from './components/detail/QuoteDetailPage';
 export { PipelineBoard } from './components/pipeline/PipelineBoard';
 export { QuoteLineItem, type QuoteLineItemGroup } from './components/QuoteLineItem';
+export { CopyableQuoteNumber } from './components/CopyableQuoteNumber';
 export { QuickLineCard } from './components/builder/QuickLineBuilder/QuickLineCard';
 export { OptionGroupChips } from './components/builder/LineBuilder/OptionGroupChips';
 export { OptionGroupSelectList } from './components/builder/LineBuilder/OptionGroupSelectList';

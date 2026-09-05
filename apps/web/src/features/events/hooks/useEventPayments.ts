@@ -73,6 +73,30 @@ export function useUploadEventPaymentAttachment() {
   };
 }
 
+export function useRemoveEventPayment() {
+  const trpc = useTRPC();
+  const qc = useQueryClient();
+  const onError = useApiError();
+  const { message } = App.useApp();
+  const { t } = useTranslation('events');
+
+  const mutation = useMutation(
+    trpc.events.removePayment.mutationOptions({
+      onSuccess: () => {
+        message.success(t('detail.payments.removed'));
+        return qc.invalidateQueries(trpc.events.pathFilter());
+      },
+      onError,
+    }),
+  );
+
+  return {
+    removePayment: (eventId: string, paymentId: string) =>
+      mutation.mutateAsync({ eventId, paymentId }),
+    isPending: mutation.isPending,
+  };
+}
+
 export function useRemoveEventPaymentAttachment() {
   const trpc = useTRPC();
   const qc = useQueryClient();

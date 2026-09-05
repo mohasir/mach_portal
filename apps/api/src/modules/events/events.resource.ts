@@ -53,6 +53,7 @@ export type EventWithNames = PublicEvent & {
   totalPaid: number;
   createdByName: string | null;
   assignedToName: string | null;
+  staff?: EventStaffRow[];
 };
 
 export const eventListItemResource = (row: EventWithNames) => ({
@@ -77,6 +78,7 @@ export const eventListItemResource = (row: EventWithNames) => ({
   paymentStatus: derivePaymentStatus(row.totalAmount, row.totalPaid),
   createdByName: row.createdByName,
   assignedToName: row.assignedToName,
+  staff: row.staff ?? [],
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });
@@ -160,6 +162,23 @@ export const buildEventPaymentDetails = (
       .map(eventPaymentAttachmentResource),
   }));
 
+export type EventHistoryRow = {
+  id: string;
+  type: string;
+  data: unknown;
+  changedByName: string | null;
+  changedAt: Date;
+};
+
+export const eventHistoryResource = (row: EventHistoryRow) => ({
+  id: row.id,
+  type: row.type,
+  data: row.data,
+  changedByName: row.changedByName,
+  changedAt: row.changedAt,
+});
+export type EventHistoryResource = ReturnType<typeof eventHistoryResource>;
+
 export const buildEventDetail = (
   eventRow: EventWithNames,
   lineRows: PublicQuoteLine[],
@@ -167,6 +186,7 @@ export const buildEventDetail = (
   staffRows: EventStaffRow[],
   paymentRows: EventPaymentRow[],
   attachmentRows: EventPaymentAttachmentRow[],
+  historyRows: EventHistoryRow[],
   optionsSelectionDeadlineDays: number,
 ) => {
   const totalPaid = paymentRows.reduce((sum, p) => sum + p.amount, 0);
@@ -183,6 +203,7 @@ export const buildEventDetail = (
       selectionsPending && eventRow.eventDate
         ? subtractDays(eventRow.eventDate, optionsSelectionDeadlineDays)
         : null,
+    history: historyRows.map(eventHistoryResource),
   };
 };
 export type EventDetailResource = ReturnType<typeof buildEventDetail>;

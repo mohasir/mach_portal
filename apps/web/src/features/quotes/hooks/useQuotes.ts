@@ -200,13 +200,32 @@ export function useAssignQuote() {
   };
 }
 
+// On-demand check (not a subscribed useQuery) — called right when the user clicks
+// "archive", before deciding whether to show the confirm dialog or a blocked-reason one.
+// `staleTime: 0` forces a fresh request every time: the default 60s staleTime would
+// otherwise serve a stale cached answer if the same quote's archive is retried shortly
+// after (eg. right after deleting the payment that was blocking it).
+export function useCanArchiveQuote() {
+  const trpc = useTRPC();
+  const qc = useQueryClient();
+  return {
+    canArchive: (id: string) =>
+      qc.fetchQuery({ ...trpc.quotes.canArchive.queryOptions({ id }), staleTime: 0 }),
+  };
+}
+
 export function useArchiveQuote() {
   const trpc = useTRPC();
   const qc = useQueryClient();
   const onError = useApiError();
   const mutation = useMutation(
     trpc.quotes.archive.mutationOptions({
-      onSuccess: () => qc.invalidateQueries(trpc.quotes.pathFilter()),
+      onSuccess: () =>
+        Promise.all([
+          qc.invalidateQueries(trpc.quotes.pathFilter()),
+          qc.invalidateQueries(trpc.events.pathFilter()),
+          qc.invalidateQueries(trpc.dashboard.pathFilter()),
+        ]),
       onError,
     }),
   );

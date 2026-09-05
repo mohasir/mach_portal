@@ -24,6 +24,7 @@
     "QUOTE_INVALID_TRANSITION": "Ese cambio de estado no está permitido",
     "QUOTE_PDF_GENERATION_FAILED": "No se pudo generar el PDF de la cotización. Intentá de nuevo en unos minutos",
     "QUOTE_PDF_NOT_ALLOWED": "Solo se puede generar el PDF de una cotización Enviada o Aprobada",
+    "QUOTE_HAS_PAYMENTS": "No se puede archivar: el evento ya tiene pagos registrados. Cancelá la cotización en su lugar",
     "EVENT_NOT_FOUND": "El evento no existe",
     "EVENT_STAFF_ALREADY_ASSIGNED": "Ese miembro del staff ya está asignado a este evento",
     "EVENT_STAFF_NOT_FOUND": "Esa asignación de staff no existe",
