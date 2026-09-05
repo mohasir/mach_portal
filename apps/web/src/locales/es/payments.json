@@ -20,7 +20,11 @@
     "eventDate": "Fecha del evento",
     "method": "Método",
     "amount": "Monto",
-    "reference": "Referencia"
+    "reference": "Referencia",
+    "registeredBy": "Registrado por"
+  },
+  "card": {
+    "registeredBy": "Registrado por {{name}}"
   },
   "empty": "No hay pagos para este filtro",
   "income": {

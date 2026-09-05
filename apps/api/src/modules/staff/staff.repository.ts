@@ -1,7 +1,7 @@
-import { and, asc, count, desc, eq, ilike, notInArray, or, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, isNull, notInArray, or, type SQL } from 'drizzle-orm';
 import type { CreateStaffInput, StaffListQuery, UpdateStaffInput } from '@repo/schemas';
 import type { Database } from '../../db';
-import { events, eventStaff, staff } from '../../db/schema';
+import { events, eventStaff, quotes, staff } from '../../db/schema';
 import { resolvePagination } from '../../lib/utils/pagination';
 import { publicStaffColumns } from './staff.resource';
 
@@ -74,7 +74,8 @@ export class StaffRepository {
       .select({ staffId: eventStaff.staffId })
       .from(eventStaff)
       .innerJoin(events, eq(eventStaff.eventId, events.id))
-      .where(eq(events.eventDate, date));
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
+      .where(and(eq(events.eventDate, date), isNull(quotes.archivedAt)));
 
     return this.db
       .select(publicStaffColumns)

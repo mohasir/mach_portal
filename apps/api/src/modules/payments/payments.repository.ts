@@ -1,7 +1,7 @@
-import { and, asc, count, desc, eq, gte, ilike, lte, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, ilike, isNull, lte, sql, type SQL } from 'drizzle-orm';
 import type { PaymentsIncomeQuery, PaymentsListQuery } from '@repo/schemas';
 import type { Database } from '../../db';
-import { clients, events, eventPayments, eventTypes, user } from '../../db/schema';
+import { clients, events, eventPayments, eventTypes, quotes, user } from '../../db/schema';
 import { resolvePagination } from '../../lib/utils/pagination';
 
 const sortColumns = {
@@ -29,6 +29,7 @@ export class PaymentsRepository {
       })
       .from(eventPayments)
       .innerJoin(events, eq(eventPayments.eventId, events.id))
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
       .innerJoin(clients, eq(events.clientId, clients.id))
       .leftJoin(eventTypes, eq(events.eventTypeId, eventTypes.id))
       .leftJoin(user, eq(eventPayments.createdById, user.id));
@@ -38,6 +39,7 @@ export class PaymentsRepository {
     const { search, sortBy, sortDir, dateFrom, dateTo, clientId, eventTypeId, method } = query;
 
     const where = and(
+      isNull(quotes.archivedAt),
       search ? ilike(clients.name, `%${search}%`) : undefined,
       dateFrom ? gte(eventPayments.paidAt, dateFrom) : undefined,
       dateTo ? lte(eventPayments.paidAt, dateTo) : undefined,
@@ -58,6 +60,7 @@ export class PaymentsRepository {
       .select({ value: count() })
       .from(eventPayments)
       .innerJoin(events, eq(eventPayments.eventId, events.id))
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
       .innerJoin(clients, eq(events.clientId, clients.id))
       .where(where);
     return row?.value ?? 0;
@@ -67,6 +70,7 @@ export class PaymentsRepository {
     const { dateFrom, dateTo, groupBy } = query;
 
     const where = and(
+      isNull(quotes.archivedAt),
       dateFrom ? gte(eventPayments.paidAt, dateFrom) : undefined,
       dateTo ? lte(eventPayments.paidAt, dateTo) : undefined,
     );
@@ -81,6 +85,8 @@ export class PaymentsRepository {
         count: count(),
       })
       .from(eventPayments)
+      .innerJoin(events, eq(eventPayments.eventId, events.id))
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
       .where(where)
       .groupBy(sql`period`)
       .orderBy(sql`period`);

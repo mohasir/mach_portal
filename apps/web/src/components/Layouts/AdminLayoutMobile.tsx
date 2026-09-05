@@ -10,7 +10,7 @@ export function AdminLayoutMobile({ children }: { children: React.ReactNode }) {
   const hideBottomNav = useHideBottomNav();
 
   return (
-    <Layout className={`h-dvh overflow-hidden bg-white`}>
+    <Layout className={`h-full overflow-hidden bg-white`}>
       <Layout.Header className="relative z-10 shadow-xs flex h-auto min-h-16 items-center pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] px-4 leading-normal bg-white">
         <MobileTopbar />
       </Layout.Header>

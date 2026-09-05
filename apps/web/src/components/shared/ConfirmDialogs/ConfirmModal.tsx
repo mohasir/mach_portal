@@ -43,6 +43,9 @@ export interface ConfirmOptions {
   cancelText?: string;
   type?: ConfirmModalType;
   danger?: boolean;
+  /** Purely informational dialog (e.g. explaining why an action is blocked) — renders
+   * just one dismiss button instead of cancel+confirm. */
+  singleButton?: boolean;
   onOk: () => void;
 }
 
@@ -54,6 +57,7 @@ interface ConfirmModalProps {
   cancelText?: string;
   type?: ConfirmModalType;
   danger?: boolean;
+  singleButton?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -66,6 +70,7 @@ export function ConfirmModal({
   cancelText,
   type = 'help',
   danger,
+  singleButton,
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
@@ -89,16 +94,18 @@ export function ConfirmModal({
           </Typography.Text>
         )}
         <div className="mt-3 flex w-full gap-3">
-          <Button className="min-w-0 flex-1 whitespace-normal" onClick={onCancel}>
-            {cancelText ?? tc('cancel')}
-          </Button>
+          {!singleButton && (
+            <Button className="min-w-0 flex-1 whitespace-normal" onClick={onCancel}>
+              {cancelText ?? tc('cancel')}
+            </Button>
+          )}
           <Button
             danger={danger}
             type="primary"
             className="min-w-0 flex-1 whitespace-normal"
             onClick={onConfirm}
           >
-            {okText ?? tc('confirmAction')}
+            {okText ?? (singleButton ? tc('accept') : tc('confirmAction'))}
           </Button>
         </div>
       </div>
@@ -114,6 +121,7 @@ interface DialogState {
   cancelText?: string;
   type?: ConfirmModalType;
   danger?: boolean;
+  singleButton?: boolean;
   onOk?: () => void;
 }
 
@@ -133,6 +141,7 @@ export function useConfirmModal() {
       cancelText={state.cancelText}
       type={state.type}
       danger={state.danger}
+      singleButton={state.singleButton}
       onConfirm={() => {
         state.onOk?.();
         close();

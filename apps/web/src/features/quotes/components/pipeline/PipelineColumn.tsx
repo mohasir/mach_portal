@@ -1,11 +1,14 @@
 'use client';
+import { useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { Empty, Typography } from 'antd';
+import type { OverlayScrollbars } from 'overlayscrollbars';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import type { QuoteStageId } from '@repo/schemas';
 import { useQuoteStages } from '@/features/settings';
 import { hexToRgba } from '@/lib/utils/color';
 import type { QuoteCard as QuoteCardType } from '../../types';
+import { usePipelineScrollStore } from '../../pipelineScroll.store';
 import { QuoteCard } from './QuoteCard';
 
 interface PipelineColumnProps {
@@ -18,6 +21,21 @@ export function PipelineColumn({ stageId, cards, draggable = true }: PipelineCol
   const { stageMap } = useQuoteStages();
   const stage = stageMap.get(stageId);
   const { setNodeRef, isOver } = useDroppable({ id: stageId, disabled: !draggable });
+
+  const scrollEvents = useMemo(
+    () => ({
+      initialized: (instance: OverlayScrollbars) => {
+        const top = usePipelineScrollStore.getState().columnScrollTop[stageId];
+        if (top) instance.elements().viewport.scrollTop = top;
+      },
+      scroll: (instance: OverlayScrollbars) => {
+        usePipelineScrollStore
+          .getState()
+          .setColumnScrollTop(stageId, instance.elements().viewport.scrollTop);
+      },
+    }),
+    [stageId],
+  );
 
   return (
     <div
@@ -47,6 +65,7 @@ export function PipelineColumn({ stageId, cards, draggable = true }: PipelineCol
           overflow: { x: 'hidden' },
           scrollbars: { autoHide: 'leave', theme: 'os-theme-dark' },
         }}
+        events={scrollEvents}
         defer
       >
         <div className="flex flex-col gap-2">

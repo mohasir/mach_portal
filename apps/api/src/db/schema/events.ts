@@ -2,6 +2,7 @@ import {
   boolean,
   date,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -75,6 +76,20 @@ export const eventPayments = pgTable('event_payments', {
   notes: text('notes'),
   createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Generic append-only activity log for an event — one row per notable action (staff
+// assigned/removed, station selections updated, payment registered/removed, marked completed). `data` shape varies by `type` (mirrors the `notifications` table's own
+// type+jsonb pattern rather than a column per action).
+export const eventHistory = pgTable('event_history', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  eventId: uuid('event_id')
+    .notNull()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  type: text('type').notNull(),
+  data: jsonb('data').notNull(),
+  changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
+  changedAt: timestamp('changed_at').defaultNow().notNull(),
 });
 
 export const eventPaymentAttachments = pgTable('event_payment_attachments', {

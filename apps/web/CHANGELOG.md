@@ -5,6 +5,64 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.14.0] - 2026-09-05
+
+### Added
+
+- Banner de ambiente (local/staging) en la parte superior de toda la app, oculto en
+  producción, configurable vía `NEXT_PUBLIC_APP_ENV` (`EnvironmentBanner`).
+- Al archivar una cotización cuyo evento ya tiene pagos registrados, se muestra un
+  modal informativo (un solo botón) en vez del modal de confirmación de siempre,
+  con un loader de pantalla completa mientras se consulta si se puede archivar
+  (`validate` en `DataTableRowActions`, `WrapperSpin`).
+- Nueva card "Actividad" en el detalle de evento (`EventHistoryCard`): quién asignó
+  o quitó staff, actualizó la selección de estaciones, registró o eliminó un pago,
+  o marcó el evento como realizado.
+- Botón para eliminar un pago de un evento (`EventPayments`), restringido a
+  admin/superadmin.
+- Opción "Ver evento" en el menú "..." de la cotización (tabla y pipeline), visible
+  cuando la cotización ya tiene un evento creado.
+- Staff asignado (label + avatares agrupados) en la card de evento del listado,
+  cuando el evento tiene staff asignado.
+- Botón "Regenerar PDF" en el detalle de cotización, restringido a superadmin, que
+  fuerza un nuevo PDF aunque el vigente no esté desactualizado.
+- "Registrado por" en pagos: quién registró cada pago, en la card mobile y en una
+  columna nueva de la tabla desktop.
+- Se conserva la posición de scroll de cada columna del pipeline de cotizaciones (y
+  del carrusel en mobile) al navegar al detalle de una cotización y volver.
+- Nuevos componentes compartidos: `IconButton` (centraliza el patrón botón-ícono +
+  `IconBadge`), `WrapperAssign` (buscador + asignados + candidatos para los bottom
+  sheets de asignación), `WrapperDropdown` (envuelve `Dropdown` de AntD),
+  `WrapperSpin` (loader de pantalla completa portaleado a `body`).
+- Nueva paleta de 16 colores para avatares (`getAvatarColor`), con texto claro/oscuro
+  elegido por contraste; las iniciales ahora ignoran tildes y caracteres no
+  alfanuméricos.
+- Logging de requests tRPC en consola durante desarrollo, sin efecto en producción.
+
+### Changed
+
+- El menú "..." de tablas/cards (`DataTableRowActions`) pasa a apoyarse en
+  `WrapperDropdown` en vez del `Dropdown` de AntD directo: corrige que el click para
+  cerrar el menú (afuera de él) terminara disparando el click de toda la fila/card.
+- La card de cotización de la tabla (`QuoteRowCard`) ahora muestra el avatar de
+  asignación y accesos directos de "ver detalle"/"editar" debajo de un divisor.
+- El formulario de tarifas por cantidad de personas (`PriceTiersForm`) reordena los
+  paquetes automáticamente por cantidad de personas al guardar.
+- La card "Servicios incluidos" del detalle de cotización ya no se muestra si la
+  cotización no se armó eligiendo opciones al momento de cotizar.
+- Se permite generar/regenerar el PDF de una cotización no-borrador sin importar su
+  etapa (antes solo aplicaba a "cotizado"/"confirmado").
+- El PDF de cotización arma la dirección del evento combinando calle, ciudad y
+  estado (antes solo mandaba la calle).
+- Se depuró y amplió el listado de ciudades y condados disponibles por estado en el
+  selector de dirección de la cotización.
+
+### Fixed
+
+- El formulario de tarifas por cantidad de personas (`PriceTiersForm`) invalidaba
+  una query sin ningún consumidor tras guardar, en vez de la que realmente alimenta
+  la pantalla — los cambios no se reflejaban sin recargar la página.
+
 ## [0.13.0] - 2026-09-03
 
 ### Added
