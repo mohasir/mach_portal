@@ -52,6 +52,7 @@ export function UpcomingEventsCard() {
                 showEventType={false}
                 variant="plain"
                 showCreatedBy={false}
+                layout="dashboard"
               />
             </div>
           ))

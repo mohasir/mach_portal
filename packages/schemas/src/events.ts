@@ -43,6 +43,12 @@ export const removeStaffSchema = z.object({
 });
 export type RemoveStaffInput = z.infer<typeof removeStaffSchema>;
 
+export const removeEventPaymentSchema = z.object({
+  eventId: z.uuid(),
+  paymentId: z.uuid(),
+});
+export type RemoveEventPaymentInput = z.infer<typeof removeEventPaymentSchema>;
+
 export const removeEventPaymentAttachmentSchema = z.object({
   eventId: z.uuid(),
   attachmentId: z.uuid(),

@@ -117,6 +117,7 @@ export type QuoteListItemRow = QuoteWithNames & {
   linesCount: number;
   createdByName: string | null;
   assignedToName: string | null;
+  eventId: string | null;
 };
 
 export const quoteListItemResource = (row: QuoteListItemRow) => ({
@@ -126,6 +127,7 @@ export const quoteListItemResource = (row: QuoteListItemRow) => ({
   isComplete: isQuoteComplete(row, row.linesCount),
   createdByName: row.createdByName,
   assignedToName: row.assignedToName,
+  eventId: row.eventId,
 });
 
 export type QuoteCardRow = QuoteWithNames & {
@@ -170,6 +172,7 @@ export type QuoteLineDetail = {
 export type QuoteDetailRow = QuoteWithNames & {
   createdByName: string | null;
   assignedToName: string | null;
+  eventId: string | null;
 };
 
 export type StageHistoryRow = {
@@ -222,6 +225,7 @@ export const buildQuoteDetail = (
   eventTypeName: quoteRow.eventTypeName,
   createdByName: quoteRow.createdByName,
   assignedToName: quoteRow.assignedToName,
+  eventId: quoteRow.eventId,
   isComplete: isQuoteComplete(quoteRow, lineRows.length),
   stageHistory: historyRows,
   assignmentHistory: assignmentHistoryRows,

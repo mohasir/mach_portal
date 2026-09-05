@@ -61,5 +61,12 @@ export function usePaymentsColumns(): TableColumnsType<Payment> {
       responsive: ['lg'],
       render: (value: Payment['reference']) => value ?? '—',
     },
+    {
+      title: t('columns.registeredBy'),
+      dataIndex: 'createdByName',
+      key: 'createdByName',
+      responsive: ['lg'],
+      render: (value: Payment['createdByName']) => value ?? '—',
+    },
   ];
 }

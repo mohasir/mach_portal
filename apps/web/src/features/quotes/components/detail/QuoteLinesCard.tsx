@@ -38,7 +38,7 @@ export function QuoteLinesCard({ detail, catalog, variant }: QuoteLinesCardProps
           <WrapperAlert
             type="info"
             showIcon
-            title={t('detail.validUntil', {
+            description={t('detail.validUntil', {
               date: date(detail.validUntil),
               count: config?.appSettings.quoteValidityMonths ?? 0,
             })}

@@ -98,9 +98,12 @@ export const quotesRouter = router({
         ownerScope(ctx),
       ),
     ),
+  canArchive: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.DELETE] })
+    .input(z.object({ id: z.uuid() }))
+    .query(({ input, ctx }) => service.canArchive(input.id, ownerScope(ctx))),
   archive: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.DELETE] })
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input, ctx }) => service.archive(input.id, ownerScope(ctx))),
+    .mutation(({ input, ctx }) => service.archive(input.id, ctx.user.id, ownerScope(ctx))),
 
   assign: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.MANAGE_ASSIGNMENT] })
     .input(assignQuoteSchema)
