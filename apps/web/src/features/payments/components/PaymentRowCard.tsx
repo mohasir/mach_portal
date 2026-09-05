@@ -1,5 +1,5 @@
 'use client';
-import { Card, Divider } from 'antd';
+import { Divider } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
