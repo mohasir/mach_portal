@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { QUOTE_STAGE } from '@repo/schemas';
 import type { RowActionItem } from '@/components/shared/DataTable';
+import { openQuotePdf } from '../helpers';
 import { useArchiveQuote, useCanArchiveQuote } from './useQuotes';
 
 interface QuoteRowActionsRow {
@@ -12,6 +13,7 @@ interface QuoteRowActionsRow {
   number: string;
   stageId: number;
   pdfUrl?: string | null;
+  pdfGeneratedAt?: string | Date | null;
   eventId?: string | null;
 }
 
@@ -45,7 +47,7 @@ export function useQuoteRowActions() {
               key: 'viewPdf',
               label: t('detail.viewPdf'),
               icon: <Download size={16} />,
-              onClick: () => window.open(row.pdfUrl!, '_blank'),
+              onClick: () => openQuotePdf(row.pdfUrl!, row.pdfGeneratedAt),
             },
           ] as RowActionItem[])
         : []),

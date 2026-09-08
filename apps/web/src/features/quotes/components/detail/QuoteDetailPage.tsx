@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { showEnvBanner } from '@/env';
 import { isAfter } from '@/lib/date';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
+import { openQuotePdf } from '../../helpers';
 import { useGenerateQuotePdf, useQuote } from '../../hooks/useQuotes';
 import { QuoteHistoryCard } from '../builder/QuoteHistoryCard';
 import { QuoteDetailCard } from './QuoteDetailCard';
@@ -42,7 +43,7 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
 
   const handleClick = () => {
     if (hasPdf && !isStale) {
-      window.open(detail.pdfUrl!, '_blank');
+      openQuotePdf(detail.pdfUrl!, detail.pdfGeneratedAt);
       return;
     }
     void generatePdf(quoteId);
