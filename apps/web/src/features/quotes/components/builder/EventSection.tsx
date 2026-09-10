@@ -103,13 +103,15 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
       }
 
       // Suggests the fee from the new state's tax rate — a starting point the staff overrides freely.
-      const nextTaxRate = changed.state
-        ? (config?.stateSettings.find((s) => s.state === changed.state)?.taxRate ?? 0)
-        : 0;
-      const subtotal = state.lines.reduce((sum, line) => sum + line.subtotal, 0);
-      const suggestedLongDistance = Math.round(subtotal * nextTaxRate);
-      patch.longDistanceAmount = suggestedLongDistance;
-      form.setFieldValue('longDistanceAmount', suggestedLongDistance);
+      if (config?.appSettings.applyTaxByState) {
+        const nextTaxRate = changed.state
+          ? (config?.stateSettings.find((s) => s.state === changed.state)?.taxRate ?? 0)
+          : 0;
+        const subtotal = state.lines.reduce((sum, line) => sum + line.subtotal, 0);
+        const suggestedLongDistance = Math.round(subtotal * nextTaxRate);
+        patch.longDistanceAmount = suggestedLongDistance;
+        form.setFieldValue('longDistanceAmount', suggestedLongDistance);
+      }
     }
     if ('city' in changed) patch.city = changed.city ?? '';
     if ('address' in changed) patch.address = changed.address ?? '';
