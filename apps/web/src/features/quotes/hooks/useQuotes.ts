@@ -11,6 +11,7 @@ import type {
 } from '@repo/schemas';
 import { useTRPC } from '@/lib/trpc/client';
 import { useApiError } from '@/lib/error/useApiError';
+import { openQuotePdf } from '../helpers';
 
 export function useQuotesList(query: QuotesListQuery) {
   const trpc = useTRPC();
@@ -145,7 +146,7 @@ export function useGenerateQuotePdf() {
     trpc.quotes.generatePdf.mutationOptions({
       onSuccess: (data) => {
         qc.invalidateQueries(trpc.quotes.pathFilter());
-        if (data.pdfUrl) window.open(data.pdfUrl, '_blank');
+        if (data.pdfUrl) openQuotePdf(data.pdfUrl, data.pdfGeneratedAt);
       },
       onError,
     }),
@@ -164,7 +165,7 @@ export function useRegenerateQuotePdf() {
     trpc.quotes.regeneratePdf.mutationOptions({
       onSuccess: (data) => {
         qc.invalidateQueries(trpc.quotes.pathFilter());
-        if (data.pdfUrl) window.open(data.pdfUrl, '_blank');
+        if (data.pdfUrl) openQuotePdf(data.pdfUrl, data.pdfGeneratedAt);
       },
       onError,
     }),

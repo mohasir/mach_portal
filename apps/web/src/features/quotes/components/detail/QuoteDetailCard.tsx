@@ -17,6 +17,7 @@ import { isPastDate } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { copyToClipboard } from '@/lib/utils/clipboard';
+import { withPdfCacheBuster } from '../../helpers';
 import { useRegenerateQuotePdf } from '../../hooks/useQuotes';
 import type { QuoteDetail } from '../../types';
 import { QuoteStageTagDropdown } from '../QuoteStageTagDropdown';
@@ -115,7 +116,13 @@ export function QuoteDetailCard({
               />
             </Tooltip>
           )}
-          {hasPdf && <ShareButton url={detail.pdfUrl!} title={detail.number} iconOnly />}
+          {hasPdf && (
+            <ShareButton
+              url={withPdfCacheBuster(detail.pdfUrl!, detail.pdfGeneratedAt)}
+              title={detail.number}
+              iconOnly
+            />
+          )}
           {hasPdf && canRegeneratePdf && (
             <Tooltip title={t('detail.regeneratePdf')}>
               <Button
