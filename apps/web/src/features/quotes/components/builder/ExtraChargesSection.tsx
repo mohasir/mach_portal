@@ -28,7 +28,7 @@ export function ExtraChargesSection({ readOnly }: ExtraChargesSectionProps) {
         <Form.Item
           label={<FieldLabel title={t('builder.event.longDistance')} />}
           extra={
-            state.state
+            config?.appSettings.applyTaxByState && state.state
               ? t('builder.event.longDistanceHint', {
                   rate: Math.round(stateTaxRate * 1000) / 10,
                 })
