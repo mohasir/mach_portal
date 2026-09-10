@@ -84,6 +84,25 @@ export function toBuilderState(detail: QuoteDetail): QuoteBuilderState {
   };
 }
 
+// The PDF storage key is derived from the quote number, so the URL is identical across
+// regenerations — without a cache-busting param the browser reuses its cached response
+// instead of fetching the newly regenerated file.
+export function withPdfCacheBuster(
+  pdfUrl: string,
+  pdfGeneratedAt: string | Date | null | undefined,
+): string {
+  if (!pdfGeneratedAt) return pdfUrl;
+  const separator = pdfUrl.includes('?') ? '&' : '?';
+  return `${pdfUrl}${separator}v=${new Date(pdfGeneratedAt).getTime()}`;
+}
+
+export function openQuotePdf(
+  pdfUrl: string,
+  pdfGeneratedAt: string | Date | null | undefined,
+): void {
+  window.open(withPdfCacheBuster(pdfUrl, pdfGeneratedAt), '_blank');
+}
+
 export function hasClient(state: QuoteBuilderState): boolean {
   return !!state.clientId || !!state.newClient?.name.trim();
 }
