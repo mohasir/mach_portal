@@ -184,10 +184,13 @@ Agregar esta excepción como decisión nueva en `docs/mach-bar-domain.md`.
 ### 4.5 Conflictos de staff
 
 **Definición**: un miembro del staff asignado a este evento choca si también está asignado a **otro**
-evento en la nueva fecha que no está cancelado, archivado ni realizado.
+evento en la nueva fecha que no está cancelado ni archivado.
 
 La disponibilidad hoy es **por día**, no por hora (`staff.repository.ts::findAvailable`); se mantiene
-ese criterio.
+ese criterio. Hoy `findAvailable` solo excluye las cotizaciones archivadas, así que un evento
+cancelado (no archivado) deja al staff como no disponible. Para que las dos consultas no se
+contradigan, la condición "staff ocupado ese día" se extrae a un helper compartido
+(cotización no archivada **y** evento no cancelado) y la usan `findAvailable` y `findStaffConflicts`.
 
 Repositorio: `EventsRepository.findStaffConflicts(eventId, date)` devuelve
 `{ staffId, name, conflictingEvent: { id, quoteNumber, eventTime } }[]`.
@@ -207,11 +210,18 @@ reschedule: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.RESCHEDULE] })
 ```
 
 - `checkReschedule` combina `findStaffConflicts` + `quotesRepo.findByDateTime(date, time, quoteId)`.
+  `findByDateTime` exige la hora (filtra por `eventTime`), y la hora es opcional: sin hora,
+  `eventConflicts` se calcula por fecha (`quotesRepo.findByDate(date, quoteId)`, nuevo), así el
+  aviso de doble reserva no queda vacío solo porque falte la hora.
 - `reschedule`, en una transacción (`EventsRepository.reschedule`):
   1. `UPDATE events SET event_date, event_time`.
   2. `UPDATE quotes SET event_date, event_time` (por `events.quoteId`).
   3. `INSERT event_reschedules`.
   4. `INSERT event_history` (`type: 'rescheduled'`, `data: { from, to, reasonName }`).
+  5. `DELETE` de la notificación `event_selections_reminder` del evento. El job
+     (`eventReminders.job.ts`) deduplica con `createIfNotExists` por `(type, entityId)`: si el
+     recordatorio ya salió con la fecha vieja, nunca crearía uno nuevo, y el feed seguiría
+     mostrando el plazo viejo. Al borrarlo, el próximo cron lo recrea con la fecha nueva.
 - Notificación: después de la transacción (ver §4.7).
 - `getById` suma `reschedules` (con `reasonName` y `rescheduledByName`), `null` si no es superadmin.
 
@@ -268,7 +278,7 @@ En `features/events/`:
 | R4 | Motivos como catálogo con `requiresNote` | Evita comparar por nombre ("Otro") y permite más motivos que exijan nota. |
 | R5 | Acción `RESCHEDULE` separada de `UPDATE` | Permite dar o quitar la capacidad de reprogramar sin tocar el resto de permisos del evento. |
 | R6 | Conflictos de staff no bloquean, pero exigen confirmación y quedan registrados | El choque puede ser intencional (staff que cubre dos eventos el mismo día). |
-| R7 | Disponibilidad de staff por día | Mismo criterio que `findAvailable`; los eventos no tienen hora de fin. |
+| R7 | Disponibilidad de staff por día, con un solo criterio de "ocupado" | Los eventos no tienen hora de fin; `findAvailable` y los conflictos comparten la condición para no contradecirse. |
 | R8 | Historial visible solo para superadmin | Consistente con `event_history`. |
 
 ---
@@ -308,7 +318,11 @@ En `features/events/`:
    desaparece.
 8. Superadmin ve el historial de reprogramaciones; admin no.
 9. Admins (excepto quien reprogramó) reciben la notificación `event_rescheduled`.
-10. Evento con selecciones pendientes → el plazo y el recordatorio se recalculan con la fecha nueva.
+10. Evento con selecciones pendientes y recordatorio ya enviado → tras reprogramar, el recordatorio
+    viejo desaparece del feed y el cron crea uno nuevo con el plazo de la fecha nueva.
+11. Reprogramar sin hora a una fecha con otra reserva → aparece el aviso de doble reserva.
+12. Staff con un evento cancelado (no archivado) en la fecha nueva → no figura como conflicto y sí
+    como disponible en la asignación.
 
 ---
 
