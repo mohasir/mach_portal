@@ -7,8 +7,14 @@ export interface FilterOption {
   icon?: ReactNode;
 }
 
-/** Inclusive range as ISO dates (YYYY-MM-DD); either end may be open. */
+export type DateRangePreset = 'today' | 'last7Days' | 'thisMonth' | 'lastMonth';
+
+/**
+ * A quick preset (resolved to dates when used, see resolveDateRange) or a custom inclusive range
+ * as ISO dates (YYYY-MM-DD) where either end may be open.
+ */
 export interface DateRangeValue {
+  preset?: DateRangePreset;
   from?: string;
   to?: string;
 }

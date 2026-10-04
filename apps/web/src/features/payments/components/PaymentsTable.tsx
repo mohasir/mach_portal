@@ -6,6 +6,7 @@ import { TbFilter2 } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { paginationOf, type PaymentsListQuery } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
+import { resolveDateRange } from '@/components/shared/FilterChips';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { usePaymentsList } from '../hooks/usePayments';
 import type { Payment, PaymentsFilters } from '../types';
@@ -16,15 +17,13 @@ import { PaymentsFilterChips } from './PaymentsFilterChips';
 const EMPTY_FILTERS: PaymentsFilters = {};
 
 /** Filter-bar criteria in use; the date range counts once whichever ends are set. */
-const countActiveFilters = ({
-  dateFrom,
-  dateTo,
-  clientIds,
-  eventTypeIds,
-  methods,
-}: PaymentsFilters) =>
-  [dateFrom || dateTo, clientIds?.length, eventTypeIds?.length, methods?.length].filter(Boolean)
-    .length;
+const countActiveFilters = ({ date, clientIds, eventTypeIds, methods }: PaymentsFilters) =>
+  [
+    date?.preset || date?.from || date?.to,
+    clientIds?.length,
+    eventTypeIds?.length,
+    methods?.length,
+  ].filter(Boolean).length;
 
 export function PaymentsTable() {
   const { t } = useTranslation('payments');
@@ -38,7 +37,14 @@ export function PaymentsTable() {
   });
   const columns = usePaymentsColumns();
 
-  const { data, isLoading, isPlaceholderData } = usePaymentsList({ ...table.query, ...filters });
+  const { date, ...listFilters } = filters;
+  const { from: dateFrom, to: dateTo } = resolveDateRange(date ?? {}, true);
+  const { data, isLoading, isPlaceholderData } = usePaymentsList({
+    ...table.query,
+    ...listFilters,
+    dateFrom,
+    dateTo,
+  });
   const total = paginationOf(data)?.total;
   const search = table.query.search;
   const activeFilters = countActiveFilters(filters);

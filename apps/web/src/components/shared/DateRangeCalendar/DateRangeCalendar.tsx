@@ -38,8 +38,8 @@ export function DateRangeCalendar({ value, onChange, disabledDate }: DateRangeCa
   // between them, reaching only the middle of the end cells.
   const rangeClass = (day: Dayjs) => {
     const { from, to } = value;
-    if (!from || !day.isSame(panel, 'month')) return '';
-    const isFrom = day.isSame(from, 'day');
+    if (!day.isSame(panel, 'month')) return '';
+    const isFrom = !!from && day.isSame(from, 'day');
     const isTo = !!to && day.isSame(to, 'day');
     const solid = '*:bg-primary *:text-white';
     if (isFrom && isTo) return solid;
@@ -49,9 +49,11 @@ export function DateRangeCalendar({ value, onChange, disabledDate }: DateRangeCa
         : solid;
     }
     if (isTo) {
-      return `${solid} *:rounded-l-none bg-linear-to-l from-transparent from-50% to-primary/15 to-50%`;
+      return from
+        ? `${solid} *:rounded-l-none bg-linear-to-l from-transparent from-50% to-primary/15 to-50%`
+        : solid;
     }
-    return to && day.isAfter(from, 'day') && day.isBefore(to, 'day') ? 'bg-primary/15' : '';
+    return from && to && day.isAfter(from, 'day') && day.isBefore(to, 'day') ? 'bg-primary/15' : '';
   };
 
   const field = (end: RangeEnd) => {
@@ -78,7 +80,7 @@ export function DateRangeCalendar({ value, onChange, disabledDate }: DateRangeCa
         {field('to')}
       </div>
       <Calendar
-        className="mach-range-calendar"
+        className="mach-picked-calendar"
         fullscreen={false}
         value={panel}
         onPanelChange={setPanel}

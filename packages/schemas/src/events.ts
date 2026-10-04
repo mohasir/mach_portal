@@ -21,19 +21,17 @@ export const eventsCalendarQuerySchema = z.object({
 });
 export type EventsCalendarQuery = z.infer<typeof eventsCalendarQuerySchema>;
 
-const pad2 = (n: number) => String(n).padStart(2, '0');
-/** Today's calendar date (YYYY-MM-DD) where the check runs; ISO dates compare as strings. */
-const todayIso = () => {
-  const now = new Date();
-  return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
-};
+// The latest calendar date anywhere on Earth (UTC+14). This schema runs on both the client and
+// the server, which can sit in different zones, so "not in the future" is judged against the date
+// no user can be ahead of. The web's date picker still blocks days after the user's own today.
+const latestTodayIso = () =>
+  new Date(Date.now() + 14 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 export const registerEventPaymentSchema = z.object({
   method: paymentMethodSchema,
   amount: z.number().int().positive('events.validation.amountRequired'),
-  // A payment records money already received. The API runs on UTC, which is ahead of US clients,
-  // so a payment dated "today" on the client never fails the server-side check.
-  paidAt: z.iso.date().refine((date) => date <= todayIso(), 'events.validation.paidAtFuture'),
+  // A payment records money already received, so it can't be dated in the future.
+  paidAt: z.iso.date().refine((date) => date <= latestTodayIso(), 'events.validation.paidAtFuture'),
   reference: optionalText(120),
   notes: optionalText(500),
 });

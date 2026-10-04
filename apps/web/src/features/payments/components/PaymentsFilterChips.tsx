@@ -25,8 +25,8 @@ export function PaymentsFilterChips({ filters, onChange }: PaymentsFilterChipsPr
       <FilterChipDateRange
         label={t('filters.date')}
         disableFuture
-        value={{ from: filters.dateFrom, to: filters.dateTo }}
-        onChange={({ from, to }) => onChange({ dateFrom: from, dateTo: to })}
+        value={filters.date ?? {}}
+        onChange={(date) => onChange({ date })}
       />
       <FilterChipSelect
         label={t('filters.client')}

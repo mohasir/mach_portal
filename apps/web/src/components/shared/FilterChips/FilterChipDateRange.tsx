@@ -8,45 +8,13 @@ import { DateRangeCalendar, type DateRange } from '@/components/shared/DateRange
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { FilterChipPanel } from './FilterChipPanel';
 import { FilterPanelHeader } from './FilterPanelHeader';
+import { DATE_RANGE_PRESETS, presetRange, toIsoRange } from './dateRange';
 import type { DateRangeValue } from './types';
 
-const ISO_DATE = 'YYYY-MM-DD';
-
-type PresetKey = 'today' | 'last7Days' | 'thisMonth' | 'lastMonth';
-
-const PRESET_KEYS: PresetKey[] = ['today', 'last7Days', 'thisMonth', 'lastMonth'];
-
-/** With `disableFuture`, ranges that would reach past today stop at today instead. */
-function presetRange(key: PresetKey, disableFuture: boolean): DateRange {
-  const today = dayjs();
-  switch (key) {
-    case 'today':
-      return { from: today, to: today };
-    case 'last7Days':
-      return { from: today.subtract(6, 'day'), to: today };
-    case 'thisMonth':
-      return { from: today.startOf('month'), to: disableFuture ? today : today.endOf('month') };
-    case 'lastMonth':
-      return {
-        from: today.subtract(1, 'month').startOf('month'),
-        to: today.subtract(1, 'month').endOf('month'),
-      };
-  }
-}
-
-const toValue = ({ from, to }: DateRange): DateRangeValue => ({
-  from: from?.format(ISO_DATE),
-  to: to?.format(ISO_DATE),
-});
 const toRange = ({ from, to }: DateRangeValue): DateRange => ({
   from: from ? dayjs(from) : null,
   to: to ? dayjs(to) : null,
 });
-const presetOf = (range: DateRangeValue, disableFuture: boolean) =>
-  PRESET_KEYS.find((key) => {
-    const preset = toValue(presetRange(key, disableFuture));
-    return preset.from === range.from && preset.to === range.to;
-  });
 
 interface FilterChipDateRangeProps {
   /** Chip text while no range is set; also the panel title. */
@@ -73,8 +41,8 @@ export function FilterChipDateRange({
   const [custom, setCustom] = useState(false);
   const [draft, setDraft] = useState<DateRange>(() => toRange(value));
 
-  const hasValue = !!(value.from || value.to);
-  const appliedPreset = presetOf(value, disableFuture);
+  const appliedPreset = value.preset;
+  const hasValue = !!(appliedPreset || value.from || value.to);
 
   const chipLabel = appliedPreset
     ? t(`filters.datePresets.${appliedPreset}`)
@@ -88,7 +56,7 @@ export function FilterChipDateRange({
 
   const onOpenChange = (next: boolean) => {
     if (next) {
-      setDraft(toRange(value));
+      setDraft(appliedPreset ? presetRange(appliedPreset, disableFuture) : toRange(value));
       // A range that isn't a preset reopens where it was made.
       setCustom(hasValue && !appliedPreset);
     }
@@ -124,11 +92,11 @@ export function FilterChipDateRange({
             }`}
             aria-hidden={custom}
           >
-            {PRESET_KEYS.map((key) => (
+            {DATE_RANGE_PRESETS.map((key) => (
               <button
                 key={key}
                 type="button"
-                onClick={() => applyRange(toValue(presetRange(key, disableFuture)))}
+                onClick={() => applyRange({ preset: key })}
                 className={`h-12 cursor-pointer rounded-lg px-4 text-left transition-colors ${
                   appliedPreset === key
                     ? 'bg-primary/10 font-medium text-primary'
@@ -172,7 +140,7 @@ export function FilterChipDateRange({
                 type="primary"
                 block
                 disabled={!draft.from}
-                onClick={() => applyRange(toValue(draft))}
+                onClick={() => applyRange(toIsoRange(draft))}
               >
                 {t('filters.apply')}
               </Button>
