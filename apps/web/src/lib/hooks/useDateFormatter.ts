@@ -10,21 +10,15 @@ import {
   formatMonthYear,
   formatRelative,
   formatTime,
-  formatTimeHourMinute,
-  formatTimeMeridiem,
   TIME_DISPLAY_FORMAT,
   type DateInput,
 } from '@/lib/date';
-import { useUserPreferences } from '@/features/settings';
 import { useLocaleStore } from '@/lib/stores/locale.store';
-import type { Locale as AppLocale } from '@/lib/i18n/config';
+import { useTimeFormatStore } from '@/lib/stores/timeFormat.store';
 
 export function useDateFormatter() {
-  const locale = useLocaleStore((s) => s.locale) as AppLocale;
-  // Read-only from the cache: SettingsProvider fetches it once signed in, so formatters used on
-  // public pages don't fire an unauthenticated request.
-  const { data: preferences } = useUserPreferences(false);
-  const timeFormat = preferences?.timeFormat ?? '12h';
+  const locale = useLocaleStore((s) => s.locale);
+  const timeFormat = useTimeFormatStore((s) => s.timeFormat);
 
   return useMemo(
     () => ({
@@ -43,10 +37,6 @@ export function useDateFormatter() {
       /** dayjs format string for time inputs (TimePicker `format`). */
       timeInputFormat: TIME_DISPLAY_FORMAT[timeFormat],
       is12h: timeFormat === '12h',
-      /** "12:30" */
-      timeHourMinute: (value: string) => formatTimeHourMinute(value),
-      /** "pm" */
-      timeMeridiem: (value: string) => formatTimeMeridiem(value),
       /** "12" */
       dayOfMonth: (value: DateInput) => formatDayOfMonth(value, locale),
       /** "Jan" */

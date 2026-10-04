@@ -16,7 +16,7 @@ import { SettingsProvider } from './SettingsProvider';
 const ANTD_LOCALES: Record<Locale, typeof esES> = { es: esES, en: enUS };
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
-  const locale = useLocaleStore((s) => s.locale) as Locale;
+  const locale = useLocaleStore((s) => s.locale);
 
   // i18next boots on the default locale; this applies the persisted one and every later change.
   useEffect(() => {

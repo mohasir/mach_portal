@@ -37,7 +37,7 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
   const { t } = useTranslation('quotes');
   const { state, setFields } = useQuoteBuilder();
   const { data: config } = useConfig();
-  const { timeInputFormat, is12h } = useDateFormatter();
+  const { timeInputFormat } = useDateFormatter();
   const [form] = Form.useForm<EventFormValues>();
   const eventDate = Form.useWatch('eventDate', form);
   const eventTime = Form.useWatch('eventTime', form);
@@ -155,9 +155,6 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
       <AutoCloseTimePicker
         className="w-full"
         format={timeInputFormat}
-        // Auto-close fires once hour and minute are picked, which would shut the panel before
-        // the am/pm column can be used.
-        closeStrategy={is12h ? 'confirm' : 'complete'}
         minuteStep={15}
         classNames={{ popup: { content: 'min-w-[150px]' } }}
         disabledTime={disabledTime}

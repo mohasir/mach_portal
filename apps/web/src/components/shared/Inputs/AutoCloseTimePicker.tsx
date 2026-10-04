@@ -11,7 +11,10 @@ interface AutoCloseTimePickerProps extends AntTimePickerProps {
   closeStrategy?: TimePickerCloseStrategy;
 }
 
-type TimeUnit = 'hour' | 'minute' | 'second';
+type TimeUnit = 'hour' | 'minute' | 'second' | 'meridiem';
+
+const isMeridiemFormat = (format: AntTimePickerProps['format']) =>
+  typeof format === 'string' && /a/i.test(format);
 
 function getUnits(format: AntTimePickerProps['format']): TimeUnit[] {
   if (typeof format !== 'string') return ['hour', 'minute'];
@@ -19,6 +22,8 @@ function getUnits(format: AntTimePickerProps['format']): TimeUnit[] {
   if (/[Hh]/.test(format)) units.push('hour');
   if (/m/.test(format)) units.push('minute');
   if (/s/.test(format)) units.push('second');
+  // A 12h panel has an am/pm column; closing before it's used would lock in the wrong half.
+  if (isMeridiemFormat(format)) units.push('meridiem');
   return units.length ? units : ['hour', 'minute'];
 }
 
@@ -78,7 +83,13 @@ export function AutoCloseTimePicker({
     }
 
     const { prev, touched } = touchRef.current;
-    if (next.hour() !== prev.hour()) touched.add('hour');
+    if (isMeridiemFormat(format)) {
+      // Switching am/pm moves the hour by 12; only a change within the half is an hour pick.
+      if (next.hour() % 12 !== prev.hour() % 12) touched.add('hour');
+      if (next.hour() < 12 !== prev.hour() < 12) touched.add('meridiem');
+    } else if (next.hour() !== prev.hour()) {
+      touched.add('hour');
+    }
     if (next.minute() !== prev.minute()) touched.add('minute');
     if (next.second() !== prev.second()) touched.add('second');
     touchRef.current.prev = next;

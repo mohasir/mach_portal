@@ -4,7 +4,6 @@ import { App, Button, Form, Select, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
   LOCALES,
-  localeSchema,
   TIME_FORMATS,
   type AppLocale,
   type TimeFormat,
@@ -39,7 +38,7 @@ export function UserPreferencesCard() {
 
   const initialValues: UserPreferencesFormValues | undefined = data
     ? {
-        locale: data.locale ?? localeSchema.catch('es').parse(currentLocale),
+        locale: data.locale ?? currentLocale,
         timeFormat: data.timeFormat,
       }
     : undefined;
