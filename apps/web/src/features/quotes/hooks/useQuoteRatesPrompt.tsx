@@ -9,24 +9,30 @@ import { useCan } from '@/lib/auth/useCan';
 import { useApiError } from '@/lib/error/useApiError';
 import { useTRPC } from '@/lib/trpc/client';
 
-/** Where the question comes up: opening the quote, or moving it out of Pending. */
-export type QuoteRatesPromptMode = 'open' | 'move';
-
 const RATE_KEYS: (keyof QuoteRates)[] = ['taxRate', 'cardSurchargeRate'];
 
 const formatRate = (rate: number) => `${Math.round(rate * 100000) / 1000}%`;
 
-function RateDriftContent({ drift }: { drift: QuoteRateDrift }) {
+function RateDriftContent({
+  drift,
+  changed,
+}: {
+  drift: QuoteRateDrift;
+  changed: (keyof QuoteRates)[];
+}) {
   const { t } = useTranslation('quotes');
+  const single = changed.length === 1 ? changed[0] : undefined;
   return (
     <span className="flex flex-col gap-2">
-      <span>{t('rateDrift.content')}</span>
-      {RATE_KEYS.filter((key) => drift.saved[key] !== drift.current[key]).map((key) => (
-        <span key={key} className="font-medium text-foreground">
-          {t(`rateDrift.${key}`)}: {formatRate(drift.saved[key])} → {formatRate(drift.current[key])}
+      {changed.map((key) => (
+        <span key={key} className="flex flex-col gap-1">
+          <span>{t(`rateDrift.${key}.saved`, { rate: formatRate(drift.saved[key]) })}</span>
+          <span className="font-medium text-foreground">
+            {t(`rateDrift.${key}.current`, { rate: formatRate(drift.current[key]) })}
+          </span>
         </span>
       ))}
-      <span>{t('rateDrift.totalWarning')}</span>
+      <span>{t(`rateDrift.${single ?? 'both'}.totalWarning`)}</span>
     </span>
   );
 }
@@ -51,7 +57,7 @@ export function useQuoteRatesPrompt() {
     }),
   );
 
-  const promptRates = async (quoteId: string, mode: QuoteRatesPromptMode) => {
+  const promptRates = async (quoteId: string) => {
     if (!can({ [RESOURCES.QUOTE]: [ACTIONS.UPDATE] })) return true;
 
     let drift: QuoteRateDrift | null;
@@ -66,6 +72,9 @@ export function useQuoteRatesPrompt() {
     }
     if (!drift) return true;
     const changes = drift;
+    const changed = RATE_KEYS.filter((key) => changes.saved[key] !== changes.current[key]);
+    // One rate: the buttons name the values, so the choice reads at a glance.
+    const single = changed.length === 1 ? changed[0] : undefined;
 
     return new Promise<boolean>((done) => {
       const answer = (accept: boolean) =>
@@ -76,10 +85,14 @@ export function useQuoteRatesPrompt() {
       confirm({
         type: 'warning',
         dismissible: false,
-        title: t('rateDrift.title'),
-        content: <RateDriftContent drift={changes} />,
-        okText: t(`rateDrift.${mode}.accept`),
-        cancelText: t(`rateDrift.${mode}.keep`),
+        title: t(`rateDrift.${single ?? 'both'}.title`),
+        content: <RateDriftContent drift={changes} changed={changed} />,
+        okText: single
+          ? t('rateDrift.apply', { rate: formatRate(changes.current[single]) })
+          : t('rateDrift.both.apply'),
+        cancelText: single
+          ? t('rateDrift.keep', { rate: formatRate(changes.saved[single]) })
+          : t('rateDrift.both.keep'),
         onOk: () => void answer(true),
         onCancel: () => void answer(false),
       });
@@ -100,7 +113,7 @@ export function useQuoteRatesCheckOnOpen(
     if (!quote || quote.stageId !== QUOTE_STAGE.PENDING || quote.isArchived) return;
     if (checkedFor.current === quote.id) return;
     checkedFor.current = quote.id;
-    void promptRates(quote.id, 'open');
+    void promptRates(quote.id);
   }, [quote, promptRates]);
 
   return ratesContextHolder;

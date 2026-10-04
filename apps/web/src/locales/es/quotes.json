@@ -86,7 +86,7 @@
       "longDistance": "Cargo por larga distancia",
       "longDistanceHint": "Sugerido según la tasa del estado ({{rate}}%) — se puede ajustar",
       "cardSurcharge": "Recargo tarjeta/cheque",
-      "cardSurchargeHint": "Agrega un {{rate}}% sobre el total de la cotización",
+      "cardSurchargeHint": "Agrega un {{rate}}% al total de la cotización cuando el cliente paga con tarjeta o cheque.",
       "notes": "Notas",
       "internalNotesLabel": "Notas internas",
       "internalNotesPlaceholder": "Solo visible para tu equipo",
@@ -240,18 +240,25 @@
     "includeArchivedCaption": "Muestra también las cotizaciones archivadas: en la tabla y en una columna propia del pipeline."
   },
   "rateDrift": {
-    "title": "Cambiaron las tasas configuradas",
-    "content": "Desde que se guardó esta cotización cambiaron las tasas de la configuración:",
-    "taxRate": "Impuesto del estado",
-    "cardSurchargeRate": "Recargo por tarjeta",
-    "totalWarning": "Si las actualizas, el total y el depósito de la cotización van a cambiar.",
-    "open": {
-      "accept": "Actualizar",
-      "keep": "Mantener las guardadas"
+    "taxRate": {
+      "title": "El impuesto del estado cambió",
+      "saved": "Esta cotización se guardó cuando el impuesto del estado era del {{rate}}.",
+      "current": "Ahora el impuesto es del {{rate}}.",
+      "totalWarning": "Si aplicas el nuevo impuesto, el total y el depósito de la cotización cambiarán."
     },
-    "move": {
-      "accept": "Actualizar y mover",
-      "keep": "Mover sin actualizar"
-    }
+    "cardSurchargeRate": {
+      "title": "El recargo por tarjeta cambió",
+      "saved": "Esta cotización se guardó cuando el recargo por tarjeta era del {{rate}}.",
+      "current": "Ahora el recargo es del {{rate}}.",
+      "totalWarning": "Si aplicas el nuevo recargo, el total y el depósito de la cotización cambiarán."
+    },
+    "both": {
+      "title": "Cambiaron el impuesto y el recargo por tarjeta",
+      "totalWarning": "Si aplicas los nuevos valores, el total y el depósito de la cotización cambiarán.",
+      "keep": "Conservar los actuales",
+      "apply": "Aplicar los nuevos"
+    },
+    "keep": "Conservar {{rate}}",
+    "apply": "Aplicar {{rate}}"
   }
 }

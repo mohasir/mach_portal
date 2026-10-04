@@ -37,7 +37,7 @@ export function useQuoteStageGuard() {
 
     const commit = async () => {
       if (to === QUOTE_STAGE.QUOTED && from === QUOTE_STAGE.PENDING) {
-        if (!(await promptRates(quoteId, 'move'))) return;
+        if (!(await promptRates(quoteId))) return;
       }
       return commitTransition();
     };

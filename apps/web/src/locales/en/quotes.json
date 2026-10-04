@@ -86,7 +86,7 @@
       "longDistance": "Long distance fee",
       "longDistanceHint": "Suggested from the state's tax rate ({{rate}}%) — override as needed",
       "cardSurcharge": "Card/check surcharge",
-      "cardSurchargeHint": "Adds {{rate}}% on top of the quote total",
+      "cardSurchargeHint": "Adds {{rate}}% to the quote total when the client pays by card or check.",
       "notes": "Notes",
       "internalNotesLabel": "Internal notes",
       "internalNotesPlaceholder": "Only visible to your team",
@@ -240,18 +240,25 @@
     "includeArchivedCaption": "Also lists archived quotes: in the table and in their own pipeline column."
   },
   "rateDrift": {
-    "title": "Configured rates changed",
-    "content": "The configured rates changed since this quote was saved:",
-    "taxRate": "State tax",
-    "cardSurchargeRate": "Card surcharge",
-    "totalWarning": "Updating them changes the quote's total and deposit.",
-    "open": {
-      "accept": "Update",
-      "keep": "Keep saved rates"
+    "taxRate": {
+      "title": "The state tax changed",
+      "saved": "This quote was saved when the state tax was {{rate}}.",
+      "current": "The tax is now {{rate}}.",
+      "totalWarning": "Applying the new tax changes the quote's total and deposit."
     },
-    "move": {
-      "accept": "Update and move",
-      "keep": "Move without updating"
-    }
+    "cardSurchargeRate": {
+      "title": "The card surcharge changed",
+      "saved": "This quote was saved when the card surcharge was {{rate}}.",
+      "current": "The surcharge is now {{rate}}.",
+      "totalWarning": "Applying the new surcharge changes the quote's total and deposit."
+    },
+    "both": {
+      "title": "The tax and card surcharge changed",
+      "totalWarning": "Applying the new values changes the quote's total and deposit.",
+      "keep": "Keep current ones",
+      "apply": "Apply new ones"
+    },
+    "keep": "Keep {{rate}}",
+    "apply": "Apply {{rate}}"
   }
 }
