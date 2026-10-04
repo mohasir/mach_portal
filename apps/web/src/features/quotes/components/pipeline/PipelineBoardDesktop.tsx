@@ -17,10 +17,16 @@ import { QuoteCardPreview } from './QuoteCardPreview';
 interface PipelineBoardDesktopProps {
   data: QuoteBoard;
   orderedIds: QuoteStageId[];
+  highlightedId?: string;
   onMove: (id: string, from: QuoteStageId, to: QuoteStageId, isDraft: boolean) => void;
 }
 
-export function PipelineBoardDesktop({ data, orderedIds, onMove }: PipelineBoardDesktopProps) {
+export function PipelineBoardDesktop({
+  data,
+  orderedIds,
+  highlightedId,
+  onMove,
+}: PipelineBoardDesktopProps) {
   const [activeCard, setActiveCard] = useState<QuoteCardType | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -49,7 +55,12 @@ export function PipelineBoardDesktop({ data, orderedIds, onMove }: PipelineBoard
     >
       <div className="grid h-full auto-rows-fr grid-cols-1 gap-4 lg:grid-cols-4">
         {orderedIds.map((stageId) => (
-          <PipelineColumn key={stageId} stageId={stageId} cards={data[stageId]} />
+          <PipelineColumn
+            key={stageId}
+            stageId={stageId}
+            cards={data[stageId]}
+            highlightedId={highlightedId}
+          />
         ))}
       </div>
       <DragOverlay>{activeCard ? <QuoteCardPreview card={activeCard} /> : null}</DragOverlay>

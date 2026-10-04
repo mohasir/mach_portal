@@ -146,17 +146,28 @@ export const checkQuoteAvailabilitySchema = z.object({
 export type CheckQuoteAvailabilityQuery = z.infer<typeof checkQuoteAvailabilitySchema>;
 
 // ── list / board queries ──
+// Filters that mean the same thing on the list and the pipeline board, so the quotes page can
+// share one filter bar between both views. Each list matches any of its values.
+export const quotesFiltersSchema = listQuerySchema.pick({ search: true }).extend({
+  states: z.array(stateSchema).optional(),
+  assignedToIds: z.array(z.string()).optional(),
+  eventTypeIds: z.array(z.uuid()).optional(),
+  /** true: drafts only; omitted: drafts and finished quotes alike. */
+  isDraft: z.boolean().optional(),
+});
+export type QuotesFilters = z.infer<typeof quotesFiltersSchema>;
+
 export const quotesListQuerySchema = listQuerySchema.extend({
+  ...quotesFiltersSchema.shape,
   sortBy: z.enum(['number', 'eventDate', 'total', 'stage', 'createdAt']).default('createdAt'),
   month: z.number().int().min(1).max(12).optional(),
   year: z.number().int().optional(),
   stageId: quoteStageIdSchema.optional(),
-  state: stateSchema.optional(),
   clientId: z.uuid().optional(),
 });
 export type QuotesListQuery = z.infer<typeof quotesListQuerySchema>;
 
-export const quotesBoardQuerySchema = z.object({
+export const quotesBoardQuerySchema = quotesFiltersSchema.extend({
   month: z.number().int().min(1).max(12).optional(),
   year: z.number().int().optional(),
 });

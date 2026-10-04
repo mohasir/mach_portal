@@ -55,5 +55,8 @@
     "period": "AM/PM",
     "prevMonth": "Previous month",
     "nextMonth": "Next month"
+  },
+  "filters": {
+    "clearAll": "Clear all"
   }
 }

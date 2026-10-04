@@ -14,9 +14,10 @@ import { QuoteCardBody } from './QuoteCardBody';
 interface QuoteCardProps {
   card: QuoteCardType;
   draggable?: boolean;
+  highlighted?: boolean;
 }
 
-export function QuoteCard({ card, draggable }: QuoteCardProps) {
+export function QuoteCard({ card, draggable, highlighted }: QuoteCardProps) {
   const { t: tc } = useTranslation('common');
   const router = useRouter();
   const rowActions = useQuoteRowActions();
@@ -33,7 +34,9 @@ export function QuoteCard({ card, draggable }: QuoteCardProps) {
     <Card
       ref={draggable ? setNodeRef : undefined}
       size="small"
-      className={isDragging ? 'opacity-40' : 'cursor-pointer'}
+      className={`${isDragging ? 'opacity-40' : 'cursor-pointer'} ${
+        highlighted ? 'animate-ripple outline-2 -outline-offset-2 outline-primary/50' : ''
+      }`}
       onClick={() =>
         router.push(
           stageId === QUOTE_STAGE.PENDING

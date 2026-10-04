@@ -12,8 +12,14 @@
     "total": "Total"
   },
   "filters": {
-    "stage": "Quote stage",
-    "state": "State (US)"
+    "state": "State",
+    "button": "Filters",
+    "clear": "Clear filters",
+    "assignee": "Assignee",
+    "eventType": "Event type",
+    "drafts": "Drafts",
+    "me": "Me",
+    "clearSearch": "Clear search"
   },
   "archive": {
     "action": "Archive",

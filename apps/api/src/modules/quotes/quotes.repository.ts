@@ -20,6 +20,7 @@ import {
   type QuoteLineInput,
   type QuoteStageId,
   type QuotesBoardQuery,
+  type QuotesFilters,
   type QuotesListQuery,
 } from '@repo/schemas';
 import type { Database } from '../../db';
@@ -75,16 +76,13 @@ export class QuotesRepository {
   }
 
   async findPaginated(query: QuotesListQuery, ownerId?: string) {
-    const { search, sortBy, sortDir, month, year, stageId, state, clientId } = query;
+    const { sortBy, sortDir, month, year, stageId, clientId } = query;
     const where = and(
       isNull(quotes.archivedAt),
-      search
-        ? or(ilike(quotes.number, `%${search}%`), ilike(clients.name, `%${search}%`))
-        : undefined,
+      this.filtersWhere(query),
       month ? sql`extract(month from ${quotes.eventDate}) = ${month}` : undefined,
       year ? sql`extract(year from ${quotes.eventDate}) = ${year}` : undefined,
       stageId ? eq(quotes.stageId, stageId) : undefined,
-      state ? eq(quotes.state, state) : undefined,
       clientId ? eq(quotes.clientId, clientId) : undefined,
       this.ownerFilter(ownerId),
     );
@@ -303,9 +301,17 @@ export class QuotesRepository {
         .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id));
 
     const ownerWhere = this.ownerFilter(ownerId);
+    const filtersWhere = this.filtersWhere(query);
     const [openRows, terminalRows] = await Promise.all([
       baseSelect()
-        .where(and(inArray(quotes.stageId, OPEN_STAGES), isNull(quotes.archivedAt), ownerWhere))
+        .where(
+          and(
+            inArray(quotes.stageId, OPEN_STAGES),
+            isNull(quotes.archivedAt),
+            filtersWhere,
+            ownerWhere,
+          ),
+        )
         .orderBy(desc(quotes.createdAt)),
       baseSelect()
         .where(
@@ -314,6 +320,7 @@ export class QuotesRepository {
             isNull(quotes.archivedAt),
             sql`extract(month from ${quotes.updatedAt}) = ${month}`,
             sql`extract(year from ${quotes.updatedAt}) = ${year}`,
+            filtersWhere,
             ownerWhere,
           ),
         )
@@ -323,6 +330,19 @@ export class QuotesRepository {
     const rows = [...openRows, ...terminalRows];
     const lineCounts = await this.countLinesByQuote(rows.map((r) => r.id));
     return rows.map((row) => ({ ...row, linesCount: lineCounts.get(row.id) ?? 0 }));
+  }
+
+  // Both the list and the board join `clients`, which the search matches against.
+  private filtersWhere({ search, states, assignedToIds, eventTypeIds, isDraft }: QuotesFilters) {
+    return and(
+      search
+        ? or(ilike(quotes.number, `%${search}%`), ilike(clients.name, `%${search}%`))
+        : undefined,
+      states?.length ? inArray(quotes.state, states) : undefined,
+      assignedToIds?.length ? inArray(quotes.assignedToId, assignedToIds) : undefined,
+      eventTypeIds?.length ? inArray(quotes.eventTypeId, eventTypeIds) : undefined,
+      isDraft !== undefined ? eq(quotes.isDraft, isDraft) : undefined,
+    );
   }
 
   private async countLinesByQuote(quoteIds: string[]) {

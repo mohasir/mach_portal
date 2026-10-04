@@ -1,5 +1,5 @@
 'use client';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { App } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
@@ -34,7 +34,7 @@ function moveCard(board: QuoteBoard, id: string, toStage: QuoteStageId): QuoteBo
 
 export function usePipelineBoard(query: QuotesBoardQuery) {
   const trpc = useTRPC();
-  return useQuery(trpc.quotes.board.queryOptions(query));
+  return useQuery({ ...trpc.quotes.board.queryOptions(query), placeholderData: keepPreviousData });
 }
 
 /** `updateStage`/`approve`/`cancel` with an optimistic move on the board cache (mach-bar-flows.md §3.3). */

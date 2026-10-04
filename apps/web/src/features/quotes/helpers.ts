@@ -1,8 +1,17 @@
 import type { LucideIcon } from 'lucide-react';
-import type { CreateQuoteInput, QuoteLineInput } from '@repo/schemas';
+import type { CreateQuoteInput, QuoteLineInput, QuotesFilters } from '@repo/schemas';
 import { DEFAULT_STATION_ICON, STATION_ICON_RULES } from './constants';
 import type { LineDraft, QuoteBuilderState } from './hooks/useQuoteBuilder';
 import type { QuoteDetail } from './types';
+
+/** Filter-bar criteria in use; search is left out since it has its own field. */
+export const countActiveFilters = ({
+  states,
+  assignedToIds,
+  eventTypeIds,
+  isDraft,
+}: QuotesFilters) =>
+  [states?.length, assignedToIds?.length, eventTypeIds?.length, isDraft].filter(Boolean).length;
 
 export const nextLineKey = (): string =>
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;

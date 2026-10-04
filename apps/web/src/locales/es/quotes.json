@@ -12,8 +12,14 @@
     "total": "Total"
   },
   "filters": {
-    "stage": "Estado de la cotización",
-    "state": "Estado (US)"
+    "state": "Estado",
+    "button": "Filtros",
+    "clear": "Limpiar filtros",
+    "assignee": "Asignado a",
+    "eventType": "Tipo de evento",
+    "drafts": "Borradores",
+    "me": "Yo",
+    "clearSearch": "Limpiar búsqueda"
   },
   "archive": {
     "action": "Archivar",

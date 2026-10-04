@@ -14,10 +14,16 @@ import { QuoteCard } from './QuoteCard';
 interface PipelineColumnProps {
   stageId: QuoteStageId;
   cards: QuoteCardType[];
+  highlightedId?: string;
   draggable?: boolean;
 }
 
-export function PipelineColumn({ stageId, cards, draggable = true }: PipelineColumnProps) {
+export function PipelineColumn({
+  stageId,
+  cards,
+  highlightedId,
+  draggable = true,
+}: PipelineColumnProps) {
   const { stageMap } = useQuoteStages();
   const stage = stageMap.get(stageId);
   const { setNodeRef, isOver } = useDroppable({ id: stageId, disabled: !draggable });
@@ -72,7 +78,14 @@ export function PipelineColumn({ stageId, cards, draggable = true }: PipelineCol
           {cards.length === 0 ? (
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={false} className="my-4" />
           ) : (
-            cards.map((card) => <QuoteCard key={card.id} card={card} draggable={draggable} />)
+            cards.map((card) => (
+              <QuoteCard
+                key={card.id}
+                card={card}
+                draggable={draggable}
+                highlighted={card.id === highlightedId}
+              />
+            ))
           )}
         </div>
       </OverlayScrollbarsComponent>

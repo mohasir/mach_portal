@@ -1,8 +1,8 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Tabs } from 'antd';
-import { Columns3, Plus, Table2 } from 'lucide-react';
+import { Divider } from 'antd';
+import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -11,11 +11,11 @@ import { useLayoutStore } from '@/lib/stores/layout.store';
 import { PipelineBoard } from '../pipeline/PipelineBoard';
 import { useQuotesViewStore, type QuotesViewTab } from '../../quotesView.store';
 import { QuotesTable } from './QuotesTable';
-import type { Quote } from '../../types';
+import { QuotesToolbar } from './QuotesToolbar';
+import type { Quote, QuotesPageFilters } from '../../types';
 
-const VALID_VIEWS: QuotesViewTab[] = ['pipeline', 'table'];
-const isValidView = (value: string | null): value is QuotesViewTab =>
-  VALID_VIEWS.includes(value as QuotesViewTab);
+const isView = (value: string | null, views: QuotesViewTab[]): value is QuotesViewTab =>
+  views.includes(value as QuotesViewTab);
 
 export function QuotesPage() {
   const { t } = useTranslation('quotes');
@@ -24,17 +24,28 @@ export function QuotesPage() {
   const can = useCan();
   const setFillViewport = useLayoutStore((s) => s.setFillViewport);
   const { activeTab, setActiveTab } = useQuotesViewStore();
+  const [filters, setFilters] = useState<QuotesPageFilters>({});
+  const [searching, setSearching] = useState(false);
+  const [total, setTotal] = useState<number>();
 
   const canCreate = can({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] });
   const onRowClick = (quote: Quote) => router.push(`/admin/quotes/${quote.id}`);
 
+  const views: QuotesViewTab[] = [
+    ...(can({ [RESOURCES.PIPELINE]: [ACTIONS.READ] }) ? (['pipeline'] as const) : []),
+    ...(can({ [RESOURCES.QUOTE]: [ACTIONS.READ] }) ? (['table'] as const) : []),
+  ];
   const paramView = searchParams.get('view');
-  const activeKey: QuotesViewTab = isValidView(paramView) ? paramView : activeTab;
-  const isPipelineActive = activeKey === 'pipeline';
+  const view: QuotesViewTab | undefined = isView(paramView, views)
+    ? paramView
+    : isView(activeTab, views)
+      ? activeTab
+      : views[0];
+  const isPipelineActive = view === 'pipeline';
 
-  const onChange = (key: string) => {
-    router.replace(`/admin/quotes?view=${key}`, { scroll: false });
-    setActiveTab(key as QuotesViewTab);
+  const onViewChange = (next: QuotesViewTab) => {
+    router.replace(`/admin/quotes?view=${next}`, { scroll: false });
+    setActiveTab(next);
   };
 
   useEffect(() => {
@@ -42,55 +53,60 @@ export function QuotesPage() {
     return () => setFillViewport(false);
   }, [isPipelineActive, setFillViewport]);
 
-  const items = [
-    can({ [RESOURCES.PIPELINE]: [ACTIONS.READ] }) && {
-      key: 'pipeline' as const,
-      label: t('pipeline.title'),
-      icon: <Columns3 size={16} />,
-      children: <PipelineBoard />,
-    },
-    can({ [RESOURCES.QUOTE]: [ACTIONS.READ] }) && {
-      key: 'table' as const,
-      label: t('title'),
-      icon: <Table2 size={16} />,
-      children: <QuotesTable onRowClick={onRowClick} />,
-    },
-  ].filter((item) => !!item);
-
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <Tabs
-        activeKey={activeKey}
-        onChange={onChange}
-        items={items}
-        className="min-h-0 flex-1"
-        classNames={{ body: 'h-full', content: 'h-full' }}
-        renderTabBar={(tabBarProps, DefaultTabBar) => (
-          <div
-            className={
-              isPipelineActive
-                ? undefined
-                : 'md:sticky md:top-0 md:z-10 md:-mx-8 md:-mt-8 md:bg-surface md:px-8 md:pt-8'
-            }
-          >
-            <PageHeader
-              title={t('title')}
-              actionLabel={canCreate ? t('index.add') : undefined}
-              onAction={canCreate ? () => router.push('/admin/quotes/new') : undefined}
-              mobileAction={
-                canCreate
-                  ? {
-                      icon: Plus,
-                      onClick: () => router.push('/admin/quotes/new'),
-                      ariaLabel: t('index.add'),
-                    }
-                  : undefined
-              }
-            />
-            <DefaultTabBar {...tabBarProps} />
-          </div>
+      <div
+        className={`pb-4 ${
+          isPipelineActive
+            ? ''
+            : 'md:sticky md:top-0 md:z-10 md:-mx-8 md:-mt-8 md:bg-surface md:px-8 md:pt-8'
+        }`}
+      >
+        <PageHeader
+          title={t('title')}
+          actionLabel={canCreate ? t('index.add') : undefined}
+          onAction={canCreate ? () => router.push('/admin/quotes/new') : undefined}
+          mobileAction={
+            canCreate
+              ? {
+                  icon: Plus,
+                  onClick: () => router.push('/admin/quotes/new'),
+                  ariaLabel: t('index.add'),
+                }
+              : undefined
+          }
+        />
+        {view && (
+          <QuotesToolbar
+            filters={filters}
+            onFiltersChange={setFilters}
+            searching={searching}
+            view={view}
+            views={views}
+            onViewChange={onViewChange}
+            total={total}
+          />
         )}
-      />
+        <Divider className="mt-3 mb-0 border-brown/30" />
+      </div>
+
+      <div className="min-h-0 flex-1">
+        {view === 'pipeline' && (
+          <PipelineBoard
+            filters={filters}
+            onSearchingChange={setSearching}
+            onTotalChange={setTotal}
+          />
+        )}
+        {view === 'table' && (
+          <QuotesTable
+            filters={filters}
+            onRowClick={onRowClick}
+            onSearchingChange={setSearching}
+            onTotalChange={setTotal}
+          />
+        )}
+      </div>
     </div>
   );
 }
