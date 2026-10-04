@@ -7,8 +7,11 @@ import {
   eq,
   ilike,
   inArray,
+  isNotNull,
   isNull,
+  lt,
   ne,
+  not,
   or,
   sql,
   type SQL,
@@ -20,6 +23,8 @@ import {
   type QuoteLineInput,
   type QuoteStageId,
   type QuotesBoardQuery,
+  type QuotesFilters,
+  type QuotesViewOptions,
   type QuotesListQuery,
 } from '@repo/schemas';
 import type { Database } from '../../db';
@@ -59,6 +64,20 @@ const sortColumns = {
 const OPEN_STAGES = [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED, QUOTE_STAGE.CONFIRMED] as const;
 const TERMINAL_STAGES = [QUOTE_STAGE.CANCELLED] as const;
 
+// Same rules as the web's isQuoteExpired/isQuotePastDue tags (day granularity). Archived quotes are out of the flow,
+// so they never count as stale. Wrapped in coalesce: a missing event date/validity makes the
+// comparison NULL, and NOT NULL would wrongly drop the row when stale quotes are hidden.
+const staleCondition = sql<boolean>`coalesce(${and(
+  isNull(quotes.archivedAt),
+  or(
+    and(
+      inArray(quotes.stageId, [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED]),
+      lt(quotes.eventDate, sql`current_date`),
+    ),
+    and(eq(quotes.stageId, QUOTE_STAGE.QUOTED), lt(quotes.validUntil, sql`current_date`)),
+  ),
+)}, false)`;
+
 const assignedToUser = alias(user, 'assigned_to_user');
 const assignmentFromUser = alias(user, 'assignment_from_user');
 const assignmentToUser = alias(user, 'assignment_to_user');
@@ -75,16 +94,13 @@ export class QuotesRepository {
   }
 
   async findPaginated(query: QuotesListQuery, ownerId?: string) {
-    const { search, sortBy, sortDir, month, year, stageId, state, clientId } = query;
+    const { sortBy, sortDir, month, year, stageId, clientId } = query;
     const where = and(
-      isNull(quotes.archivedAt),
-      search
-        ? or(ilike(quotes.number, `%${search}%`), ilike(clients.name, `%${search}%`))
-        : undefined,
+      this.archivedWhere(query),
+      this.filtersWhere(query),
       month ? sql`extract(month from ${quotes.eventDate}) = ${month}` : undefined,
       year ? sql`extract(year from ${quotes.eventDate}) = ${year}` : undefined,
       stageId ? eq(quotes.stageId, stageId) : undefined,
-      state ? eq(quotes.state, state) : undefined,
       clientId ? eq(quotes.clientId, clientId) : undefined,
       this.ownerFilter(ownerId),
     );
@@ -130,7 +146,7 @@ export class QuotesRepository {
     return row?.value ?? 0;
   }
 
-  async findById(id: string, ownerId?: string) {
+  async findById(id: string, ownerId?: string, includeArchived = false) {
     const [quoteRow] = await this.db
       .select({
         ...publicQuoteColumns,
@@ -146,7 +162,13 @@ export class QuotesRepository {
       .leftJoin(user, eq(quotes.createdById, user.id))
       .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id))
       .leftJoin(events, eq(events.quoteId, quotes.id))
-      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt), this.ownerFilter(ownerId)))
+      .where(
+        and(
+          eq(quotes.id, id),
+          includeArchived ? undefined : isNull(quotes.archivedAt),
+          this.ownerFilter(ownerId),
+        ),
+      )
       .limit(1);
     if (!quoteRow) return undefined;
 
@@ -303,26 +325,76 @@ export class QuotesRepository {
         .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id));
 
     const ownerWhere = this.ownerFilter(ownerId);
-    const [openRows, terminalRows] = await Promise.all([
-      baseSelect()
-        .where(and(inArray(quotes.stageId, OPEN_STAGES), isNull(quotes.archivedAt), ownerWhere))
-        .orderBy(desc(quotes.createdAt)),
-      baseSelect()
-        .where(
-          and(
-            inArray(quotes.stageId, TERMINAL_STAGES),
-            isNull(quotes.archivedAt),
-            sql`extract(month from ${quotes.updatedAt}) = ${month}`,
-            sql`extract(year from ${quotes.updatedAt}) = ${year}`,
-            ownerWhere,
-          ),
-        )
-        .orderBy(desc(quotes.createdAt)),
+    const filtersWhere = this.filtersWhere(query);
+    // Archived quotes get their own column instead of their stage's; with the "archived only"
+    // filter on, that column is all the board shows.
+    const onlyArchived = !!(query.includeArchived && query.archived);
+    const noRows = Promise.resolve([] as Awaited<ReturnType<typeof baseSelect>>);
+    const [openRows, terminalRows, archivedRows] = await Promise.all([
+      onlyArchived
+        ? noRows
+        : baseSelect()
+            .where(
+              and(
+                inArray(quotes.stageId, OPEN_STAGES),
+                isNull(quotes.archivedAt),
+                filtersWhere,
+                ownerWhere,
+              ),
+            )
+            .orderBy(desc(quotes.createdAt)),
+      onlyArchived
+        ? noRows
+        : baseSelect()
+            .where(
+              and(
+                inArray(quotes.stageId, TERMINAL_STAGES),
+                isNull(quotes.archivedAt),
+                sql`extract(month from ${quotes.updatedAt}) = ${month}`,
+                sql`extract(year from ${quotes.updatedAt}) = ${year}`,
+                filtersWhere,
+                ownerWhere,
+              ),
+            )
+            .orderBy(desc(quotes.createdAt)),
+      query.includeArchived
+        ? baseSelect()
+            .where(and(isNotNull(quotes.archivedAt), filtersWhere, ownerWhere))
+            .orderBy(desc(quotes.archivedAt))
+        : noRows,
     ]);
 
-    const rows = [...openRows, ...terminalRows];
+    const rows = [...openRows, ...terminalRows, ...archivedRows];
     const lineCounts = await this.countLinesByQuote(rows.map((r) => r.id));
     return rows.map((row) => ({ ...row, linesCount: lineCounts.get(row.id) ?? 0 }));
+  }
+
+  // Both the list and the board join `clients`, which the search matches against.
+  private archivedWhere({ includeArchived, archived }: QuotesFilters & QuotesViewOptions) {
+    if (!includeArchived) return isNull(quotes.archivedAt);
+    return archived ? isNotNull(quotes.archivedAt) : undefined;
+  }
+
+  private filtersWhere({
+    search,
+    states,
+    assignedToIds,
+    eventTypeIds,
+    isDraft,
+    stale,
+    hideStale,
+  }: QuotesFilters & QuotesViewOptions) {
+    return and(
+      search
+        ? or(ilike(quotes.number, `%${search}%`), ilike(clients.name, `%${search}%`))
+        : undefined,
+      states?.length ? inArray(quotes.state, states) : undefined,
+      assignedToIds?.length ? inArray(quotes.assignedToId, assignedToIds) : undefined,
+      eventTypeIds?.length ? inArray(quotes.eventTypeId, eventTypeIds) : undefined,
+      isDraft !== undefined ? eq(quotes.isDraft, isDraft) : undefined,
+      stale ? staleCondition : undefined,
+      hideStale && !search && !stale ? not(staleCondition) : undefined,
+    );
   }
 
   private async countLinesByQuote(quoteIds: string[]) {

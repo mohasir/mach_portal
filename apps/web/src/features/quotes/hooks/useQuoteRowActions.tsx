@@ -15,6 +15,7 @@ interface QuoteRowActionsRow {
   pdfUrl?: string | null;
   pdfGeneratedAt?: string | Date | null;
   eventId?: string | null;
+  isArchived?: boolean;
 }
 
 export function useQuoteRowActions() {
@@ -24,7 +25,10 @@ export function useQuoteRowActions() {
   const { canArchive } = useCanArchiveQuote();
 
   return (row: QuoteRowActionsRow): RowActionItem[] => {
-    const isEditable = row.stageId === QUOTE_STAGE.PENDING || row.stageId === QUOTE_STAGE.QUOTED;
+    // Archived quotes are read-only (no unarchive yet): no edit, and nothing left to archive.
+    const isEditable =
+      !row.isArchived &&
+      (row.stageId === QUOTE_STAGE.PENDING || row.stageId === QUOTE_STAGE.QUOTED);
 
     return [
       {
@@ -60,29 +64,33 @@ export function useQuoteRowActions() {
             },
           ] as RowActionItem[])
         : []),
-      { type: 'divider' },
-      {
-        key: 'archive',
-        label: t('archive.action'),
-        icon: <Archive size={16} />,
-        danger: true,
-        guard: { [RESOURCES.QUOTE]: [ACTIONS.DELETE] },
-        onClick: () => void archiveQuote(row.id),
-        confirm: {
-          title: t('archive.confirmTitle'),
-          content: t('archive.confirmContent', { number: row.number }),
-        },
-        validate: async () => {
-          const result = await canArchive(row.id);
-          return result.canArchive
-            ? { allowed: true }
-            : {
-                allowed: false,
-                title: t('archive.blockedTitle'),
-                content: t('archive.blockedContent'),
-              };
-        },
-      },
+      ...(row.isArchived
+        ? []
+        : ([
+            { type: 'divider' },
+            {
+              key: 'archive',
+              label: t('archive.action'),
+              icon: <Archive size={16} />,
+              danger: true,
+              guard: { [RESOURCES.QUOTE]: [ACTIONS.DELETE] },
+              onClick: () => void archiveQuote(row.id),
+              confirm: {
+                title: t('archive.confirmTitle'),
+                content: t('archive.confirmContent', { number: row.number }),
+              },
+              validate: async () => {
+                const result = await canArchive(row.id);
+                return result.canArchive
+                  ? { allowed: true }
+                  : {
+                      allowed: false,
+                      title: t('archive.blockedTitle'),
+                      content: t('archive.blockedContent'),
+                    };
+              },
+            },
+          ] as RowActionItem[])),
     ];
   };
 }

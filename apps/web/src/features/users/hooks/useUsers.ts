@@ -3,9 +3,13 @@ import type { CreateUserInput, UpdateUserInput, UsersListQuery } from '@repo/sch
 import { useTRPC } from '@/lib/trpc/client';
 import { useApiError } from '@/lib/error/useApiError';
 
-export function useUsersList(query: UsersListQuery) {
+export function useUsersList(query: UsersListQuery, enabled = true) {
   const trpc = useTRPC();
-  return useQuery({ ...trpc.users.list.queryOptions(query), placeholderData: keepPreviousData });
+  return useQuery({
+    ...trpc.users.list.queryOptions(query),
+    placeholderData: keepPreviousData,
+    enabled,
+  });
 }
 
 export function useCreateUser() {

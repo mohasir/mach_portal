@@ -1,13 +1,14 @@
 'use client';
-import { DatePicker, Form, Input, Select } from 'antd';
+import { Form, Input, Select } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { STATE_NAMES, stateSchema, type StateValue } from '@repo/schemas';
 import type { EventType } from '@/features/event-types';
-import { AutoCloseTimePicker } from '@/components/shared/Inputs/AutoCloseTimePicker';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { WrapperCard } from '@/components/shared/WrapperCard';
+import { WrapperDatePicker } from '@/components/shared/WrapperDatePicker';
+import { WrapperTimePicker } from '@/components/shared/WrapperTimePicker';
 import { useConfig } from '@/features/settings';
 import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 import CITIES_BY_STATE from '../../citiesByState.json';
@@ -138,7 +139,11 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
       hasFeedback={!!availabilityStatus}
       validateStatus={availabilityStatus}
     >
-      <DatePicker className="w-full" disabledDate={disabledDate} />
+      <WrapperDatePicker
+        className="w-full"
+        sheetTitle={t('builder.event.date')}
+        disabledDate={disabledDate}
+      />
     </Form.Item>
   );
 
@@ -149,9 +154,9 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
       hasFeedback={!!availabilityStatus}
       validateStatus={availabilityStatus}
     >
-      <AutoCloseTimePicker
+      <WrapperTimePicker
         className="w-full"
-        format="HH:mm"
+        sheetTitle={t('builder.event.time')}
         minuteStep={15}
         classNames={{ popup: { content: 'min-w-[150px]' } }}
         disabledTime={disabledTime}

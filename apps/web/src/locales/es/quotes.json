@@ -12,8 +12,16 @@
     "total": "Total"
   },
   "filters": {
-    "stage": "Estado de la cotización",
-    "state": "Estado (US)"
+    "state": "Estado",
+    "button": "Filtros",
+    "clear": "Limpiar filtros",
+    "assignee": "Asignado a",
+    "eventType": "Tipo de evento",
+    "drafts": "Borradores",
+    "me": "Yo",
+    "clearSearch": "Limpiar búsqueda",
+    "stale": "Vencidas",
+    "archived": "Archivadas"
   },
   "archive": {
     "action": "Archivar",
@@ -33,7 +41,6 @@
     "editTitle": "Editar cotización",
     "saveDraft": "Guardar borrador",
     "saveChanges": "Guardar cambios",
-    "update": "Actualizar",
     "createQuote": "Crear cotización",
     "saved": "Cotización guardada",
     "created": "Cotización creada",
@@ -191,7 +198,9 @@
         "caption": "Una vez que cambie de etapa, dejará de ser un borrador.",
         "ok": "Continuar"
       }
-    }
+    },
+    "archived": "Archivada",
+    "archivedTag": "Archivada"
   },
   "history": {
     "title": "Actividad",
@@ -225,5 +234,12 @@
     "viewPdf": "Ver PDF",
     "viewEvent": "Ver evento",
     "pdfGeneratedAt": "Generado el {{date}}"
+  },
+  "viewSettings": {
+    "title": "Configuración de vista",
+    "hideStale": "Ocultar vencidas",
+    "hideStaleCaption": "No muestra en el pipeline ni en la tabla las cotizaciones con la fecha del evento o la vigencia vencidas. Igual aparecen al buscarlas.",
+    "includeArchived": "Incluir archivadas",
+    "includeArchivedCaption": "Muestra también las cotizaciones archivadas: en la tabla y en una columna propia del pipeline."
   }
 }

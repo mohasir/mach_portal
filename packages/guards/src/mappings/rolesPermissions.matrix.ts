@@ -46,6 +46,7 @@ const {
   MANAGE_STAFF_ASSIGNMENTS,
   MANAGE_ASSIGNMENT,
   REGENERATE_PDF,
+  VIEW_ARCHIVED,
   VIEW_SUMMARY,
   VIEW_QUOTES_CHART,
   VIEW_TOP_PRODUCTS,
@@ -66,9 +67,9 @@ const DASHBOARD_FULL = [READ, VIEW_SUMMARY, VIEW_QUOTES_CHART, VIEW_TOP_PRODUCTS
 // catalog's price tiers, or reassign a quote to another user — operator (scope 'own')
 // stays plain CRUD.
 const QUOTE_FULL = [...CRUD, MANAGE_LINE_PRICING, MANAGE_ASSIGNMENT];
-// Forcing a PDF regen (even when the current one isn't stale) is superadmin-only —
-// admin stays on QUOTE_FULL without it.
-const QUOTE_SUPERADMIN = [...QUOTE_FULL, REGENERATE_PDF];
+// Forcing a PDF regen (even when the current one isn't stale) and listing archived quotes are
+// superadmin-only — admin stays on QUOTE_FULL without them.
+const QUOTE_SUPERADMIN = [...QUOTE_FULL, REGENERATE_PDF, VIEW_ARCHIVED];
 
 export const rolesPermissionsMatrix = [
   {
@@ -90,6 +91,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.CATALOG_PREFERENCES]: VIEW_UPDATE,
       [RESOURCES.QUOTE_PDF_TEMPLATE]: VIEW_UPDATE,
       [RESOURCES.QUOTE_BUILDER_PREFERENCES]: VIEW_UPDATE,
+      [RESOURCES.PIPELINE_PREFERENCES]: VIEW_UPDATE,
     },
   },
   {
@@ -115,6 +117,7 @@ export const rolesPermissionsMatrix = [
       // [RESOURCES.CATALOG_PREFERENCES]: VIEW_ONLY,
       [RESOURCES.QUOTE_PDF_TEMPLATE]: VIEW_UPDATE,
       // [RESOURCES.QUOTE_BUILDER_PREFERENCES]: VIEW_ONLY,
+      // [RESOURCES.PIPELINE_PREFERENCES]: VIEW_ONLY,
     },
   },
   {

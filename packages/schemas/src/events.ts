@@ -21,10 +21,19 @@ export const eventsCalendarQuerySchema = z.object({
 });
 export type EventsCalendarQuery = z.infer<typeof eventsCalendarQuerySchema>;
 
+const pad2 = (n: number) => String(n).padStart(2, '0');
+/** Today's calendar date (YYYY-MM-DD) where the check runs; ISO dates compare as strings. */
+const todayIso = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+};
+
 export const registerEventPaymentSchema = z.object({
   method: paymentMethodSchema,
   amount: z.number().int().positive('events.validation.amountRequired'),
-  paidAt: z.iso.date(),
+  // A payment records money already received. The API runs on UTC, which is ahead of US clients,
+  // so a payment dated "today" on the client never fails the server-side check.
+  paidAt: z.iso.date().refine((date) => date <= todayIso(), 'events.validation.paidAtFuture'),
   reference: optionalText(120),
   notes: optionalText(500),
 });

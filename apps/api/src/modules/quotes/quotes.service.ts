@@ -4,6 +4,7 @@ import {
   computeQuoteTotals,
   paginationMeta,
   QUOTE_STAGE,
+  resolveQuoteRates,
   TEMPLATE_TYPES,
   type CheckQuoteAvailabilityQuery,
   type CreateQuoteInput,
@@ -78,8 +79,8 @@ export class QuotesService {
     return { items: resource, pagination: paginationMeta(total, page, pageSize) };
   }
 
-  async getById(id: string, ownerId?: string) {
-    const result = await this.repo.findById(id, ownerId);
+  async getById(id: string, ownerId?: string, includeArchived = false) {
+    const result = await this.repo.findById(id, ownerId, includeArchived);
     if (!result) throw notFound();
     return buildQuoteDetail(
       result.quoteRow,
@@ -126,13 +127,19 @@ export class QuotesService {
 
   async board(query: QuotesBoardQuery, ownerId?: string) {
     const rows = await this.repo.findBoard(query, ownerId);
-    const grouped: Record<QuoteStageId, ReturnType<typeof quoteCardResource>[]> = {
+    type Card = ReturnType<typeof quoteCardResource>;
+    const grouped: Record<QuoteStageId, Card[]> & { archived: Card[] } = {
       [QUOTE_STAGE.PENDING]: [],
       [QUOTE_STAGE.QUOTED]: [],
       [QUOTE_STAGE.CONFIRMED]: [],
       [QUOTE_STAGE.CANCELLED]: [],
+      archived: [],
     };
-    for (const row of rows) grouped[row.stageId as QuoteStageId].push(quoteCardResource(row));
+    for (const row of rows) {
+      const card = quoteCardResource(row);
+      if (card.isArchived) grouped.archived.push(card);
+      else grouped[row.stageId as QuoteStageId].push(card);
+    }
     return grouped;
   }
 
@@ -157,9 +164,10 @@ export class QuotesService {
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.config.NOT_FOUND) });
 
     const now = new Date();
-    const taxRate = appRow.applyTaxByState
-      ? (stateRows.find((s) => s.state === input.state)?.taxRate ?? 0)
-      : 0;
+    const { taxRate, cardSurchargeRate } = resolveQuoteRates(
+      { ...appRow, stateSettings: stateRows },
+      input.state,
+    );
     const depositRate = input.depositRate ?? appRow.depositRate;
     const totals = computeQuoteTotals({
       lines: input.lines.map((l) => ({ subtotal: l.subtotal })),
@@ -168,7 +176,7 @@ export class QuotesService {
       longDistanceAmount: input.longDistanceAmount,
       taxRate,
       applyCardSurcharge: input.applyCardSurcharge,
-      cardSurchargeRate: appRow.cardSurchargeRate,
+      cardSurchargeRate,
       depositRate,
     });
 
@@ -259,24 +267,7 @@ export class QuotesService {
     return quoteResource(updated);
   }
 
-  // stage 'new' re-snapshots rates from live config (the draft isn't final yet); from
-  // 'quoted' onward the rates stay frozen and only the derived amounts move
-  // (mach-bar-domain.md §7, "queda fija").
   private async resolveTotals(current: PublicQuote, input: UpdateQuoteInput) {
-    const lines = { lines: input.lines.map((l) => ({ subtotal: l.subtotal })) };
-    if (current.stageId === QUOTE_STAGE.QUOTED) {
-      return computeQuoteTotals({
-        ...lines,
-        discountType: input.discountType,
-        discountValue: input.discountValue,
-        longDistanceAmount: input.longDistanceAmount,
-        taxRate: current.taxRate,
-        applyCardSurcharge: current.applyCardSurcharge,
-        cardSurchargeRate: current.cardSurchargeRate,
-        depositRate: current.depositRate,
-      });
-    }
-
     const [stateRows, appRow] = await Promise.all([
       this.configRepo.findStateSettings(),
       this.configRepo.findAppSettings(),
@@ -284,19 +275,21 @@ export class QuotesService {
     if (!appRow)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.config.NOT_FOUND) });
 
-    const taxRate = appRow.applyTaxByState
-      ? (stateRows.find((s) => s.state === input.state)?.taxRate ?? 0)
-      : 0;
-    const depositRate = input.depositRate ?? appRow.depositRate;
+    const { taxRate, cardSurchargeRate } = resolveQuoteRates(
+      { ...appRow, stateSettings: stateRows },
+      input.state,
+      current,
+    );
+    const frozen = current.stageId === QUOTE_STAGE.QUOTED;
     return computeQuoteTotals({
-      ...lines,
+      lines: input.lines.map((l) => ({ subtotal: l.subtotal })),
       discountType: input.discountType,
       discountValue: input.discountValue,
       longDistanceAmount: input.longDistanceAmount,
       taxRate,
-      applyCardSurcharge: input.applyCardSurcharge,
-      cardSurchargeRate: appRow.cardSurchargeRate,
-      depositRate,
+      applyCardSurcharge: input.applyCardSurcharge ?? current.applyCardSurcharge,
+      cardSurchargeRate,
+      depositRate: input.depositRate ?? (frozen ? current.depositRate : appRow.depositRate),
     });
   }
 

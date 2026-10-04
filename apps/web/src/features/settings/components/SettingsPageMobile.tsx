@@ -1,6 +1,7 @@
 'use client';
 import {
   FileText,
+  Globe,
   Info,
   KeyRound,
   LifeBuoy,
@@ -15,6 +16,7 @@ import type { SectionMenuItem } from '@/components/shared/SectionMenu';
 import { ProfileEditFormMobile } from './ProfileEditFormMobile';
 import { ProfileSummaryCardMobile } from './ProfileSummaryCardMobile';
 import { SecuritySettingsForm } from './SecuritySettingsForm';
+import { UserPreferencesCard } from './forms/UserPreferencesCard';
 import { GeneralSettingsForm } from './GeneralSettingsForm';
 import { PreferencesSettingsForm } from './PreferencesSettingsForm';
 import { PermissionsSettingsForm } from './PermissionsSettingsForm';
@@ -25,6 +27,7 @@ import type { MobileSettingsSection } from './SettingsPage';
 
 const MOBILE_SECTION_ICONS: Record<MobileSettingsSection, typeof UserPen> = {
   profileEdit: UserPen,
+  userPreferences: Globe,
   security: Shield,
   permissions: KeyRound,
   general: SlidersHorizontal,
@@ -63,6 +66,7 @@ export function SettingsPageMobile({
       <div className={`px-2 py-4 ${isAbout ? 'flex min-h-0 flex-1 flex-col' : ''}`}>
         <PageHeader title={label} onBack={onBack} />
         {section === 'profileEdit' && <ProfileEditFormMobile />}
+        {section === 'userPreferences' && <UserPreferencesCard />}
         {section === 'security' && <SecuritySettingsForm />}
         {section === 'general' && <GeneralSettingsForm />}
         {section === 'preferences' && <PreferencesSettingsForm />}

@@ -71,6 +71,7 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
         number={detail?.number}
         stageId={stageId}
         isDraft={detail?.isDraft}
+        savedRates={detail}
         createdByName={detail?.createdByName}
         assignedToId={detail?.assignedToId}
         assignedToName={detail?.assignedToName}

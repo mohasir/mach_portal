@@ -2,6 +2,7 @@ export * from './pagination';
 export * from './fields';
 export * from './enums';
 export * from './users';
+export * from './userPreferences';
 export * from './clients';
 export * from './staff';
 export * from './catalog';

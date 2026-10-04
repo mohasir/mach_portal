@@ -1,5 +1,6 @@
 import {
   updateCatalogPreferencesSchema,
+  updatePipelinePreferencesSchema,
   updateQuoteBuilderPreferencesSchema,
   updateQuoteDefaultsSchema,
   updateQuoteStagesSchema,
@@ -42,4 +43,10 @@ export const configRouter = router({
   })
     .input(updateQuoteBuilderPreferencesSchema)
     .mutation(({ input }) => service.updateQuoteBuilderPreferences(input)),
+
+  updatePipelinePreferences: guardedProcedure({
+    [RESOURCES.PIPELINE_PREFERENCES]: [ACTIONS.UPDATE],
+  })
+    .input(updatePipelinePreferencesSchema)
+    .mutation(({ input }) => service.updatePipelinePreferences(input)),
 });

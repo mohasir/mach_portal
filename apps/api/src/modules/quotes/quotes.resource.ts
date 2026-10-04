@@ -36,6 +36,7 @@ export const publicQuoteColumns = {
   pdfGeneratedAt: quotes.pdfGeneratedAt,
   createdAt: quotes.createdAt,
   updatedAt: quotes.updatedAt,
+  archivedAt: quotes.archivedAt,
 } as const;
 
 export const publicQuoteLineColumns = {
@@ -128,6 +129,7 @@ export const quoteListItemResource = (row: QuoteListItemRow) => ({
   createdByName: row.createdByName,
   assignedToName: row.assignedToName,
   eventId: row.eventId,
+  isArchived: !!row.archivedAt,
 });
 
 export type QuoteCardRow = QuoteWithNames & {
@@ -155,6 +157,7 @@ export const quoteCardResource = (row: QuoteCardRow) => ({
   assignedToName: row.assignedToName,
   eventId: row.eventId,
   depositPaid: row.depositPaid,
+  isArchived: !!row.archivedAt,
 });
 
 export type QuoteCardResource = ReturnType<typeof quoteCardResource>;

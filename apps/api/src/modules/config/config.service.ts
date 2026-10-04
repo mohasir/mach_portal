@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import type {
   UpdateCatalogPreferencesInput,
+  UpdatePipelinePreferencesInput,
   UpdateQuoteBuilderPreferencesInput,
   UpdateQuoteDefaultsInput,
   UpdateQuoteStagesInput,
@@ -38,7 +39,7 @@ export class ConfigService {
 
   async updateQuoteDefaults(input: UpdateQuoteDefaultsInput) {
     const lastUsedSeq = await this.repo.getLastUsedSeq();
-    if (input.quoteSeqStart < lastUsedSeq) {
+    if (input.quoteSeqStart <= lastUsedSeq) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         cause: new AppError(ErrorCodes.config.SEQUENCE_BELOW_LAST),
@@ -61,6 +62,11 @@ export class ConfigService {
 
   async updateQuoteBuilderPreferences(input: UpdateQuoteBuilderPreferencesInput) {
     await this.repo.updateQuoteBuilderPreferences(input);
+    return this.get();
+  }
+
+  async updatePipelinePreferences(input: UpdatePipelinePreferencesInput) {
+    await this.repo.updatePipelinePreferences(input);
     return this.get();
   }
 }

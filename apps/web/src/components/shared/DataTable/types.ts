@@ -55,4 +55,7 @@ export interface UseDataTableOptions<TSort extends string> {
   defaultSortBy: TSort;
   defaultSortDir?: SortDir;
   defaultPageSize?: number;
+  /** Filters applied outside the table (e.g. a page-level filter bar). Any change sends the
+   * table back to page 1, like its own search does. */
+  externalFilters?: unknown;
 }

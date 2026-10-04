@@ -541,10 +541,10 @@ Para formularios complejos, un `validator` que corre el schema de `@repo/schemas
 
 Stores en `lib/stores/`. `create(persist((set) => ({...}), { name }))` cuando se persiste.
 
-| Store                | Contenido                            | Persistencia   |
-| -------------------- | ------------------------------------ | -------------- |
-| `useLocaleStore`     | idioma actual + `setLocale`.         | `localStorage` |
-| `useUiStore` _(ej.)_ | UI global (sidebar colapsado, etc.). | opcional       |
+| Store                | Contenido                                                                                                                                                                                                                               | Persistencia   |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| `useLocaleStore`     | idioma actual + `setLocale`. Es el idioma aplicado (`AppProviders` lo pasa a i18next); la preferencia guardada vive en `userPreferences` (server): `SettingsProvider` la aplica al iniciar sesión y solo se cambia desde Configuración. | `localStorage` |
+| `useUiStore` _(ej.)_ | UI global (sidebar colapsado, etc.).                                                                                                                                                                                                    | opcional       |
 
 - **La sesión NO va en Zustand** — la maneja Better Auth (`useSession`).
 

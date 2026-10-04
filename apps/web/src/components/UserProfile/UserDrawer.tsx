@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { LogOut, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AvatarUser } from '@/components/shared/AvatarUser';
-import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher';
 import { RoleTag } from '@/components/shared/RoleTag';
 import { signOut, useSession } from '@/lib/auth/client';
 
@@ -43,7 +42,6 @@ export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         />
 
         <div className="flex flex-col gap-1">
-          <LanguageSwitcher block className="justify-start" />
           <Button
             type="text"
             block

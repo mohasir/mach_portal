@@ -1,6 +1,7 @@
 import { router } from './trpc';
 import { dashboardRouter } from '../../modules/dashboard/dashboard.router';
 import { usersRouter } from '../../modules/users/users.router';
+import { userPreferencesRouter } from '../../modules/userPreferences/userPreferences.router';
 import { clientsRouter } from '../../modules/clients/clients.router';
 import { staffRouter } from '../../modules/staff/staff.router';
 import { productsRouter } from '../../modules/products/products.router';
@@ -15,6 +16,7 @@ import { notificationsRouter } from '../../modules/notifications/notifications.r
 export const appRouter = router({
   dashboard: dashboardRouter,
   users: usersRouter,
+  userPreferences: userPreferencesRouter,
   clients: clientsRouter,
   staff: staffRouter,
   products: productsRouter,

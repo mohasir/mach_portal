@@ -12,8 +12,16 @@
     "total": "Total"
   },
   "filters": {
-    "stage": "Quote stage",
-    "state": "State (US)"
+    "state": "State",
+    "button": "Filters",
+    "clear": "Clear filters",
+    "assignee": "Assignee",
+    "eventType": "Event type",
+    "drafts": "Drafts",
+    "me": "Me",
+    "clearSearch": "Clear search",
+    "stale": "Expired",
+    "archived": "Archived"
   },
   "archive": {
     "action": "Archive",
@@ -33,7 +41,6 @@
     "editTitle": "Edit quote",
     "saveDraft": "Save draft",
     "saveChanges": "Save changes",
-    "update": "Update",
     "createQuote": "Create quote",
     "saved": "Quote saved",
     "created": "Quote created",
@@ -191,7 +198,9 @@
         "caption": "Once it changes stage, it will no longer be a draft.",
         "ok": "Continue"
       }
-    }
+    },
+    "archived": "Archived",
+    "archivedTag": "Archived"
   },
   "history": {
     "title": "Activity",
@@ -225,5 +234,12 @@
     "regeneratePdfConfirmTitle": "Regenerate PDF?",
     "regeneratePdfConfirmContent": "This creates a new PDF and replaces the current one, even though it's already up to date.",
     "viewEvent": "View event"
+  },
+  "viewSettings": {
+    "title": "View settings",
+    "hideStale": "Hide expired",
+    "hideStaleCaption": "Leaves quotes whose event date or validity already passed out of the pipeline and the table. They still show up when searched for.",
+    "includeArchived": "Include archived",
+    "includeArchivedCaption": "Also lists archived quotes: in the table and in their own pipeline column."
   }
 }

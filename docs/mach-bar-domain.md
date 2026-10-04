@@ -396,8 +396,11 @@ Ejemplo (2 estaciones, −10%, tax NY 8.875%, depósito 50%):
 | depósito 50% | 38460 | $384.60 |
 | saldo | 38460 | $384.60 |
 
-**Snapshot**: `taxRate`, `depositRate` y todos los `*Amount` se congelan en la quote al calcular.
-Una quote en `new` recalcula al editar; desde `quoted` en adelante queda fija.
+**Snapshot**: `taxRate`, `cardSurchargeRate` y todos los `*Amount` se congelan en la quote al calcular.
+Una quote en `new` re-toma esas tasas de la config al editar; desde `quoted` quedan fijas, salvo
+que cambie el `state` del evento: entonces `taxRate` se toma de la config del nuevo estado. Las
+elecciones propias de la quote (`applyCardSurcharge`, `depositRate`) siguen editables en `new` y
+`quoted`; desde `confirmed` la quote no se edita.
 
 ---
 

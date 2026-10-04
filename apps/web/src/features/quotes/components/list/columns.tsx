@@ -44,6 +44,7 @@ export function useQuotesColumns(): TableColumnsType<Quote> {
         return (
           <div className="flex items-center gap-1">
             <Tag color={stage?.color}>{stage?.label}</Tag>
+            {row.isArchived && <Tag>{t('pipeline.archivedTag')}</Tag>}
             {row.isDraft && (
               <IconTag
                 color={row.isComplete ? undefined : 'error'}

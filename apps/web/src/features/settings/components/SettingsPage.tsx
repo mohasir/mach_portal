@@ -13,6 +13,7 @@ import { SettingsPageMobile } from './SettingsPageMobile';
 
 export type SettingsSection =
   | 'profile'
+  | 'userPreferences'
   | 'security'
   | 'general'
   | 'preferences'
@@ -56,6 +57,7 @@ export function SettingsPage() {
 
   const menuItems: SectionMenuItem[] = [
     { key: 'profile', label: t('profile.title'), group: t('groups.account') },
+    { key: 'userPreferences', label: t('userPreferences.title'), group: t('groups.account') },
     { key: 'security', label: t('security.title'), group: t('groups.account') },
     ...(isSuperAdmin
       ? [{ key: 'permissions', label: t('permissions.title'), group: t('groups.access') }]

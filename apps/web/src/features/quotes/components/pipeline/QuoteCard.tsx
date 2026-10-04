@@ -8,15 +8,16 @@ import { DataTableRowActions } from '@/components/shared/DataTable';
 import { useQuoteRowActions } from '../../hooks/useQuoteRowActions';
 import type { QuoteCard as QuoteCardType } from '../../types';
 import { QuoteStageTagDropdown } from '../QuoteStageTagDropdown';
-import { QuoteCardAssignment } from './QuoteCardAssignment';
+import { QuoteCardFooter } from './QuoteCardFooter';
 import { QuoteCardBody } from './QuoteCardBody';
 
 interface QuoteCardProps {
   card: QuoteCardType;
   draggable?: boolean;
+  highlighted?: boolean;
 }
 
-export function QuoteCard({ card, draggable }: QuoteCardProps) {
+export function QuoteCard({ card, draggable, highlighted }: QuoteCardProps) {
   const { t: tc } = useTranslation('common');
   const router = useRouter();
   const rowActions = useQuoteRowActions();
@@ -33,10 +34,12 @@ export function QuoteCard({ card, draggable }: QuoteCardProps) {
     <Card
       ref={draggable ? setNodeRef : undefined}
       size="small"
-      className={isDragging ? 'opacity-40' : 'cursor-pointer'}
+      className={`${isDragging ? 'opacity-40' : 'cursor-pointer'} ${
+        highlighted ? 'animate-ripple outline-2 -outline-offset-2 outline-primary/50' : ''
+      }`}
       onClick={() =>
         router.push(
-          stageId === QUOTE_STAGE.PENDING
+          stageId === QUOTE_STAGE.PENDING && !card.isArchived
             ? `/admin/quotes/${card.id}`
             : `/admin/quotes/preview/${card.id}`,
         )
@@ -44,7 +47,7 @@ export function QuoteCard({ card, draggable }: QuoteCardProps) {
       {...(draggable ? { ...attributes, ...listeners } : {})}
     >
       <div className="mb-2 flex items-center justify-between gap-2">
-        {!draggable && (
+        {!draggable && !card.isArchived && (
           <div onClick={(e) => e.stopPropagation()}>
             <QuoteStageTagDropdown
               quoteId={card.id}
@@ -59,7 +62,7 @@ export function QuoteCard({ card, draggable }: QuoteCardProps) {
         </div>
       </div>
       <QuoteCardBody card={card} />
-      <QuoteCardAssignment card={card} />
+      <QuoteCardFooter card={card} />
     </Card>
   );
 }

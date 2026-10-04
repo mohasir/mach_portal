@@ -13,9 +13,13 @@ import { useTRPC } from '@/lib/trpc/client';
 import { useApiError } from '@/lib/error/useApiError';
 import { openQuotePdf } from '../helpers';
 
-export function useQuotesList(query: QuotesListQuery) {
+export function useQuotesList(query: QuotesListQuery, enabled = true) {
   const trpc = useTRPC();
-  return useQuery({ ...trpc.quotes.list.queryOptions(query), placeholderData: keepPreviousData });
+  return useQuery({
+    ...trpc.quotes.list.queryOptions(query),
+    placeholderData: keepPreviousData,
+    enabled,
+  });
 }
 
 export function useQuote(id: string | undefined) {

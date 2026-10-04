@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { listQuerySchema } from './pagination';
-import { stateSchema } from './enums';
+import { stateSchema, type StateValue } from './enums';
 import { optionalText } from './fields';
 import { createClientSchema } from './clients';
 
@@ -146,21 +146,81 @@ export const checkQuoteAvailabilitySchema = z.object({
 export type CheckQuoteAvailabilityQuery = z.infer<typeof checkQuoteAvailabilitySchema>;
 
 // ── list / board queries ──
+// Filters that mean the same thing on the list and the pipeline board, so the quotes page can
+// share one filter bar between both views. Each list matches any of its values.
+export const quotesFiltersSchema = listQuerySchema.pick({ search: true }).extend({
+  states: z.array(stateSchema).optional(),
+  assignedToIds: z.array(z.string()).optional(),
+  eventTypeIds: z.array(z.uuid()).optional(),
+  /** true: drafts only; omitted: drafts and finished quotes alike. */
+  isDraft: z.boolean().optional(),
+  /** true: only stale quotes — open with the event date past, or sent with validity expired. */
+  stale: z.boolean().optional(),
+  /** true: only archived quotes; only applies alongside `includeArchived`. */
+  archived: z.boolean().optional(),
+});
+export type QuotesFilters = z.infer<typeof quotesFiltersSchema>;
+
+// What the list/board include at all (per-user view preferences), as opposed to the filter bar.
+export const quotesViewOptionsSchema = z.object({
+  /** Leave stale quotes out — unless searching, where one specific quote is being looked for. */
+  hideStale: z.boolean().optional(),
+  /** Also return archived quotes. Needs QUOTE/VIEW_ARCHIVED; ignored server-side otherwise. */
+  includeArchived: z.boolean().optional(),
+});
+export type QuotesViewOptions = z.infer<typeof quotesViewOptionsSchema>;
+
 export const quotesListQuerySchema = listQuerySchema.extend({
+  ...quotesFiltersSchema.shape,
+  ...quotesViewOptionsSchema.shape,
   sortBy: z.enum(['number', 'eventDate', 'total', 'stage', 'createdAt']).default('createdAt'),
   month: z.number().int().min(1).max(12).optional(),
   year: z.number().int().optional(),
   stageId: quoteStageIdSchema.optional(),
-  state: stateSchema.optional(),
   clientId: z.uuid().optional(),
 });
 export type QuotesListQuery = z.infer<typeof quotesListQuerySchema>;
 
-export const quotesBoardQuerySchema = z.object({
+export const quotesBoardQuerySchema = quotesFiltersSchema.extend({
+  ...quotesViewOptionsSchema.shape,
   month: z.number().int().min(1).max(12).optional(),
   year: z.number().int().optional(),
 });
 export type QuotesBoardQuery = z.infer<typeof quotesBoardQuerySchema>;
+
+// ── config-driven rates — mach-bar-domain.md §7, shared so preview (FE) = saved (BE) ──
+export interface QuoteRatesConfig {
+  applyTaxByState: boolean;
+  stateSettings: { state: StateValue; taxRate: number }[];
+  cardSurchargeRate: number;
+}
+
+export interface SavedQuoteRates {
+  stageId: number;
+  state: StateValue | null;
+  taxRate: number;
+  cardSurchargeRate: number;
+}
+
+// A sent quote keeps the rates it was sent with, so later config edits don't silently reprice
+// it. Moving the event to another state is a change to the quote itself, so it takes that
+// state's current tax rate.
+export function resolveQuoteRates(
+  config: QuoteRatesConfig,
+  state: StateValue | null | undefined,
+  saved?: SavedQuoteRates | null,
+): { taxRate: number; cardSurchargeRate: number } {
+  const configTaxRate = config.applyTaxByState
+    ? (config.stateSettings.find((s) => s.state === state)?.taxRate ?? 0)
+    : 0;
+  if (saved?.stageId !== QUOTE_STAGE.QUOTED) {
+    return { taxRate: configTaxRate, cardSurchargeRate: config.cardSurchargeRate };
+  }
+  return {
+    taxRate: (state ?? null) === saved.state ? saved.taxRate : configTaxRate,
+    cardSurchargeRate: saved.cardSurchargeRate,
+  };
+}
 
 // ── price cascade — mach-bar-domain.md §7, shared so preview (FE) = saved (BE) = PDF ──
 export interface QuoteTotalsInput {

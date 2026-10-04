@@ -34,6 +34,7 @@ export function QuoteRowCard({ row, onClick }: QuoteRowCardProps) {
   const can = useCan();
   const stage = stageMap.get(row.stageId as QuoteStageId);
   const canEdit =
+    !row.isArchived &&
     (row.stageId === QUOTE_STAGE.PENDING || row.stageId === QUOTE_STAGE.QUOTED) &&
     can({ [RESOURCES.QUOTE]: [ACTIONS.UPDATE] });
 
@@ -48,6 +49,7 @@ export function QuoteRowCard({ row, onClick }: QuoteRowCardProps) {
         </div>
         <div className="flex items-center gap-1">
           <Tag color={stage?.color}>{stage?.label}</Tag>
+          {row.isArchived && <Tag>{t('pipeline.archivedTag')}</Tag>}
           {row.isDraft && (
             <IconTag
               color={row.isComplete ? undefined : 'error'}

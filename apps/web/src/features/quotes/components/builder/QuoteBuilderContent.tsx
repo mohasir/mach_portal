@@ -4,7 +4,13 @@ import { useRouter } from 'next/navigation';
 import { App, Button, Card } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { TRPCClientError } from '@trpc/client';
-import { computeQuoteTotals, QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
+import {
+  computeQuoteTotals,
+  QUOTE_STAGE,
+  resolveQuoteRates,
+  type QuoteStageId,
+  type SavedQuoteRates,
+} from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
 import { useConfirmModal, type ConfirmModalType } from '@/components/shared/ConfirmDialogs';
@@ -34,6 +40,7 @@ interface QuoteBuilderContentProps {
   number?: string;
   stageId?: QuoteStageId;
   isDraft?: boolean;
+  savedRates?: SavedQuoteRates;
   createdByName?: string | null;
   assignedToId?: string | null;
   assignedToName?: string | null;
@@ -46,6 +53,7 @@ export function QuoteBuilderContent({
   number,
   stageId,
   isDraft,
+  savedRates,
   createdByName,
   assignedToId,
   assignedToName,
@@ -71,20 +79,19 @@ export function QuoteBuilderContent({
 
   const readOnly = !!stageId && stageId !== QUOTE_STAGE.PENDING && stageId !== QUOTE_STAGE.QUOTED;
   // The "create quote" action only makes sense while there's still a draft to graduate from —
-  // once a quote is saved as non-draft, editing it only offers "Actualizar" (see saveLabel below).
+  // once a quote is saved as non-draft, editing it only offers "save changes" (see saveLabel).
   const showSendButton =
     !readOnly && (!stageId || stageId === QUOTE_STAGE.PENDING) && (!quoteId || !!isDraft);
-  const isUpdateAction = stageId !== QUOTE_STAGE.QUOTED && !!quoteId && !isDraft;
-  const saveLabel =
-    stageId === QUOTE_STAGE.QUOTED
-      ? t('builder.saveChanges')
-      : isUpdateAction
-        ? t('builder.update')
-        : t('builder.saveDraft');
+  const isUpdateAction = !!quoteId && !isDraft;
+  const saveLabel = isUpdateAction ? t('builder.saveChanges') : t('builder.saveDraft');
 
-  const taxRate = config?.appSettings.applyTaxByState
-    ? (config?.stateSettings.find((s) => s.state === state.state)?.taxRate ?? 0)
-    : 0;
+  const { taxRate, cardSurchargeRate } = config
+    ? resolveQuoteRates(
+        { ...config.appSettings, stateSettings: config.stateSettings },
+        state.state,
+        savedRates,
+      )
+    : { taxRate: 0, cardSurchargeRate: 0 };
   const totals = computeQuoteTotals({
     lines: state.lines.map((l) => ({ subtotal: l.subtotal })),
     discountType: state.discountType,
@@ -92,7 +99,7 @@ export function QuoteBuilderContent({
     longDistanceAmount: state.longDistanceAmount,
     taxRate,
     applyCardSurcharge: state.applyCardSurcharge,
-    cardSurchargeRate: config?.appSettings.cardSurchargeRate ?? 0,
+    cardSurchargeRate,
     depositRate: state.depositRate,
   });
 
@@ -221,7 +228,7 @@ export function QuoteBuilderContent({
       {!isDesktop && (
         <>
           <LinesBuilderSection catalog={catalog} readOnly={readOnly} />
-          <ExtraChargesSection readOnly={readOnly} />
+          <ExtraChargesSection readOnly={readOnly} cardSurchargeRate={cardSurchargeRate} />
           <WrapperCard className="border-line border-2 bg-primary/5">
             <QuoteSummary
               subtotal={totals.subtotal}
@@ -241,7 +248,9 @@ export function QuoteBuilderContent({
         </>
       )}
       <EventSection eventTypes={eventTypes} readOnly={readOnly} quoteId={quoteId} />
-      {isDesktop && <ExtraChargesSection readOnly={readOnly} />}
+      {isDesktop && (
+        <ExtraChargesSection readOnly={readOnly} cardSurchargeRate={cardSurchargeRate} />
+      )}
       {isDesktop && <LinesBuilderSection catalog={catalog} readOnly={readOnly} />}
       <NotesSection readOnly={readOnly} />
     </div>
