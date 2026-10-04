@@ -14,6 +14,7 @@ import type { QuoteBoard } from '../types';
 
 function moveCard(board: QuoteBoard, id: string, toStage: QuoteStageId): QuoteBoard {
   const next: QuoteBoard = {
+    ...board,
     [QUOTE_STAGE.PENDING]: [...board[QUOTE_STAGE.PENDING]],
     [QUOTE_STAGE.QUOTED]: [...board[QUOTE_STAGE.QUOTED]],
     [QUOTE_STAGE.CONFIRMED]: [...board[QUOTE_STAGE.CONFIRMED]],
@@ -32,9 +33,13 @@ function moveCard(board: QuoteBoard, id: string, toStage: QuoteStageId): QuoteBo
   return next;
 }
 
-export function usePipelineBoard(query: QuotesBoardQuery) {
+export function usePipelineBoard(query: QuotesBoardQuery, enabled = true) {
   const trpc = useTRPC();
-  return useQuery({ ...trpc.quotes.board.queryOptions(query), placeholderData: keepPreviousData });
+  return useQuery({
+    ...trpc.quotes.board.queryOptions(query),
+    placeholderData: keepPreviousData,
+    enabled,
+  });
 }
 
 /** `updateStage`/`approve`/`cancel` with an optimistic move on the board cache (mach-bar-flows.md §3.3). */

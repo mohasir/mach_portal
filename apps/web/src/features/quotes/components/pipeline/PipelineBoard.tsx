@@ -1,34 +1,53 @@
 'use client';
 import { useEffect } from 'react';
 import { Skeleton } from 'antd';
-import { QUOTE_STAGE, type QuoteStageId, type QuotesFilters } from '@repo/schemas';
+import {
+  QUOTE_STAGE,
+  type QuoteStageId,
+  type QuotesFilters,
+  type QuotesViewOptions,
+} from '@repo/schemas';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useQuoteStages } from '@/features/settings';
 import { usePipelineBoard, usePipelineTransitions } from '../../hooks/usePipelineBoard';
 import { useQuoteStageGuard } from '../../hooks/useQuoteStageGuard';
 import { countActiveFilters } from '../../helpers';
+import type { PipelineColumnKey } from '../../types';
 import { PipelineBoardDesktop } from './PipelineBoardDesktop';
 import { PipelineBoardMobile } from './PipelineBoardMobile';
 
 interface PipelineBoardProps {
   filters: QuotesFilters;
+  viewOptions: QuotesViewOptions;
+  /** Holds the query until the view options are known. */
+  ready: boolean;
   /** True while the previous board is still shown for a new search/filter. */
   onSearchingChange?: (searching: boolean) => void;
   /** Cards currently on the board, across every column. */
   onTotalChange?: (total: number | undefined) => void;
 }
 
-export function PipelineBoard({ filters, onSearchingChange, onTotalChange }: PipelineBoardProps) {
+export function PipelineBoard({
+  filters,
+  viewOptions,
+  ready,
+  onSearchingChange,
+  onTotalChange,
+}: PipelineBoardProps) {
   const isDesktop = useIsDesktop();
   const { guardTransition, confirmContextHolder } = useQuoteStageGuard();
   const { orderedIds } = useQuoteStages();
-  const boardQuery = filters;
-  const { data, isLoading, isPlaceholderData } = usePipelineBoard(boardQuery);
+  const boardQuery = { ...filters, ...viewOptions };
+  const { data, isLoading, isPlaceholderData } = usePipelineBoard(boardQuery, ready);
   const { moveStage, approve, cancel } = usePipelineTransitions(boardQuery);
+
+  const columns: PipelineColumnKey[] = viewOptions.includeArchived
+    ? [...orderedIds, 'archived']
+    : orderedIds;
 
   // A search/filter narrowed the whole board down to one quote: point it out.
   const isFiltered = !!filters.search || countActiveFilters(filters) > 0;
-  const results = data && !isPlaceholderData ? orderedIds.flatMap((id) => data[id]) : [];
+  const results = data && !isPlaceholderData ? columns.flatMap((column) => data[column]) : [];
   const highlightedId = isFiltered && results.length === 1 ? results[0]?.id : undefined;
 
   useEffect(() => {
@@ -36,7 +55,7 @@ export function PipelineBoard({ filters, onSearchingChange, onTotalChange }: Pip
     return () => onSearchingChange?.(false);
   }, [isPlaceholderData, onSearchingChange]);
 
-  const total = data ? orderedIds.reduce((sum, id) => sum + data[id].length, 0) : undefined;
+  const total = data ? columns.reduce((sum, column) => sum + data[column].length, 0) : undefined;
   useEffect(() => {
     onTotalChange?.(total);
     return () => onTotalChange?.(undefined);
@@ -66,14 +85,14 @@ export function PipelineBoard({ filters, onSearchingChange, onTotalChange }: Pip
       ) : isDesktop ? (
         <PipelineBoardDesktop
           data={data}
-          orderedIds={orderedIds}
+          columns={columns}
           highlightedId={highlightedId}
           onMove={runTransition}
         />
       ) : (
         <PipelineBoardMobile
           data={data}
-          orderedIds={orderedIds}
+          columns={columns}
           highlightedId={highlightedId}
           resultsKey={isPlaceholderData ? undefined : JSON.stringify(boardQuery)}
         />

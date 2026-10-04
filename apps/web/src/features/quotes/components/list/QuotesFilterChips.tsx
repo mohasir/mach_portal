@@ -1,6 +1,6 @@
 'use client';
 import { useTranslation } from 'react-i18next';
-import { STATE_NAMES, stateSchema, type StateValue } from '@repo/schemas';
+import { STATE_NAMES, stateSchema, type QuotesViewOptions, type StateValue } from '@repo/schemas';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import {
   FilterChips,
@@ -12,16 +12,25 @@ import { useEventTypesList } from '@/features/event-types';
 import { useUsersList } from '@/features/users';
 import { useSession } from '@/lib/auth/client';
 import { useCanReassignQuote } from '@/lib/auth/useCan';
+import type { QuotesViewTab } from '../../quotesView.store';
 import type { QuotesPageFilters } from '../../types';
 
 interface QuotesFilterChipsProps {
   filters: QuotesPageFilters;
+  /** Chips for quotes the view leaves out are hidden: they would match nothing. */
+  viewOptions: QuotesViewOptions;
+  view: QuotesViewTab;
   onChange: (patch: Partial<QuotesPageFilters>) => void;
 }
 
 const AVATAR_SIZE = 28;
 
-export function QuotesFilterChips({ filters, onChange }: QuotesFilterChipsProps) {
+export function QuotesFilterChips({
+  filters,
+  viewOptions,
+  view,
+  onChange,
+}: QuotesFilterChipsProps) {
   const { t } = useTranslation('quotes');
   const { data: session } = useSession();
   // Users who only see their own quotes have nobody else to filter by.
@@ -84,6 +93,20 @@ export function QuotesFilterChips({ filters, onChange }: QuotesFilterChipsProps)
         checked={!!filters.isDraft}
         onChange={(checked) => onChange({ isDraft: checked || undefined })}
       />
+      {!viewOptions.hideStale && (
+        <FilterChipToggle
+          label={t('filters.stale')}
+          checked={!!filters.stale}
+          onChange={(checked) => onChange({ stale: checked || undefined })}
+        />
+      )}
+      {viewOptions.includeArchived && view === 'table' && (
+        <FilterChipToggle
+          label={t('filters.archived')}
+          checked={!!filters.archived}
+          onChange={(checked) => onChange({ archived: checked || undefined })}
+        />
+      )}
     </FilterChips>
   );
 }

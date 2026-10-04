@@ -1,8 +1,29 @@
 import type { LucideIcon } from 'lucide-react';
-import type { CreateQuoteInput, QuoteLineInput, QuotesFilters } from '@repo/schemas';
+import {
+  QUOTE_STAGE,
+  type CreateQuoteInput,
+  type QuoteLineInput,
+  type QuotesFilters,
+} from '@repo/schemas';
+import { isPastDate, type DateInput } from '@/lib/date';
 import { DEFAULT_STATION_ICON, STATION_ICON_RULES } from './constants';
 import type { LineDraft, QuoteBuilderState } from './hooks/useQuoteBuilder';
 import type { QuoteDetail } from './types';
+
+interface QuoteTimeline {
+  stageId: number;
+  eventDate?: DateInput | null;
+  validUntil?: DateInput | null;
+}
+
+/** Sent, but the quoted prices are no longer valid. */
+export const isQuoteExpired = (quote: QuoteTimeline) =>
+  quote.stageId === QUOTE_STAGE.QUOTED && isPastDate(quote.validUntil);
+
+/** Still open (pending/sent) although the event date already went by. */
+export const isQuotePastDue = (quote: QuoteTimeline) =>
+  (quote.stageId === QUOTE_STAGE.PENDING || quote.stageId === QUOTE_STAGE.QUOTED) &&
+  isPastDate(quote.eventDate);
 
 /** Filter-bar criteria in use; search is left out since it has its own field. */
 export const countActiveFilters = ({
@@ -10,8 +31,12 @@ export const countActiveFilters = ({
   assignedToIds,
   eventTypeIds,
   isDraft,
+  stale,
+  archived,
 }: QuotesFilters) =>
-  [states?.length, assignedToIds?.length, eventTypeIds?.length, isDraft].filter(Boolean).length;
+  [states?.length, assignedToIds?.length, eventTypeIds?.length, isDraft, stale, archived].filter(
+    Boolean,
+  ).length;
 
 export const nextLineKey = (): string =>
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;

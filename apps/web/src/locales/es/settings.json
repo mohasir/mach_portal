@@ -74,6 +74,11 @@
       "title": "Armador de cotizaciones",
       "allowSelectOptionsAtQuote": "Permitir elegir opciones al cotizar",
       "allowSelectOptionsAtQuoteCaption": "Si se apaga, el switch \"Elegir opciones ahora\" del armador se oculta — todas las cotizaciones difieren la selección de opciones al evento. Las cotizaciones existentes conservan lo que ya tengan guardado."
+    },
+    "pipeline": {
+      "title": "Pipeline",
+      "hideStaleQuotes": "Permitir ocultar cotizaciones vencidas",
+      "hideStaleQuotesCaption": "Habilita en la configuración de vista de Cotizaciones la opción \"Ocultar vencidas\", que cada usuario activa o no para sí mismo. Si se apaga, la opción desaparece y las vencidas se muestran siempre."
     }
   },
   "taxRates": {
@@ -165,7 +170,8 @@
       "manage_staff_assignments": "Asignar/quitar staff del evento",
       "view_summary": "Ver métricas del mes",
       "view_quotes_chart": "Ver gráfica de cotizaciones",
-      "view_top_products": "Ver estaciones más pedidas"
+      "view_top_products": "Ver estaciones más pedidas",
+      "view_archived": "Ver cotizaciones archivadas"
     },
     "resources": {
       "dashboard": {
@@ -231,6 +237,10 @@
       "quote_builder_preferences": {
         "label": "Preferencias del armador de cotizaciones",
         "caption": "Si el staff puede elegir opciones al momento de cotizar en vez de diferirlas al evento."
+      },
+      "pipeline_preferences": {
+        "label": "Preferencias del pipeline",
+        "caption": "Si se puede habilitar la opción de ocultar cotizaciones vencidas en la vista de cotizaciones."
       }
     }
   },

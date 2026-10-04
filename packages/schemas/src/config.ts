@@ -45,3 +45,8 @@ export const updateQuoteBuilderPreferencesSchema = z.object({
 export type UpdateQuoteBuilderPreferencesInput = z.infer<
   typeof updateQuoteBuilderPreferencesSchema
 >;
+
+export const updatePipelinePreferencesSchema = z.object({
+  hideStaleQuotes: z.boolean(),
+});
+export type UpdatePipelinePreferencesInput = z.infer<typeof updatePipelinePreferencesSchema>;

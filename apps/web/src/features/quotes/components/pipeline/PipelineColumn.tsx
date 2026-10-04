@@ -2,45 +2,53 @@
 import { useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { Empty, Typography } from 'antd';
+import { useTranslation } from 'react-i18next';
 import type { OverlayScrollbars } from 'overlayscrollbars';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
-import type { QuoteStageId } from '@repo/schemas';
 import { useQuoteStages } from '@/features/settings';
 import { hexToRgba } from '@/lib/utils/color';
-import type { QuoteCard as QuoteCardType } from '../../types';
+import { MB } from '@/theme/antd';
+import type { PipelineColumnKey, QuoteCard as QuoteCardType } from '../../types';
 import { usePipelineScrollStore } from '../../pipelineScroll.store';
 import { QuoteCard } from './QuoteCard';
 
 interface PipelineColumnProps {
-  stageId: QuoteStageId;
+  column: PipelineColumnKey;
   cards: QuoteCardType[];
   highlightedId?: string;
   draggable?: boolean;
 }
 
 export function PipelineColumn({
-  stageId,
+  column,
   cards,
   highlightedId,
   draggable = true,
 }: PipelineColumnProps) {
+  const { t } = useTranslation('quotes');
   const { stageMap } = useQuoteStages();
-  const stage = stageMap.get(stageId);
-  const { setNodeRef, isOver } = useDroppable({ id: stageId, disabled: !draggable });
+  const isArchived = column === 'archived';
+  const stageInfo = isArchived ? undefined : stageMap.get(column);
+  // Archived isn't a stage (no admin-defined label/color) and nothing can be dropped into it.
+  const stage = isArchived ? { label: t('pipeline.archived'), color: MB.taupe } : stageInfo;
+  const { setNodeRef, isOver } = useDroppable({
+    id: column,
+    disabled: !draggable || isArchived,
+  });
 
   const scrollEvents = useMemo(
     () => ({
       initialized: (instance: OverlayScrollbars) => {
-        const top = usePipelineScrollStore.getState().columnScrollTop[stageId];
+        const top = usePipelineScrollStore.getState().columnScrollTop[column];
         if (top) instance.elements().viewport.scrollTop = top;
       },
       scroll: (instance: OverlayScrollbars) => {
         usePipelineScrollStore
           .getState()
-          .setColumnScrollTop(stageId, instance.elements().viewport.scrollTop);
+          .setColumnScrollTop(column, instance.elements().viewport.scrollTop);
       },
     }),
-    [stageId],
+    [column],
   );
 
   return (
@@ -82,7 +90,7 @@ export function PipelineColumn({
               <QuoteCard
                 key={card.id}
                 card={card}
-                draggable={draggable}
+                draggable={draggable && !card.isArchived}
                 highlighted={card.id === highlightedId}
               />
             ))

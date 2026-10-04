@@ -41,13 +41,27 @@ function canManagePricing(ctx: { user: { role?: string | null } }) {
   return hasPermission(ctx.user.role, { [RESOURCES.QUOTE]: [ACTIONS.MANAGE_LINE_PRICING] });
 }
 
+// Archived quotes are superadmin-only (QUOTE/VIEW_ARCHIVED): without it, asking for them is a
+// no-op instead of an error, since the flag comes from a per-user view preference.
+function canViewArchived(ctx: { user: { role?: string | null } }) {
+  return hasPermission(ctx.user.role, { [RESOURCES.QUOTE]: [ACTIONS.VIEW_ARCHIVED] });
+}
+
+function archivedScope<T extends { includeArchived?: boolean; archived?: boolean }>(
+  input: T,
+  ctx: { user: { role?: string | null } },
+): T {
+  if (canViewArchived(ctx)) return input;
+  return { ...input, includeArchived: false, archived: undefined };
+}
+
 export const quotesRouter = router({
   list: read
     .input(quotesListQuerySchema)
-    .query(({ input, ctx }) => service.list(input, ownerScope(ctx))),
+    .query(({ input, ctx }) => service.list(archivedScope(input, ctx), ownerScope(ctx))),
   getById: read
     .input(z.object({ id: z.uuid() }))
-    .query(({ input, ctx }) => service.getById(input.id, ownerScope(ctx))),
+    .query(({ input, ctx }) => service.getById(input.id, ownerScope(ctx), canViewArchived(ctx))),
   // Deliberately NOT ownerScope'd — advisory heads-up that should surface everyone's
   // bookings for that date/time, not just the caller's own.
   checkAvailability: read
@@ -63,7 +77,7 @@ export const quotesRouter = router({
     .mutation(({ input, ctx }) => service.generatePdf(input.id, ownerScope(ctx))),
   board: guardedProcedure({ [RESOURCES.PIPELINE]: [ACTIONS.READ] })
     .input(quotesBoardQuerySchema)
-    .query(({ input, ctx }) => service.board(input, ownerScope(ctx))),
+    .query(({ input, ctx }) => service.board(archivedScope(input, ctx), ownerScope(ctx))),
 
   create: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] })
     .input(createQuoteSchema)

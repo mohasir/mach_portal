@@ -1,13 +1,12 @@
 'use client';
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import type { QuoteStageId } from '@repo/schemas';
-import type { QuoteBoard } from '../../types';
+import type { PipelineColumnKey, QuoteBoard } from '../../types';
 import { usePipelineScrollStore } from '../../pipelineScroll.store';
 import { PipelineColumn } from './PipelineColumn';
 
 interface PipelineBoardMobileProps {
   data: QuoteBoard;
-  orderedIds: QuoteStageId[];
+  columns: PipelineColumnKey[];
   highlightedId?: string;
   /** Identifies the filters `data` belongs to; undefined while stale results are still shown. */
   resultsKey?: string;
@@ -15,7 +14,7 @@ interface PipelineBoardMobileProps {
 
 export function PipelineBoardMobile({
   data,
-  orderedIds,
+  columns,
   highlightedId,
   resultsKey,
 }: PipelineBoardMobileProps) {
@@ -32,10 +31,10 @@ export function PipelineBoardMobile({
   useEffect(() => {
     if (!resultsKey || scrolledForKey.current === resultsKey) return;
     scrolledForKey.current = resultsKey;
-    const index = orderedIds.findIndex((stageId) => data[stageId].length > 0);
+    const index = columns.findIndex((column) => data[column].length > 0);
     const column = index >= 0 ? containerRef.current?.children[index] : undefined;
     column?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-  }, [resultsKey, data, orderedIds]);
+  }, [resultsKey, data, columns]);
 
   return (
     <div
@@ -45,11 +44,11 @@ export function PipelineBoardMobile({
       }
       className="-mx-4 flex h-full min-h-0 snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2"
     >
-      {orderedIds.map((stageId) => (
-        <div key={stageId} className="w-[85%] max-w-80 shrink-0 snap-center">
+      {columns.map((column) => (
+        <div key={column} className="w-[85%] max-w-80 shrink-0 snap-center">
           <PipelineColumn
-            stageId={stageId}
-            cards={data[stageId]}
+            column={column}
+            cards={data[column]}
             highlightedId={highlightedId}
             draggable={false}
           />

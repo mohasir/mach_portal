@@ -39,7 +39,7 @@ export function QuoteCard({ card, draggable, highlighted }: QuoteCardProps) {
       }`}
       onClick={() =>
         router.push(
-          stageId === QUOTE_STAGE.PENDING
+          stageId === QUOTE_STAGE.PENDING && !card.isArchived
             ? `/admin/quotes/${card.id}`
             : `/admin/quotes/preview/${card.id}`,
         )
@@ -47,7 +47,7 @@ export function QuoteCard({ card, draggable, highlighted }: QuoteCardProps) {
       {...(draggable ? { ...attributes, ...listeners } : {})}
     >
       <div className="mb-2 flex items-center justify-between gap-2">
-        {!draggable && (
+        {!draggable && !card.isArchived && (
           <div onClick={(e) => e.stopPropagation()}>
             <QuoteStageTagDropdown
               quoteId={card.id}

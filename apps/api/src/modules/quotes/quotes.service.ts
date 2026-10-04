@@ -79,8 +79,8 @@ export class QuotesService {
     return { items: resource, pagination: paginationMeta(total, page, pageSize) };
   }
 
-  async getById(id: string, ownerId?: string) {
-    const result = await this.repo.findById(id, ownerId);
+  async getById(id: string, ownerId?: string, includeArchived = false) {
+    const result = await this.repo.findById(id, ownerId, includeArchived);
     if (!result) throw notFound();
     return buildQuoteDetail(
       result.quoteRow,
@@ -127,13 +127,19 @@ export class QuotesService {
 
   async board(query: QuotesBoardQuery, ownerId?: string) {
     const rows = await this.repo.findBoard(query, ownerId);
-    const grouped: Record<QuoteStageId, ReturnType<typeof quoteCardResource>[]> = {
+    type Card = ReturnType<typeof quoteCardResource>;
+    const grouped: Record<QuoteStageId, Card[]> & { archived: Card[] } = {
       [QUOTE_STAGE.PENDING]: [],
       [QUOTE_STAGE.QUOTED]: [],
       [QUOTE_STAGE.CONFIRMED]: [],
       [QUOTE_STAGE.CANCELLED]: [],
+      archived: [],
     };
-    for (const row of rows) grouped[row.stageId as QuoteStageId].push(quoteCardResource(row));
+    for (const row of rows) {
+      const card = quoteCardResource(row);
+      if (card.isArchived) grouped.archived.push(card);
+      else grouped[row.stageId as QuoteStageId].push(card);
+    }
     return grouped;
   }
 

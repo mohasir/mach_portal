@@ -19,6 +19,7 @@ export function QuoteCardFooter({ card }: QuoteCardFooterProps) {
   const can = useCan();
   const canReassign = useCanReassignQuote();
   const canEdit =
+    !card.isArchived &&
     (card.stageId === QUOTE_STAGE.PENDING || card.stageId === QUOTE_STAGE.QUOTED) &&
     can({ [RESOURCES.QUOTE]: [ACTIONS.UPDATE] });
 

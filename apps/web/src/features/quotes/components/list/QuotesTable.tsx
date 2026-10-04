@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { paginationOf, type QuotesListQuery } from '@repo/schemas';
+import { paginationOf, type QuotesListQuery, type QuotesViewOptions } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { useQuotesList } from '../../hooks/useQuotes';
 import { useQuotesColumns } from './columns';
@@ -10,6 +10,9 @@ import type { Quote, QuotesPageFilters } from '../../types';
 
 interface QuotesTableProps {
   filters: QuotesPageFilters;
+  viewOptions: QuotesViewOptions;
+  /** Holds the query until the view options are known. */
+  ready: boolean;
   onRowClick: (quote: Quote) => void;
   /** True while the previous results are still shown for a new search/filter/page. */
   onSearchingChange?: (searching: boolean) => void;
@@ -18,6 +21,8 @@ interface QuotesTableProps {
 
 export function QuotesTable({
   filters,
+  viewOptions,
+  ready,
   onRowClick,
   onSearchingChange,
   onTotalChange,
@@ -25,10 +30,17 @@ export function QuotesTable({
   const { t } = useTranslation('quotes');
   const table = useDataTable<QuotesListQuery['sortBy']>({
     defaultSortBy: 'createdAt',
-    externalFilters: filters,
+    externalFilters: { ...filters, ...viewOptions },
   });
 
-  const { data, isLoading, isPlaceholderData } = useQuotesList({ ...table.query, ...filters });
+  const { data, isLoading, isPlaceholderData } = useQuotesList(
+    {
+      ...table.query,
+      ...filters,
+      ...viewOptions,
+    },
+    ready,
+  );
 
   useEffect(() => {
     onSearchingChange?.(isPlaceholderData);
@@ -54,7 +66,7 @@ export function QuotesTable({
       renderCard={(row) => <QuoteRowCard row={row} onClick={() => onRowClick(row)} />}
       onRow={(row) => ({ onClick: () => onRowClick(row), className: 'cursor-pointer' })}
       dataSource={data?.items}
-      loading={isLoading}
+      loading={isLoading || !ready}
       total={total}
       // The page's filter bar already shows the result count for both views.
       showTotal={false}

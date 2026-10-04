@@ -15,6 +15,10 @@ export type TimeFormat = z.infer<typeof timeFormatSchema>;
 export const userPreferencesSchema = z.object({
   locale: localeSchema.optional().catch(undefined),
   timeFormat: timeFormatSchema.default('12h').catch('12h'),
+  /** Quotes view: leave stale quotes out (only offered when app settings allow it). */
+  quotesHideStale: z.boolean().default(false).catch(false),
+  /** Quotes view: also list archived quotes (only offered with QUOTE/VIEW_ARCHIVED). */
+  quotesIncludeArchived: z.boolean().default(false).catch(false),
 });
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
 
@@ -24,6 +28,8 @@ export const updateUserPreferencesSchema = z
   .object({
     locale: localeSchema,
     timeFormat: timeFormatSchema,
+    quotesHideStale: z.boolean(),
+    quotesIncludeArchived: z.boolean(),
   })
   .partial();
 export type UpdateUserPreferencesInput = z.infer<typeof updateUserPreferencesSchema>;

@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { useCan } from '@/lib/auth/useCan';
 import { useLayoutStore } from '@/lib/stores/layout.store';
 import { PipelineBoard } from '../pipeline/PipelineBoard';
+import { useQuotesViewOptions } from '../../hooks/useQuotesViewOptions';
 import { useQuotesViewStore, type QuotesViewTab } from '../../quotesView.store';
 import { QuotesTable } from './QuotesTable';
 import { QuotesToolbar } from './QuotesToolbar';
@@ -24,12 +25,16 @@ export function QuotesPage() {
   const can = useCan();
   const setFillViewport = useLayoutStore((s) => s.setFillViewport);
   const { activeTab, setActiveTab } = useQuotesViewStore();
-  const [filters, setFilters] = useState<QuotesPageFilters>({});
+  const [storedFilters, setFilters] = useState<QuotesPageFilters>({});
   const [searching, setSearching] = useState(false);
   const [total, setTotal] = useState<number>();
+  const { viewOptions, ready } = useQuotesViewOptions();
 
   const canCreate = can({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] });
-  const onRowClick = (quote: Quote) => router.push(`/admin/quotes/${quote.id}`);
+  const onRowClick = (quote: Quote) =>
+    router.push(
+      quote.isArchived ? `/admin/quotes/preview/${quote.id}` : `/admin/quotes/${quote.id}`,
+    );
 
   const views: QuotesViewTab[] = [
     ...(can({ [RESOURCES.PIPELINE]: [ACTIONS.READ] }) ? (['pipeline'] as const) : []),
@@ -42,6 +47,14 @@ export function QuotesPage() {
       ? activeTab
       : views[0];
   const isPipelineActive = view === 'pipeline';
+
+  // A chip for quotes the view leaves out would match nothing, so it's dropped while unavailable.
+  // Archived ones already have their own pipeline column, so that chip is table-only.
+  const filters: QuotesPageFilters = {
+    ...storedFilters,
+    stale: viewOptions.hideStale ? undefined : storedFilters.stale,
+    archived: viewOptions.includeArchived && view === 'table' ? storedFilters.archived : undefined,
+  };
 
   const onViewChange = (next: QuotesViewTab) => {
     router.replace(`/admin/quotes?view=${next}`, { scroll: false });
@@ -84,6 +97,7 @@ export function QuotesPage() {
             view={view}
             views={views}
             onViewChange={onViewChange}
+            viewOptions={viewOptions}
             total={total}
           />
         )}
@@ -94,6 +108,8 @@ export function QuotesPage() {
         {view === 'pipeline' && (
           <PipelineBoard
             filters={filters}
+            viewOptions={viewOptions}
+            ready={ready}
             onSearchingChange={setSearching}
             onTotalChange={setTotal}
           />
@@ -101,6 +117,8 @@ export function QuotesPage() {
         {view === 'table' && (
           <QuotesTable
             filters={filters}
+            viewOptions={viewOptions}
+            ready={ready}
             onRowClick={onRowClick}
             onSearchingChange={setSearching}
             onTotalChange={setTotal}

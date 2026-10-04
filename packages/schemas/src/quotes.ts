@@ -154,11 +154,25 @@ export const quotesFiltersSchema = listQuerySchema.pick({ search: true }).extend
   eventTypeIds: z.array(z.uuid()).optional(),
   /** true: drafts only; omitted: drafts and finished quotes alike. */
   isDraft: z.boolean().optional(),
+  /** true: only stale quotes — open with the event date past, or sent with validity expired. */
+  stale: z.boolean().optional(),
+  /** true: only archived quotes; only applies alongside `includeArchived`. */
+  archived: z.boolean().optional(),
 });
 export type QuotesFilters = z.infer<typeof quotesFiltersSchema>;
 
+// What the list/board include at all (per-user view preferences), as opposed to the filter bar.
+export const quotesViewOptionsSchema = z.object({
+  /** Leave stale quotes out — unless searching, where one specific quote is being looked for. */
+  hideStale: z.boolean().optional(),
+  /** Also return archived quotes. Needs QUOTE/VIEW_ARCHIVED; ignored server-side otherwise. */
+  includeArchived: z.boolean().optional(),
+});
+export type QuotesViewOptions = z.infer<typeof quotesViewOptionsSchema>;
+
 export const quotesListQuerySchema = listQuerySchema.extend({
   ...quotesFiltersSchema.shape,
+  ...quotesViewOptionsSchema.shape,
   sortBy: z.enum(['number', 'eventDate', 'total', 'stage', 'createdAt']).default('createdAt'),
   month: z.number().int().min(1).max(12).optional(),
   year: z.number().int().optional(),
@@ -167,7 +181,7 @@ export const quotesListQuerySchema = listQuerySchema.extend({
 });
 export type QuotesListQuery = z.infer<typeof quotesListQuerySchema>;
 
-export const quotesBoardQuerySchema = quotesFiltersSchema;
+export const quotesBoardQuerySchema = quotesFiltersSchema.extend(quotesViewOptionsSchema.shape);
 export type QuotesBoardQuery = z.infer<typeof quotesBoardQuerySchema>;
 
 // ── config-driven rates — mach-bar-domain.md §7, shared so preview (FE) = saved (BE) ──

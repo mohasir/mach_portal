@@ -4,10 +4,12 @@ import { Badge, Button } from 'antd';
 import { LayoutGrid, List } from 'lucide-react';
 import { TbFilter2 } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
+import type { QuotesViewOptions } from '@repo/schemas';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { ViewModeToggle } from '@/components/shared/ViewModeToggle';
 import { countActiveFilters } from '../../helpers';
 import { QuotesFilterChips } from './QuotesFilterChips';
+import { QuotesViewSettings } from './QuotesViewSettings';
 import type { QuotesViewTab } from '../../quotesView.store';
 import type { QuotesPageFilters } from '../../types';
 
@@ -18,6 +20,7 @@ interface QuotesToolbarProps {
   view: QuotesViewTab;
   views: QuotesViewTab[];
   onViewChange: (view: QuotesViewTab) => void;
+  viewOptions: QuotesViewOptions;
   /** Results matching the current search/filters; undefined until the view has loaded. */
   total?: number;
 }
@@ -34,6 +37,7 @@ export function QuotesToolbar({
   view,
   views,
   onViewChange,
+  viewOptions,
   total,
 }: QuotesToolbarProps) {
   const { t } = useTranslation('quotes');
@@ -70,7 +74,12 @@ export function QuotesToolbar({
 
       {filtersOpen && (
         <div className="py-1">
-          <QuotesFilterChips filters={filters} onChange={setFilter} />
+          <QuotesFilterChips
+            filters={filters}
+            viewOptions={viewOptions}
+            view={view}
+            onChange={setFilter}
+          />
         </div>
       )}
 
@@ -114,6 +123,7 @@ export function QuotesToolbar({
               }))}
             />
           )}
+          <QuotesViewSettings />
         </div>
       </div>
     </div>
