@@ -47,5 +47,13 @@
   "footer": {
     "copyright": "© {{year}} {{appName}}. Todos los derechos reservados.",
     "developedBy": "Desarrollado por Oravitech"
+  },
+  "pickers": {
+    "done": "Listo",
+    "hours": "Horas",
+    "minutes": "Minutos",
+    "period": "AM/PM",
+    "prevMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente"
   }
 }
