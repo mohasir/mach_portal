@@ -178,7 +178,7 @@ export interface SavedQuoteRates {
 
 // A sent quote keeps the rates it was sent with, so later config edits don't silently reprice
 // it. Moving the event to another state is a change to the quote itself, so it takes that
-// state's current tax rate.
+// state's current tax rate; clearing the state is not a move and keeps the sent rate.
 export function resolveQuoteRates(
   config: QuoteRatesConfig,
   state: StateValue | null | undefined,
@@ -191,7 +191,7 @@ export function resolveQuoteRates(
     return { taxRate: configTaxRate, cardSurchargeRate: config.cardSurchargeRate };
   }
   return {
-    taxRate: (state ?? null) === saved.state ? saved.taxRate : configTaxRate,
+    taxRate: !state || state === saved.state ? saved.taxRate : configTaxRate,
     cardSurchargeRate: saved.cardSurchargeRate,
   };
 }

@@ -274,7 +274,6 @@ export class QuotesService {
       input.state,
       current,
     );
-    const frozen = current.stageId === QUOTE_STAGE.QUOTED;
     return computeQuoteTotals({
       lines: input.lines.map((l) => ({ subtotal: l.subtotal })),
       discountType: input.discountType,
@@ -283,7 +282,7 @@ export class QuotesService {
       taxRate,
       applyCardSurcharge: input.applyCardSurcharge ?? current.applyCardSurcharge,
       cardSurchargeRate,
-      depositRate: input.depositRate ?? (frozen ? current.depositRate : appRow.depositRate),
+      depositRate: input.depositRate ?? current.depositRate,
     });
   }
 
