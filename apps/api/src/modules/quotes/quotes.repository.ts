@@ -45,6 +45,7 @@ import {
   user,
 } from '../../db/schema';
 import { resolvePagination } from '../../lib/utils/pagination';
+import { todayInBusinessTimezone } from '../../lib/utils/date';
 import { containsPattern } from '../../lib/utils/search';
 import {
   publicQuoteColumns,
@@ -62,20 +63,24 @@ const sortColumns = {
   createdAt: quotes.createdAt,
 } as const;
 
-// Same rules as the web's isQuoteExpired/isQuotePastDue tags (day granularity). Archived quotes
-// are out of the flow, so they never count as stale. Wrapped in coalesce: a missing event
-// date/validity makes the comparison NULL, and NOT NULL would wrongly drop the row when stale
-// quotes are hidden.
-const staleCondition = sql<boolean>`coalesce(${and(
-  isNull(quotes.archivedAt),
-  or(
-    and(
-      inArray(quotes.stageId, [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED]),
-      lt(quotes.eventDate, sql`current_date`),
+// Same rules as the web's isQuoteExpired/isQuotePastDue tags (day granularity), on the business
+// calendar day rather than the DB's (UTC) `current_date`, which flips hours early in the US.
+// Archived quotes are out of the flow, so they never count as stale. Wrapped in coalesce: a
+// missing event date/validity makes the comparison NULL, and NOT NULL would wrongly drop the row
+// when stale quotes are hidden.
+const staleCondition = () => {
+  const today = todayInBusinessTimezone();
+  return sql<boolean>`coalesce(${and(
+    isNull(quotes.archivedAt),
+    or(
+      and(
+        inArray(quotes.stageId, [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED]),
+        lt(quotes.eventDate, today),
+      ),
+      and(eq(quotes.stageId, QUOTE_STAGE.QUOTED), lt(quotes.validUntil, today)),
     ),
-    and(eq(quotes.stageId, QUOTE_STAGE.QUOTED), lt(quotes.validUntil, sql`current_date`)),
-  ),
-)}, false)`;
+  )}, false)`;
+};
 
 const assignedToUser = alias(user, 'assigned_to_user');
 const assignmentFromUser = alias(user, 'assignment_from_user');
@@ -364,8 +369,8 @@ export class QuotesRepository {
       assignedToIds?.length ? inArray(quotes.assignedToId, assignedToIds) : undefined,
       eventTypeIds?.length ? inArray(quotes.eventTypeId, eventTypeIds) : undefined,
       isDraft !== undefined ? eq(quotes.isDraft, isDraft) : undefined,
-      stale ? staleCondition : undefined,
-      hideStale && !search && !stale ? not(staleCondition) : undefined,
+      stale ? staleCondition() : undefined,
+      hideStale && !search && !stale ? not(staleCondition()) : undefined,
     );
   }
 

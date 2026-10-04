@@ -229,6 +229,7 @@ export const buildQuoteDetail = (
   createdByName: quoteRow.createdByName,
   assignedToName: quoteRow.assignedToName,
   eventId: quoteRow.eventId,
+  isArchived: !!quoteRow.archivedAt,
   isComplete: isQuoteComplete(quoteRow, lineRows.length),
   stageHistory: historyRows,
   assignmentHistory: assignmentHistoryRows,

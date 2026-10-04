@@ -92,7 +92,7 @@ export function QuotesPage() {
         {view && (
           <QuotesToolbar
             filters={filters}
-            onFiltersChange={setFilters}
+            onFiltersChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
             searching={searching}
             view={view}
             views={views}

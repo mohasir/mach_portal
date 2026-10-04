@@ -17,7 +17,7 @@ export function QuoteCardFooter({ card }: QuoteCardFooterProps) {
   const { t: tc } = useTranslation('common');
   const router = useRouter();
   const can = useCan();
-  const canReassign = useCanReassignQuote();
+  const canReassign = useCanReassignQuote() && !card.isArchived;
   const canEdit =
     !card.isArchived &&
     (card.stageId === QUOTE_STAGE.PENDING || card.stageId === QUOTE_STAGE.QUOTED) &&
@@ -36,7 +36,7 @@ export function QuoteCardFooter({ card }: QuoteCardFooterProps) {
           createdByName={card.createdByName}
           assignedToId={card.assignedToId}
           assignedToName={card.assignedToName}
-          editable
+          editable={!card.isArchived}
         />
         {canEdit && (
           <Button

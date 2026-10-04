@@ -32,7 +32,9 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
   const { data: detail, isLoading: quoteLoading } = useQuote(quoteId);
 
   const stageId = detail?.stageId as QuoteStageId | undefined;
-  const isEditable = !stageId || stageId === QUOTE_STAGE.PENDING || stageId === QUOTE_STAGE.QUOTED;
+  const isEditable =
+    !detail?.isArchived &&
+    (!stageId || stageId === QUOTE_STAGE.PENDING || stageId === QUOTE_STAGE.QUOTED);
 
   useEffect(() => {
     if (quoteId && detail && !isEditable) {

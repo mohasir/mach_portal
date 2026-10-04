@@ -18,6 +18,8 @@ interface QuoteStageTagDropdownProps {
   className?: string;
   /** Trigger label: the stage name (default) or a "Move to…" prompt (pipeline card). */
   triggerLabel?: 'stage' | 'moveTo';
+  /** Shows the stage as a plain tag (e.g. archived quotes, which can't change stage). */
+  readOnly?: boolean;
 }
 
 export function QuoteStageTagDropdown({
@@ -26,6 +28,7 @@ export function QuoteStageTagDropdown({
   isDraft,
   className,
   triggerLabel = 'stage',
+  readOnly,
 }: QuoteStageTagDropdownProps) {
   const { t } = useTranslation('quotes');
   const { stageMap } = useQuoteStages();
@@ -38,7 +41,8 @@ export function QuoteStageTagDropdown({
 
   const currentStage = stageMap.get(stageId);
   const moveOptions = QUOTE_STAGE_TRANSITIONS[stageId];
-  const canChange = can({ [RESOURCES.QUOTE]: [ACTIONS.UPDATE] }) && moveOptions.length > 0;
+  const canChange =
+    !readOnly && can({ [RESOURCES.QUOTE]: [ACTIONS.UPDATE] }) && moveOptions.length > 0;
 
   if (!currentStage) return null;
 

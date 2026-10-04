@@ -105,6 +105,7 @@ export function QuoteDetailCard({
             quoteId={detail.id}
             stageId={detail.stageId as QuoteStageId}
             isDraft={detail.isDraft}
+            readOnly={detail.isArchived}
           />
           {draftTag}
         </div>
@@ -125,7 +126,7 @@ export function QuoteDetailCard({
               iconOnly
             />
           )}
-          {hasPdf && canRegeneratePdf && (
+          {hasPdf && canRegeneratePdf && !detail.isArchived && (
             <Tooltip title={t('detail.regeneratePdf')}>
               <Button
                 type="text"

@@ -74,7 +74,7 @@ export function QuoteRowCard({ row, onClick }: QuoteRowCardProps) {
           createdByName={row.createdByName}
           assignedToId={row.assignedToId}
           assignedToName={row.assignedToName}
-          editable
+          editable={!row.isArchived}
         />
         <div className="flex items-center gap-2">
           <IconButton

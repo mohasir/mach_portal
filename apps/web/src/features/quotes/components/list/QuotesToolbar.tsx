@@ -15,7 +15,8 @@ import type { QuotesPageFilters } from '../../types';
 
 interface QuotesToolbarProps {
   filters: QuotesPageFilters;
-  onFiltersChange: (filters: QuotesPageFilters) => void;
+  /** Receives only the changed keys, so filters the view hides for now aren't lost. */
+  onFiltersChange: (patch: Partial<QuotesPageFilters>) => void;
   searching?: boolean;
   view: QuotesViewTab;
   views: QuotesViewTab[];
@@ -24,6 +25,14 @@ interface QuotesToolbarProps {
   /** Results matching the current search/filters; undefined until the view has loaded. */
   total?: number;
 }
+
+/** Unsets every filter in the state except the search. */
+const clearFiltersPatch = (filters: QuotesPageFilters): Partial<QuotesPageFilters> =>
+  Object.fromEntries(
+    Object.keys(filters)
+      .filter((key) => key !== 'search')
+      .map((key) => [key, undefined]),
+  );
 
 const VIEW_ICONS: Record<QuotesViewTab, typeof List> = {
   table: List,
@@ -45,9 +54,6 @@ export function QuotesToolbar({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const activeFilters = countActiveFilters(filters);
 
-  const setFilter = (patch: Partial<QuotesPageFilters>) =>
-    onFiltersChange({ ...filters, ...patch });
-
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
@@ -55,7 +61,7 @@ export function QuotesToolbar({
           value={filters.search}
           loading={searching}
           placeholder={tc('table.search')}
-          onSearch={(value) => setFilter({ search: value || undefined })}
+          onSearch={(value) => onFiltersChange({ search: value || undefined })}
           className="min-w-0 flex-1 sm:max-w-xs"
         />
         <Badge count={activeFilters} offset={[-5, 5]}>
@@ -78,7 +84,7 @@ export function QuotesToolbar({
             filters={filters}
             viewOptions={viewOptions}
             view={view}
-            onChange={setFilter}
+            onChange={onFiltersChange}
           />
         </div>
       )}
@@ -89,7 +95,7 @@ export function QuotesToolbar({
             <Button
               type="link"
               className="px-0 py-1 h-auto"
-              onClick={() => setFilter({ search: undefined })}
+              onClick={() => onFiltersChange({ search: undefined })}
             >
               {t('filters.clearSearch')}
             </Button>
@@ -98,7 +104,7 @@ export function QuotesToolbar({
             <Button
               type="link"
               className="px-0 py-1 h-auto"
-              onClick={() => onFiltersChange({ search: filters.search })}
+              onClick={() => onFiltersChange(clearFiltersPatch(filters))}
             >
               {t('filters.clear')}
             </Button>
