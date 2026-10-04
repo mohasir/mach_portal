@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE, canTransition, type QuoteStageId } from '@repo/schemas';
 import { useConfirmModal } from '@/components/shared/ConfirmDialogs';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
+import { useQuoteRatesPrompt } from './useQuoteRatesPrompt';
 
 const CONFIRM_STAGES: QuoteStageId[] = [QUOTE_STAGE.CONFIRMED, QUOTE_STAGE.CANCELLED];
 
@@ -14,22 +15,32 @@ const CONFIRM_STAGE_KEYS: Partial<Record<QuoteStageId, string>> = {
 
 /**
  * Shared guardrails for a quote stage transition: validates `canTransition`, confirms
- * before CONFIRMED/CANCELLED, and warns before a draft leaves PENDING — independent of
+ * before CONFIRMED/CANCELLED, warns before a draft leaves PENDING, and asks about changed
+ * config rates before a quote is sent (its rates are final from then on) — independent of
  * how the transition is actually committed (optimistic for drag-and-drop, plain elsewhere).
  */
 export function useQuoteStageGuard() {
   const { t } = useTranslation('quotes');
   const { modal } = App.useApp();
   const isDesktop = useIsDesktop();
-  const [confirmAction, confirmContextHolder] = useConfirmModal();
+  const [confirmAction, confirmModalHolder] = useConfirmModal();
+  const { promptRates, ratesContextHolder } = useQuoteRatesPrompt();
 
   const guardTransition = (
+    quoteId: string,
     from: QuoteStageId,
     to: QuoteStageId,
     isDraft: boolean,
-    commit: () => unknown,
+    commitTransition: () => unknown,
   ) => {
     if (!canTransition(from, to)) return;
+
+    const commit = async () => {
+      if (to === QUOTE_STAGE.QUOTED && from === QUOTE_STAGE.PENDING) {
+        if (!(await promptRates(quoteId, 'move'))) return;
+      }
+      return commitTransition();
+    };
 
     const proceed = () => {
       if (CONFIRM_STAGES.includes(to)) {
@@ -71,5 +82,13 @@ export function useQuoteStageGuard() {
     proceed();
   };
 
-  return { guardTransition, confirmContextHolder };
+  return {
+    guardTransition,
+    confirmContextHolder: (
+      <>
+        {confirmModalHolder}
+        {ratesContextHolder}
+      </>
+    ),
+  };
 }

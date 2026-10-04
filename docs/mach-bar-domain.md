@@ -397,10 +397,19 @@ Ejemplo (2 estaciones, −10%, tax NY 8.875%, depósito 50%):
 | saldo | 38460 | $384.60 |
 
 **Snapshot**: `taxRate`, `cardSurchargeRate` y todos los `*Amount` se congelan en la quote al calcular.
-Una quote en `new` re-toma esas tasas de la config al editar; desde `quoted` quedan fijas, salvo
-que cambie el `state` del evento: entonces `taxRate` se toma de la config del nuevo estado. Las
-elecciones propias de la quote (`applyCardSurcharge`, `depositRate`) siguen editables en `new` y
-`quoted`; desde `confirmed` la quote no se edita.
+Una quote guardada trabaja **siempre** con sus propias tasas, en cualquier stage; cambiar la config no
+la recalcula sola. Excepción: si cambia el `state` del evento (a otro estado, no a vacío), `taxRate` se
+toma de la config del nuevo estado. Las elecciones propias de la quote (`applyCardSurcharge`,
+`depositRate`) siguen editables en `new` y `quoted`; desde `confirmed` la quote no se edita.
+
+**Tasas desactualizadas** (`quoteRateDrift`): si una quote en `new` tiene un `taxRate` o
+`cardSurchargeRate` distinto del que da hoy la config, a quien puede editarla (`QUOTE.UPDATE`) se le
+pregunta si actualizarlas, avisando que el total cambia: al abrirla (detalle o builder) y al pasarla a
+`quoted` desde el pipeline o el dropdown de stage. El `depositRate` no entra: siempre es el guardado.
+- **Actualizar**: toma las tasas de la config, recalcula los montos y regenera el PDF si tiene.
+- **Mantener**: guarda los valores rechazados en `declinedRates`; no se vuelve a preguntar hasta que la
+  config cambie otra vez.
+- Desde `quoted` no se pregunta más: las tasas quedan como se enviaron.
 
 ---
 

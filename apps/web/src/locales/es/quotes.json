@@ -238,5 +238,20 @@
     "hideStaleCaption": "No muestra en el pipeline ni en la tabla las cotizaciones con la fecha del evento o la vigencia vencidas. Igual aparecen al buscarlas.",
     "includeArchived": "Incluir archivadas",
     "includeArchivedCaption": "Muestra también las cotizaciones archivadas: en la tabla y en una columna propia del pipeline."
+  },
+  "rateDrift": {
+    "title": "Cambiaron las tasas configuradas",
+    "content": "Desde que se guardó esta cotización cambiaron las tasas de la configuración:",
+    "taxRate": "Impuesto del estado",
+    "cardSurchargeRate": "Recargo por tarjeta",
+    "totalWarning": "Si las actualizas, el total y el depósito de la cotización van a cambiar.",
+    "open": {
+      "accept": "Actualizar",
+      "keep": "Mantener las guardadas"
+    },
+    "move": {
+      "accept": "Actualizar y mover",
+      "keep": "Mover sin actualizar"
+    }
   }
 }

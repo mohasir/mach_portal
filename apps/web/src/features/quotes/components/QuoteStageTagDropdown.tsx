@@ -62,7 +62,7 @@ export function QuoteStageTagDropdown({
 
   const selectStage = (to: QuoteStageId) => {
     setOpen(false);
-    guardTransition(stageId, to, isDraft ?? false, () => commitTransition(to));
+    guardTransition(quoteId, stageId, to, isDraft ?? false, () => commitTransition(to));
   };
 
   return (

@@ -41,8 +41,8 @@ interface QuoteBuilderContentProps {
   stageId?: QuoteStageId;
   isDraft?: boolean;
   config: Config;
-  /** The saved quote's rates; frozen once it's been sent (see resolveQuoteRates). */
-  savedRates?: Omit<SavedQuoteRates, 'stageId'>;
+  /** The saved quote's own rates, kept over config (see resolveQuoteRates). */
+  savedRates?: SavedQuoteRates;
   createdByName?: string | null;
   assignedToId?: string | null;
   assignedToName?: string | null;
@@ -90,7 +90,7 @@ export function QuoteBuilderContent({
   const { taxRate, cardSurchargeRate } = resolveQuoteRates(
     { ...config.appSettings, stateSettings: config.stateSettings },
     state.state,
-    savedRates && stageId ? { ...savedRates, stageId } : undefined,
+    savedRates,
   );
   const totals = computeQuoteTotals({
     lines: state.lines.map((l) => ({ subtotal: l.subtotal })),

@@ -191,11 +191,13 @@ export interface QuoteRatesConfig {
   cardSurchargeRate: number;
 }
 
-export interface SavedQuoteRates {
-  stageId: number;
-  state: StateValue | null;
+export interface QuoteRates {
   taxRate: number;
   cardSurchargeRate: number;
+}
+
+export interface SavedQuoteRates extends QuoteRates {
+  state: StateValue | null;
 }
 
 /** The tax rate config assigns to `state` (0 when tax by state is off or the state has none). */
@@ -204,22 +206,63 @@ export const configTaxRate = (config: QuoteRatesConfig, state: StateValue | null
     ? (config.stateSettings.find((s) => s.state === state)?.taxRate ?? 0)
     : 0;
 
-// A sent quote keeps the rates it was sent with, so later config edits don't silently reprice
-// it. Moving the event to another state is a change to the quote itself, so it takes that
-// state's current tax rate; clearing the state is not a move and keeps the sent rate.
+/** Whether resolveQuoteRates has to read config: a new quote, or one moved to another state. */
+export const needsConfigRates = (
+  state: StateValue | null | undefined,
+  saved?: SavedQuoteRates | null,
+) => !saved || (!!state && state !== saved.state);
+
+// A saved quote keeps its own rates, so config edits never reprice it silently (the user is asked
+// instead, see quoteRateDrift). Moving the event to another state is a change to the quote itself,
+// so it takes that state's current tax rate; clearing the state is not a move and keeps the saved one.
 export function resolveQuoteRates(
   config: QuoteRatesConfig,
   state: StateValue | null | undefined,
   saved?: SavedQuoteRates | null,
-): { taxRate: number; cardSurchargeRate: number } {
-  if (saved?.stageId !== QUOTE_STAGE.QUOTED) {
+): QuoteRates {
+  if (!saved) {
     return { taxRate: configTaxRate(config, state), cardSurchargeRate: config.cardSurchargeRate };
   }
   return {
-    taxRate: !state || state === saved.state ? saved.taxRate : configTaxRate(config, state),
+    taxRate: needsConfigRates(state, saved) ? configTaxRate(config, state) : saved.taxRate,
     cardSurchargeRate: saved.cardSurchargeRate,
   };
 }
+
+export interface QuoteRateDrift {
+  saved: QuoteRates;
+  current: QuoteRates;
+}
+
+const sameRates = (a: QuoteRates, b: QuoteRates) =>
+  a.taxRate === b.taxRate && a.cardSurchargeRate === b.cardSurchargeRate;
+
+/**
+ * Config rates that differ from a pending quote's saved ones, for the user to accept or keep.
+ * Once sent, a quote always keeps its rates. A difference the user already declined isn't
+ * offered again until config changes once more.
+ */
+export function quoteRateDrift(
+  config: QuoteRatesConfig,
+  quote: SavedQuoteRates & { stageId: number; declinedRates: QuoteRates | null },
+): QuoteRateDrift | null {
+  if (quote.stageId !== QUOTE_STAGE.PENDING) return null;
+  const saved = { taxRate: quote.taxRate, cardSurchargeRate: quote.cardSurchargeRate };
+  const current = {
+    taxRate: configTaxRate(config, quote.state),
+    cardSurchargeRate: config.cardSurchargeRate,
+  };
+  if (sameRates(saved, current)) return null;
+  if (quote.declinedRates && sameRates(quote.declinedRates, current)) return null;
+  return { saved, current };
+}
+
+export const resolveQuoteRateDriftSchema = z.object({
+  id: z.uuid(),
+  /** true takes the config rates (repricing the quote); false keeps the saved ones. */
+  accept: z.boolean(),
+});
+export type ResolveQuoteRateDriftInput = z.infer<typeof resolveQuoteRateDriftSchema>;
 
 // ── price cascade — mach-bar-domain.md §7, shared so preview (FE) = saved (BE) = PDF ──
 export interface QuoteTotalsInput {

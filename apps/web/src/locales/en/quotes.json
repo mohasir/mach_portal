@@ -238,5 +238,20 @@
     "hideStaleCaption": "Leaves quotes whose event date or validity already passed out of the pipeline and the table. They still show up when searched for.",
     "includeArchived": "Include archived",
     "includeArchivedCaption": "Also lists archived quotes: in the table and in their own pipeline column."
+  },
+  "rateDrift": {
+    "title": "Configured rates changed",
+    "content": "The configured rates changed since this quote was saved:",
+    "taxRate": "State tax",
+    "cardSurchargeRate": "Card surcharge",
+    "totalWarning": "Updating them changes the quote's total and deposit.",
+    "open": {
+      "accept": "Update",
+      "keep": "Keep saved rates"
+    },
+    "move": {
+      "accept": "Update and move",
+      "keep": "Move without updating"
+    }
   }
 }

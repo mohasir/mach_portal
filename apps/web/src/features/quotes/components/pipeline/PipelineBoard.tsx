@@ -71,7 +71,7 @@ export function PipelineBoard({
     // The board on screen still belongs to the previous filters, so the optimistic move would
     // land in a cache entry that isn't shown yet; the card would snap back under a success toast.
     if (isPlaceholderData) return;
-    guardTransition(from, to, isDraft, () => commitTransition(id, to));
+    guardTransition(id, from, to, isDraft, () => commitTransition(id, to));
   };
 
   return (

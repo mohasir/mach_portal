@@ -237,6 +237,19 @@ export class QuotesRepository {
       .then((r) => r[0]);
   }
 
+  updateRates(
+    id: string,
+    values: Partial<Omit<typeof quotes.$inferInsert, 'id' | 'seq' | 'number'>>,
+    ownerId?: string,
+  ) {
+    return this.db
+      .update(quotes)
+      .set(values)
+      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt), this.ownerFilter(ownerId)))
+      .returning(publicQuoteColumns)
+      .then((r) => r[0]);
+  }
+
   findQuoteRow(id: string, ownerId?: string) {
     return this.db
       .select(publicQuoteColumns)

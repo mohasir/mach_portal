@@ -3,7 +3,9 @@ import {
   canTransition,
   computeQuoteTotals,
   paginationMeta,
+  needsConfigRates,
   QUOTE_STAGE,
+  quoteRateDrift,
   resolveQuoteRates,
   TEMPLATE_TYPES,
   type CheckQuoteAvailabilityQuery,
@@ -12,6 +14,7 @@ import {
   type QuoteStageId,
   type QuotesBoardQuery,
   type QuotesListQuery,
+  type QuoteRatesConfig,
   type QuotesViewOptions,
   type UpdateQuoteInput,
 } from '@repo/schemas';
@@ -43,6 +46,10 @@ const PDF_ALLOWED_STAGES: QuoteStageId[] = [QUOTE_STAGE.QUOTED, QUOTE_STAGE.CONF
 
 function canGeneratePdf(row: { stageId: number; isDraft: boolean }): boolean {
   return !row.isDraft || PDF_ALLOWED_STAGES.includes(row.stageId as QuoteStageId);
+}
+
+function configNotFound() {
+  return new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.config.NOT_FOUND) });
 }
 
 function notFound() {
@@ -169,8 +176,7 @@ export class QuotesService {
       this.configRepo.findAppSettings(),
       this.repo.getMaxSeq(),
     ]);
-    if (!appRow)
-      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.config.NOT_FOUND) });
+    if (!appRow) throw configNotFound();
 
     const now = new Date();
     const { taxRate, cardSurchargeRate } = resolveQuoteRates(
@@ -276,19 +282,19 @@ export class QuotesService {
     return quoteResource(updated);
   }
 
-  private async resolveTotals(current: PublicQuote, input: UpdateQuoteInput) {
+  private async loadRatesConfig(): Promise<QuoteRatesConfig> {
     const [stateRows, appRow] = await Promise.all([
       this.configRepo.findStateSettings(),
       this.configRepo.findAppSettings(),
     ]);
-    if (!appRow)
-      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.config.NOT_FOUND) });
+    if (!appRow) throw configNotFound();
+    return { ...appRow, stateSettings: stateRows };
+  }
 
-    const { taxRate, cardSurchargeRate } = resolveQuoteRates(
-      { ...appRow, stateSettings: stateRows },
-      input.state,
-      current,
-    );
+  private async resolveTotals(current: PublicQuote, input: UpdateQuoteInput) {
+    const { taxRate, cardSurchargeRate } = needsConfigRates(input.state, current)
+      ? resolveQuoteRates(await this.loadRatesConfig(), input.state, current)
+      : current;
     return computeQuoteTotals({
       lines: input.lines.map((l) => ({ subtotal: l.subtotal })),
       discountType: input.discountType,
@@ -299,6 +305,47 @@ export class QuotesService {
       cardSurchargeRate,
       depositRate: input.depositRate ?? current.depositRate,
     });
+  }
+
+  async rateDrift(id: string, ownerId?: string) {
+    const current = await this.repo.findQuoteRow(id, ownerId);
+    if (!current) throw notFound();
+    return quoteRateDrift(await this.loadRatesConfig(), current);
+  }
+
+  async resolveRateDrift(id: string, accept: boolean, ownerId?: string) {
+    const current = await this.repo.findQuoteRow(id, ownerId);
+    if (!current) throw notFound();
+    const drift = quoteRateDrift(await this.loadRatesConfig(), current);
+    if (!drift) return quoteResource(current);
+
+    const updated = await this.repo.updateRates(
+      id,
+      accept
+        ? {
+            ...computeQuoteTotals({
+              lines: [{ subtotal: current.subtotal }],
+              discountType: current.discountType,
+              discountValue: current.discountValue,
+              longDistanceAmount: current.longDistanceAmount,
+              ...drift.current,
+              applyCardSurcharge: current.applyCardSurcharge,
+              depositRate: current.depositRate,
+            }),
+            declinedRates: null,
+          }
+        : { declinedRates: drift.current },
+      ownerId,
+    );
+    if (!updated) throw notFound();
+
+    // Repricing changes the client-facing amounts, so the PDF has to follow (same as update()).
+    if (accept && canGeneratePdf(updated)) {
+      void this.generatePdf(id).catch((err) => {
+        console.error('background pdf regeneration failed', err);
+      });
+    }
+    return quoteResource(updated);
   }
 
   async updateStage(id: string, stageId: QuoteStageId, userId: string, ownerId?: string) {

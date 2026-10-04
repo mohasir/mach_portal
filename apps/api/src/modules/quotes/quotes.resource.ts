@@ -26,6 +26,7 @@ export const publicQuoteColumns = {
   cardSurchargeAmount: quotes.cardSurchargeAmount,
   depositRate: quotes.depositRate,
   depositAmount: quotes.depositAmount,
+  declinedRates: quotes.declinedRates,
   stageId: quotes.stageId,
   isDraft: quotes.isDraft,
   selectOptionsAtQuote: quotes.selectOptionsAtQuote,
