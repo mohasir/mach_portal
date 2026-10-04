@@ -235,7 +235,8 @@
   "viewSettings": {
     "title": "Configuración de vista",
     "hideStale": "Ocultar vencidas",
-    "hideStaleCaption": "Oculta las cotizaciones cuyo evento ya pasó o cuya vigencia expiró. Siguen apareciendo en la búsqueda.",
+    "hideStaleCaption": "Oculta las cotizaciones cuyo evento ya pasó o cuya vigencia expiró.",
+    "hideStaleNote": "Siguen apareciendo en la búsqueda.",
     "includeArchived": "Incluir archivadas",
     "includeArchivedCaption": "Las muestra en la tabla y en una columna aparte del pipeline."
   },

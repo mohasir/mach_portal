@@ -235,7 +235,8 @@
   "viewSettings": {
     "title": "View settings",
     "hideStale": "Hide expired",
-    "hideStaleCaption": "Hides quotes whose event already happened or whose validity expired. They still show up in search.",
+    "hideStaleCaption": "Hides quotes whose event already happened or whose validity expired.",
+    "hideStaleNote": "They still show up in search.",
     "includeArchived": "Include archived",
     "includeArchivedCaption": "Shows them in the table and in a separate pipeline column."
   },

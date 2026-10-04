@@ -1,31 +1,23 @@
 'use client';
 import { useState } from 'react';
-import { Popover, Switch, Tooltip } from 'antd';
+import { Popover, Switch } from 'antd';
 import { Info } from 'lucide-react';
 import { TbSettings } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { IconButton } from '@/components/shared/IconButton';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
+import { WrapperTooltip } from '@/components/shared/WrapperTooltip';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useQuotesViewOptions } from '../../hooks/useQuotesViewOptions';
 
-/** Option name with its explanation behind an info icon (tap to open on touch screens). */
-function OptionLabel({
-  title,
-  hint,
-  isDesktop,
-}: {
-  title: string;
-  hint: string;
-  isDesktop: boolean;
-}) {
+function OptionLabel({ title, hint, note }: { title: string; hint: string; note?: string }) {
   return (
     <span className="inline-flex items-center gap-1.5">
       {title}
-      <Tooltip title={hint} trigger={isDesktop ? 'hover' : 'click'}>
+      <WrapperTooltip title={hint} caption={note}>
         <Info size={14} className="cursor-help text-muted" aria-label={hint} />
-      </Tooltip>
+      </WrapperTooltip>
     </span>
   );
 }
@@ -55,7 +47,7 @@ export function QuotesViewSettings() {
             <OptionLabel
               title={t('viewSettings.hideStale')}
               hint={t('viewSettings.hideStaleCaption')}
-              isDesktop={isDesktop}
+              note={t('viewSettings.hideStaleNote')}
             />
           }
           control={
@@ -73,7 +65,6 @@ export function QuotesViewSettings() {
             <OptionLabel
               title={t('viewSettings.includeArchived')}
               hint={t('viewSettings.includeArchivedCaption')}
-              isDesktop={isDesktop}
             />
           }
           control={
