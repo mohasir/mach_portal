@@ -44,7 +44,9 @@
     "timeFormats": {
       "12h": "12-hour",
       "24h": "24-hour"
-    }
+    },
+    "loadError": "Your preferences couldn't be loaded.",
+    "retry": "Retry"
   },
   "security": {
     "title": "Security",

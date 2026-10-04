@@ -1,5 +1,5 @@
-import { eq } from 'drizzle-orm';
-import type { UserPreferences } from '@repo/schemas';
+import { eq, sql } from 'drizzle-orm';
+import type { UpdateUserPreferencesInput } from '@repo/schemas';
 import type { Database } from '../../db';
 import { userPreferences } from '../../db/schema';
 import {
@@ -19,13 +19,18 @@ export class UserPreferencesRepository {
       .then((r) => r[0] as PublicUserPreferences | undefined);
   }
 
-  upsert(userId: string, preferences: UserPreferences) {
+  // Merges in SQL so concurrent partial saves (e.g. locale from one device, time format from
+  // another) can't overwrite each other, and only the keys actually sent are stored.
+  merge(userId: string, patch: UpdateUserPreferencesInput) {
     return this.db
       .insert(userPreferences)
-      .values({ userId, preferences })
+      .values({ userId, preferences: patch })
       .onConflictDoUpdate({
         target: userPreferences.userId,
-        set: { preferences, updatedAt: new Date() },
+        set: {
+          preferences: sql`${userPreferences.preferences} || excluded.preferences`,
+          updatedAt: new Date(),
+        },
       })
       .returning(publicUserPreferencesColumns)
       .then((r) => r[0]!);

@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/es';
@@ -6,6 +7,7 @@ import 'dayjs/locale/en';
 import type { TimeFormat } from '@repo/schemas';
 import type { Locale as AppLocale } from '@/lib/i18n/config';
 
+dayjs.extend(customParseFormat);
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
 
@@ -41,13 +43,17 @@ export const formatDateTime = (value: DateInput, locale: AppLocale, timeFormat: 
     `${MEDIUM_DATE_FORMAT[locale]}, ${TIME_DISPLAY_FORMAT[timeFormat]}`,
   );
 
-// `eventTime` is stored as a plain "HH:mm" string, not a full date.
-export const formatTime = (value: string, timeFormat: TimeFormat) =>
-  dayjs(value, 'HH:mm').format(TIME_DISPLAY_FORMAT[timeFormat]);
+// `eventTime` is a free-text column: pickers save "HH:mm", but older rows may hold anything
+// ("6pm"), which is shown as typed rather than as "Invalid Date".
+export const formatTime = (value: string, timeFormat: TimeFormat) => {
+  const parsed = dayjs(value, ['HH:mm', 'H:mm'], true);
+  return parsed.isValid() ? parsed.format(TIME_DISPLAY_FORMAT[timeFormat]) : value;
+};
 
 /** Hour-of-day label for calendar axes: "2 pm" / "14:00". */
 export const formatHour = (hour: number, timeFormat: TimeFormat) =>
-  dayjs().hour(hour).minute(0).format(HOUR_DISPLAY_FORMAT[timeFormat]);
+  // A fixed date: on a DST switch day, today's 2 am doesn't exist and would shift to 3 am.
+  dayjs('2000-01-01').hour(hour).format(HOUR_DISPLAY_FORMAT[timeFormat]);
 
 /** "6:30" — hour/minute only, no am/pm (paired with formatTimeMeridiem). */
 export const formatTimeHourMinute = (value: string) => dayjs(value, 'HH:mm').format('h:mm');

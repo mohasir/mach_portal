@@ -11,8 +11,7 @@ export class UserPreferencesService {
   }
 
   async update(userId: string, input: UpdateUserPreferencesInput) {
-    const current = await this.get(userId);
-    const row = await this.repo.upsert(userId, { ...current, ...input });
+    const row = await this.repo.merge(userId, input);
     return userPreferencesResource(row);
   }
 }

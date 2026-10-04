@@ -30,8 +30,8 @@ export function useUpdateUserPreferences() {
 }
 
 // Once per signed-in user, lines up the browser's locale store with the saved `locale`
-// preference: the saved value wins when there is one; otherwise the browser's current choice is
-// saved so other devices pick it up. Later changes go through UserPreferencesCard, which saves
+// preference: the saved value wins when there is one; otherwise the language picked on this
+// browser (if any — the bare default doesn't count) is saved so other devices pick it up. Later changes go through UserPreferencesCard, which saves
 // and applies them itself.
 export function useSyncUserPreferences(userId: string | undefined) {
   const trpc = useTRPC();
@@ -39,6 +39,7 @@ export function useSyncUserPreferences(userId: string | undefined) {
   const { data: preferences } = useUserPreferences(!!userId);
   const { updateUserPreferences } = useUpdateUserPreferences();
   const locale = useLocaleStore((s) => s.locale);
+  const chosen = useLocaleStore((s) => s.chosen);
   const setLocale = useLocaleStore((s) => s.setLocale);
   const reconciledFor = useRef<string | undefined>(undefined);
   const seenUserId = useRef(userId);
@@ -60,7 +61,8 @@ export function useSyncUserPreferences(userId: string | undefined) {
       if (preferences.locale !== locale) setLocale(preferences.locale);
       return;
     }
+    if (!chosen) return;
     const parsed = localeSchema.safeParse(locale);
     if (parsed.success) void updateUserPreferences({ locale: parsed.data });
-  }, [userId, preferences, locale, setLocale]);
+  }, [userId, preferences, locale, chosen, setLocale]);
 }

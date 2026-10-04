@@ -44,7 +44,9 @@
     "timeFormats": {
       "12h": "12 horas",
       "24h": "24 horas"
-    }
+    },
+    "loadError": "No se pudieron cargar tus preferencias.",
+    "retry": "Reintentar"
   },
   "security": {
     "title": "Seguridad",

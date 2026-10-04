@@ -10,6 +10,7 @@ import {
   type TimeFormat,
 } from '@repo/schemas';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
+import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { WrapperSpin } from '@/components/shared/WrapperSpin';
 import i18n from '@/lib/i18n/config';
@@ -29,7 +30,7 @@ interface UserPreferencesFormValues {
 export function UserPreferencesCard() {
   const { t } = useTranslation('settings');
   const { message } = App.useApp();
-  const { data, isLoading } = useUserPreferences();
+  const { data, isLoading, isError, refetch } = useUserPreferences();
   const { updateUserPreferences, isPending } = useUpdateUserPreferences();
   const currentLocale = useLocaleStore((s) => s.locale);
   const setLocale = useLocaleStore((s) => s.setLocale);
@@ -44,6 +45,16 @@ export function UserPreferencesCard() {
     : undefined;
   const unchanged = useIsFormUnchanged(form, initialValues);
 
+  if (isError)
+    return (
+      <WrapperAlert
+        type="error"
+        closeable={false}
+        title={t('userPreferences.loadError')}
+        actionText={t('userPreferences.retry')}
+        onAction={() => void refetch()}
+      />
+    );
   if (isLoading || !initialValues) return <Skeleton active paragraph={{ rows: 3 }} />;
 
   const onFinish = async (values: UserPreferencesFormValues) => {
