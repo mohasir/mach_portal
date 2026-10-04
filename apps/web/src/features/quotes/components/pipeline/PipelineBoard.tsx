@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Skeleton } from 'antd';
 import {
   QUOTE_STAGE,
@@ -67,11 +67,18 @@ export function PipelineBoard({
     return moveStage(id, to);
   };
 
+  // A guarded transition may wait on a confirmation; by the time it commits, filters can have
+  // changed, so it goes through the latest board query instead of the one from the drop.
+  const latestCommit = useRef(commitTransition);
+  useEffect(() => {
+    latestCommit.current = commitTransition;
+  });
+
   const runTransition = (id: string, from: QuoteStageId, to: QuoteStageId, isDraft: boolean) => {
     // The board on screen still belongs to the previous filters, so the optimistic move would
     // land in a cache entry that isn't shown yet; the card would snap back under a success toast.
     if (isPlaceholderData) return;
-    guardTransition(id, from, to, isDraft, () => commitTransition(id, to));
+    guardTransition(id, from, to, isDraft, () => latestCommit.current(id, to));
   };
 
   return (

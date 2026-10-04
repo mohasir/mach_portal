@@ -243,21 +243,21 @@
   "rateDrift": {
     "cardSurchargeRate": {
       "title": "La tarifa por pago con tarjeta cambió",
-      "up": "Originalmente cotizaste con un recargo del <bold>{{saved}}</bold>, pero la tarifa actual subió al <bold>{{current}}</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido.",
-      "down": "Originalmente cotizaste con un recargo del <bold>{{saved}}</bold>, pero la tarifa actual bajó al <bold>{{current}}</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido."
+      "up": "Originalmente cotizaste con un recargo del <bold>{{saved}}%</bold>, pero la tarifa actual subió al <bold>{{current}}%</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido.",
+      "down": "Originalmente cotizaste con un recargo del <bold>{{saved}}%</bold>, pero la tarifa actual bajó al <bold>{{current}}%</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido."
     },
     "taxRate": {
       "title": "El impuesto del estado cambió",
-      "up": "Originalmente cotizaste con un impuesto del <bold>{{saved}}</bold>, pero la tasa actual subió al <bold>{{current}}</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido.",
-      "down": "Originalmente cotizaste con un impuesto del <bold>{{saved}}</bold>, pero la tasa actual bajó al <bold>{{current}}</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido."
+      "up": "Originalmente cotizaste con un impuesto del <bold>{{saved}}%</bold>, pero la tasa actual subió al <bold>{{current}}%</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido.",
+      "down": "Originalmente cotizaste con un impuesto del <bold>{{saved}}%</bold>, pero la tasa actual bajó al <bold>{{current}}%</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido."
     },
     "both": {
       "title": "Cambiaron el impuesto y la tarifa por pago con tarjeta",
-      "body": "Originalmente cotizaste con un impuesto del <bold>{{savedTax}}</bold> y un recargo del <bold>{{savedSurcharge}}</bold>, pero ahora son del <bold>{{currentTax}}</bold> y del <bold>{{currentSurcharge}}</bold>. ¿Deseas aplicar los nuevos porcentajes? Esto ajustará el costo total y el depósito requerido.",
+      "body": "Originalmente cotizaste con un impuesto del <bold>{{savedTax}}%</bold> y un recargo del <bold>{{savedSurcharge}}%</bold>, pero ahora son del <bold>{{currentTax}}%</bold> y del <bold>{{currentSurcharge}}%</bold>. ¿Deseas aplicar los nuevos porcentajes? Esto ajustará el costo total y el depósito requerido.",
       "keep": "Dejar como están",
       "apply": "Aplicar los nuevos"
     },
-    "keep": "Dejar en {{rate}}",
-    "apply": "Aplicar {{rate}}"
+    "keep": "Dejar en {{rate}}%",
+    "apply": "Aplicar {{rate}}%"
   }
 }

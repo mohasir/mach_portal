@@ -3,9 +3,10 @@ import type { ReactNode } from 'react';
 import { Tooltip, type TooltipProps } from 'antd';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 
-type WrapperTooltipProps = Omit<TooltipProps, 'title'> & {
+type WrapperTooltipProps = Omit<TooltipProps, 'title' | 'classNames'> & {
   title: ReactNode;
   caption?: ReactNode;
+  classNames?: { root?: string; container?: string; arrow?: string };
 };
 
 export function WrapperTooltip({
@@ -22,7 +23,11 @@ export function WrapperTooltip({
       // `color` also paints the arrow, which a container class can't reach.
       color="black"
       trigger={trigger ?? (isDesktop ? 'hover' : 'click')}
-      classNames={{ container: 'px-4 py-3 text-white-300', ...classNames }}
+      classNames={{
+        ...classNames,
+        // Merged rather than replaced, so a caller's container class keeps the base look.
+        container: `px-4 py-3 text-gray-300 ${classNames?.container ?? ''}`,
+      }}
       title={
         <span className="flex flex-col gap-0.5">
           <span className="leading-5">{title}</span>

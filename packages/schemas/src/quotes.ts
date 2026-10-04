@@ -240,7 +240,9 @@ const sameRates = (a: QuoteRates, b: QuoteRates) =>
 /**
  * Config rates that differ from a pending quote's saved ones, for the user to accept or keep.
  * Only rates the quote actually applies count, since the others can't change its total: tax when
- * it was saved with some, card surcharge when it's turned on. A rate that doesn't count stays at
+ * it was saved with some and config still taxes its state (no state, or tax by state turned off,
+ * would read as 0% and offer to drop a tax the quote keeps anyway, see resolveQuoteRates), and
+ * card surcharge when it's turned on. A rate that doesn't count stays at
  * its saved value in `current`, so accepting never touches it. Once sent, a quote always keeps its
  * rates, and a difference the user already declined isn't offered again until config changes.
  */
@@ -255,7 +257,10 @@ export function quoteRateDrift(
   if (quote.stageId !== QUOTE_STAGE.PENDING) return null;
   const saved = { taxRate: quote.taxRate, cardSurchargeRate: quote.cardSurchargeRate };
   const current = {
-    taxRate: saved.taxRate > 0 ? configTaxRate(config, quote.state) : saved.taxRate,
+    taxRate:
+      saved.taxRate > 0 && quote.state && config.applyTaxByState
+        ? configTaxRate(config, quote.state)
+        : saved.taxRate,
     cardSurchargeRate: quote.applyCardSurcharge
       ? config.cardSurchargeRate
       : saved.cardSurchargeRate,

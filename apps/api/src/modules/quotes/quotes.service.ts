@@ -308,21 +308,26 @@ export class QuotesService {
   }
 
   async rateDrift(id: string, ownerId?: string) {
-    const current = await this.repo.findQuoteRow(id, ownerId);
+    const [current, config] = await Promise.all([
+      this.repo.findQuoteRow(id, ownerId),
+      this.loadRatesConfig(),
+    ]);
     if (!current) throw notFound();
-    const config = await this.loadRatesConfig();
     return config.promptRateChanges ? quoteRateDrift(config, current) : null;
   }
 
   async resolveRateDrift(id: string, accept: boolean, ownerId?: string) {
-    const current = await this.repo.findQuoteRow(id, ownerId);
+    const [current, config] = await Promise.all([
+      this.repo.findQuoteRow(id, ownerId),
+      this.loadRatesConfig(),
+    ]);
     if (!current) throw notFound();
-    const config = await this.loadRatesConfig();
     const drift = config.promptRateChanges ? quoteRateDrift(config, current) : null;
     if (!drift) return quoteResource(current);
 
     const updated = await this.repo.updateRates(
       id,
+      drift.saved,
       accept
         ? {
             ...computeQuoteTotals({
@@ -339,7 +344,12 @@ export class QuotesService {
         : { declinedRates: drift.current },
       ownerId,
     );
-    if (!updated) throw notFound();
+    // It was sent or edited meanwhile: nothing left to answer, so report how it stands now.
+    if (!updated) {
+      const latest = await this.repo.findQuoteRow(id, ownerId);
+      if (!latest) throw notFound();
+      return quoteResource(latest);
+    }
 
     // Repricing changes the client-facing amounts, so the PDF has to follow (same as update()).
     if (accept && canGeneratePdf(updated)) {

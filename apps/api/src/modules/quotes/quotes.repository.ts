@@ -237,15 +237,27 @@ export class QuotesRepository {
       .then((r) => r[0]);
   }
 
+  // Only while the quote is still pending with the rates the caller read: a concurrent send or
+  // edit in between must not be repriced (sent quotes keep their rates). No row means it changed.
   updateRates(
     id: string,
+    expected: { taxRate: number; cardSurchargeRate: number },
     values: Partial<Omit<typeof quotes.$inferInsert, 'id' | 'seq' | 'number'>>,
     ownerId?: string,
   ) {
     return this.db
       .update(quotes)
       .set(values)
-      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt), this.ownerFilter(ownerId)))
+      .where(
+        and(
+          eq(quotes.id, id),
+          eq(quotes.stageId, QUOTE_STAGE.PENDING),
+          eq(quotes.taxRate, expected.taxRate),
+          eq(quotes.cardSurchargeRate, expected.cardSurchargeRate),
+          isNull(quotes.archivedAt),
+          this.ownerFilter(ownerId),
+        ),
+      )
       .returning(publicQuoteColumns)
       .then((r) => r[0]);
   }

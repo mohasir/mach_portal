@@ -1,6 +1,7 @@
 'use client';
 import { Form, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { toDisplayPercent } from '@/lib/utils/percent';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
@@ -28,7 +29,7 @@ export function ExtraChargesSection({
           label={<FieldLabel title={t('builder.event.longDistance')} />}
           extra={
             state.state && taxRate > 0
-              ? t('builder.event.longDistanceHint', { rate: Math.round(taxRate * 1000) / 10 })
+              ? t('builder.event.longDistanceHint', { rate: toDisplayPercent(taxRate) })
               : undefined
           }
           className="mb-0"
@@ -45,7 +46,7 @@ export function ExtraChargesSection({
           className="mt-4"
           title={t('builder.event.cardSurcharge')}
           caption={t('builder.event.cardSurchargeHint', {
-            rate: Math.round(cardSurchargeRate * 100),
+            rate: toDisplayPercent(cardSurchargeRate),
           })}
           control={
             <Switch

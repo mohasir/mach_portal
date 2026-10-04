@@ -243,21 +243,21 @@
   "rateDrift": {
     "cardSurchargeRate": {
       "title": "The card payment fee changed",
-      "up": "You originally quoted with a <bold>{{saved}}</bold> surcharge, but the current fee went up to <bold>{{current}}</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit.",
-      "down": "You originally quoted with a <bold>{{saved}}</bold> surcharge, but the current fee went down to <bold>{{current}}</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit."
+      "up": "You originally quoted with a <bold>{{saved}}%</bold> surcharge, but the current fee went up to <bold>{{current}}%</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit.",
+      "down": "You originally quoted with a <bold>{{saved}}%</bold> surcharge, but the current fee went down to <bold>{{current}}%</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit."
     },
     "taxRate": {
       "title": "The state tax changed",
-      "up": "You originally quoted with a <bold>{{saved}}</bold> tax, but the current rate went up to <bold>{{current}}</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit.",
-      "down": "You originally quoted with a <bold>{{saved}}</bold> tax, but the current rate went down to <bold>{{current}}</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit."
+      "up": "You originally quoted with a <bold>{{saved}}%</bold> tax, but the current rate went up to <bold>{{current}}%</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit.",
+      "down": "You originally quoted with a <bold>{{saved}}%</bold> tax, but the current rate went down to <bold>{{current}}%</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit."
     },
     "both": {
       "title": "The tax and card payment fee changed",
-      "body": "You originally quoted with a <bold>{{savedTax}}</bold> tax and a <bold>{{savedSurcharge}}</bold> surcharge, but they are now <bold>{{currentTax}}</bold> and <bold>{{currentSurcharge}}</bold>. Do you want to apply the new percentages? This will adjust the total cost and the required deposit.",
+      "body": "You originally quoted with a <bold>{{savedTax}}%</bold> tax and a <bold>{{savedSurcharge}}%</bold> surcharge, but they are now <bold>{{currentTax}}%</bold> and <bold>{{currentSurcharge}}%</bold>. Do you want to apply the new percentages? This will adjust the total cost and the required deposit.",
       "keep": "Leave as is",
       "apply": "Apply new ones"
     },
-    "keep": "Leave at {{rate}}",
-    "apply": "Apply {{rate}}"
+    "keep": "Leave at {{rate}}%",
+    "apply": "Apply {{rate}}%"
   }
 }
