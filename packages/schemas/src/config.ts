@@ -14,6 +14,7 @@ export type UpdateTaxRatesInput = z.infer<typeof updateTaxRatesSchema>;
 
 export const updateTaxPreferencesSchema = z.object({
   applyTaxByState: z.boolean(),
+  cardSurchargeRate: rateSchema('config.validation.cardSurchargeRateInvalid'),
 });
 export type UpdateTaxPreferencesInput = z.infer<typeof updateTaxPreferencesSchema>;
 
@@ -30,7 +31,6 @@ export const updateQuoteDefaultsSchema = z.object({
     .number()
     .int()
     .min(0, 'config.validation.optionsSelectionDeadlineDaysInvalid'),
-  cardSurchargeRate: rateSchema('config.validation.cardSurchargeRateInvalid'),
 });
 export type UpdateQuoteDefaultsInput = z.infer<typeof updateQuoteDefaultsSchema>;
 

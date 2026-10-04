@@ -27,7 +27,7 @@ export function QuoteDefaultsCard() {
   if (isLoading || !data) return <Skeleton active paragraph={{ rows: 5 }} />;
 
   const canEdit = can({ [RESOURCES.QUOTE_DEFAULTS]: [ACTIONS.UPDATE] });
-  const minSeqStart = Math.max(1, data.lastUsedSeq);
+  const minSeqStart = data.lastUsedSeq + 1;
   const onFinish = (values: QuoteDefaultsFormValues) => {
     void updateQuoteDefaults(toQuoteDefaultsUpdateInput(values));
   };
@@ -126,20 +126,6 @@ export function QuoteDefaultsCard() {
             ]}
           >
             <InputNumber min={0} className="w-full" suffix={t('quoteDefaults.days')} />
-          </Form.Item>
-        </FieldRow>
-
-        <FieldRow
-          title={t('quoteDefaults.cardSurchargeRate')}
-          caption={t('quoteDefaults.cardSurchargeRateCaption')}
-          required
-        >
-          <Form.Item
-            name="cardSurchargeRatePercent"
-            className="mb-0"
-            rules={[{ required: true, message: t('validation.cardSurchargeRateInvalid') }]}
-          >
-            <InputNumber min={0} max={100} step={1} precision={0} suffix="%" className="w-full" />
           </Form.Item>
         </FieldRow>
         {canEdit && (

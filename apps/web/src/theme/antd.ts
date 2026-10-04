@@ -163,5 +163,9 @@ export const machBarTheme: ThemeConfig = {
       itemSelectedColor: '#ffffff',
       trackBg: MB.oliveFaint,
     },
+    Divider: {
+      colorSplit: 'rgba(0,0,0,0.20)',
+      lineWidth: 0.5,
+    },
   },
 };

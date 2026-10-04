@@ -38,7 +38,7 @@ export class ConfigService {
 
   async updateQuoteDefaults(input: UpdateQuoteDefaultsInput) {
     const lastUsedSeq = await this.repo.getLastUsedSeq();
-    if (input.quoteSeqStart < lastUsedSeq) {
+    if (input.quoteSeqStart <= lastUsedSeq) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         cause: new AppError(ErrorCodes.config.SEQUENCE_BELOW_LAST),

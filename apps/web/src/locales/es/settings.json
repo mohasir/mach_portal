@@ -59,9 +59,11 @@
     }
   },
   "taxRates": {
-    "title": "Impuestos por estado",
+    "title": "Impuestos",
     "applyByState": "Aplicar impuesto por estado",
-    "applyByStateCaption": "Impuesto aplicado a las cotizaciones según el estado."
+    "applyByStateCaption": "Impuesto aplicado a las cotizaciones según el estado.",
+    "cardSurchargeRate": "Recargo tarjeta/cheque",
+    "cardSurchargeRateCaption": "Porcentaje que se suma al total de la cotización cuando el switch de recargo está activado."
   },
   "quotePdfTemplate": {
     "title": "Plantilla de PDF",
@@ -124,9 +126,7 @@
     "currencyCaption": "Moneda en la que se muestran los montos de las cotizaciones.",
     "optionsSelectionDeadlineDays": "Fecha límite para elegir opciones",
     "optionsSelectionDeadlineDaysCaption": "Días antes del evento para los que debería estar confirmada la elección de opciones del cliente.",
-    "days": "días",
-    "cardSurchargeRate": "Recargo tarjeta/cheque",
-    "cardSurchargeRateCaption": "Porcentaje que se suma al total de la cotización cuando el switch de recargo está activado."
+    "days": "días"
   },
   "permissions": {
     "title": "Permisos",
