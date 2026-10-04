@@ -89,14 +89,7 @@ export function QuotesToolbar({
             <Button
               type="link"
               className="px-0 py-1 h-auto"
-              onClick={() =>
-                setFilter({
-                  states: undefined,
-                  assignedToIds: undefined,
-                  eventTypeIds: undefined,
-                  isDraft: undefined,
-                })
-              }
+              onClick={() => onFiltersChange({ search: filters.search })}
             >
               {t('filters.clear')}
             </Button>
@@ -106,7 +99,7 @@ export function QuotesToolbar({
 
       <div className="flex min-h-8 items-center justify-between gap-2">
         {total !== undefined && (
-          <span className="text-sm text-gray-500">{tc('table.results', { count: total })}</span>
+          <span className="text-sm text-muted">{tc('table.results', { count: total })}</span>
         )}
         <div className="ml-auto flex items-center gap-4">
           {views.length > 1 && (
