@@ -13,13 +13,10 @@
   },
   "filters": {
     "state": "Estado",
-    "button": "Filtros",
-    "clear": "Limpiar filtros",
     "assignee": "Asignado a",
     "eventType": "Tipo de evento",
     "drafts": "Borradores",
     "me": "Yo",
-    "clearSearch": "Limpiar búsqueda",
     "stale": "Vencidas",
     "archived": "Archivadas"
   },

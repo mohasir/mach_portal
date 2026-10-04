@@ -58,6 +58,7 @@
     "nextMonth": "Next month"
   },
   "filters": {
+    "button": "Filters",
     "clearAll": "Clear all",
     "from": "From",
     "to": "To",

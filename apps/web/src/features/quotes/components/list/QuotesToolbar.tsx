@@ -1,11 +1,8 @@
 'use client';
-import { useState } from 'react';
-import { Badge, Button } from 'antd';
 import { LayoutGrid, List } from 'lucide-react';
-import { TbFilter2 } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import type { QuotesViewOptions } from '@repo/schemas';
-import { SearchInput } from '@/components/shared/SearchInput';
+import { FilterToolbar } from '@/components/shared/FilterToolbar';
 import { ViewModeToggle } from '@/components/shared/ViewModeToggle';
 import { countActiveFilters } from '../../helpers';
 import { QuotesFilterChips } from './QuotesFilterChips';
@@ -50,73 +47,25 @@ export function QuotesToolbar({
   total,
 }: QuotesToolbarProps) {
   const { t } = useTranslation('quotes');
-  const { t: tc } = useTranslation('common');
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const activeFilters = countActiveFilters(filters);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <SearchInput
-          value={filters.search}
-          loading={searching}
-          placeholder={tc('table.search')}
-          onSearch={(value) => onFiltersChange({ search: value || undefined })}
-          className="min-w-0 flex-1 sm:max-w-xs"
+    <FilterToolbar
+      search={filters.search}
+      onSearch={(value) => onFiltersChange({ search: value || undefined })}
+      searching={searching}
+      activeFilters={countActiveFilters(filters)}
+      onClearFilters={() => onFiltersChange(clearFiltersPatch(filters))}
+      chips={
+        <QuotesFilterChips
+          filters={filters}
+          viewOptions={viewOptions}
+          view={view}
+          onChange={onFiltersChange}
         />
-        <Badge count={activeFilters} offset={[-5, 5]}>
-          <Button
-            icon={<TbFilter2 size={18} />}
-            type={filtersOpen ? 'primary' : 'default'}
-            onClick={() => setFiltersOpen((open) => !open)}
-            aria-label={t('filters.button')}
-            aria-expanded={filtersOpen}
-            className="px-3"
-          >
-            <span className="hidden sm:inline">{t('filters.button')}</span>
-          </Button>
-        </Badge>
-      </div>
-
-      {filtersOpen && (
-        <div className="py-1">
-          <QuotesFilterChips
-            filters={filters}
-            viewOptions={viewOptions}
-            view={view}
-            onChange={onFiltersChange}
-          />
-        </div>
-      )}
-
-      {(filters.search || activeFilters > 0) && (
-        <div className="flex items-center justify-end gap-2">
-          {filters.search && (
-            <Button
-              type="link"
-              className="px-0 py-1 h-auto"
-              onClick={() => onFiltersChange({ search: undefined })}
-            >
-              {t('filters.clearSearch')}
-            </Button>
-          )}
-          {activeFilters > 0 && (
-            <Button
-              type="link"
-              className="px-0 py-1 h-auto"
-              onClick={() => onFiltersChange(clearFiltersPatch(filters))}
-            >
-              {t('filters.clear')}
-            </Button>
-          )}
-        </div>
-      )}
-
-      <div className="flex min-h-8 items-center justify-between gap-2">
-        {total !== undefined && (
-          <span className="text-sm text-muted">{tc('table.results', { count: total })}</span>
-        )}
-        <div className="ml-auto flex items-center gap-4">
+      }
+      total={total}
+      actions={
+        <>
           {views.length > 1 && (
             <ViewModeToggle<QuotesViewTab>
               className="ml-auto"
@@ -130,8 +79,8 @@ export function QuotesToolbar({
             />
           )}
           <QuotesViewSettings />
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    />
   );
 }

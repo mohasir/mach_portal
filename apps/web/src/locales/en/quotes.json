@@ -13,13 +13,10 @@
   },
   "filters": {
     "state": "State",
-    "button": "Filters",
-    "clear": "Clear filters",
     "assignee": "Assignee",
     "eventType": "Event type",
     "drafts": "Drafts",
     "me": "Me",
-    "clearSearch": "Clear search",
     "stale": "Expired",
     "archived": "Archived"
   },

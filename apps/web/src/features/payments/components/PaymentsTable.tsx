@@ -1,13 +1,11 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Badge, Button } from 'antd';
-import { TbFilter2 } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { paginationOf, type PaymentsListQuery } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { resolveDateRange } from '@/components/shared/FilterChips';
-import { SearchInput } from '@/components/shared/SearchInput';
+import { FilterToolbar } from '@/components/shared/FilterToolbar';
 import { usePaymentsList } from '../hooks/usePayments';
 import type { Payment, PaymentsFilters } from '../types';
 import { usePaymentsColumns } from './columns';
@@ -27,10 +25,8 @@ const countActiveFilters = ({ date, clientIds, eventTypeIds, methods }: Payments
 
 export function PaymentsTable() {
   const { t } = useTranslation('payments');
-  const { t: tc } = useTranslation('common');
   const router = useRouter();
   const [filters, setFilters] = useState<PaymentsFilters>(EMPTY_FILTERS);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const table = useDataTable<PaymentsListQuery['sortBy']>({
     defaultSortBy: 'paidAt',
     externalFilters: filters,
@@ -47,68 +43,21 @@ export function PaymentsTable() {
   });
   const total = paginationOf(data)?.total;
   const search = table.query.search;
-  const activeFilters = countActiveFilters(filters);
 
   const goToEvent = (row: Payment) => router.push(`/admin/events/${row.eventId}`);
   const setFilter = (patch: Partial<PaymentsFilters>) => setFilters({ ...filters, ...patch });
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <SearchInput
-            value={search}
-            loading={isPlaceholderData}
-            placeholder={tc('table.search')}
-            onSearch={table.tableProps.onSearch}
-            className="min-w-0 flex-1 sm:max-w-xs"
-          />
-          <Badge count={activeFilters} offset={[-5, 5]}>
-            <Button
-              icon={<TbFilter2 size={18} />}
-              type={filtersOpen ? 'primary' : 'default'}
-              onClick={() => setFiltersOpen((open) => !open)}
-              aria-label={t('filters.title')}
-              aria-expanded={filtersOpen}
-              className="px-3"
-            >
-              <span className="hidden sm:inline">{t('filters.title')}</span>
-            </Button>
-          </Badge>
-        </div>
-
-        {filtersOpen && (
-          <div className="py-1">
-            <PaymentsFilterChips filters={filters} onChange={setFilter} />
-          </div>
-        )}
-
-        <div className="flex min-h-8 items-center justify-between gap-2">
-          {total !== undefined && (
-            <span className="text-sm text-gray-500">{tc('table.results', { count: total })}</span>
-          )}
-          <div className="ml-auto flex items-center gap-4">
-            {search && (
-              <Button
-                type="link"
-                className="h-auto px-0 py-1"
-                onClick={() => table.tableProps.onSearch('')}
-              >
-                {tc('table.clearSearch')}
-              </Button>
-            )}
-            {activeFilters > 0 && (
-              <Button
-                type="link"
-                className="h-auto px-0 py-1"
-                onClick={() => setFilters(EMPTY_FILTERS)}
-              >
-                {tc('table.clearFilters')}
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
+      <FilterToolbar
+        search={search}
+        onSearch={table.tableProps.onSearch}
+        searching={isPlaceholderData}
+        activeFilters={countActiveFilters(filters)}
+        onClearFilters={() => setFilters(EMPTY_FILTERS)}
+        chips={<PaymentsFilterChips filters={filters} onChange={setFilter} />}
+        total={total}
+      />
 
       <DataTable<Payment>
         {...table.tableProps}

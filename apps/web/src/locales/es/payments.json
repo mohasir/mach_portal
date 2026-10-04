@@ -5,7 +5,6 @@
     "income": "Ingresos"
   },
   "filters": {
-    "title": "Filtros",
     "date": "Fecha de pago",
     "client": "Cliente",
     "eventType": "Tipo de evento",
