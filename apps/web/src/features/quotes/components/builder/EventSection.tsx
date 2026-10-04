@@ -2,7 +2,7 @@
 import { DatePicker, Form, Input, Select } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { STATE_NAMES, stateSchema, type StateValue } from '@repo/schemas';
+import { configTaxRate, STATE_NAMES, stateSchema, type StateValue } from '@repo/schemas';
 import type { EventType } from '@/features/event-types';
 import { AutoCloseTimePicker } from '@/components/shared/Inputs/AutoCloseTimePicker';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
@@ -104,9 +104,10 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
 
       // Suggests the fee from the new state's tax rate — a starting point the staff overrides freely.
       if (config?.appSettings.applyTaxByState) {
-        const nextTaxRate = changed.state
-          ? (config?.stateSettings.find((s) => s.state === changed.state)?.taxRate ?? 0)
-          : 0;
+        const nextTaxRate = configTaxRate(
+          { ...config.appSettings, stateSettings: config.stateSettings },
+          changed.state,
+        );
         const subtotal = state.lines.reduce((sum, line) => sum + line.subtotal, 0);
         const suggestedLongDistance = Math.round(subtotal * nextTaxRate);
         patch.longDistanceAmount = suggestedLongDistance;

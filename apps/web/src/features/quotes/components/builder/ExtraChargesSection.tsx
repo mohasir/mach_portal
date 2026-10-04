@@ -5,22 +5,21 @@ import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
 import { WrapperCard } from '@/components/shared/WrapperCard';
-import { useConfig } from '@/features/settings';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 
 interface ExtraChargesSectionProps {
   readOnly?: boolean;
+  taxRate: number;
   cardSurchargeRate: number;
 }
 
-export function ExtraChargesSection({ readOnly, cardSurchargeRate }: ExtraChargesSectionProps) {
+export function ExtraChargesSection({
+  readOnly,
+  taxRate,
+  cardSurchargeRate,
+}: ExtraChargesSectionProps) {
   const { t } = useTranslation('quotes');
   const { state, setFields } = useQuoteBuilder();
-  const { data: config } = useConfig();
-
-  const stateTaxRate = state.state
-    ? (config?.stateSettings.find((s) => s.state === state.state)?.taxRate ?? 0)
-    : 0;
 
   return (
     <WrapperCard title={t('builder.event.taxesGroupTitle')}>
@@ -28,10 +27,8 @@ export function ExtraChargesSection({ readOnly, cardSurchargeRate }: ExtraCharge
         <Form.Item
           label={<FieldLabel title={t('builder.event.longDistance')} />}
           extra={
-            config?.appSettings.applyTaxByState && state.state
-              ? t('builder.event.longDistanceHint', {
-                  rate: Math.round(stateTaxRate * 1000) / 10,
-                })
+            state.state && taxRate > 0
+              ? t('builder.event.longDistanceHint', { rate: Math.round(taxRate * 1000) / 10 })
               : undefined
           }
           className="mb-0"

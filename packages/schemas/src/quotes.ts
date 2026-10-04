@@ -176,6 +176,12 @@ export interface SavedQuoteRates {
   cardSurchargeRate: number;
 }
 
+/** The tax rate config assigns to `state` (0 when tax by state is off or the state has none). */
+export const configTaxRate = (config: QuoteRatesConfig, state: StateValue | null | undefined) =>
+  config.applyTaxByState
+    ? (config.stateSettings.find((s) => s.state === state)?.taxRate ?? 0)
+    : 0;
+
 // A sent quote keeps the rates it was sent with, so later config edits don't silently reprice
 // it. Moving the event to another state is a change to the quote itself, so it takes that
 // state's current tax rate; clearing the state is not a move and keeps the sent rate.
@@ -184,14 +190,11 @@ export function resolveQuoteRates(
   state: StateValue | null | undefined,
   saved?: SavedQuoteRates | null,
 ): { taxRate: number; cardSurchargeRate: number } {
-  const configTaxRate = config.applyTaxByState
-    ? (config.stateSettings.find((s) => s.state === state)?.taxRate ?? 0)
-    : 0;
   if (saved?.stageId !== QUOTE_STAGE.QUOTED) {
-    return { taxRate: configTaxRate, cardSurchargeRate: config.cardSurchargeRate };
+    return { taxRate: configTaxRate(config, state), cardSurchargeRate: config.cardSurchargeRate };
   }
   return {
-    taxRate: !state || state === saved.state ? saved.taxRate : configTaxRate,
+    taxRate: !state || state === saved.state ? saved.taxRate : configTaxRate(config, state),
     cardSurchargeRate: saved.cardSurchargeRate,
   };
 }

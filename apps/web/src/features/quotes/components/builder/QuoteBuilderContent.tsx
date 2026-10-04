@@ -17,7 +17,7 @@ import { useConfirmModal, type ConfirmModalType } from '@/components/shared/Conf
 import { PageHeader } from '@/components/shared/PageHeader';
 import { QuoteNumberHeader } from '@/components/shared/QuoteNumberHeader';
 import { showEnvBanner } from '@/env';
-import { useConfig } from '@/features/settings';
+import type { Config } from '@/features/settings';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useApiError } from '@/lib/error/useApiError';
@@ -40,7 +40,9 @@ interface QuoteBuilderContentProps {
   number?: string;
   stageId?: QuoteStageId;
   isDraft?: boolean;
-  savedRates?: SavedQuoteRates;
+  config: Config;
+  /** The saved quote's rates; frozen once it's been sent (see resolveQuoteRates). */
+  savedRates?: Omit<SavedQuoteRates, 'stageId'>;
   createdByName?: string | null;
   assignedToId?: string | null;
   assignedToName?: string | null;
@@ -53,6 +55,7 @@ export function QuoteBuilderContent({
   number,
   stageId,
   isDraft,
+  config,
   savedRates,
   createdByName,
   assignedToId,
@@ -66,7 +69,6 @@ export function QuoteBuilderContent({
   const router = useRouter();
   const isDesktop = useIsDesktop();
   const { state, initialState, setFields } = useQuoteBuilder();
-  const { data: config } = useConfig();
   const { money } = useMoneyFormatter();
   const clientSectionRef = useRef<ClientSectionHandle>(null);
   const onApiError = useApiError();
@@ -85,13 +87,11 @@ export function QuoteBuilderContent({
   const isUpdateAction = !!quoteId && !isDraft;
   const saveLabel = isUpdateAction ? t('builder.saveChanges') : t('builder.saveDraft');
 
-  const { taxRate, cardSurchargeRate } = config
-    ? resolveQuoteRates(
-        { ...config.appSettings, stateSettings: config.stateSettings },
-        state.state,
-        savedRates,
-      )
-    : { taxRate: 0, cardSurchargeRate: 0 };
+  const { taxRate, cardSurchargeRate } = resolveQuoteRates(
+    { ...config.appSettings, stateSettings: config.stateSettings },
+    state.state,
+    savedRates && stageId ? { ...savedRates, stageId } : undefined,
+  );
   const totals = computeQuoteTotals({
     lines: state.lines.map((l) => ({ subtotal: l.subtotal })),
     discountType: state.discountType,
@@ -228,7 +228,11 @@ export function QuoteBuilderContent({
       {!isDesktop && (
         <>
           <LinesBuilderSection catalog={catalog} readOnly={readOnly} />
-          <ExtraChargesSection readOnly={readOnly} cardSurchargeRate={cardSurchargeRate} />
+          <ExtraChargesSection
+            readOnly={readOnly}
+            taxRate={taxRate}
+            cardSurchargeRate={cardSurchargeRate}
+          />
           <WrapperCard className="border-line border-2 bg-primary/5">
             <QuoteSummary
               subtotal={totals.subtotal}
@@ -249,7 +253,11 @@ export function QuoteBuilderContent({
       )}
       <EventSection eventTypes={eventTypes} readOnly={readOnly} quoteId={quoteId} />
       {isDesktop && (
-        <ExtraChargesSection readOnly={readOnly} cardSurchargeRate={cardSurchargeRate} />
+        <ExtraChargesSection
+            readOnly={readOnly}
+            taxRate={taxRate}
+            cardSurchargeRate={cardSurchargeRate}
+          />
       )}
       {isDesktop && <LinesBuilderSection catalog={catalog} readOnly={readOnly} />}
       <NotesSection readOnly={readOnly} />
