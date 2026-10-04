@@ -5,13 +5,10 @@
     "income": "Income"
   },
   "filters": {
-    "title": "Filters",
-    "apply": "Apply filters",
-    "dateFrom": "From",
-    "dateTo": "To",
-    "clientPlaceholder": "All clients",
-    "eventTypePlaceholder": "All event types",
-    "methodPlaceholder": "All methods"
+    "date": "Payment date",
+    "client": "Client",
+    "eventType": "Event type",
+    "method": "Payment method"
   },
   "columns": {
     "paidAt": "Date",

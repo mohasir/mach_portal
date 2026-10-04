@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { listQuerySchema } from './pagination';
-import { stateSchema } from './enums';
+import { stateSchema, type StateValue } from './enums';
 import { optionalText } from './fields';
 import { createClientSchema } from './clients';
 
@@ -146,21 +146,136 @@ export const checkQuoteAvailabilitySchema = z.object({
 export type CheckQuoteAvailabilityQuery = z.infer<typeof checkQuoteAvailabilitySchema>;
 
 // ── list / board queries ──
+// Filters that mean the same thing on the list and the pipeline board, so the quotes page can
+// share one filter bar between both views. Each list matches any of its values.
+export const quotesFiltersSchema = listQuerySchema.pick({ search: true }).extend({
+  states: z.array(stateSchema).optional(),
+  assignedToIds: z.array(z.string()).optional(),
+  eventTypeIds: z.array(z.uuid()).optional(),
+  /** true: drafts only; omitted: drafts and finished quotes alike. */
+  isDraft: z.boolean().optional(),
+  /** true: only stale quotes — open with the event date past, or sent with validity expired. */
+  stale: z.boolean().optional(),
+  /** true: only archived quotes; only applies alongside `includeArchived`. */
+  archived: z.boolean().optional(),
+});
+export type QuotesFilters = z.infer<typeof quotesFiltersSchema>;
+
+// What the list/board include at all (per-user view preferences), as opposed to the filter bar.
+export const quotesViewOptionsSchema = z.object({
+  /** Leave stale quotes out — unless searching, where one specific quote is being looked for. */
+  hideStale: z.boolean().optional(),
+  /** Also return archived quotes. Needs QUOTE/VIEW_ARCHIVED; ignored server-side otherwise. */
+  includeArchived: z.boolean().optional(),
+});
+export type QuotesViewOptions = z.infer<typeof quotesViewOptionsSchema>;
+
 export const quotesListQuerySchema = listQuerySchema.extend({
+  ...quotesFiltersSchema.shape,
+  ...quotesViewOptionsSchema.shape,
   sortBy: z.enum(['number', 'eventDate', 'total', 'stage', 'createdAt']).default('createdAt'),
   month: z.number().int().min(1).max(12).optional(),
   year: z.number().int().optional(),
   stageId: quoteStageIdSchema.optional(),
-  state: stateSchema.optional(),
   clientId: z.uuid().optional(),
 });
 export type QuotesListQuery = z.infer<typeof quotesListQuerySchema>;
 
-export const quotesBoardQuerySchema = z.object({
-  month: z.number().int().min(1).max(12).optional(),
-  year: z.number().int().optional(),
-});
+export const quotesBoardQuerySchema = quotesFiltersSchema.extend(quotesViewOptionsSchema.shape);
 export type QuotesBoardQuery = z.infer<typeof quotesBoardQuerySchema>;
+
+// ── config-driven rates — mach-bar-domain.md §7, shared so preview (FE) = saved (BE) ──
+export interface QuoteRatesConfig {
+  applyTaxByState: boolean;
+  stateSettings: { state: StateValue; taxRate: number }[];
+  cardSurchargeRate: number;
+}
+
+export interface QuoteRates {
+  taxRate: number;
+  cardSurchargeRate: number;
+}
+
+export interface SavedQuoteRates extends QuoteRates {
+  state: StateValue | null;
+}
+
+/** The tax rate config assigns to `state` (0 when tax by state is off or the state has none). */
+export const configTaxRate = (config: QuoteRatesConfig, state: StateValue | null | undefined) =>
+  config.applyTaxByState
+    ? (config.stateSettings.find((s) => s.state === state)?.taxRate ?? 0)
+    : 0;
+
+/** Whether resolveQuoteRates has to read config: a new quote, or one moved to another state. */
+export const needsConfigRates = (
+  state: StateValue | null | undefined,
+  saved?: SavedQuoteRates | null,
+) => !saved || (!!state && state !== saved.state);
+
+// A saved quote keeps its own rates, so config edits never reprice it silently (the user is asked
+// instead, see quoteRateDrift). Moving the event to another state is a change to the quote itself,
+// so it takes that state's current tax rate; clearing the state is not a move and keeps the saved one.
+export function resolveQuoteRates(
+  config: QuoteRatesConfig,
+  state: StateValue | null | undefined,
+  saved?: SavedQuoteRates | null,
+): QuoteRates {
+  if (!saved) {
+    return { taxRate: configTaxRate(config, state), cardSurchargeRate: config.cardSurchargeRate };
+  }
+  return {
+    taxRate: needsConfigRates(state, saved) ? configTaxRate(config, state) : saved.taxRate,
+    cardSurchargeRate: saved.cardSurchargeRate,
+  };
+}
+
+export interface QuoteRateDrift {
+  saved: QuoteRates;
+  current: QuoteRates;
+}
+
+const sameRates = (a: QuoteRates, b: QuoteRates) =>
+  a.taxRate === b.taxRate && a.cardSurchargeRate === b.cardSurchargeRate;
+
+/**
+ * Config rates that differ from a pending quote's saved ones, for the user to accept or keep.
+ * Only rates the quote actually applies count, since the others can't change its total: tax when
+ * it was saved with some and config still taxes its state (no state, or tax by state turned off,
+ * would read as 0% and offer to drop a tax the quote keeps anyway, see resolveQuoteRates), and
+ * card surcharge when it's turned on. A rate that doesn't count stays at
+ * its saved value in `current`, so accepting never touches it. Once sent, a quote always keeps its
+ * rates, and a difference the user already declined isn't offered again until config changes.
+ */
+export function quoteRateDrift(
+  config: QuoteRatesConfig,
+  quote: SavedQuoteRates & {
+    stageId: number;
+    applyCardSurcharge: boolean;
+    declinedRates: QuoteRates | null;
+  },
+): QuoteRateDrift | null {
+  if (quote.stageId !== QUOTE_STAGE.PENDING) return null;
+  const saved = { taxRate: quote.taxRate, cardSurchargeRate: quote.cardSurchargeRate };
+  const current = {
+    taxRate:
+      saved.taxRate > 0 && quote.state && config.applyTaxByState
+        ? configTaxRate(config, quote.state)
+        : saved.taxRate,
+    cardSurchargeRate: quote.applyCardSurcharge
+      ? config.cardSurchargeRate
+      : saved.cardSurchargeRate,
+  };
+  if (sameRates(saved, current)) return null;
+  if (quote.declinedRates && sameRates(quote.declinedRates, current)) return null;
+  return { saved, current };
+}
+
+export const resolveQuoteRateDriftSchema = z.object({
+  id: z.uuid(),
+  /** true takes the config rates (repricing the quote); false keeps the saved ones. */
+  accept: z.boolean(),
+});
+export type ResolveQuoteRateDriftInput = z.infer<typeof resolveQuoteRateDriftSchema>;
 
 // ── price cascade — mach-bar-domain.md §7, shared so preview (FE) = saved (BE) = PDF ──
 export interface QuoteTotalsInput {

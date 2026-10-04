@@ -7,8 +7,11 @@ import {
   eq,
   ilike,
   inArray,
+  isNotNull,
   isNull,
+  lt,
   ne,
+  not,
   or,
   sql,
   type SQL,
@@ -20,6 +23,8 @@ import {
   type QuoteLineInput,
   type QuoteStageId,
   type QuotesBoardQuery,
+  type QuotesFilters,
+  type QuotesViewOptions,
   type QuotesListQuery,
 } from '@repo/schemas';
 import type { Database } from '../../db';
@@ -40,6 +45,8 @@ import {
   user,
 } from '../../db/schema';
 import { resolvePagination } from '../../lib/utils/pagination';
+import { todayInBusinessTimezone } from '../../lib/utils/date';
+import { containsPattern } from '../../lib/utils/search';
 import {
   publicQuoteColumns,
   publicQuoteLineColumns,
@@ -56,8 +63,24 @@ const sortColumns = {
   createdAt: quotes.createdAt,
 } as const;
 
-const OPEN_STAGES = [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED, QUOTE_STAGE.CONFIRMED] as const;
-const TERMINAL_STAGES = [QUOTE_STAGE.CANCELLED] as const;
+// Same rules as the web's isQuoteExpired/isQuotePastDue tags (day granularity), on the business
+// calendar day rather than the DB's (UTC) `current_date`, which flips hours early in the US.
+// Archived quotes are out of the flow, so they never count as stale. Wrapped in coalesce: a
+// missing event date/validity makes the comparison NULL, and NOT NULL would wrongly drop the row
+// when stale quotes are hidden.
+const staleCondition = () => {
+  const today = todayInBusinessTimezone();
+  return sql<boolean>`coalesce(${and(
+    isNull(quotes.archivedAt),
+    or(
+      and(
+        inArray(quotes.stageId, [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED]),
+        lt(quotes.eventDate, today),
+      ),
+      and(eq(quotes.stageId, QUOTE_STAGE.QUOTED), lt(quotes.validUntil, today)),
+    ),
+  )}, false)`;
+};
 
 const assignedToUser = alias(user, 'assigned_to_user');
 const assignmentFromUser = alias(user, 'assignment_from_user');
@@ -75,16 +98,13 @@ export class QuotesRepository {
   }
 
   async findPaginated(query: QuotesListQuery, ownerId?: string) {
-    const { search, sortBy, sortDir, month, year, stageId, state, clientId } = query;
+    const { sortBy, sortDir, month, year, stageId, clientId } = query;
     const where = and(
-      isNull(quotes.archivedAt),
-      search
-        ? or(ilike(quotes.number, `%${search}%`), ilike(clients.name, `%${search}%`))
-        : undefined,
+      this.archivedWhere(query),
+      this.filtersWhere(query),
       month ? sql`extract(month from ${quotes.eventDate}) = ${month}` : undefined,
       year ? sql`extract(year from ${quotes.eventDate}) = ${year}` : undefined,
       stageId ? eq(quotes.stageId, stageId) : undefined,
-      state ? eq(quotes.state, state) : undefined,
       clientId ? eq(quotes.clientId, clientId) : undefined,
       this.ownerFilter(ownerId),
     );
@@ -130,7 +150,7 @@ export class QuotesRepository {
     return row?.value ?? 0;
   }
 
-  async findById(id: string, ownerId?: string) {
+  async findById(id: string, ownerId?: string, includeArchived = false) {
     const [quoteRow] = await this.db
       .select({
         ...publicQuoteColumns,
@@ -146,7 +166,13 @@ export class QuotesRepository {
       .leftJoin(user, eq(quotes.createdById, user.id))
       .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id))
       .leftJoin(events, eq(events.quoteId, quotes.id))
-      .where(and(eq(quotes.id, id), isNull(quotes.archivedAt), this.ownerFilter(ownerId)))
+      .where(
+        and(
+          eq(quotes.id, id),
+          includeArchived ? undefined : isNull(quotes.archivedAt),
+          this.ownerFilter(ownerId),
+        ),
+      )
       .limit(1);
     if (!quoteRow) return undefined;
 
@@ -207,6 +233,31 @@ export class QuotesRepository {
       .update(quotes)
       .set({ pdfUrl: url, pdfKey: key, pdfGeneratedAt: new Date() })
       .where(eq(quotes.id, id))
+      .returning(publicQuoteColumns)
+      .then((r) => r[0]);
+  }
+
+  // Only while the quote is still pending with the rates the caller read: a concurrent send or
+  // edit in between must not be repriced (sent quotes keep their rates). No row means it changed.
+  updateRates(
+    id: string,
+    expected: { taxRate: number; cardSurchargeRate: number },
+    values: Partial<Omit<typeof quotes.$inferInsert, 'id' | 'seq' | 'number'>>,
+    ownerId?: string,
+  ) {
+    return this.db
+      .update(quotes)
+      .set(values)
+      .where(
+        and(
+          eq(quotes.id, id),
+          eq(quotes.stageId, QUOTE_STAGE.PENDING),
+          eq(quotes.taxRate, expected.taxRate),
+          eq(quotes.cardSurchargeRate, expected.cardSurchargeRate),
+          isNull(quotes.archivedAt),
+          this.ownerFilter(ownerId),
+        ),
+      )
       .returning(publicQuoteColumns)
       .then((r) => r[0]);
   }
@@ -280,10 +331,6 @@ export class QuotesRepository {
   }
 
   async findBoard(query: QuotesBoardQuery, ownerId?: string) {
-    const now = new Date();
-    const month = query.month ?? now.getMonth() + 1;
-    const year = query.year ?? now.getFullYear();
-
     const baseSelect = () =>
       this.db
         .select({
@@ -303,26 +350,53 @@ export class QuotesRepository {
         .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id));
 
     const ownerWhere = this.ownerFilter(ownerId);
-    const [openRows, terminalRows] = await Promise.all([
+    const filtersWhere = this.filtersWhere(query);
+    // Archived quotes get their own column instead of their stage's.
+    const [activeRows, archivedRows] = await Promise.all([
       baseSelect()
-        .where(and(inArray(quotes.stageId, OPEN_STAGES), isNull(quotes.archivedAt), ownerWhere))
+        .where(and(isNull(quotes.archivedAt), filtersWhere, ownerWhere))
         .orderBy(desc(quotes.createdAt)),
-      baseSelect()
-        .where(
-          and(
-            inArray(quotes.stageId, TERMINAL_STAGES),
-            isNull(quotes.archivedAt),
-            sql`extract(month from ${quotes.updatedAt}) = ${month}`,
-            sql`extract(year from ${quotes.updatedAt}) = ${year}`,
-            ownerWhere,
-          ),
-        )
-        .orderBy(desc(quotes.createdAt)),
+      query.includeArchived
+        ? baseSelect()
+            .where(and(isNotNull(quotes.archivedAt), filtersWhere, ownerWhere))
+            .orderBy(desc(quotes.archivedAt))
+        : [],
     ]);
 
-    const rows = [...openRows, ...terminalRows];
+    const rows = [...activeRows, ...archivedRows];
     const lineCounts = await this.countLinesByQuote(rows.map((r) => r.id));
     return rows.map((row) => ({ ...row, linesCount: lineCounts.get(row.id) ?? 0 }));
+  }
+
+  // Both the list and the board join `clients`, which the search matches against.
+  private archivedWhere({ includeArchived, archived }: QuotesFilters & QuotesViewOptions) {
+    if (!includeArchived) return isNull(quotes.archivedAt);
+    return archived ? isNotNull(quotes.archivedAt) : undefined;
+  }
+
+  private filtersWhere({
+    search,
+    states,
+    assignedToIds,
+    eventTypeIds,
+    isDraft,
+    stale,
+    hideStale,
+  }: QuotesFilters & QuotesViewOptions) {
+    return and(
+      search
+        ? or(
+            ilike(quotes.number, containsPattern(search)),
+            ilike(clients.name, containsPattern(search)),
+          )
+        : undefined,
+      states?.length ? inArray(quotes.state, states) : undefined,
+      assignedToIds?.length ? inArray(quotes.assignedToId, assignedToIds) : undefined,
+      eventTypeIds?.length ? inArray(quotes.eventTypeId, eventTypeIds) : undefined,
+      isDraft !== undefined ? eq(quotes.isDraft, isDraft) : undefined,
+      stale ? staleCondition() : undefined,
+      hideStale && !search && !stale ? not(staleCondition()) : undefined,
+    );
   }
 
   private async countLinesByQuote(quoteIds: string[]) {

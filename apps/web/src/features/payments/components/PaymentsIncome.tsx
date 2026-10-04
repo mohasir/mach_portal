@@ -6,7 +6,6 @@ import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import type { PaymentsIncomeGroupBy } from '@repo/schemas';
 import { DataTable } from '@/components/shared/DataTable';
-import type { Locale as AppLocale } from '@/lib/i18n/config';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useLocaleStore } from '@/lib/stores/locale.store';
 import { usePaymentsIncome } from '../hooks/usePayments';
@@ -17,7 +16,7 @@ const GROUP_BY_OPTIONS: PaymentsIncomeGroupBy[] = ['week', 'month', 'year'];
 export function PaymentsIncome() {
   const { t } = useTranslation('payments');
   const { money } = useMoneyFormatter();
-  const locale = useLocaleStore((s) => s.locale) as AppLocale;
+  const locale = useLocaleStore((s) => s.locale);
   const [groupBy, setGroupBy] = useState<PaymentsIncomeGroupBy>('month');
 
   const { data, isLoading } = usePaymentsIncome({ groupBy });

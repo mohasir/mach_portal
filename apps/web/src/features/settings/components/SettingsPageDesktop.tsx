@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { SectionMenu, type SectionMenuItem } from '@/components/shared/SectionMenu';
 import { ProfileSettingsForm } from './ProfileSettingsForm';
 import { SecuritySettingsForm } from './SecuritySettingsForm';
+import { UserPreferencesCard } from './forms/UserPreferencesCard';
 import { GeneralSettingsForm } from './GeneralSettingsForm';
 import { PreferencesSettingsForm } from './PreferencesSettingsForm';
 import { PermissionsSettingsForm } from './PermissionsSettingsForm';
@@ -58,6 +59,7 @@ export function SettingsPageDesktop({
 
         <div className={`min-w-0 flex-1 ${isAbout ? 'flex min-h-0 flex-col' : ''}`}>
           {section === 'profile' && <ProfileSettingsForm />}
+          {section === 'userPreferences' && <UserPreferencesCard />}
           {section === 'security' && <SecuritySettingsForm />}
           {section === 'general' && <GeneralSettingsForm />}
           {section === 'preferences' && <PreferencesSettingsForm />}

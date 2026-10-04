@@ -1,4 +1,5 @@
 import i18n from 'i18next';
+import { LOCALES, type AppLocale } from '@repo/schemas';
 import { initReactI18next } from 'react-i18next';
 
 import esCommon from '@/locales/es/common.json';
@@ -34,8 +35,8 @@ import enPayments from '@/locales/en/payments.json';
 import enNotifications from '@/locales/en/notifications.json';
 import enSupport from '@/locales/en/support.json';
 
-export const locales = ['es', 'en'] as const;
-export type Locale = (typeof locales)[number];
+export const locales = LOCALES;
+export type Locale = AppLocale;
 export const defaultLocale: Locale = 'es';
 
 i18n.use(initReactI18next).init({

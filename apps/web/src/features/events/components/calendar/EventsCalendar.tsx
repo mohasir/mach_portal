@@ -5,7 +5,6 @@ import { Calendar, Grid } from 'antd';
 import type { CalendarProps } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { ACTIONS, RESOURCES } from '@repo/guards';
-import type { Locale as AppLocale } from '@/lib/i18n/config';
 import { useCan } from '@/lib/auth/useCan';
 import { isPastDate } from '@/lib/date';
 import { useLocaleStore } from '@/lib/stores/locale.store';
@@ -28,7 +27,7 @@ export function EventsCalendar() {
   const router = useRouter();
   const can = useCan();
   const canCreateQuote = can({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] });
-  const locale = useLocaleStore((s) => s.locale) as AppLocale;
+  const locale = useLocaleStore((s) => s.locale);
   const screens = Grid.useBreakpoint();
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
   const [cursor, setCursor] = useState<Dayjs>(() => dayjs());

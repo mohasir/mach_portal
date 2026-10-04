@@ -186,10 +186,8 @@ El tablero necesita las quotes **agrupadas por stage**, no una lista paginada:
 usePipelineBoard(filters)  // trpc.quotes.board → { [stageId]: Card[] } — 4 keys (mach-bar-domain.md D18)
 ```
 
-- Columnas **abiertas** (Pendiente/Enviada/Aprobada) cargan completas: son deals activos, acotados por
-  naturaleza.
-- Columna **terminal** (Cancelada) se **limita por ventana** (default: mes actual) para que no crezca
-  sin techo; selector de rango arriba + "ver más".
+- Todas las columnas cargan completas, sin ventana de fechas: la tabla y el pipeline comparten la
+  misma barra de búsqueda y filtros, y deben devolver los mismos resultados.
 - Cada card es una **proyección liviana** (`QuoteCardResource`), no la quote completa:
   `id, number, clientName, eventTypeName, eventDate, total, stageId, validUntil, linesCount`,
   y en Aprobada: `staffAssignedCount`, `depositPaid`.

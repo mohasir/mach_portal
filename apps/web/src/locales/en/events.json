@@ -6,7 +6,8 @@
     "numberCopied": "Number copied to clipboard"
   },
   "validation": {
-    "amountRequired": "Amount must be greater than 0"
+    "amountRequired": "Amount must be greater than 0",
+    "paidAtFuture": "The payment date can’t be in the future"
   },
   "columns": {
     "client": "Client",

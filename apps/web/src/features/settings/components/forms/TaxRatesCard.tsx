@@ -1,11 +1,12 @@
 'use client';
-import { App, Button, Form, InputNumber, Skeleton, Switch } from 'antd';
+import { App, Button, Divider, Form, InputNumber, Skeleton, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { STATE_NAMES } from '@repo/schemas';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
 import { useCan } from '@/lib/auth/useCan';
+import { fromPercent, toPercent } from '@/lib/utils/percent';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
 import { useConfig } from '../../hooks/useConfig';
 import { useUpdateTaxPreferences } from '../../hooks/useUpdateTaxPreferences';
@@ -19,6 +20,7 @@ import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface TaxRatesCardFormValues extends TaxRatesFormValues {
   applyTaxByState: boolean;
+  cardSurchargeRatePercent: number;
 }
 
 export function TaxRatesCard() {
@@ -32,7 +34,11 @@ export function TaxRatesCard() {
   const applyTaxByState = Form.useWatch('applyTaxByState', form);
   const rates = Form.useWatch('rates', form);
   const initialValues = data
-    ? { applyTaxByState: data.appSettings.applyTaxByState, ...toTaxRatesFormValues(data) }
+    ? {
+        applyTaxByState: data.appSettings.applyTaxByState,
+        cardSurchargeRatePercent: toPercent(data.appSettings.cardSurchargeRate),
+        ...toTaxRatesFormValues(data),
+      }
     : undefined;
   const unchanged = useIsFormUnchanged(form, initialValues);
   const hasPositiveRate = (rates ?? []).some((r) => (r?.taxRatePercent ?? 0) > 0);
@@ -43,7 +49,12 @@ export function TaxRatesCard() {
 
   const canEdit = can({ [RESOURCES.TAX_RATES]: [ACTIONS.UPDATE] });
   const onFinish = async (values: TaxRatesCardFormValues) => {
-    const tasks = [updateTaxPreferences({ applyTaxByState: values.applyTaxByState })];
+    const tasks = [
+      updateTaxPreferences({
+        applyTaxByState: values.applyTaxByState,
+        cardSurchargeRate: fromPercent(values.cardSurchargeRatePercent),
+      }),
+    ];
     // The rate fields never register while hidden (switch off) — nothing to save for them then.
     if (values.rates) tasks.push(updateTaxRates(toTaxRatesUpdateInput(values, data)));
     await Promise.all(tasks);
@@ -53,7 +64,7 @@ export function TaxRatesCard() {
   return (
     <WrapperCard title={t('taxRates.title')}>
       <Form
-        key={JSON.stringify(data.stateSettings) + String(data.appSettings.applyTaxByState)}
+        key={JSON.stringify(initialValues)}
         form={form}
         layout="vertical"
         initialValues={initialValues}
@@ -98,6 +109,22 @@ export function TaxRatesCard() {
             )}
           </>
         )}
+
+        <Divider className="my-6" />
+
+        <FieldRow
+          title={t('taxRates.cardSurchargeRate')}
+          caption={t('taxRates.cardSurchargeRateCaption')}
+          required
+        >
+          <Form.Item
+            name="cardSurchargeRatePercent"
+            className="mb-0"
+            rules={[{ required: true, message: t('validation.cardSurchargeRateInvalid') }]}
+          >
+            <InputNumber min={0} max={100} step={1} precision={0} suffix="%" className="w-full" />
+          </Form.Item>
+        </FieldRow>
 
         {canEdit && (
           <Button

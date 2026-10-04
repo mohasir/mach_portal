@@ -3,7 +3,7 @@ import { App, Button, Card, Descriptions, Divider, Tooltip, Typography } from 'a
 import { AlertCircle, CalendarDays, Download, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
+import type { QuoteStageId } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import { AddressLines } from '@/components/shared/AddressLines';
 import { WrapperAlert } from '@/components/shared/WrapperAlert';
@@ -13,11 +13,10 @@ import { QuoteNumberHeader } from '@/components/shared/QuoteNumberHeader';
 import { ShareButton } from '@/components/shared/ShareButton';
 import { useActionConfirm } from '@/components/shared/ConfirmDialogs/useActionConfirm';
 import { useCanRegeneratePdf } from '@/lib/auth/useCan';
-import { isPastDate } from '@/lib/date';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { copyToClipboard } from '@/lib/utils/clipboard';
-import { withPdfCacheBuster } from '../../helpers';
+import { isQuotePastDue, withPdfCacheBuster } from '../../helpers';
 import { useRegenerateQuotePdf } from '../../hooks/useQuotes';
 import type { QuoteDetail } from '../../types';
 import { QuoteStageTagDropdown } from '../QuoteStageTagDropdown';
@@ -44,7 +43,7 @@ export function QuoteDetailCard({
   const { t } = useTranslation('quotes');
   const { message } = App.useApp();
   const router = useRouter();
-  const { date, dateTime } = useDateFormatter();
+  const { date, dateTime, time } = useDateFormatter();
   const isDesktop = useIsDesktop();
   const hasPdf = Boolean(detail.pdfUrl);
   const canRegeneratePdf = useCanRegeneratePdf();
@@ -65,12 +64,12 @@ export function QuoteDetailCard({
   };
 
   const eventDateTime = detail.eventDate
-    ? `${date(detail.eventDate)}${detail.eventTime ? `, ${detail.eventTime}` : ''}`
-    : (detail.eventTime ?? '—');
+    ? `${date(detail.eventDate)}${detail.eventTime ? `, ${time(detail.eventTime)}` : ''}`
+    : detail.eventTime
+      ? time(detail.eventTime)
+      : '—';
 
-  const isPastDue =
-    (detail.stageId === QUOTE_STAGE.PENDING || detail.stageId === QUOTE_STAGE.QUOTED) &&
-    isPastDate(detail.eventDate);
+  const isPastDue = isQuotePastDue(detail);
 
   const draftTag = detail.isDraft && (
     <IconTag
@@ -103,6 +102,7 @@ export function QuoteDetailCard({
             quoteId={detail.id}
             stageId={detail.stageId as QuoteStageId}
             isDraft={detail.isDraft}
+            readOnly={detail.isArchived}
           />
           {draftTag}
         </div>
@@ -123,7 +123,7 @@ export function QuoteDetailCard({
               iconOnly
             />
           )}
-          {hasPdf && canRegeneratePdf && (
+          {hasPdf && canRegeneratePdf && !detail.isArchived && (
             <Tooltip title={t('detail.regeneratePdf')}>
               <Button
                 type="text"

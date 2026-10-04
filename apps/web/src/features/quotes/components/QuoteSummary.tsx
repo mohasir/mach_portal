@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button, Divider } from 'antd';
 import { Check, SquarePen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { toDisplayPercent } from '@/lib/utils/percent';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
@@ -67,7 +68,7 @@ export function QuoteSummary({
       {cardSurchargeAmount > 0 && (
         <div className="flex justify-between">
           <span className="text-gray-500">
-            {t('builder.pricing.cardSurcharge', { rate: Math.round(cardSurchargeRate * 100) })}
+            {t('builder.pricing.cardSurcharge', { rate: toDisplayPercent(cardSurchargeRate) })}
           </span>
           <span>{money(cardSurchargeAmount)}</span>
         </div>
