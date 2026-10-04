@@ -8,7 +8,6 @@ import { showEnvBanner } from '@/env';
 import { isAfter } from '@/lib/date';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { openQuotePdf } from '../../helpers';
-import { useQuoteRatesCheckOnOpen } from '../../hooks/useQuoteRatesPrompt';
 import { useGenerateQuotePdf, useQuote } from '../../hooks/useQuotes';
 import { QuoteHistoryCard } from '../builder/QuoteHistoryCard';
 import { QuoteDetailCard } from './QuoteDetailCard';
@@ -24,7 +23,6 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
   const { data: detail, isLoading: quoteLoading } = useQuote(quoteId);
   const { data: catalog, isLoading: catalogLoading } = useProductCatalog();
   const { generatePdf, isPending: isGeneratingPdf } = useGenerateQuotePdf();
-  const ratesContextHolder = useQuoteRatesCheckOnOpen(detail);
 
   if (quoteLoading || catalogLoading || !detail || !catalog) {
     return (
@@ -57,7 +55,6 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader title={t('detail.title')} titleSize="sm" onBack />
-      {ratesContextHolder}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
         {isDesktop ? (

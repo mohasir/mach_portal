@@ -404,7 +404,7 @@ toma de la config del nuevo estado. Las elecciones propias de la quote (`applyCa
 
 **Tasas desactualizadas** (`quoteRateDrift`): si una quote en `new` tiene un `taxRate` o
 `cardSurchargeRate` distinto del que da hoy la config, a quien puede editarla (`QUOTE.UPDATE`) se le
-pregunta si actualizarlas, avisando que el total cambia: al abrirla (detalle o builder) y al pasarla a
+pregunta si actualizarlas, avisando que el total cambia: al abrirla en el builder (no en el detalle) y al pasarla a
 `quoted` desde el pipeline o el dropdown de stage. Solo cuentan las tasas que la quote aplica, porque
 las otras no mueven el total: el impuesto si se guardó con alguno (`taxRate` > 0) y el recargo si
 `applyCardSurcharge` está activo. El `depositRate` no entra: siempre es el guardado.

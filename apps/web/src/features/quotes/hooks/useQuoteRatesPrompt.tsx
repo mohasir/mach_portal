@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { QUOTE_STAGE, type QuoteRateDrift, type QuoteRates } from '@repo/schemas';
@@ -39,9 +39,10 @@ function RateDriftContent({
 
 /**
  * The one place that asks whether a pending quote should take the current config rates (tax by
- * state, card surcharge) after they changed. `promptRates` resolves `true` once the user has
- * answered (or right away when there's nothing to ask) and `false` if saving the answer failed,
- * so a caller can chain the action it was about to do.
+ * state, card surcharge) after they changed. `promptRates` looks the difference up and asks;
+ * `askAboutDrift` asks about one already loaded. Both resolve `true` once the user has answered
+ * (or right away when there's nothing to ask) and `false` if saving the answer failed, so a
+ * caller can chain the action it was about to do.
  */
 export function useQuoteRatesPrompt() {
   const { t } = useTranslation('quotes');
@@ -57,21 +58,7 @@ export function useQuoteRatesPrompt() {
     }),
   );
 
-  const promptRates = async (quoteId: string) => {
-    if (!can({ [RESOURCES.QUOTE]: [ACTIONS.UPDATE] })) return true;
-
-    let drift: QuoteRateDrift | null;
-    try {
-      drift = await qc.fetchQuery({
-        ...trpc.quotes.rateDrift.queryOptions({ id: quoteId }),
-        staleTime: 0,
-      });
-    } catch {
-      // Out of the caller's scope: nothing it could reprice, so nothing to ask.
-      return true;
-    }
-    if (!drift) return true;
-    const changes = drift;
+  const askAboutDrift = (quoteId: string, changes: QuoteRateDrift) => {
     const changed = RATE_KEYS.filter((key) => changes.saved[key] !== changes.current[key]);
     // One rate: the buttons name the values, so the choice reads at a glance.
     const single = changed.length === 1 ? changed[0] : undefined;
@@ -99,22 +86,53 @@ export function useQuoteRatesPrompt() {
     });
   };
 
-  return { promptRates, ratesContextHolder };
+  const promptRates = async (quoteId: string) => {
+    if (!can({ [RESOURCES.QUOTE]: [ACTIONS.UPDATE] })) return true;
+
+    let drift: QuoteRateDrift | null;
+    try {
+      drift = await qc.fetchQuery({
+        ...trpc.quotes.rateDrift.queryOptions({ id: quoteId }),
+        staleTime: 0,
+      });
+    } catch {
+      // Out of the caller's scope: nothing it could reprice, so nothing to ask.
+      return true;
+    }
+    return drift ? askAboutDrift(quoteId, drift) : true;
+  };
+
+  return { promptRates, askAboutDrift, ratesContextHolder };
 }
 
-/** Asks once per quote when it's opened (detail or builder) while still pending. */
+/**
+ * Asks once when a pending quote is opened in the builder. The difference is fetched alongside
+ * the quote itself (from the id, not after the quote loads), so the question shows up as soon as
+ * the quote does.
+ */
 export function useQuoteRatesCheckOnOpen(
+  quoteId: string | undefined,
   quote: { id: string; stageId: number; isArchived: boolean } | undefined,
 ) {
-  const { promptRates, ratesContextHolder } = useQuoteRatesPrompt();
+  const trpc = useTRPC();
+  const can = useCan();
+  const { askAboutDrift, ratesContextHolder } = useQuoteRatesPrompt();
   const checkedFor = useRef<string | undefined>(undefined);
+  const { data: drift, isFetchedAfterMount } = useQuery({
+    ...trpc.quotes.rateDrift.queryOptions({ id: quoteId! }),
+    enabled: !!quoteId && can({ [RESOURCES.QUOTE]: [ACTIONS.UPDATE] }),
+    staleTime: 0,
+    retry: false,
+  });
 
   useEffect(() => {
-    if (!quote || quote.stageId !== QUOTE_STAGE.PENDING || quote.isArchived) return;
+    // A cached answer from an earlier visit may be outdated; only a fresh one is asked about.
+    if (!quote || !drift || !isFetchedAfterMount) return;
+    if (quote.stageId !== QUOTE_STAGE.PENDING || quote.isArchived) return;
     if (checkedFor.current === quote.id) return;
     checkedFor.current = quote.id;
-    void promptRates(quote.id);
-  }, [quote, promptRates]);
+    void askAboutDrift(quote.id, drift);
+  }, [quote, drift, isFetchedAfterMount, askAboutDrift]);
 
   return ratesContextHolder;
 }

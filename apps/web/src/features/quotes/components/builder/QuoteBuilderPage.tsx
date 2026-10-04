@@ -31,7 +31,7 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
     sortDir: 'asc',
   });
   const { data: detail, isLoading: quoteLoading } = useQuote(quoteId);
-  const ratesContextHolder = useQuoteRatesCheckOnOpen(detail);
+  const ratesContextHolder = useQuoteRatesCheckOnOpen(quoteId, detail);
 
   const stageId = detail?.stageId as QuoteStageId | undefined;
   const isEditable =
