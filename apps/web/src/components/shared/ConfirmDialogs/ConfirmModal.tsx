@@ -89,7 +89,7 @@ export function ConfirmModal({
       open={open}
       onCancel={dismissible ? onCancel : undefined}
       closable={dismissible}
-      maskClosable={dismissible}
+      mask={{ closable: dismissible }}
       keyboard={dismissible}
       width={{ xs: '90%', md: 340 }}
     >
