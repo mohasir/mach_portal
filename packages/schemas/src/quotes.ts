@@ -167,10 +167,7 @@ export const quotesListQuerySchema = listQuerySchema.extend({
 });
 export type QuotesListQuery = z.infer<typeof quotesListQuerySchema>;
 
-export const quotesBoardQuerySchema = quotesFiltersSchema.extend({
-  month: z.number().int().min(1).max(12).optional(),
-  year: z.number().int().optional(),
-});
+export const quotesBoardQuerySchema = quotesFiltersSchema;
 export type QuotesBoardQuery = z.infer<typeof quotesBoardQuerySchema>;
 
 // ── config-driven rates — mach-bar-domain.md §7, shared so preview (FE) = saved (BE) ──

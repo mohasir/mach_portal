@@ -41,6 +41,7 @@ import {
   user,
 } from '../../db/schema';
 import { resolvePagination } from '../../lib/utils/pagination';
+import { containsPattern } from '../../lib/utils/search';
 import {
   publicQuoteColumns,
   publicQuoteLineColumns,
@@ -57,8 +58,6 @@ const sortColumns = {
   createdAt: quotes.createdAt,
 } as const;
 
-const OPEN_STAGES = [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED, QUOTE_STAGE.CONFIRMED] as const;
-const TERMINAL_STAGES = [QUOTE_STAGE.CANCELLED] as const;
 
 const assignedToUser = alias(user, 'assigned_to_user');
 const assignmentFromUser = alias(user, 'assignment_from_user');
@@ -278,56 +277,25 @@ export class QuotesRepository {
   }
 
   async findBoard(query: QuotesBoardQuery, ownerId?: string) {
-    const now = new Date();
-    const month = query.month ?? now.getMonth() + 1;
-    const year = query.year ?? now.getFullYear();
+    const rows = await this.db
+      .select({
+        ...publicQuoteColumns,
+        clientName: clients.name,
+        eventTypeName: eventTypes.name,
+        createdByName: user.name,
+        assignedToName: assignedToUser.name,
+        eventId: events.id,
+        depositPaid: events.depositPaid,
+      })
+      .from(quotes)
+      .innerJoin(clients, eq(quotes.clientId, clients.id))
+      .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
+      .leftJoin(events, eq(events.quoteId, quotes.id))
+      .leftJoin(user, eq(quotes.createdById, user.id))
+      .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id))
+      .where(and(isNull(quotes.archivedAt), this.filtersWhere(query), this.ownerFilter(ownerId)))
+      .orderBy(desc(quotes.createdAt));
 
-    const baseSelect = () =>
-      this.db
-        .select({
-          ...publicQuoteColumns,
-          clientName: clients.name,
-          eventTypeName: eventTypes.name,
-          createdByName: user.name,
-          assignedToName: assignedToUser.name,
-          eventId: events.id,
-          depositPaid: events.depositPaid,
-        })
-        .from(quotes)
-        .innerJoin(clients, eq(quotes.clientId, clients.id))
-        .leftJoin(eventTypes, eq(quotes.eventTypeId, eventTypes.id))
-        .leftJoin(events, eq(events.quoteId, quotes.id))
-        .leftJoin(user, eq(quotes.createdById, user.id))
-        .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id));
-
-    const ownerWhere = this.ownerFilter(ownerId);
-    const filtersWhere = this.filtersWhere(query);
-    const [openRows, terminalRows] = await Promise.all([
-      baseSelect()
-        .where(
-          and(
-            inArray(quotes.stageId, OPEN_STAGES),
-            isNull(quotes.archivedAt),
-            filtersWhere,
-            ownerWhere,
-          ),
-        )
-        .orderBy(desc(quotes.createdAt)),
-      baseSelect()
-        .where(
-          and(
-            inArray(quotes.stageId, TERMINAL_STAGES),
-            isNull(quotes.archivedAt),
-            sql`extract(month from ${quotes.updatedAt}) = ${month}`,
-            sql`extract(year from ${quotes.updatedAt}) = ${year}`,
-            filtersWhere,
-            ownerWhere,
-          ),
-        )
-        .orderBy(desc(quotes.createdAt)),
-    ]);
-
-    const rows = [...openRows, ...terminalRows];
     const lineCounts = await this.countLinesByQuote(rows.map((r) => r.id));
     return rows.map((row) => ({ ...row, linesCount: lineCounts.get(row.id) ?? 0 }));
   }
@@ -336,7 +304,10 @@ export class QuotesRepository {
   private filtersWhere({ search, states, assignedToIds, eventTypeIds, isDraft }: QuotesFilters) {
     return and(
       search
-        ? or(ilike(quotes.number, `%${search}%`), ilike(clients.name, `%${search}%`))
+        ? or(
+            ilike(quotes.number, containsPattern(search)),
+            ilike(clients.name, containsPattern(search)),
+          )
         : undefined,
       states?.length ? inArray(quotes.state, states) : undefined,
       assignedToIds?.length ? inArray(quotes.assignedToId, assignedToIds) : undefined,

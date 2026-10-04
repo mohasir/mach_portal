@@ -37,7 +37,6 @@ export function SearchInput({
   return (
     <Input
       allowClear
-      type="search"
       enterKeyHint="search"
       value={text}
       onChange={(e) => setText(e.target.value)}

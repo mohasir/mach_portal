@@ -74,33 +74,35 @@ export function QuotesToolbar({
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-2">
-        {filters.search && (
-          <Button
-            type="link"
-            className="px-0 py-1 h-auto"
-            onClick={() => setFilter({ search: undefined })}
-          >
-            {t('filters.clearSearch')}
-          </Button>
-        )}
-        {activeFilters > 0 && (
-          <Button
-            type="link"
-            className="px-0 py-1 h-auto"
-            onClick={() =>
-              setFilter({
-                states: undefined,
-                assignedToIds: undefined,
-                eventTypeIds: undefined,
-                isDraft: undefined,
-              })
-            }
-          >
-            {t('filters.clear')}
-          </Button>
-        )}
-      </div>
+      {(filters.search || activeFilters > 0) && (
+        <div className="flex items-center justify-end gap-2">
+          {filters.search && (
+            <Button
+              type="link"
+              className="px-0 py-1 h-auto"
+              onClick={() => setFilter({ search: undefined })}
+            >
+              {t('filters.clearSearch')}
+            </Button>
+          )}
+          {activeFilters > 0 && (
+            <Button
+              type="link"
+              className="px-0 py-1 h-auto"
+              onClick={() =>
+                setFilter({
+                  states: undefined,
+                  assignedToIds: undefined,
+                  eventTypeIds: undefined,
+                  isDraft: undefined,
+                })
+              }
+            >
+              {t('filters.clear')}
+            </Button>
+          )}
+        </div>
+      )}
 
       <div className="flex min-h-8 items-center justify-between gap-2">
         {total !== undefined && (
