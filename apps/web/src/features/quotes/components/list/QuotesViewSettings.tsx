@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { Popover, Switch } from 'antd';
+import { Popover, Switch, Tooltip } from 'antd';
+import { Info } from 'lucide-react';
 import { TbSettings } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet } from '@/components/shared/BottomSheet';
@@ -8,6 +9,26 @@ import { IconButton } from '@/components/shared/IconButton';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useQuotesViewOptions } from '../../hooks/useQuotesViewOptions';
+
+/** Option name with its explanation behind an info icon (tap to open on touch screens). */
+function OptionLabel({
+  title,
+  hint,
+  isDesktop,
+}: {
+  title: string;
+  hint: string;
+  isDesktop: boolean;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {title}
+      <Tooltip title={hint} trigger={isDesktop ? 'hover' : 'click'}>
+        <Info size={14} className="cursor-help text-muted" aria-label={hint} />
+      </Tooltip>
+    </span>
+  );
+}
 
 /** Gear + panel with the user's own view options for the quotes page; hidden when none apply. */
 export function QuotesViewSettings() {
@@ -30,8 +51,13 @@ export function QuotesViewSettings() {
       <span className="text-muted">{t('viewSettings.title')}</span>
       {canHideStale && (
         <SwitchRow
-          title={t('viewSettings.hideStale')}
-          caption={t('viewSettings.hideStaleCaption')}
+          title={
+            <OptionLabel
+              title={t('viewSettings.hideStale')}
+              hint={t('viewSettings.hideStaleCaption')}
+              isDesktop={isDesktop}
+            />
+          }
           control={
             <Switch
               checked={viewOptions.hideStale}
@@ -43,8 +69,13 @@ export function QuotesViewSettings() {
       )}
       {canIncludeArchived && (
         <SwitchRow
-          title={t('viewSettings.includeArchived')}
-          caption={t('viewSettings.includeArchivedCaption')}
+          title={
+            <OptionLabel
+              title={t('viewSettings.includeArchived')}
+              hint={t('viewSettings.includeArchivedCaption')}
+              isDesktop={isDesktop}
+            />
+          }
           control={
             <Switch
               checked={viewOptions.includeArchived}
