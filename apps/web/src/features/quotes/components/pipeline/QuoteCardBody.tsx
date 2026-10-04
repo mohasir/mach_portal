@@ -25,13 +25,12 @@ export function QuoteCardBody({ card }: QuoteCardBodyProps) {
     (stageId === QUOTE_STAGE.PENDING || stageId === QUOTE_STAGE.QUOTED) &&
     isPastDate(card.eventDate);
 
+  const hasTags = card.isDraft || isExpired || isPastDue;
+
   return (
     <>
-      <div className="flex items-center justify-between gap-2">
-        <Typography.Text strong className="text-xs">
-          <CopyableQuoteNumber number={card.number} />
-        </Typography.Text>
-        <div className="flex items-center gap-1">
+      {hasTags && (
+        <div className="mb-1 flex flex-wrap items-center gap-1">
           {card.isDraft && (
             <IconTag
               color={card.isComplete ? undefined : 'error'}
@@ -43,7 +42,10 @@ export function QuoteCardBody({ card }: QuoteCardBodyProps) {
           {isExpired && <Tag color="red">{t('pipeline.expired')}</Tag>}
           {isPastDue && <Tag color="orange">{t('pipeline.pastDue')}</Tag>}
         </div>
-      </div>
+      )}
+      <Typography.Text strong className="text-xs">
+        <CopyableQuoteNumber number={card.number} />
+      </Typography.Text>
       <div className="mt-1 text-base font-medium">{card.clientName}</div>
       {card.eventTypeName && <div className="text-xs text-gray-500">{card.eventTypeName}</div>}
       <div className="mt-2 flex items-center justify-between">

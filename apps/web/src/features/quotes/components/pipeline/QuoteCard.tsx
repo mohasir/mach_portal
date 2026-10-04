@@ -8,7 +8,7 @@ import { DataTableRowActions } from '@/components/shared/DataTable';
 import { useQuoteRowActions } from '../../hooks/useQuoteRowActions';
 import type { QuoteCard as QuoteCardType } from '../../types';
 import { QuoteStageTagDropdown } from '../QuoteStageTagDropdown';
-import { QuoteCardAssignment } from './QuoteCardAssignment';
+import { QuoteCardFooter } from './QuoteCardFooter';
 import { QuoteCardBody } from './QuoteCardBody';
 
 interface QuoteCardProps {
@@ -59,7 +59,7 @@ export function QuoteCard({ card, draggable }: QuoteCardProps) {
         </div>
       </div>
       <QuoteCardBody card={card} />
-      <QuoteCardAssignment card={card} />
+      <QuoteCardFooter card={card} />
     </Card>
   );
 }
