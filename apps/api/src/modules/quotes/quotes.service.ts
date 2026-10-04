@@ -12,6 +12,7 @@ import {
   type QuoteStageId,
   type QuotesBoardQuery,
   type QuotesListQuery,
+  type QuotesViewOptions,
   type UpdateQuoteInput,
 } from '@repo/schemas';
 import { AppError, ErrorCodes } from '../../lib/errors';
@@ -69,9 +70,17 @@ export class QuotesService {
     private notificationsRepo: NotificationsRepository,
   ) {}
 
+  // `hideStale` is a per-user view option, but it only applies while the app allows hiding stale
+  // quotes: a client with an old config cache must not keep hiding them once an admin turns it off.
+  private async allowedViewOptions<T extends QuotesViewOptions>(query: T): Promise<T> {
+    if (!query.hideStale) return query;
+    const appRow = await this.configRepo.findAppSettings();
+    return appRow?.hideStaleQuotes ? query : { ...query, hideStale: false };
+  }
+
   async list(query: QuotesListQuery, ownerId?: string) {
     const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(
-      query,
+      await this.allowedViewOptions(query),
       ownerId,
     );
     const resource = items.map(quoteListItemResource);
@@ -126,7 +135,7 @@ export class QuotesService {
   }
 
   async board(query: QuotesBoardQuery, ownerId?: string) {
-    const rows = await this.repo.findBoard(query, ownerId);
+    const rows = await this.repo.findBoard(await this.allowedViewOptions(query), ownerId);
     type Card = ReturnType<typeof quoteCardResource>;
     const grouped: Record<QuoteStageId, Card[]> & { archived: Card[] } = {
       [QUOTE_STAGE.PENDING]: [],
