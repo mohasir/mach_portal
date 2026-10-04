@@ -235,9 +235,9 @@
   "viewSettings": {
     "title": "View settings",
     "hideStale": "Hide expired",
-    "hideStaleCaption": "Leaves quotes whose event date or validity already passed out of the pipeline and the table. They still show up when searched for.",
+    "hideStaleCaption": "Hides quotes whose event already happened or whose validity expired. They still show up in search.",
     "includeArchived": "Include archived",
-    "includeArchivedCaption": "Also lists archived quotes: in the table and in their own pipeline column."
+    "includeArchivedCaption": "Shows them in the table and in a separate pipeline column."
   },
   "rateDrift": {
     "taxRate": {

@@ -235,9 +235,9 @@
   "viewSettings": {
     "title": "Configuración de vista",
     "hideStale": "Ocultar vencidas",
-    "hideStaleCaption": "No muestra en el pipeline ni en la tabla las cotizaciones con la fecha del evento o la vigencia vencidas. Igual aparecen al buscarlas.",
+    "hideStaleCaption": "Oculta las cotizaciones cuyo evento ya pasó o cuya vigencia expiró. Siguen apareciendo en la búsqueda.",
     "includeArchived": "Incluir archivadas",
-    "includeArchivedCaption": "Muestra también las cotizaciones archivadas: en la tabla y en una columna propia del pipeline."
+    "includeArchivedCaption": "Las muestra en la tabla y en una columna aparte del pipeline."
   },
   "rateDrift": {
     "taxRate": {
