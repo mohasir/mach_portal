@@ -30,6 +30,24 @@
       "error": "Couldn't change the password"
     }
   },
+  "userPreferences": {
+    "title": "Language & format",
+    "cardTitle": "Language and time format",
+    "language": "Language",
+    "languageCaption": "Language the app is shown in.",
+    "timeFormat": "Time format",
+    "timeFormatCaption": "How times are shown across the app. E.g. 2:30 pm or 14:30.",
+    "languages": {
+      "es": "Español",
+      "en": "English"
+    },
+    "timeFormats": {
+      "12h": "12-hour",
+      "24h": "24-hour"
+    },
+    "loadError": "Your preferences couldn't be loaded.",
+    "retry": "Retry"
+  },
   "security": {
     "title": "Security",
     "sessions": {
@@ -46,7 +64,7 @@
     "title": "General"
   },
   "preferences": {
-    "title": "Preferences",
+    "title": "Features",
     "catalog": {
       "title": "Catalog",
       "sortable": "Sortable catalog",
@@ -54,14 +72,23 @@
     },
     "quoteBuilder": {
       "title": "Quote builder",
-      "allowSelectOptionsAtQuote": "Allow choosing options at quote time",
-      "allowSelectOptionsAtQuoteCaption": "When off, the builder's \"Choose options now\" toggle is hidden — every quote defers option selection to the event. Existing quotes keep whatever they already saved."
+      "allowSelectOptionsAtQuote": "Select options when quoting",
+      "allowSelectOptionsAtQuoteCaption": "Lets you choose item options while creating the quote. When off, this choice is deferred to the event. (Existing quotes don't change.)",
+      "promptRateChanges": "Suggest rate updates",
+      "promptRateChangesCaption": "Asks whether to apply the new percentages when opening a pending quote after taxes or surcharges have changed. When off, the original values are kept."
+    },
+    "pipeline": {
+      "title": "Pipeline",
+      "hideStaleQuotes": "Enable the \"Hide expired\" filter",
+      "hideStaleQuotesCaption": "Adds an option in the Quotes view so each user can hide the ones that already expired."
     }
   },
   "taxRates": {
-    "title": "Tax rates by state",
+    "title": "Taxes",
     "applyByState": "Apply tax by state",
-    "applyByStateCaption": "Tax applied to quotes based on state."
+    "applyByStateCaption": "Tax applied to quotes based on state.",
+    "cardSurchargeRate": "Card/check surcharge",
+    "cardSurchargeRateCaption": "Percentage added to the quote total when the surcharge switch is on."
   },
   "quotePdfTemplate": {
     "title": "PDF template",
@@ -124,9 +151,7 @@
     "currencyCaption": "Currency used to display quote amounts.",
     "optionsSelectionDeadlineDays": "Options selection deadline",
     "optionsSelectionDeadlineDaysCaption": "Days before the event date by which the client's option choices should be confirmed.",
-    "days": "days",
-    "cardSurchargeRate": "Card/check surcharge",
-    "cardSurchargeRateCaption": "Percentage added to the quote total when the surcharge switch is on."
+    "days": "days"
   },
   "permissions": {
     "title": "Permissions",
@@ -147,7 +172,8 @@
       "manage_staff_assignments": "Assign/remove event staff",
       "view_summary": "View monthly metrics",
       "view_quotes_chart": "View quotes chart",
-      "view_top_products": "View top requested stations"
+      "view_top_products": "View top requested stations",
+      "view_archived": "View archived quotes"
     },
     "resources": {
       "dashboard": {
@@ -213,6 +239,10 @@
       "quote_builder_preferences": {
         "label": "Quote builder preferences",
         "caption": "Whether staff can choose options at quote time instead of deferring them to the event."
+      },
+      "pipeline_preferences": {
+        "label": "Pipeline preferences",
+        "caption": "Whether the option to hide expired quotes is available in the quotes view."
       }
     }
   },

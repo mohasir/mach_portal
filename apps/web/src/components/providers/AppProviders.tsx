@@ -1,4 +1,5 @@
 'use client';
+import { useEffect } from 'react';
 import { App, ConfigProvider } from 'antd';
 import esES from 'antd/locale/es_ES';
 import enUS from 'antd/locale/en_US';
@@ -15,7 +16,12 @@ import { SettingsProvider } from './SettingsProvider';
 const ANTD_LOCALES: Record<Locale, typeof esES> = { es: esES, en: enUS };
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
-  const locale = useLocaleStore((s) => s.locale) as Locale;
+  const locale = useLocaleStore((s) => s.locale);
+
+  // i18next boots on the default locale; this applies the persisted one and every later change.
+  useEffect(() => {
+    if (i18n.language !== locale) void i18n.changeLanguage(locale);
+  }, [locale]);
 
   return (
     <ConfigProvider theme={machBarTheme} locale={ANTD_LOCALES[locale] ?? esES}>

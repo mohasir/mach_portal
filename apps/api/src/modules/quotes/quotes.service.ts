@@ -3,7 +3,10 @@ import {
   canTransition,
   computeQuoteTotals,
   paginationMeta,
+  needsConfigRates,
   QUOTE_STAGE,
+  quoteRateDrift,
+  resolveQuoteRates,
   TEMPLATE_TYPES,
   type CheckQuoteAvailabilityQuery,
   type CreateQuoteInput,
@@ -11,6 +14,8 @@ import {
   type QuoteStageId,
   type QuotesBoardQuery,
   type QuotesListQuery,
+  type QuoteRatesConfig,
+  type QuotesViewOptions,
   type UpdateQuoteInput,
 } from '@repo/schemas';
 import { AppError, ErrorCodes } from '../../lib/errors';
@@ -43,6 +48,10 @@ function canGeneratePdf(row: { stageId: number; isDraft: boolean }): boolean {
   return !row.isDraft || PDF_ALLOWED_STAGES.includes(row.stageId as QuoteStageId);
 }
 
+function configNotFound() {
+  return new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.config.NOT_FOUND) });
+}
+
 function notFound() {
   return new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.quote.NOT_FOUND) });
 }
@@ -68,9 +77,17 @@ export class QuotesService {
     private notificationsRepo: NotificationsRepository,
   ) {}
 
+  // `hideStale` is a per-user view option, but it only applies while the app allows hiding stale
+  // quotes: a client with an old config cache must not keep hiding them once an admin turns it off.
+  private async allowedViewOptions<T extends QuotesViewOptions>(query: T): Promise<T> {
+    if (!query.hideStale) return query;
+    const appRow = await this.configRepo.findAppSettings();
+    return appRow?.hideStaleQuotes ? query : { ...query, hideStale: false };
+  }
+
   async list(query: QuotesListQuery, ownerId?: string) {
     const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(
-      query,
+      await this.allowedViewOptions(query),
       ownerId,
     );
     const resource = items.map(quoteListItemResource);
@@ -78,8 +95,8 @@ export class QuotesService {
     return { items: resource, pagination: paginationMeta(total, page, pageSize) };
   }
 
-  async getById(id: string, ownerId?: string) {
-    const result = await this.repo.findById(id, ownerId);
+  async getById(id: string, ownerId?: string, includeArchived = false) {
+    const result = await this.repo.findById(id, ownerId, includeArchived);
     if (!result) throw notFound();
     return buildQuoteDetail(
       result.quoteRow,
@@ -125,14 +142,20 @@ export class QuotesService {
   }
 
   async board(query: QuotesBoardQuery, ownerId?: string) {
-    const rows = await this.repo.findBoard(query, ownerId);
-    const grouped: Record<QuoteStageId, ReturnType<typeof quoteCardResource>[]> = {
+    const rows = await this.repo.findBoard(await this.allowedViewOptions(query), ownerId);
+    type Card = ReturnType<typeof quoteCardResource>;
+    const grouped: Record<QuoteStageId, Card[]> & { archived: Card[] } = {
       [QUOTE_STAGE.PENDING]: [],
       [QUOTE_STAGE.QUOTED]: [],
       [QUOTE_STAGE.CONFIRMED]: [],
       [QUOTE_STAGE.CANCELLED]: [],
+      archived: [],
     };
-    for (const row of rows) grouped[row.stageId as QuoteStageId].push(quoteCardResource(row));
+    for (const row of rows) {
+      const card = quoteCardResource(row);
+      if (card.isArchived) grouped.archived.push(card);
+      else grouped[row.stageId as QuoteStageId].push(card);
+    }
     return grouped;
   }
 
@@ -153,13 +176,13 @@ export class QuotesService {
       this.configRepo.findAppSettings(),
       this.repo.getMaxSeq(),
     ]);
-    if (!appRow)
-      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.config.NOT_FOUND) });
+    if (!appRow) throw configNotFound();
 
     const now = new Date();
-    const taxRate = appRow.applyTaxByState
-      ? (stateRows.find((s) => s.state === input.state)?.taxRate ?? 0)
-      : 0;
+    const { taxRate, cardSurchargeRate } = resolveQuoteRates(
+      { ...appRow, stateSettings: stateRows },
+      input.state,
+    );
     const depositRate = input.depositRate ?? appRow.depositRate;
     const totals = computeQuoteTotals({
       lines: input.lines.map((l) => ({ subtotal: l.subtotal })),
@@ -168,7 +191,7 @@ export class QuotesService {
       longDistanceAmount: input.longDistanceAmount,
       taxRate,
       applyCardSurcharge: input.applyCardSurcharge,
-      cardSurchargeRate: appRow.cardSurchargeRate,
+      cardSurchargeRate,
       depositRate,
     });
 
@@ -259,45 +282,82 @@ export class QuotesService {
     return quoteResource(updated);
   }
 
-  // stage 'new' re-snapshots rates from live config (the draft isn't final yet); from
-  // 'quoted' onward the rates stay frozen and only the derived amounts move
-  // (mach-bar-domain.md §7, "queda fija").
-  private async resolveTotals(current: PublicQuote, input: UpdateQuoteInput) {
-    const lines = { lines: input.lines.map((l) => ({ subtotal: l.subtotal })) };
-    if (current.stageId === QUOTE_STAGE.QUOTED) {
-      return computeQuoteTotals({
-        ...lines,
-        discountType: input.discountType,
-        discountValue: input.discountValue,
-        longDistanceAmount: input.longDistanceAmount,
-        taxRate: current.taxRate,
-        applyCardSurcharge: current.applyCardSurcharge,
-        cardSurchargeRate: current.cardSurchargeRate,
-        depositRate: current.depositRate,
-      });
-    }
-
+  private async loadRatesConfig(): Promise<QuoteRatesConfig & { promptRateChanges: boolean }> {
     const [stateRows, appRow] = await Promise.all([
       this.configRepo.findStateSettings(),
       this.configRepo.findAppSettings(),
     ]);
-    if (!appRow)
-      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.config.NOT_FOUND) });
+    if (!appRow) throw configNotFound();
+    return { ...appRow, stateSettings: stateRows };
+  }
 
-    const taxRate = appRow.applyTaxByState
-      ? (stateRows.find((s) => s.state === input.state)?.taxRate ?? 0)
-      : 0;
-    const depositRate = input.depositRate ?? appRow.depositRate;
+  private async resolveTotals(current: PublicQuote, input: UpdateQuoteInput) {
+    const { taxRate, cardSurchargeRate } = needsConfigRates(input.state, current)
+      ? resolveQuoteRates(await this.loadRatesConfig(), input.state, current)
+      : current;
     return computeQuoteTotals({
-      ...lines,
+      lines: input.lines.map((l) => ({ subtotal: l.subtotal })),
       discountType: input.discountType,
       discountValue: input.discountValue,
       longDistanceAmount: input.longDistanceAmount,
       taxRate,
-      applyCardSurcharge: input.applyCardSurcharge,
-      cardSurchargeRate: appRow.cardSurchargeRate,
-      depositRate,
+      applyCardSurcharge: input.applyCardSurcharge ?? current.applyCardSurcharge,
+      cardSurchargeRate,
+      depositRate: input.depositRate ?? current.depositRate,
     });
+  }
+
+  async rateDrift(id: string, ownerId?: string) {
+    const [current, config] = await Promise.all([
+      this.repo.findQuoteRow(id, ownerId),
+      this.loadRatesConfig(),
+    ]);
+    if (!current) throw notFound();
+    return config.promptRateChanges ? quoteRateDrift(config, current) : null;
+  }
+
+  async resolveRateDrift(id: string, accept: boolean, ownerId?: string) {
+    const [current, config] = await Promise.all([
+      this.repo.findQuoteRow(id, ownerId),
+      this.loadRatesConfig(),
+    ]);
+    if (!current) throw notFound();
+    const drift = config.promptRateChanges ? quoteRateDrift(config, current) : null;
+    if (!drift) return quoteResource(current);
+
+    const updated = await this.repo.updateRates(
+      id,
+      drift.saved,
+      accept
+        ? {
+            ...computeQuoteTotals({
+              lines: [{ subtotal: current.subtotal }],
+              discountType: current.discountType,
+              discountValue: current.discountValue,
+              longDistanceAmount: current.longDistanceAmount,
+              ...drift.current,
+              applyCardSurcharge: current.applyCardSurcharge,
+              depositRate: current.depositRate,
+            }),
+            declinedRates: null,
+          }
+        : { declinedRates: drift.current },
+      ownerId,
+    );
+    // It was sent or edited meanwhile: nothing left to answer, so report how it stands now.
+    if (!updated) {
+      const latest = await this.repo.findQuoteRow(id, ownerId);
+      if (!latest) throw notFound();
+      return quoteResource(latest);
+    }
+
+    // Repricing changes the client-facing amounts, so the PDF has to follow (same as update()).
+    if (accept && canGeneratePdf(updated)) {
+      void this.generatePdf(id).catch((err) => {
+        console.error('background pdf regeneration failed', err);
+      });
+    }
+    return quoteResource(updated);
   }
 
   async updateStage(id: string, stageId: QuoteStageId, userId: string, ownerId?: string) {

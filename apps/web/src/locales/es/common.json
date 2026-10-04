@@ -20,7 +20,8 @@
     "search": "Buscar",
     "total": "{{total}} registros",
     "results": "{{count}} resultados",
-    "clearFilters": "Limpiar filtros"
+    "clearFilters": "Limpiar filtros",
+    "clearSearch": "Limpiar búsqueda"
   },
   "share": {
     "action": "Compartir",
@@ -47,5 +48,29 @@
   "footer": {
     "copyright": "© {{year}} {{appName}}. Todos los derechos reservados.",
     "developedBy": "Desarrollado por Oravitech"
+  },
+  "pickers": {
+    "done": "Listo",
+    "hours": "Horas",
+    "minutes": "Minutos",
+    "period": "AM/PM",
+    "prevMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente"
+  },
+  "filters": {
+    "button": "Filtros",
+    "clearAll": "Limpiar",
+    "from": "Desde",
+    "to": "Hasta",
+    "dateFrom": "Desde {{date}}",
+    "dateTo": "Hasta {{date}}",
+    "datePresets": {
+      "today": "Hoy",
+      "last7Days": "Últimos 7 días",
+      "thisMonth": "Este mes",
+      "lastMonth": "Mes anterior"
+    },
+    "apply": "Aplicar",
+    "customRange": "Rango personalizado"
   }
 }

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dayjs, { type Dayjs } from 'dayjs';
 import type { Locale } from '@/lib/i18n/config';
+import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { CalendarDayEvents } from './CalendarDayEvents';
 import { EventDayCard } from './EventDayCard';
 import type { EventCalendarItem } from '../../types';
@@ -25,6 +26,7 @@ const parseHour = (time: string) => {
 };
 
 function HourLabels() {
+  const { hour: hourLabel } = useDateFormatter();
   return (
     <div className="relative w-14 shrink-0">
       {HOURS.map(
@@ -35,7 +37,7 @@ function HourLabels() {
               className="absolute right-2 -translate-y-1/2 text-xs text-gray-400"
               style={{ top: hour * HOUR_HEIGHT }}
             >
-              {String(hour).padStart(2, '0')}:00
+              {hourLabel(hour)}
             </div>
           ),
       )}

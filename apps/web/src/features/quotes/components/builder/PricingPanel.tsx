@@ -1,6 +1,7 @@
 'use client';
 import { Divider, Form, Select, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { toDisplayPercent } from '@/lib/utils/percent';
 import type { DiscountType, QuoteTotals } from '@repo/schemas';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
@@ -98,7 +99,7 @@ export function PricingPanel({ totals }: PricingPanelProps) {
           <Row label={t('builder.pricing.longDistance')} value={money(totals.longDistanceAmount)} />
         )}
         <Row
-          label={t('builder.pricing.tax', { rate: Math.round(totals.taxRate * 1000) / 10 })}
+          label={t('builder.pricing.tax', { rate: toDisplayPercent(totals.taxRate) })}
           value={money(totals.taxAmount)}
         />
         <Divider className="my-1" />

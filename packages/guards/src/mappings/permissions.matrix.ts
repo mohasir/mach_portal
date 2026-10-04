@@ -18,6 +18,7 @@ const {
   MANAGE_STAFF_ASSIGNMENTS,
   MANAGE_ASSIGNMENT,
   REGENERATE_PDF,
+  VIEW_ARCHIVED,
   VIEW_SUMMARY,
   VIEW_QUOTES_CHART,
   VIEW_TOP_PRODUCTS,
@@ -40,7 +41,7 @@ export const permissionsMatrix = [
   { resource: RESOURCES.CLIENT, actions: CRUD },
   {
     resource: RESOURCES.QUOTE,
-    actions: [...CRUD, MANAGE_LINE_PRICING, MANAGE_ASSIGNMENT, REGENERATE_PDF],
+    actions: [...CRUD, MANAGE_LINE_PRICING, MANAGE_ASSIGNMENT, REGENERATE_PDF, VIEW_ARCHIVED],
   },
   { resource: RESOURCES.PIPELINE, actions: CRUD },
   { resource: RESOURCES.STAFF, actions: CRUD },
@@ -53,4 +54,5 @@ export const permissionsMatrix = [
   { resource: RESOURCES.CATALOG_PREFERENCES, actions: VIEW_UPDATE },
   { resource: RESOURCES.QUOTE_PDF_TEMPLATE, actions: VIEW_UPDATE },
   { resource: RESOURCES.QUOTE_BUILDER_PREFERENCES, actions: VIEW_UPDATE },
+  { resource: RESOURCES.PIPELINE_PREFERENCES, actions: VIEW_UPDATE },
 ] as const satisfies readonly PermissionsMatrixItem[];

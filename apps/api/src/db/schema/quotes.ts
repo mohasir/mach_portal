@@ -8,7 +8,9 @@ import {
   pgEnum,
   timestamp,
   boolean,
+  jsonb,
 } from 'drizzle-orm/pg-core';
+import type { QuoteRates } from '@repo/schemas';
 import { stateEnum } from './enums';
 import { clients } from './clients';
 import { eventTypes } from './eventTypes';
@@ -57,6 +59,9 @@ export const quotes = pgTable('quotes', {
     .notNull()
     .default(0.5),
   depositAmount: integer('deposit_amount').notNull().default(0),
+  // Config rates the user chose not to apply to this pending quote (quoteRateDrift), so the same
+  // difference isn't offered again until config changes once more.
+  declinedRates: jsonb('declined_rates').$type<QuoteRates>(),
   stageId: integer('stage_id')
     .notNull()
     .default(1) // QUOTE_STAGE.PENDING
