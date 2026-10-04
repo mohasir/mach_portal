@@ -1,6 +1,7 @@
 node_modules
 dist
 .next
+.next-prepush
 .env
 .env.local
 .turbo
