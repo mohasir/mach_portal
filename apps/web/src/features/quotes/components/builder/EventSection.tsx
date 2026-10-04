@@ -9,6 +9,7 @@ import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useConfig } from '@/features/settings';
+import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 import CITIES_BY_STATE from '../../citiesByState.json';
 import { useQuoteBuilder, type QuoteBuilderState } from '../../hooks/useQuoteBuilder';
@@ -36,6 +37,7 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
   const { t } = useTranslation('quotes');
   const { state, setFields } = useQuoteBuilder();
   const { data: config } = useConfig();
+  const { timeInputFormat, is12h } = useDateFormatter();
   const [form] = Form.useForm<EventFormValues>();
   const eventDate = Form.useWatch('eventDate', form);
   const eventTime = Form.useWatch('eventTime', form);
@@ -152,7 +154,10 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
     >
       <AutoCloseTimePicker
         className="w-full"
-        format="HH:mm"
+        format={timeInputFormat}
+        // Auto-close fires once hour and minute are picked, which would shut the panel before
+        // the am/pm column can be used.
+        closeStrategy={is12h ? 'confirm' : 'complete'}
         minuteStep={15}
         classNames={{ popup: { content: 'min-w-[150px]' } }}
         disabledTime={disabledTime}

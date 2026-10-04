@@ -30,6 +30,22 @@
       "error": "Couldn't change the password"
     }
   },
+  "userPreferences": {
+    "title": "Language & format",
+    "cardTitle": "Language and time format",
+    "language": "Language",
+    "languageCaption": "Language the app is shown in.",
+    "timeFormat": "Time format",
+    "timeFormatCaption": "How times are shown across the app. E.g. 2:30 pm or 14:30.",
+    "languages": {
+      "es": "Español",
+      "en": "English"
+    },
+    "timeFormats": {
+      "12h": "12-hour",
+      "24h": "24-hour"
+    }
+  },
   "security": {
     "title": "Security",
     "sessions": {

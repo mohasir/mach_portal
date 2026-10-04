@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Grid } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import type { Locale } from '@/lib/i18n/config';
+import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { CalendarDayEvents } from './CalendarDayEvents';
 import { EventDayCard } from './EventDayCard';
 import type { EventCalendarItem } from '../../types';
@@ -33,6 +34,7 @@ export function WeekView({
   onSelectDate,
 }: WeekViewProps) {
   const screens = Grid.useBreakpoint();
+  const { hour: hourLabel } = useDateFormatter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const today = dayjs();
   const days = Array.from({ length: 7 }, (_, i) => weekStart.add(i, 'day').locale(locale));
@@ -160,7 +162,7 @@ export function WeekView({
                     className="absolute right-2 -translate-y-1/2 text-xs text-gray-400"
                     style={{ top: hour * HOUR_HEIGHT }}
                   >
-                    {String(hour).padStart(2, '0')}:00
+                    {hourLabel(hour)}
                   </div>
                 ),
             )}

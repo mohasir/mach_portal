@@ -30,6 +30,22 @@
       "error": "No se pudo cambiar la contraseña"
     }
   },
+  "userPreferences": {
+    "title": "Idioma y formato",
+    "cardTitle": "Idioma y formato de hora",
+    "language": "Idioma",
+    "languageCaption": "Idioma en el que se muestra la aplicación.",
+    "timeFormat": "Formato de hora",
+    "timeFormatCaption": "Cómo se muestran las horas en toda la aplicación. Ej.: 2:30 pm o 14:30.",
+    "languages": {
+      "es": "Español",
+      "en": "English"
+    },
+    "timeFormats": {
+      "12h": "12 horas",
+      "24h": "24 horas"
+    }
+  },
   "security": {
     "title": "Seguridad",
     "sessions": {

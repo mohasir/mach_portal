@@ -44,7 +44,7 @@ export function QuoteDetailCard({
   const { t } = useTranslation('quotes');
   const { message } = App.useApp();
   const router = useRouter();
-  const { date, dateTime } = useDateFormatter();
+  const { date, dateTime, time } = useDateFormatter();
   const isDesktop = useIsDesktop();
   const hasPdf = Boolean(detail.pdfUrl);
   const canRegeneratePdf = useCanRegeneratePdf();
@@ -65,8 +65,10 @@ export function QuoteDetailCard({
   };
 
   const eventDateTime = detail.eventDate
-    ? `${date(detail.eventDate)}${detail.eventTime ? `, ${detail.eventTime}` : ''}`
-    : (detail.eventTime ?? '—');
+    ? `${date(detail.eventDate)}${detail.eventTime ? `, ${time(detail.eventTime)}` : ''}`
+    : detail.eventTime
+      ? time(detail.eventTime)
+      : '—';
 
   const isPastDue =
     (detail.stageId === QUOTE_STAGE.PENDING || detail.stageId === QUOTE_STAGE.QUOTED) &&

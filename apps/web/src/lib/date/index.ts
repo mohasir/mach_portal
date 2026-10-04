@@ -3,6 +3,7 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/es';
 import 'dayjs/locale/en';
+import type { TimeFormat } from '@repo/schemas';
 import type { Locale as AppLocale } from '@/lib/i18n/config';
 
 dayjs.extend(localizedFormat);
@@ -17,9 +18,14 @@ const MEDIUM_DATE_FORMAT: Record<AppLocale, string> = {
   en: 'MMM D, YYYY',
 };
 
-const MEDIUM_DATE_TIME_FORMAT: Record<AppLocale, string> = {
-  es: 'D MMM YYYY, HH:mm',
-  en: 'MMM D, YYYY, HH:mm',
+export const TIME_DISPLAY_FORMAT: Record<TimeFormat, string> = {
+  '12h': 'h:mm a',
+  '24h': 'HH:mm',
+};
+
+const HOUR_DISPLAY_FORMAT: Record<TimeFormat, string> = {
+  '12h': 'h a',
+  '24h': 'HH:mm',
 };
 
 const toDayjs = (value: DateInput, locale: AppLocale) => dayjs(value).locale(locale);
@@ -30,12 +36,18 @@ export const formatDate = (value: DateInput, locale: AppLocale) =>
 export const formatDateLong = (value: DateInput, locale: AppLocale) =>
   toDayjs(value, locale).format('LL');
 
-export const formatDateTime = (value: DateInput, locale: AppLocale) =>
-  toDayjs(value, locale).format(MEDIUM_DATE_TIME_FORMAT[locale]);
+export const formatDateTime = (value: DateInput, locale: AppLocale, timeFormat: TimeFormat) =>
+  toDayjs(value, locale).format(
+    `${MEDIUM_DATE_FORMAT[locale]}, ${TIME_DISPLAY_FORMAT[timeFormat]}`,
+  );
 
-// `eventTime` is stored/displayed elsewhere as a plain "HH:mm" string, not a full date —
-// 12h/am-pm is a fixed display choice here (not locale-dependent like the formatters above).
-export const formatTime = (value: string) => dayjs(value, 'HH:mm').format('h:mm a');
+// `eventTime` is stored as a plain "HH:mm" string, not a full date.
+export const formatTime = (value: string, timeFormat: TimeFormat) =>
+  dayjs(value, 'HH:mm').format(TIME_DISPLAY_FORMAT[timeFormat]);
+
+/** Hour-of-day label for calendar axes: "2 pm" / "14:00". */
+export const formatHour = (hour: number, timeFormat: TimeFormat) =>
+  dayjs().hour(hour).minute(0).format(HOUR_DISPLAY_FORMAT[timeFormat]);
 
 /** "6:30" — hour/minute only, no am/pm (paired with formatTimeMeridiem). */
 export const formatTimeHourMinute = (value: string) => dayjs(value, 'HH:mm').format('h:mm');
