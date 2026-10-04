@@ -10,9 +10,10 @@ import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 
 interface ExtraChargesSectionProps {
   readOnly?: boolean;
+  cardSurchargeRate: number;
 }
 
-export function ExtraChargesSection({ readOnly }: ExtraChargesSectionProps) {
+export function ExtraChargesSection({ readOnly, cardSurchargeRate }: ExtraChargesSectionProps) {
   const { t } = useTranslation('quotes');
   const { state, setFields } = useQuoteBuilder();
   const { data: config } = useConfig();
@@ -20,7 +21,6 @@ export function ExtraChargesSection({ readOnly }: ExtraChargesSectionProps) {
   const stateTaxRate = state.state
     ? (config?.stateSettings.find((s) => s.state === state.state)?.taxRate ?? 0)
     : 0;
-  const cardSurchargeRate = config?.appSettings.cardSurchargeRate ?? 0;
 
   return (
     <WrapperCard title={t('builder.event.taxesGroupTitle')}>

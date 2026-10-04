@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { listQuerySchema } from './pagination';
-import { stateSchema } from './enums';
+import { stateSchema, type StateValue } from './enums';
 import { optionalText } from './fields';
 import { createClientSchema } from './clients';
 
@@ -161,6 +161,40 @@ export const quotesBoardQuerySchema = z.object({
   year: z.number().int().optional(),
 });
 export type QuotesBoardQuery = z.infer<typeof quotesBoardQuerySchema>;
+
+// ── config-driven rates — mach-bar-domain.md §7, shared so preview (FE) = saved (BE) ──
+export interface QuoteRatesConfig {
+  applyTaxByState: boolean;
+  stateSettings: { state: StateValue; taxRate: number }[];
+  cardSurchargeRate: number;
+}
+
+export interface SavedQuoteRates {
+  stageId: number;
+  state: StateValue | null;
+  taxRate: number;
+  cardSurchargeRate: number;
+}
+
+// A sent quote keeps the rates it was sent with, so later config edits don't silently reprice
+// it. Moving the event to another state is a change to the quote itself, so it takes that
+// state's current tax rate.
+export function resolveQuoteRates(
+  config: QuoteRatesConfig,
+  state: StateValue | null | undefined,
+  saved?: SavedQuoteRates | null,
+): { taxRate: number; cardSurchargeRate: number } {
+  const configTaxRate = config.applyTaxByState
+    ? (config.stateSettings.find((s) => s.state === state)?.taxRate ?? 0)
+    : 0;
+  if (saved?.stageId !== QUOTE_STAGE.QUOTED) {
+    return { taxRate: configTaxRate, cardSurchargeRate: config.cardSurchargeRate };
+  }
+  return {
+    taxRate: (state ?? null) === saved.state ? saved.taxRate : configTaxRate,
+    cardSurchargeRate: saved.cardSurchargeRate,
+  };
+}
 
 // ── price cascade — mach-bar-domain.md §7, shared so preview (FE) = saved (BE) = PDF ──
 export interface QuoteTotalsInput {
