@@ -1,7 +1,8 @@
 'use client';
-import { useState, type MouseEvent } from 'react';
+import { useContext, useState, type MouseEvent } from 'react';
 import { Button, TimePicker } from 'antd';
 import type { Dayjs } from 'dayjs';
+import DisabledContext from 'antd/es/config-provider/DisabledContext';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { AutoCloseTimePicker } from '@/components/shared/Inputs/AutoCloseTimePicker';
@@ -28,6 +29,8 @@ export function WrapperTimePicker({
   const { timeInputFormat, is12h } = useDateFormatter();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Dayjs>(() => toWheelValue(value, minuteStep));
+  // A read-only <Form disabled> reaches the input but not this prop; the sheet must honor both.
+  const formDisabled = useContext(DisabledContext);
 
   if (isDesktop) {
     return (
@@ -43,7 +46,7 @@ export function WrapperTimePicker({
   }
 
   const openSheet = (event: MouseEvent<HTMLDivElement>) => {
-    if (pickerProps.disabled) return;
+    if (pickerProps.disabled ?? formDisabled) return;
     // The clear icon lives inside the input; clearing shouldn't also open the sheet.
     if ((event.target as HTMLElement).closest('.ant-picker-clear')) return;
     // The drawer hands focus back to whatever had it when it opened; dropping it here leaves the

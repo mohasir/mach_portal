@@ -1,7 +1,8 @@
 'use client';
-import { useState, type MouseEvent } from 'react';
+import { useContext, useState, type MouseEvent } from 'react';
 import { Button, Calendar, DatePicker } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
+import DisabledContext from 'antd/es/config-provider/DisabledContext';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
@@ -23,6 +24,10 @@ export function WrapperDatePicker({
   const isDesktop = useIsDesktop();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Dayjs>(() => value ?? dayjs());
+  // Month on display, kept apart from the picked day so paging months doesn't pick anything.
+  const [panel, setPanel] = useState<Dayjs>(draft);
+  // A read-only <Form disabled> reaches the input but not this prop; the sheet must honor both.
+  const formDisabled = useContext(DisabledContext);
 
   if (isDesktop) {
     return (
@@ -36,13 +41,15 @@ export function WrapperDatePicker({
   }
 
   const openSheet = (event: MouseEvent<HTMLDivElement>) => {
-    if (pickerProps.disabled) return;
+    if (pickerProps.disabled ?? formDisabled) return;
     // The clear icon lives inside the input; clearing shouldn't also open the sheet.
     if ((event.target as HTMLElement).closest('.ant-picker-clear')) return;
     // The drawer hands focus back to whatever had it when it opened; dropping it here leaves the
     // field unfocused once a value is picked or the sheet is dismissed.
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-    setDraft(value ?? dayjs());
+    const initial = value ?? dayjs();
+    setDraft(initial);
+    setPanel(initial);
     setOpen(true);
   };
 
@@ -74,10 +81,27 @@ export function WrapperDatePicker({
       >
         {open && (
           <Calendar
+            className="mach-picked-calendar"
             fullscreen={false}
-            value={draft}
-            onChange={setDraft}
+            value={panel}
+            onPanelChange={setPanel}
+            onSelect={(day, { source }) => {
+              if (source !== 'date') return;
+              setDraft(day);
+              setPanel(day);
+            }}
             disabledDate={disabledDate}
+            fullCellRender={(day, info) => (
+              <div
+                className={
+                  day.isSame(draft, 'day') && day.isSame(panel, 'month')
+                    ? '*:bg-primary *:text-white'
+                    : ''
+                }
+              >
+                {info.originNode}
+              </div>
+            )}
             headerRender={({ value: month, onChange: setMonth }) => (
               <CalendarHeader value={month} onChange={setMonth} />
             )}

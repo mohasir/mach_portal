@@ -310,4 +310,11 @@
   .notification-popover .ant-popover-container {
     padding: 18px;
   }
+
+  /* Calendars that paint the picked day(s) themselves (fullCellRender). AntD's own "selected"
+     day just follows the month being browsed, so it must not look picked there. */
+  .mach-picked-calendar .ant-picker-cell-selected .ant-picker-cell-inner {
+    background: transparent;
+    color: inherit;
+  }
 }

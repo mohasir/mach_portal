@@ -7,7 +7,9 @@ import { WheelColumn } from './WheelColumn';
 
 interface TimeWheelProps {
   value: Dayjs;
-  onChange: (value: Dayjs) => void;
+  // Takes an updater: each column settles on its own timer, so building on a captured `value`
+  // would let a late column write back what another one just changed.
+  onChange: (update: (prev: Dayjs) => Dayjs) => void;
   is12h: boolean;
   minuteStep: number;
   disabled: TimeDisabledConfig;
@@ -21,8 +23,6 @@ export function TimeWheel({ value, onChange, is12h, minuteStep, disabled }: Time
   const { hour: hour12, meridiem } = to12h(hour24);
   const disabledHours = new Set(disabled.disabledHours?.() ?? []);
   const disabledMinutes = new Set(disabled.disabledMinutes?.(hour24) ?? []);
-
-  const setHour24 = (next: number) => onChange(value.hour(next));
 
   const hourItems: WheelItem<number>[] = is12h
     ? range(1, 12).map((h) => ({
@@ -60,21 +60,23 @@ export function TimeWheel({ value, onChange, is12h, minuteStep, disabled }: Time
         ariaLabel={t('pickers.hours')}
         items={hourItems}
         value={is12h ? hour12 : hour24}
-        onChange={(h) => setHour24(is12h ? to24h(h, meridiem) : h)}
+        onChange={(h) =>
+          onChange((prev) => prev.hour(is12h ? to24h(h, to12h(prev.hour()).meridiem) : h))
+        }
       />
       <span className="relative z-10 text-2xl text-muted">:</span>
       <WheelColumn
         ariaLabel={t('pickers.minutes')}
         items={minuteItems}
         value={value.minute()}
-        onChange={(m) => onChange(value.minute(m))}
+        onChange={(m) => onChange((prev) => prev.minute(m))}
       />
       {is12h && (
         <WheelColumn
           ariaLabel={t('pickers.period')}
           items={meridiemItems}
           value={meridiem}
-          onChange={(m) => setHour24(to24h(hour12, m))}
+          onChange={(m) => onChange((prev) => prev.hour(to24h(to12h(prev.hour()).hour, m)))}
         />
       )}
     </div>
