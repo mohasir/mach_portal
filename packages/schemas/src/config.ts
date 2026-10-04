@@ -41,6 +41,7 @@ export type UpdateCatalogPreferencesInput = z.infer<typeof updateCatalogPreferen
 
 export const updateQuoteBuilderPreferencesSchema = z.object({
   allowSelectOptionsAtQuote: z.boolean(),
+  promptRateChanges: z.boolean(),
 });
 export type UpdateQuoteBuilderPreferencesInput = z.infer<
   typeof updateQuoteBuilderPreferencesSchema

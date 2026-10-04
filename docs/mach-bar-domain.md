@@ -402,7 +402,7 @@ la recalcula sola. Excepción: si cambia el `state` del evento (a otro estado, n
 toma de la config del nuevo estado. Las elecciones propias de la quote (`applyCardSurcharge`,
 `depositRate`) siguen editables en `new` y `quoted`; desde `confirmed` la quote no se edita.
 
-**Tasas desactualizadas** (`quoteRateDrift`): si una quote en `new` tiene un `taxRate` o
+**Tasas desactualizadas** (`quoteRateDrift`), solo si `app_settings.promptRateChanges` está activo (lo decide el superadmin en Configuración → Armador de cotizaciones; apagado por defecto, y apagado la quote conserva siempre sus valores): si una quote en `new` tiene un `taxRate` o
 `cardSurchargeRate` distinto del que da hoy la config, a quien puede editarla (`QUOTE.UPDATE`) se le
 pregunta si actualizarlas, avisando que el total cambia: al abrirla en el builder (no en el detalle) y al pasarla a
 `quoted` desde el pipeline o el dropdown de stage. Solo cuentan las tasas que la quote aplica, porque

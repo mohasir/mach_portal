@@ -5,9 +5,9 @@ import {
   Info,
   KeyRound,
   LifeBuoy,
-  ListOrdered,
   Shield,
   SlidersHorizontal,
+  ToggleRight,
   UserPen,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -31,7 +31,7 @@ const MOBILE_SECTION_ICONS: Record<MobileSettingsSection, typeof UserPen> = {
   security: Shield,
   permissions: KeyRound,
   general: SlidersHorizontal,
-  preferences: ListOrdered,
+  preferences: ToggleRight,
   quotePdfTemplate: FileText,
   support: LifeBuoy,
   about: Info,

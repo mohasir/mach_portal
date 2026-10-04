@@ -282,7 +282,7 @@ export class QuotesService {
     return quoteResource(updated);
   }
 
-  private async loadRatesConfig(): Promise<QuoteRatesConfig> {
+  private async loadRatesConfig(): Promise<QuoteRatesConfig & { promptRateChanges: boolean }> {
     const [stateRows, appRow] = await Promise.all([
       this.configRepo.findStateSettings(),
       this.configRepo.findAppSettings(),
@@ -310,13 +310,15 @@ export class QuotesService {
   async rateDrift(id: string, ownerId?: string) {
     const current = await this.repo.findQuoteRow(id, ownerId);
     if (!current) throw notFound();
-    return quoteRateDrift(await this.loadRatesConfig(), current);
+    const config = await this.loadRatesConfig();
+    return config.promptRateChanges ? quoteRateDrift(config, current) : null;
   }
 
   async resolveRateDrift(id: string, accept: boolean, ownerId?: string) {
     const current = await this.repo.findQuoteRow(id, ownerId);
     if (!current) throw notFound();
-    const drift = quoteRateDrift(await this.loadRatesConfig(), current);
+    const config = await this.loadRatesConfig();
+    const drift = config.promptRateChanges ? quoteRateDrift(config, current) : null;
     if (!drift) return quoteResource(current);
 
     const updated = await this.repo.updateRates(

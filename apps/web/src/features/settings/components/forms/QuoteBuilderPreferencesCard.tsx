@@ -11,6 +11,7 @@ import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface QuoteBuilderPreferencesFormValues {
   allowSelectOptionsAtQuote: boolean;
+  promptRateChanges: boolean;
 }
 
 export function QuoteBuilderPreferencesCard() {
@@ -19,19 +20,18 @@ export function QuoteBuilderPreferencesCard() {
   const { data, isLoading } = useConfig();
   const { updateQuoteBuilderPreferences, isPending } = useUpdateQuoteBuilderPreferences();
   const [form] = Form.useForm<QuoteBuilderPreferencesFormValues>();
-  const unchanged = useIsFormUnchanged(
-    form,
-    data ? { allowSelectOptionsAtQuote: data.appSettings.allowSelectOptionsAtQuote } : undefined,
-  );
+  const initialValues: QuoteBuilderPreferencesFormValues | undefined = data && {
+    allowSelectOptionsAtQuote: data.appSettings.allowSelectOptionsAtQuote,
+    promptRateChanges: data.appSettings.promptRateChanges,
+  };
+  const unchanged = useIsFormUnchanged(form, initialValues);
 
   if (!can({ [RESOURCES.QUOTE_BUILDER_PREFERENCES]: [ACTIONS.VIEW] })) return null;
   if (isLoading || !data) return <Skeleton active paragraph={{ rows: 2 }} />;
 
   const canEdit = can({ [RESOURCES.QUOTE_BUILDER_PREFERENCES]: [ACTIONS.UPDATE] });
   const onFinish = (values: QuoteBuilderPreferencesFormValues) => {
-    void updateQuoteBuilderPreferences({
-      allowSelectOptionsAtQuote: values.allowSelectOptionsAtQuote,
-    });
+    void updateQuoteBuilderPreferences(values);
   };
 
   return (
@@ -40,7 +40,7 @@ export function QuoteBuilderPreferencesCard() {
         key={String(data.appSettings.updatedAt)}
         form={form}
         layout="vertical"
-        initialValues={{ allowSelectOptionsAtQuote: data.appSettings.allowSelectOptionsAtQuote }}
+        initialValues={initialValues}
         onFinish={onFinish}
         disabled={!canEdit}
       >
@@ -49,6 +49,16 @@ export function QuoteBuilderPreferencesCard() {
           caption={t('preferences.quoteBuilder.allowSelectOptionsAtQuoteCaption')}
           control={
             <Form.Item name="allowSelectOptionsAtQuote" valuePropName="checked" noStyle>
+              <Switch />
+            </Form.Item>
+          }
+        />
+        <SwitchRow
+          className="mt-4"
+          title={t('preferences.quoteBuilder.promptRateChanges')}
+          caption={t('preferences.quoteBuilder.promptRateChangesCaption')}
+          control={
+            <Form.Item name="promptRateChanges" valuePropName="checked" noStyle>
               <Switch />
             </Form.Item>
           }

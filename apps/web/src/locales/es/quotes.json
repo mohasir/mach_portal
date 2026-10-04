@@ -241,25 +241,23 @@
     "includeArchivedCaption": "Las muestra en la tabla y en una columna aparte del pipeline."
   },
   "rateDrift": {
+    "cardSurchargeRate": {
+      "title": "La tarifa por pago con tarjeta cambió",
+      "up": "Originalmente cotizaste con un recargo del <bold>{{saved}}</bold>, pero la tarifa actual subió al <bold>{{current}}</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido.",
+      "down": "Originalmente cotizaste con un recargo del <bold>{{saved}}</bold>, pero la tarifa actual bajó al <bold>{{current}}</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido."
+    },
     "taxRate": {
       "title": "El impuesto del estado cambió",
-      "saved": "Esta cotización se guardó cuando el impuesto del estado era del {{rate}}.",
-      "current": "Ahora el impuesto es del {{rate}}.",
-      "totalWarning": "Si aplicas el nuevo impuesto, el total y el depósito de la cotización cambiarán."
-    },
-    "cardSurchargeRate": {
-      "title": "El recargo por tarjeta cambió",
-      "saved": "Esta cotización se guardó cuando el recargo por tarjeta era del {{rate}}.",
-      "current": "Ahora el recargo es del {{rate}}.",
-      "totalWarning": "Si aplicas el nuevo recargo, el total y el depósito de la cotización cambiarán."
+      "up": "Originalmente cotizaste con un impuesto del <bold>{{saved}}</bold>, pero la tasa actual subió al <bold>{{current}}</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido.",
+      "down": "Originalmente cotizaste con un impuesto del <bold>{{saved}}</bold>, pero la tasa actual bajó al <bold>{{current}}</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido."
     },
     "both": {
-      "title": "Cambiaron el impuesto y el recargo por tarjeta",
-      "totalWarning": "Si aplicas los nuevos valores, el total y el depósito de la cotización cambiarán.",
-      "keep": "Conservar los actuales",
+      "title": "Cambiaron el impuesto y la tarifa por pago con tarjeta",
+      "body": "Originalmente cotizaste con un impuesto del <bold>{{savedTax}}</bold> y un recargo del <bold>{{savedSurcharge}}</bold>, pero ahora son del <bold>{{currentTax}}</bold> y del <bold>{{currentSurcharge}}</bold>. ¿Deseas aplicar los nuevos porcentajes? Esto ajustará el costo total y el depósito requerido.",
+      "keep": "Dejar como están",
       "apply": "Aplicar los nuevos"
     },
-    "keep": "Conservar {{rate}}",
+    "keep": "Dejar en {{rate}}",
     "apply": "Aplicar {{rate}}"
   }
 }

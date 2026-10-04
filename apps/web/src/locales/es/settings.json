@@ -64,7 +64,7 @@
     "title": "General"
   },
   "preferences": {
-    "title": "Preferencias",
+    "title": "Funcionalidades",
     "catalog": {
       "title": "Catálogo",
       "sortable": "Catálogo ordenable",
@@ -72,13 +72,15 @@
     },
     "quoteBuilder": {
       "title": "Armador de cotizaciones",
-      "allowSelectOptionsAtQuote": "Permitir elegir opciones al cotizar",
-      "allowSelectOptionsAtQuoteCaption": "Si se apaga, el switch \"Elegir opciones ahora\" del armador se oculta — todas las cotizaciones difieren la selección de opciones al evento. Las cotizaciones existentes conservan lo que ya tengan guardado."
+      "allowSelectOptionsAtQuote": "Seleccionar opciones al cotizar",
+      "allowSelectOptionsAtQuoteCaption": "Permite elegir las opciones de los ítems al crear la cotización. Si se desactiva, esta selección se pospone hasta el evento. (Las cotizaciones previas no cambian).",
+      "promptRateChanges": "Sugerir actualización de tasas",
+      "promptRateChangesCaption": "Pregunta si deseas aplicar los nuevos porcentajes al abrir una cotización pendiente cuando los impuestos o recargos han cambiado. Si se desactiva, se conservarán los valores originales."
     },
     "pipeline": {
       "title": "Pipeline",
-      "hideStaleQuotes": "Permitir ocultar cotizaciones vencidas",
-      "hideStaleQuotesCaption": "Habilita en la configuración de vista de Cotizaciones la opción \"Ocultar vencidas\", que cada usuario activa o no para sí mismo. Si se apaga, la opción desaparece y las vencidas se muestran siempre."
+      "hideStaleQuotes": "Habilitar filtro de \"Ocultar vencidas\"",
+      "hideStaleQuotesCaption": "Añade una opción en la vista de Cotizaciones para que cada usuario pueda ocultar las que ya expiraron."
     }
   },
   "taxRates": {

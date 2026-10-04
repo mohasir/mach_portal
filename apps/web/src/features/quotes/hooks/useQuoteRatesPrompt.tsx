@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { QUOTE_STAGE, type QuoteRateDrift, type QuoteRates } from '@repo/schemas';
 import { useConfirmModal } from '@/components/shared/ConfirmDialogs';
@@ -22,18 +22,34 @@ function RateDriftContent({
 }) {
   const { t } = useTranslation('quotes');
   const single = changed.length === 1 ? changed[0] : undefined;
+  const bold = { bold: <strong className="font-semibold text-foreground" /> };
+
+  if (single) {
+    const direction = drift.current[single] > drift.saved[single] ? 'up' : 'down';
+    return (
+      <Trans
+        t={t}
+        i18nKey={`rateDrift.${single}.${direction}`}
+        values={{
+          saved: formatRate(drift.saved[single]),
+          current: formatRate(drift.current[single]),
+        }}
+        components={bold}
+      />
+    );
+  }
   return (
-    <span className="flex flex-col gap-2">
-      {changed.map((key) => (
-        <span key={key} className="flex flex-col gap-1">
-          <span>{t(`rateDrift.${key}.saved`, { rate: formatRate(drift.saved[key]) })}</span>
-          <span className="font-medium text-foreground">
-            {t(`rateDrift.${key}.current`, { rate: formatRate(drift.current[key]) })}
-          </span>
-        </span>
-      ))}
-      <span>{t(`rateDrift.${single ?? 'both'}.totalWarning`)}</span>
-    </span>
+    <Trans
+      t={t}
+      i18nKey="rateDrift.both.body"
+      values={{
+        savedTax: formatRate(drift.saved.taxRate),
+        currentTax: formatRate(drift.current.taxRate),
+        savedSurcharge: formatRate(drift.saved.cardSurchargeRate),
+        currentSurcharge: formatRate(drift.current.cardSurchargeRate),
+      }}
+      components={bold}
+    />
   );
 }
 
