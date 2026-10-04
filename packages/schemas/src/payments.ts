@@ -6,9 +6,10 @@ export const paymentsListQuerySchema = listQuerySchema.extend({
   sortBy: z.enum(['paidAt', 'amount', 'createdAt']).default('paidAt'),
   dateFrom: z.iso.date().optional(),
   dateTo: z.iso.date().optional(),
-  clientId: z.uuid().optional(),
-  eventTypeId: z.uuid().optional(),
-  method: paymentMethodSchema.optional(),
+  // Each list matches any of its values.
+  clientIds: z.array(z.uuid()).optional(),
+  eventTypeIds: z.array(z.uuid()).optional(),
+  methods: z.array(paymentMethodSchema).optional(),
 });
 export type PaymentsListQuery = z.infer<typeof paymentsListQuerySchema>;
 

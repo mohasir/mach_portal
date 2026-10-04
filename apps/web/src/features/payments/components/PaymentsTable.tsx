@@ -1,92 +1,112 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input } from 'antd';
-import { ListFilter } from 'lucide-react';
+import { Badge, Button } from 'antd';
+import { TbFilter2 } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { paginationOf, type PaymentsListQuery } from '@repo/schemas';
-import { BottomSheet } from '@/components/shared/BottomSheet';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
+import { SearchInput } from '@/components/shared/SearchInput';
 import { usePaymentsList } from '../hooks/usePayments';
-import type { Payment } from '../types';
+import type { Payment, PaymentsFilters } from '../types';
 import { usePaymentsColumns } from './columns';
 import { PaymentRowCard } from './PaymentRowCard';
-import { PaymentsFilters, type PaymentsFiltersValue } from './PaymentsFilters';
+import { PaymentsFilterChips } from './PaymentsFilterChips';
 
-const EMPTY_FILTERS: PaymentsFiltersValue = {};
+const EMPTY_FILTERS: PaymentsFilters = {};
+
+/** Filter-bar criteria in use; the date range counts once whichever ends are set. */
+const countActiveFilters = ({
+  dateFrom,
+  dateTo,
+  clientIds,
+  eventTypeIds,
+  methods,
+}: PaymentsFilters) =>
+  [dateFrom || dateTo, clientIds?.length, eventTypeIds?.length, methods?.length].filter(Boolean)
+    .length;
 
 export function PaymentsTable() {
   const { t } = useTranslation('payments');
   const { t: tc } = useTranslation('common');
   const router = useRouter();
-  const table = useDataTable<PaymentsListQuery['sortBy']>({ defaultSortBy: 'paidAt' });
-  const [filters, setFilters] = useState<PaymentsFiltersValue>(EMPTY_FILTERS);
-  const [draftFilters, setDraftFilters] = useState<PaymentsFiltersValue>(EMPTY_FILTERS);
+  const [filters, setFilters] = useState<PaymentsFilters>(EMPTY_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const table = useDataTable<PaymentsListQuery['sortBy']>({
+    defaultSortBy: 'paidAt',
+    externalFilters: filters,
+  });
   const columns = usePaymentsColumns();
 
-  const [searchValue, setSearchValue] = useState('');
-
-  const { data, isLoading } = usePaymentsList({
-    ...table.query,
-    dateFrom: filters.dateFrom?.format('YYYY-MM-DD'),
-    dateTo: filters.dateTo?.format('YYYY-MM-DD'),
-    clientId: filters.clientId,
-    eventTypeId: filters.eventTypeId,
-    method: filters.method,
-  });
+  const { data, isLoading, isPlaceholderData } = usePaymentsList({ ...table.query, ...filters });
+  const total = paginationOf(data)?.total;
+  const search = table.query.search;
+  const activeFilters = countActiveFilters(filters);
 
   const goToEvent = (row: Payment) => router.push(`/admin/events/${row.eventId}`);
-
-  const openFilters = () => {
-    setDraftFilters(filters);
-    setFiltersOpen(true);
-  };
-  const applyFilters = () => {
-    setFilters(draftFilters);
-    setFiltersOpen(false);
-  };
-
-  const hasActiveFilters =
-    !!table.query.search ||
-    !!filters.dateFrom ||
-    !!filters.dateTo ||
-    !!filters.clientId ||
-    !!filters.eventTypeId ||
-    !!filters.method;
-
-  const clearFilters = () => {
-    setSearchValue('');
-    table.tableProps.onSearch('');
-    setFilters(EMPTY_FILTERS);
-  };
+  const setFilter = (patch: Partial<PaymentsFilters>) => setFilters({ ...filters, ...patch });
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <Input.Search
-          allowClear
-          placeholder={tc('table.search')}
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          onSearch={table.tableProps.onSearch}
-          className="flex-1"
-        />
-        <Button
-          icon={<ListFilter size={16} />}
-          onClick={openFilters}
-          aria-label={t('filters.title')}
-        />
-      </div>
-      {hasActiveFilters && (
-        <div className="flex justify-end">
-          <Button type="link" className="px-0" onClick={clearFilters}>
-            {tc('table.clearFilters')}
-          </Button>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <SearchInput
+            value={search}
+            loading={isPlaceholderData}
+            placeholder={tc('table.search')}
+            onSearch={table.tableProps.onSearch}
+            className="min-w-0 flex-1 sm:max-w-xs"
+          />
+          <Badge count={activeFilters} offset={[-5, 5]}>
+            <Button
+              icon={<TbFilter2 size={18} />}
+              type={filtersOpen ? 'primary' : 'default'}
+              onClick={() => setFiltersOpen((open) => !open)}
+              aria-label={t('filters.title')}
+              aria-expanded={filtersOpen}
+              className="px-3"
+            >
+              <span className="hidden sm:inline">{t('filters.title')}</span>
+            </Button>
+          </Badge>
         </div>
-      )}
+
+        {filtersOpen && (
+          <div className="py-1">
+            <PaymentsFilterChips filters={filters} onChange={setFilter} />
+          </div>
+        )}
+
+        <div className="flex min-h-8 items-center justify-between gap-2">
+          {total !== undefined && (
+            <span className="text-sm text-gray-500">{tc('table.results', { count: total })}</span>
+          )}
+          <div className="ml-auto flex items-center gap-4">
+            {search && (
+              <Button
+                type="link"
+                className="h-auto px-0 py-1"
+                onClick={() => table.tableProps.onSearch('')}
+              >
+                {tc('table.clearSearch')}
+              </Button>
+            )}
+            {activeFilters > 0 && (
+              <Button
+                type="link"
+                className="h-auto px-0 py-1"
+                onClick={() => setFilters(EMPTY_FILTERS)}
+              >
+                {tc('table.clearFilters')}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <DataTable<Payment>
         {...table.tableProps}
+        // Search lives in the filter bar above, not in the table.
         onSearch={undefined}
         rowKey="id"
         columns={columns}
@@ -95,22 +115,11 @@ export function PaymentsTable() {
         onRow={(row) => ({ onClick: () => goToEvent(row), className: 'cursor-pointer' })}
         dataSource={data?.items}
         loading={isLoading}
-        total={paginationOf(data)?.total}
+        total={total}
+        // The filter bar above already shows the result count.
+        showTotal={false}
         emptyText={t('empty')}
       />
-
-      <BottomSheet
-        open={filtersOpen}
-        onClose={() => setFiltersOpen(false)}
-        title={t('filters.title')}
-      >
-        <div className="flex flex-col gap-4 px-2">
-          <PaymentsFilters value={draftFilters} onChange={setDraftFilters} />
-          <Button type="primary" block onClick={applyFilters}>
-            {t('filters.apply')}
-          </Button>
-        </div>
-      </BottomSheet>
     </div>
   );
 }

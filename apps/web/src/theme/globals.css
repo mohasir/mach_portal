@@ -194,6 +194,13 @@
     color: var(--ant-color-text-light-solid);
   }
 
+  /* DateRangeCalendar paints the picked range itself (fullCellRender). The Calendar's own
+     "selected" day just follows the month being browsed, so it must not look picked there. */
+  .mach-range-calendar .ant-picker-cell-selected .ant-picker-cell-inner {
+    background: transparent;
+    color: inherit;
+  }
+
   /* DatePicker/TimePicker render their own calendar/clock icon then, when the
      Form.Item has hasFeedback, append the validating/success feedback icon right
      after it (antd's useSuffixIcon) as a normal flex sibling — so the feedback

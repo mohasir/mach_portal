@@ -1,4 +1,17 @@
-import { and, asc, count, desc, eq, gte, ilike, isNull, lte, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  isNull,
+  lte,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 import type { PaymentsIncomeQuery, PaymentsListQuery } from '@repo/schemas';
 import type { Database } from '../../db';
 import { clients, events, eventPayments, eventTypes, quotes, user } from '../../db/schema';
@@ -36,16 +49,16 @@ export class PaymentsRepository {
   }
 
   async findPaginated(query: PaymentsListQuery) {
-    const { search, sortBy, sortDir, dateFrom, dateTo, clientId, eventTypeId, method } = query;
+    const { search, sortBy, sortDir, dateFrom, dateTo, clientIds, eventTypeIds, methods } = query;
 
     const where = and(
       isNull(quotes.archivedAt),
       search ? ilike(clients.name, `%${search}%`) : undefined,
       dateFrom ? gte(eventPayments.paidAt, dateFrom) : undefined,
       dateTo ? lte(eventPayments.paidAt, dateTo) : undefined,
-      clientId ? eq(events.clientId, clientId) : undefined,
-      eventTypeId ? eq(events.eventTypeId, eventTypeId) : undefined,
-      method ? eq(eventPayments.method, method) : undefined,
+      clientIds?.length ? inArray(events.clientId, clientIds) : undefined,
+      eventTypeIds?.length ? inArray(events.eventTypeId, eventTypeIds) : undefined,
+      methods?.length ? inArray(eventPayments.method, methods) : undefined,
     );
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
     const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
