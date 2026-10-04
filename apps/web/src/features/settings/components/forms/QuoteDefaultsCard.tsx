@@ -21,7 +21,8 @@ export function QuoteDefaultsCard() {
   const { data, isLoading } = useConfig();
   const { updateQuoteDefaults, isPending } = useUpdateQuoteDefaults();
   const [form] = Form.useForm<QuoteDefaultsFormValues>();
-  const unchanged = useIsFormUnchanged(form, data ? toQuoteDefaultsFormValues(data) : undefined);
+  const initialValues = data ? toQuoteDefaultsFormValues(data) : undefined;
+  const unchanged = useIsFormUnchanged(form, initialValues);
 
   if (!can({ [RESOURCES.QUOTE_DEFAULTS]: [ACTIONS.VIEW] })) return null;
   if (isLoading || !data) return <Skeleton active paragraph={{ rows: 5 }} />;
@@ -35,10 +36,10 @@ export function QuoteDefaultsCard() {
   return (
     <WrapperCard title={t('quoteDefaults.title')}>
       <Form
-        key={String(data.appSettings.updatedAt)}
+        key={JSON.stringify(initialValues)}
         form={form}
         layout="vertical"
-        initialValues={toQuoteDefaultsFormValues(data)}
+        initialValues={initialValues}
         onFinish={onFinish}
         disabled={!canEdit}
       >

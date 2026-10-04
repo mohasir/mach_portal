@@ -64,7 +64,7 @@ export function TaxRatesCard() {
   return (
     <WrapperCard title={t('taxRates.title')}>
       <Form
-        key={String(data.appSettings.updatedAt) + JSON.stringify(data.stateSettings)}
+        key={JSON.stringify(initialValues)}
         form={form}
         layout="vertical"
         initialValues={initialValues}
