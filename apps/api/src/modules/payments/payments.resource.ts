@@ -14,7 +14,8 @@ export type PaymentListRow = {
 };
 
 export const paymentListItemResource = (row: PaymentListRow) => ({ ...row });
-export const paymentCollectionResource = (rows: PaymentListRow[]) => rows.map(paymentListItemResource);
+export const paymentCollectionResource = (rows: PaymentListRow[]) =>
+  rows.map(paymentListItemResource);
 export type PaymentListItemResource = ReturnType<typeof paymentListItemResource>;
 
 export type PaymentIncomeRow = {

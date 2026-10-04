@@ -46,6 +46,20 @@
 
   --font-sans: var(--font-work-sans);
   --font-heading: var(--font-marcellus);
+
+  /* ── Animations ── */
+  /* One outward pulse from the element's edge. The 8px spread fits inside the 8px padding of
+     scrolling containers (e.g. pipeline columns) so it isn't clipped. */
+  --animate-ripple: ripple 2s ease-out 1;
+
+  @keyframes ripple {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 55%, transparent);
+    }
+    100% {
+      box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-primary) 0%, transparent);
+    }
+  }
 }
 
 @utility text-small {
@@ -309,5 +323,12 @@
      popover (`overlayClassName`) so other Popover instances stay untouched. */
   .notification-popover .ant-popover-container {
     padding: 18px;
+  }
+
+  /* Calendars that paint the picked day(s) themselves (fullCellRender). AntD's own "selected"
+     day just follows the month being browsed, so it must not look picked there. */
+  .mach-picked-calendar .ant-picker-cell-selected .ant-picker-cell-inner {
+    background: transparent;
+    color: inherit;
   }
 }

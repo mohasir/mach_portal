@@ -10,17 +10,23 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import type { QuoteStageId } from '@repo/schemas';
-import type { QuoteBoard, QuoteCard as QuoteCardType } from '../../types';
+import type { PipelineColumnKey, QuoteBoard, QuoteCard as QuoteCardType } from '../../types';
 import { PipelineColumn } from './PipelineColumn';
 import { QuoteCardPreview } from './QuoteCardPreview';
 
 interface PipelineBoardDesktopProps {
   data: QuoteBoard;
-  orderedIds: QuoteStageId[];
+  columns: PipelineColumnKey[];
+  highlightedId?: string;
   onMove: (id: string, from: QuoteStageId, to: QuoteStageId, isDraft: boolean) => void;
 }
 
-export function PipelineBoardDesktop({ data, orderedIds, onMove }: PipelineBoardDesktopProps) {
+export function PipelineBoardDesktop({
+  data,
+  columns,
+  highlightedId,
+  onMove,
+}: PipelineBoardDesktopProps) {
   const [activeCard, setActiveCard] = useState<QuoteCardType | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -47,9 +53,18 @@ export function PipelineBoardDesktop({ data, orderedIds, onMove }: PipelineBoard
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveCard(null)}
     >
-      <div className="grid h-full auto-rows-fr grid-cols-1 gap-4 lg:grid-cols-4">
-        {orderedIds.map((stageId) => (
-          <PipelineColumn key={stageId} stageId={stageId} cards={data[stageId]} />
+      <div
+        className={`grid h-full auto-rows-fr grid-cols-1 gap-4 ${
+          columns.length > 4 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'
+        }`}
+      >
+        {columns.map((column) => (
+          <PipelineColumn
+            key={column}
+            column={column}
+            cards={data[column]}
+            highlightedId={highlightedId}
+          />
         ))}
       </div>
       <DragOverlay>{activeCard ? <QuoteCardPreview card={activeCard} /> : null}</DragOverlay>

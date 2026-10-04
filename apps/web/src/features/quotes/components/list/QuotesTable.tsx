@@ -1,63 +1,76 @@
 'use client';
-import { useState } from 'react';
-import { Select } from 'antd';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { paginationOf, stateSchema, type QuotesListQuery } from '@repo/schemas';
+import { paginationOf, type QuotesListQuery, type QuotesViewOptions } from '@repo/schemas';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
-import { useQuoteStages } from '@/features/settings';
 import { useQuotesList } from '../../hooks/useQuotes';
 import { useQuotesColumns } from './columns';
 import { QuoteRowCard } from './QuoteRowCard';
-import type { Quote } from '../../types';
+import type { Quote, QuotesPageFilters } from '../../types';
 
 interface QuotesTableProps {
+  filters: QuotesPageFilters;
+  viewOptions: QuotesViewOptions;
+  /** Holds the query until the view options are known. */
+  ready: boolean;
   onRowClick: (quote: Quote) => void;
+  /** True while the previous results are still shown for a new search/filter/page. */
+  onSearchingChange?: (searching: boolean) => void;
+  onTotalChange?: (total: number | undefined) => void;
 }
 
-export function QuotesTable({ onRowClick }: QuotesTableProps) {
+export function QuotesTable({
+  filters,
+  viewOptions,
+  ready,
+  onRowClick,
+  onSearchingChange,
+  onTotalChange,
+}: QuotesTableProps) {
   const { t } = useTranslation('quotes');
-  const { t: tc } = useTranslation('common');
-  const table = useDataTable<QuotesListQuery['sortBy']>({ defaultSortBy: 'createdAt' });
-  const [stageId, setStageId] = useState<QuotesListQuery['stageId']>();
-  const [state, setState] = useState<QuotesListQuery['state']>();
-  const { orderedIds, stageMap } = useQuoteStages();
+  const table = useDataTable<QuotesListQuery['sortBy']>({
+    defaultSortBy: 'createdAt',
+    externalFilters: { ...filters, ...viewOptions },
+  });
 
-  const { data, isLoading } = useQuotesList({ ...table.query, stageId, state });
+  const { data, isLoading, isPlaceholderData } = useQuotesList(
+    {
+      ...table.query,
+      ...filters,
+      ...viewOptions,
+    },
+    ready,
+  );
+
+  useEffect(() => {
+    onSearchingChange?.(isPlaceholderData);
+    return () => onSearchingChange?.(false);
+  }, [isPlaceholderData, onSearchingChange]);
+
+  const total = paginationOf(data)?.total;
+  useEffect(() => {
+    onTotalChange?.(total);
+    return () => onTotalChange?.(undefined);
+  }, [total, onTotalChange]);
+
   const columns = useQuotesColumns();
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Select
-          allowClear
-          placeholder={t('filters.stage')}
-          className="w-full sm:w-52"
-          value={stageId}
-          onChange={setStageId}
-          options={orderedIds.map((id) => ({ value: id, label: stageMap.get(id)?.label }))}
-        />
-        <Select
-          allowClear
-          placeholder={t('filters.state')}
-          className="w-full sm:w-32"
-          value={state}
-          onChange={setState}
-          options={stateSchema.options.map((s) => ({ value: s, label: s }))}
-        />
-      </div>
-      <DataTable<Quote>
-        {...table.tableProps}
-        rowKey="id"
-        columns={columns}
-        mobileRenderType="card"
-        renderCard={(row) => <QuoteRowCard row={row} onClick={() => onRowClick(row)} />}
-        onRow={(row) => ({ onClick: () => onRowClick(row), className: 'cursor-pointer' })}
-        dataSource={data?.items}
-        loading={isLoading}
-        total={paginationOf(data)?.total}
-        searchPlaceholder={tc('table.search')}
-        emptyText={t('empty')}
-      />
-    </div>
+    <DataTable<Quote>
+      {...table.tableProps}
+      // Search lives in the page's filter bar (shared with the pipeline), not in the table.
+      onSearch={undefined}
+      rowKey="id"
+      columns={columns}
+      mobileRenderType="card"
+      renderCard={(row) => <QuoteRowCard row={row} onClick={() => onRowClick(row)} />}
+      onRow={(row) => ({ onClick: () => onRowClick(row), className: 'cursor-pointer' })}
+      dataSource={data?.items}
+      loading={isLoading || !ready}
+      total={total}
+      // The page's filter bar already shows the result count for both views.
+      showTotal={false}
+      emptyText={t('empty')}
+    />
   );
 }

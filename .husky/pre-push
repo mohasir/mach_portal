@@ -1,5 +1,11 @@
-pnpm build || {
+# Same `next build` Netlify runs, so deploy-breaking errors stop the push. It writes to its own
+# folder (NEXT_DIST_DIR, see apps/web/next.config.ts) to leave a running dev server's `.next`
+# and `public/sw.js` alone, and the folder is removed afterwards either way.
+NEXT_DIST_DIR=.next-prepush pnpm build
+status=$?
+rm -rf apps/web/.next-prepush
+if [ $status -ne 0 ]; then
   echo ""
   echo "❌ Build falló — push cancelado. Corregí los errores antes de volver a pushear."
   exit 1
-}
+fi

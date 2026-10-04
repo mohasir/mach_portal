@@ -20,7 +20,8 @@
     "search": "Search",
     "total": "{{total}} records",
     "results": "{{count}} results",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "clearSearch": "Clear search"
   },
   "share": {
     "action": "Share",
@@ -47,5 +48,29 @@
   "footer": {
     "copyright": "© {{year}} {{appName}}. All rights reserved.",
     "developedBy": "Developed by Oravitech"
+  },
+  "pickers": {
+    "done": "Done",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "period": "AM/PM",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month"
+  },
+  "filters": {
+    "button": "Filters",
+    "clearAll": "Clear all",
+    "from": "From",
+    "to": "To",
+    "dateFrom": "From {{date}}",
+    "dateTo": "Until {{date}}",
+    "datePresets": {
+      "today": "Today",
+      "last7Days": "Last 7 days",
+      "thisMonth": "This month",
+      "lastMonth": "Last month"
+    },
+    "apply": "Apply",
+    "customRange": "Custom range"
   }
 }

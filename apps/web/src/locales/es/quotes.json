@@ -12,8 +12,13 @@
     "total": "Total"
   },
   "filters": {
-    "stage": "Estado de la cotización",
-    "state": "Estado (US)"
+    "state": "Estado",
+    "assignee": "Asignado a",
+    "eventType": "Tipo de evento",
+    "drafts": "Borradores",
+    "me": "Yo",
+    "stale": "Vencidas",
+    "archived": "Archivadas"
   },
   "archive": {
     "action": "Archivar",
@@ -33,7 +38,6 @@
     "editTitle": "Editar cotización",
     "saveDraft": "Guardar borrador",
     "saveChanges": "Guardar cambios",
-    "update": "Actualizar",
     "createQuote": "Crear cotización",
     "saved": "Cotización guardada",
     "created": "Cotización creada",
@@ -82,7 +86,7 @@
       "longDistance": "Cargo por larga distancia",
       "longDistanceHint": "Sugerido según la tasa del estado ({{rate}}%) — se puede ajustar",
       "cardSurcharge": "Recargo tarjeta/cheque",
-      "cardSurchargeHint": "Agrega un {{rate}}% sobre el total de la cotización",
+      "cardSurchargeHint": "Agrega un {{rate}}% al total de la cotización cuando el cliente paga con tarjeta o cheque.",
       "notes": "Notas",
       "internalNotesLabel": "Notas internas",
       "internalNotesPlaceholder": "Solo visible para tu equipo",
@@ -191,7 +195,9 @@
         "caption": "Una vez que cambie de etapa, dejará de ser un borrador.",
         "ok": "Continuar"
       }
-    }
+    },
+    "archived": "Archivada",
+    "archivedTag": "Archivada"
   },
   "history": {
     "title": "Actividad",
@@ -225,5 +231,33 @@
     "viewPdf": "Ver PDF",
     "viewEvent": "Ver evento",
     "pdfGeneratedAt": "Generado el {{date}}"
+  },
+  "viewSettings": {
+    "title": "Configuración de vista",
+    "hideStale": "Ocultar vencidas",
+    "hideStaleCaption": "Oculta las cotizaciones cuyo evento ya pasó o cuya vigencia expiró.",
+    "hideStaleNote": "Siguen apareciendo en la búsqueda.",
+    "includeArchived": "Incluir archivadas",
+    "includeArchivedCaption": "Las muestra en la tabla y en una columna aparte del pipeline."
+  },
+  "rateDrift": {
+    "cardSurchargeRate": {
+      "title": "La tarifa por pago con tarjeta cambió",
+      "up": "Originalmente cotizaste con un recargo del <bold>{{saved}}%</bold>, pero la tarifa actual subió al <bold>{{current}}%</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido.",
+      "down": "Originalmente cotizaste con un recargo del <bold>{{saved}}%</bold>, pero la tarifa actual bajó al <bold>{{current}}%</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido."
+    },
+    "taxRate": {
+      "title": "El impuesto del estado cambió",
+      "up": "Originalmente cotizaste con un impuesto del <bold>{{saved}}%</bold>, pero la tasa actual subió al <bold>{{current}}%</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido.",
+      "down": "Originalmente cotizaste con un impuesto del <bold>{{saved}}%</bold>, pero la tasa actual bajó al <bold>{{current}}%</bold>. ¿Deseas aplicar el nuevo porcentaje? Esto ajustará el costo total y el depósito requerido."
+    },
+    "both": {
+      "title": "Cambiaron el impuesto y la tarifa por pago con tarjeta",
+      "body": "Originalmente cotizaste con un impuesto del <bold>{{savedTax}}%</bold> y un recargo del <bold>{{savedSurcharge}}%</bold>, pero ahora son del <bold>{{currentTax}}%</bold> y del <bold>{{currentSurcharge}}%</bold>. ¿Deseas aplicar los nuevos porcentajes? Esto ajustará el costo total y el depósito requerido.",
+      "keep": "Dejar como están",
+      "apply": "Aplicar los nuevos"
+    },
+    "keep": "Dejar en {{rate}}%",
+    "apply": "Aplicar {{rate}}%"
   }
 }

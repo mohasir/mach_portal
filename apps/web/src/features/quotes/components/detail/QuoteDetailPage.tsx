@@ -42,14 +42,15 @@ export function QuoteDetailPage({ quoteId }: QuoteDetailPageProps) {
   const isStale = hasPdf && isAfter(detail.updatedAt, detail.pdfGeneratedAt!);
 
   const handleClick = () => {
-    if (hasPdf && !isStale) {
+    // Archived quotes can't be written to, so their last PDF is the one they keep.
+    if (hasPdf && (!isStale || detail.isArchived)) {
       openQuotePdf(detail.pdfUrl!, detail.pdfGeneratedAt);
       return;
     }
     void generatePdf(quoteId);
   };
 
-  const showPdfAction = hasPdf || canGeneratePdf;
+  const showPdfAction = hasPdf || (canGeneratePdf && !detail.isArchived);
 
   return (
     <div className="flex flex-col gap-4">

@@ -46,7 +46,12 @@ export interface ConfirmOptions {
   /** Purely informational dialog (e.g. explaining why an action is blocked) — renders
    * just one dismiss button instead of cancel+confirm. */
   singleButton?: boolean;
+  /** When false the dialog can only be left through its buttons (no close icon, mask or Esc),
+   * for choices where both buttons are real answers and dismissing would be ambiguous. */
+  dismissible?: boolean;
   onOk: () => void;
+  /** Runs on the cancel button, and on dismissing the dialog when it's dismissible. */
+  onCancel?: () => void;
 }
 
 interface ConfirmModalProps {
@@ -58,6 +63,7 @@ interface ConfirmModalProps {
   type?: ConfirmModalType;
   danger?: boolean;
   singleButton?: boolean;
+  dismissible?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -71,6 +77,7 @@ export function ConfirmModal({
   type = 'help',
   danger,
   singleButton,
+  dismissible = true,
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
@@ -78,7 +85,14 @@ export function ConfirmModal({
   const { icon: Icon, bg, bgStrong, text } = TYPE_STYLES[type];
 
   return (
-    <WrapperModal open={open} onCancel={onCancel} width={{ xs: '90%', md: 340 }}>
+    <WrapperModal
+      open={open}
+      onCancel={dismissible ? onCancel : undefined}
+      closable={dismissible}
+      mask={{ closable: dismissible }}
+      keyboard={dismissible}
+      width={{ xs: '90%', md: 340 }}
+    >
       <div className="flex flex-col items-center gap-3 py-2 text-center">
         <div className={`flex size-16 items-center justify-center rounded-full ${bg}`}>
           <div className={`flex size-11 items-center justify-center rounded-full ${bgStrong}`}>
@@ -122,7 +136,9 @@ interface DialogState {
   type?: ConfirmModalType;
   danger?: boolean;
   singleButton?: boolean;
+  dismissible?: boolean;
   onOk?: () => void;
+  onCancel?: () => void;
 }
 
 /** Mobile-only replacement for a plain `modal.confirm({ ... })` (non-delete confirmations). */
@@ -142,11 +158,15 @@ export function useConfirmModal() {
       type={state.type}
       danger={state.danger}
       singleButton={state.singleButton}
+      dismissible={state.dismissible}
       onConfirm={() => {
         state.onOk?.();
         close();
       }}
-      onCancel={close}
+      onCancel={() => {
+        state.onCancel?.();
+        close();
+      }}
     />
   );
 

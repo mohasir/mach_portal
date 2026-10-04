@@ -306,7 +306,10 @@ export function EventPayments({ event }: EventPaymentsProps) {
                   rules={[{ required: true }]}
                   className="mb-0"
                 >
-                  <DatePicker className="w-full" />
+                  <DatePicker
+                    className="w-full"
+                    disabledDate={(day) => day.isAfter(dayjs(), 'day')}
+                  />
                 </Form.Item>
                 <Form.Item
                   name="reference"

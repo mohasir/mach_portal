@@ -6,12 +6,21 @@ export function useDataTable<TSort extends string>({
   defaultSortBy,
   defaultSortDir = 'desc',
   defaultPageSize = 10,
+  externalFilters,
 }: UseDataTableOptions<TSort>) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<TSort>(defaultSortBy);
   const [sortDir, setSortDir] = useState<SortDir>(defaultSortDir);
+  const filtersKey = JSON.stringify(externalFilters ?? null);
+  const [appliedFiltersKey, setAppliedFiltersKey] = useState(filtersKey);
+
+  // Adjusting state during render (not in an effect) so the stale page never hits the API.
+  if (filtersKey !== appliedFiltersKey) {
+    setAppliedFiltersKey(filtersKey);
+    setPage(1);
+  }
 
   const onSearch = (value: string) => {
     setSearch(value.trim());

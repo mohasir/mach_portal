@@ -5,13 +5,10 @@
     "income": "Ingresos"
   },
   "filters": {
-    "title": "Filtros",
-    "apply": "Aplicar filtros",
-    "dateFrom": "Desde",
-    "dateTo": "Hasta",
-    "clientPlaceholder": "Todos los clientes",
-    "eventTypePlaceholder": "Todos los tipos de evento",
-    "methodPlaceholder": "Todos los métodos"
+    "date": "Fecha de pago",
+    "client": "Cliente",
+    "eventType": "Tipo de evento",
+    "method": "Método de pago"
   },
   "columns": {
     "paidAt": "Fecha",

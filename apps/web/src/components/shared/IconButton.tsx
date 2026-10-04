@@ -12,6 +12,8 @@ const ICON_BUTTON_SIZES = {
 interface IconButtonProps {
   icon: IconComponent;
   size?: keyof typeof ICON_BUTTON_SIZES;
+  /** Overrides the glyph size `size` picks, for icon sets drawn with more inner padding. */
+  iconSize?: number;
   shape?: 'circle' | 'square';
   className?: string;
   danger?: boolean;
@@ -27,6 +29,7 @@ interface IconButtonProps {
 export function IconButton({
   icon,
   size = 'md',
+  iconSize: iconSizeOverride,
   shape = 'square',
   className,
   danger,
@@ -51,7 +54,7 @@ export function IconButton({
           icon={icon}
           shape={shape}
           badgeSize={badgeSize}
-          size={iconSize}
+          size={iconSizeOverride ?? iconSize}
           rounded={rounded}
           className={className}
         />

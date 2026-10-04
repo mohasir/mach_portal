@@ -12,8 +12,13 @@
     "total": "Total"
   },
   "filters": {
-    "stage": "Quote stage",
-    "state": "State (US)"
+    "state": "State",
+    "assignee": "Assignee",
+    "eventType": "Event type",
+    "drafts": "Drafts",
+    "me": "Me",
+    "stale": "Expired",
+    "archived": "Archived"
   },
   "archive": {
     "action": "Archive",
@@ -33,7 +38,6 @@
     "editTitle": "Edit quote",
     "saveDraft": "Save draft",
     "saveChanges": "Save changes",
-    "update": "Update",
     "createQuote": "Create quote",
     "saved": "Quote saved",
     "created": "Quote created",
@@ -82,7 +86,7 @@
       "longDistance": "Long distance fee",
       "longDistanceHint": "Suggested from the state's tax rate ({{rate}}%) — override as needed",
       "cardSurcharge": "Card/check surcharge",
-      "cardSurchargeHint": "Adds {{rate}}% on top of the quote total",
+      "cardSurchargeHint": "Adds {{rate}}% to the quote total when the client pays by card or check.",
       "notes": "Notes",
       "internalNotesLabel": "Internal notes",
       "internalNotesPlaceholder": "Only visible to your team",
@@ -191,7 +195,9 @@
         "caption": "Once it changes stage, it will no longer be a draft.",
         "ok": "Continue"
       }
-    }
+    },
+    "archived": "Archived",
+    "archivedTag": "Archived"
   },
   "history": {
     "title": "Activity",
@@ -225,5 +231,33 @@
     "regeneratePdfConfirmTitle": "Regenerate PDF?",
     "regeneratePdfConfirmContent": "This creates a new PDF and replaces the current one, even though it's already up to date.",
     "viewEvent": "View event"
+  },
+  "viewSettings": {
+    "title": "View settings",
+    "hideStale": "Hide expired",
+    "hideStaleCaption": "Hides quotes whose event already happened or whose validity expired.",
+    "hideStaleNote": "They still show up in search.",
+    "includeArchived": "Include archived",
+    "includeArchivedCaption": "Shows them in the table and in a separate pipeline column."
+  },
+  "rateDrift": {
+    "cardSurchargeRate": {
+      "title": "The card payment fee changed",
+      "up": "You originally quoted with a <bold>{{saved}}%</bold> surcharge, but the current fee went up to <bold>{{current}}%</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit.",
+      "down": "You originally quoted with a <bold>{{saved}}%</bold> surcharge, but the current fee went down to <bold>{{current}}%</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit."
+    },
+    "taxRate": {
+      "title": "The state tax changed",
+      "up": "You originally quoted with a <bold>{{saved}}%</bold> tax, but the current rate went up to <bold>{{current}}%</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit.",
+      "down": "You originally quoted with a <bold>{{saved}}%</bold> tax, but the current rate went down to <bold>{{current}}%</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit."
+    },
+    "both": {
+      "title": "The tax and card payment fee changed",
+      "body": "You originally quoted with a <bold>{{savedTax}}%</bold> tax and a <bold>{{savedSurcharge}}%</bold> surcharge, but they are now <bold>{{currentTax}}%</bold> and <bold>{{currentSurcharge}}%</bold>. Do you want to apply the new percentages? This will adjust the total cost and the required deposit.",
+      "keep": "Leave as is",
+      "apply": "Apply new ones"
+    },
+    "keep": "Leave at {{rate}}%",
+    "apply": "Apply {{rate}}%"
   }
 }

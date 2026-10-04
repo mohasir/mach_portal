@@ -1,26 +1,26 @@
 'use client';
 import { Form, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { toDisplayPercent } from '@/lib/utils/percent';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
 import { WrapperCard } from '@/components/shared/WrapperCard';
-import { useConfig } from '@/features/settings';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 
 interface ExtraChargesSectionProps {
   readOnly?: boolean;
+  taxRate: number;
+  cardSurchargeRate: number;
 }
 
-export function ExtraChargesSection({ readOnly }: ExtraChargesSectionProps) {
+export function ExtraChargesSection({
+  readOnly,
+  taxRate,
+  cardSurchargeRate,
+}: ExtraChargesSectionProps) {
   const { t } = useTranslation('quotes');
   const { state, setFields } = useQuoteBuilder();
-  const { data: config } = useConfig();
-
-  const stateTaxRate = state.state
-    ? (config?.stateSettings.find((s) => s.state === state.state)?.taxRate ?? 0)
-    : 0;
-  const cardSurchargeRate = config?.appSettings.cardSurchargeRate ?? 0;
 
   return (
     <WrapperCard title={t('builder.event.taxesGroupTitle')}>
@@ -28,10 +28,8 @@ export function ExtraChargesSection({ readOnly }: ExtraChargesSectionProps) {
         <Form.Item
           label={<FieldLabel title={t('builder.event.longDistance')} />}
           extra={
-            config?.appSettings.applyTaxByState && state.state
-              ? t('builder.event.longDistanceHint', {
-                  rate: Math.round(stateTaxRate * 1000) / 10,
-                })
+            state.state && taxRate > 0
+              ? t('builder.event.longDistanceHint', { rate: toDisplayPercent(taxRate) })
               : undefined
           }
           className="mb-0"
@@ -48,7 +46,7 @@ export function ExtraChargesSection({ readOnly }: ExtraChargesSectionProps) {
           className="mt-4"
           title={t('builder.event.cardSurcharge')}
           caption={t('builder.event.cardSurchargeHint', {
-            rate: Math.round(cardSurchargeRate * 100),
+            rate: toDisplayPercent(cardSurchargeRate),
           })}
           control={
             <Switch
