@@ -81,6 +81,11 @@
       "title": "Pipeline",
       "hideStaleQuotes": "Enable the \"Hide expired\" filter",
       "hideStaleQuotesCaption": "Adds an option in the Quotes view so each user can hide the ones that already expired."
+    },
+    "releaseNotes": {
+      "title": "Release notes",
+      "showReleaseNotes": "Show release notes",
+      "showReleaseNotesCaption": "When a new version is deployed, each user sees a summary of what is new once. When off, nobody sees it."
     }
   },
   "taxRates": {
@@ -243,6 +248,10 @@
       "pipeline_preferences": {
         "label": "Pipeline preferences",
         "caption": "Whether the option to hide expired quotes is available in the quotes view."
+      },
+      "release_notes_preferences": {
+        "label": "Release notes preferences",
+        "caption": "Whether the summary of what is new is shown when a new version is deployed."
       }
     }
   },

@@ -2,6 +2,7 @@
 import { CatalogPreferencesCard } from './forms/CatalogPreferencesCard';
 import { PipelinePreferencesCard } from './forms/PipelinePreferencesCard';
 import { QuoteBuilderPreferencesCard } from './forms/QuoteBuilderPreferencesCard';
+import { ReleaseNotesPreferencesCard } from './forms/ReleaseNotesPreferencesCard';
 
 export function PreferencesSettingsForm() {
   return (
@@ -9,6 +10,7 @@ export function PreferencesSettingsForm() {
       <CatalogPreferencesCard />
       <QuoteBuilderPreferencesCard />
       <PipelinePreferencesCard />
+      <ReleaseNotesPreferencesCard />
     </div>
   );
 }

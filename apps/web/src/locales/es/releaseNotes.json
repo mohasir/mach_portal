@@ -1,0 +1,8 @@
+{
+  "title": "Novedades",
+  "version": "v{{version}}",
+  "skip": "Saltar",
+  "back": "Atrás",
+  "next": "Siguiente",
+  "continue": "Continuar"
+}

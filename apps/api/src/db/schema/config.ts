@@ -25,6 +25,7 @@ export const appSettings = pgTable('app_settings', {
   allowSelectOptionsAtQuote: boolean('allow_select_options_at_quote').notNull().default(true),
   promptRateChanges: boolean('prompt_rate_changes').notNull().default(false),
   hideStaleQuotes: boolean('hide_stale_quotes').notNull().default(true),
+  showReleaseNotes: boolean('show_release_notes').notNull().default(false),
   applyTaxByState: boolean('apply_tax_by_state').notNull().default(false),
   cardSurchargeRate: numeric('card_surcharge_rate', { mode: 'number', precision: 4, scale: 3 })
     .notNull()

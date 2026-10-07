@@ -51,3 +51,10 @@ export const updatePipelinePreferencesSchema = z.object({
   hideStaleQuotes: z.boolean(),
 });
 export type UpdatePipelinePreferencesInput = z.infer<typeof updatePipelinePreferencesSchema>;
+
+export const updateReleaseNotesPreferencesSchema = z.object({
+  showReleaseNotes: z.boolean(),
+});
+export type UpdateReleaseNotesPreferencesInput = z.infer<
+  typeof updateReleaseNotesPreferencesSchema
+>;

@@ -19,6 +19,8 @@ export const userPreferencesSchema = z.object({
   quotesHideStale: z.boolean().default(false).catch(false),
   /** Quotes view: also list archived quotes (only offered with QUOTE/VIEW_ARCHIVED). */
   quotesIncludeArchived: z.boolean().default(false).catch(false),
+  /** Web version whose release notes this user already saw (or skipped). */
+  lastSeenReleaseNotes: z.string().optional().catch(undefined),
 });
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
 
@@ -30,6 +32,7 @@ export const updateUserPreferencesSchema = z
     timeFormat: timeFormatSchema,
     quotesHideStale: z.boolean(),
     quotesIncludeArchived: z.boolean(),
+    lastSeenReleaseNotes: z.string(),
   })
   .partial();
 export type UpdateUserPreferencesInput = z.infer<typeof updateUserPreferencesSchema>;

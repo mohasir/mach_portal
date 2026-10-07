@@ -347,6 +347,25 @@ ruta) y `helpers.ts` de cada feature. Los componentes React no tienen tests.
 - Alias `@/` disponible (configurado en `apps/web/vitest.config.ts`).
 - Para lógica que depende de "ahora", fijar el reloj con `vi.useFakeTimers()` + `vi.setSystemTime(...)`.
 
+### 3.8 Novedades por release (`features/release-notes`)
+
+Un modal de novedades que cada usuario ve **una vez por deploy** que trae novedades (spec:
+`docs/superpowers/specs/2026-10-07-release-notes-design.md`). El "visto" se guarda en
+`user_preferences.lastSeenReleaseNotes`; un usuario sin registro queda marcado sin ver nada.
+Se activa con el feature flag `app_settings.showReleaseNotes` (Configuración → Funcionalidades →
+"Mostrar novedades", solo superadmin, apagado por defecto); apagado, el gate no muestra ni guarda nada.
+
+Para anunciar algo en un release:
+
+1. Subir `version` en `apps/web/package.json` (junto con el changelog).
+2. Crear `features/release-notes/content/<versión>.ts` que exporte un `ReleaseNote` con sus
+   diapositivas (`title` y `description` en es / en; `icon` opcional de `react-icons/tb`, que se
+   muestra con destellos decorativos).
+3. Registrarlo en `features/release-notes/content/index.ts`.
+
+`pnpm test` valida el registro (clave = versión, al menos una diapositiva).
+Un deploy sin archivo de novedades no muestra nada.
+
 ---
 
 ## 4. Tablas: `DataTable` + `useDataTable` (obligatorio)

@@ -1,6 +1,7 @@
 import {
   updateCatalogPreferencesSchema,
   updatePipelinePreferencesSchema,
+  updateReleaseNotesPreferencesSchema,
   updateQuoteBuilderPreferencesSchema,
   updateQuoteDefaultsSchema,
   updateQuoteStagesSchema,
@@ -49,4 +50,10 @@ export const configRouter = router({
   })
     .input(updatePipelinePreferencesSchema)
     .mutation(({ input }) => service.updatePipelinePreferences(input)),
+
+  updateReleaseNotesPreferences: guardedProcedure({
+    [RESOURCES.RELEASE_NOTES_PREFERENCES]: [ACTIONS.UPDATE],
+  })
+    .input(updateReleaseNotesPreferencesSchema)
+    .mutation(({ input }) => service.updateReleaseNotesPreferences(input)),
 });

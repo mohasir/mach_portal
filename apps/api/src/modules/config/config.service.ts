@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server';
 import type {
   UpdateCatalogPreferencesInput,
   UpdatePipelinePreferencesInput,
+  UpdateReleaseNotesPreferencesInput,
   UpdateQuoteBuilderPreferencesInput,
   UpdateQuoteDefaultsInput,
   UpdateQuoteStagesInput,
@@ -67,6 +68,11 @@ export class ConfigService {
 
   async updatePipelinePreferences(input: UpdatePipelinePreferencesInput) {
     await this.repo.updatePipelinePreferences(input);
+    return this.get();
+  }
+
+  async updateReleaseNotesPreferences(input: UpdateReleaseNotesPreferencesInput) {
+    await this.repo.updateReleaseNotesPreferences(input);
     return this.get();
   }
 }

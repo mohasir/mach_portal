@@ -81,6 +81,11 @@
       "title": "Pipeline",
       "hideStaleQuotes": "Habilitar filtro de \"Ocultar vencidas\"",
       "hideStaleQuotesCaption": "Añade una opción en la vista de Cotizaciones para que cada usuario pueda ocultar las que ya expiraron."
+    },
+    "releaseNotes": {
+      "title": "Novedades",
+      "showReleaseNotes": "Mostrar novedades",
+      "showReleaseNotesCaption": "Al desplegar una versión nueva, cada usuario ve una vez un resumen de lo nuevo. Si se desactiva, no se muestra a nadie."
     }
   },
   "taxRates": {
@@ -243,6 +248,10 @@
       "pipeline_preferences": {
         "label": "Preferencias del pipeline",
         "caption": "Si se puede habilitar la opción de ocultar cotizaciones vencidas en la vista de cotizaciones."
+      },
+      "release_notes_preferences": {
+        "label": "Preferencias de novedades",
+        "caption": "Si se muestra el resumen de novedades al desplegar una versión nueva."
       }
     }
   },
