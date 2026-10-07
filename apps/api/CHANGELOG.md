@@ -5,6 +5,40 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.15.0] - 2026-10-07
+
+### Added
+
+- Reprogramación de eventos: `events.checkReschedule` (conflictos de staff por día y doble reserva
+  por fecha / hora) y `events.reschedule`. En una transacción actualiza la fecha y hora del evento
+  **y** de su cotización, registra `event_reschedules` y `event_history`, y borra el recordatorio de
+  selecciones viejo para que el cron lo recree. Notifica a admins (`event_rescheduled`).
+- Reglas de reprogramación: solo eventos próximos, fecha no pasada, fecha / hora distinta de la
+  actual (las horas `H:mm` y `HH:mm` se comparan normalizadas), motivo activo y nota cuando el motivo
+  la exige. Los conflictos no bloquean y quedan registrados (una vez por persona).
+- Módulo `rescheduleReasons` (list / create / update / toggleActive) con seed inicial: Solicitado
+  por el cliente, Clima, Otro (requiere nota). Los motivos nuevos se agregan al final del orden.
+- Permisos: `EVENT:RESCHEDULE` (superadmin, admin), `EVENT:VIEW_RESCHEDULES` (superadmin, admin,
+  operator en sus eventos) y recurso `RESCHEDULE_REASON` (superadmin: VIEW + CRUD; admin: READ).
+  `events.getById` devuelve `reschedules` según `VIEW_RESCHEDULES`.
+- Tests con Vitest en api y web (`pnpm test`).
+
+### Changed
+
+- **Breaking:** `EVENT_CLOSED` reemplaza a `EVENT_COMPLETED` y `EVENT_STAFF_EVENT_COMPLETED`. No se
+  pueden cambiar staff ni selecciones de eventos realizados o cancelados.
+- Un solo criterio de "staff ocupado ese día" (cotización no archivada y no cancelada) para la
+  disponibilidad y los conflictos: un evento cancelado ya no bloquea al staff.
+- `selectionsPending` se calcula según si quedan selecciones incompletas, y el recordatorio usa el
+  mismo criterio.
+
+### Deploy
+
+- Requiere `pnpm --filter api db:push` **antes** del deploy (tablas `reschedule_reasons` y
+  `event_reschedules`) y `pnpm --filter api db:seed` para los motivos iniciales.
+- Entorno local: `docker-compose.yaml` pasa a Postgres 18; los volúmenes `pgdata` existentes hay que
+  recrearlos.
+
 ## [0.14.0] - 2026-10-04
 
 ### Added

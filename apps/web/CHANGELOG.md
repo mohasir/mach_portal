@@ -5,6 +5,36 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.16.0] - 2026-10-07
+
+### Added
+
+- Reprogramación de eventos: pantalla `/admin/events/[id]/reschedule`, accesible desde el detalle y
+  desde el menú de cada evento en el listado (vuelve a donde se abrió). Usa los mismos pickers que el
+  builder, preselecciona el primer motivo del catálogo y deshabilita Guardar mientras la fecha y la
+  hora no cambien. En móvil, Cancelar / Guardar quedan en una barra fija abajo.
+- Avisos de conflicto debajo de fecha y hora: "Personal no disponible" (staff con otro evento ese
+  día, con link al otro evento en la pestaña Staff) y otros eventos en la misma fecha / hora. Si hay
+  staff en conflicto, guardar pide confirmación.
+- Catálogo de motivos de reprogramación (`/admin/reschedule-reasons`, solo superadmin): crear,
+  editar y activar / desactivar con confirmación; marca de "Requiere nota". Cards en móvil.
+- Card "Reprogramaciones" en el detalle del evento (fecha anterior → nueva, motivo, nota, staff en
+  conflicto, quién y cuándo), visible para superadmin, admin y operator.
+- Notificación "reprogramó el evento" para admins.
+- El detalle del evento acepta `?tab=` para abrir una pestaña puntual (ej. `?tab=staff`).
+- Estado "Vencido" en la tabla y el encabezado de eventos para eventos con la fecha pasada que no se
+  marcaron como realizados.
+- Botón "Volver" en la pantalla de acceso denegado.
+
+### Changed
+
+- Staff y selecciones de estaciones solo se pueden editar en eventos próximos (no en realizados ni
+  cancelados).
+- Reglas de fecha / hora de los pickers compartidas entre el builder y la reprogramación
+  (`disabledPastDate`, `disabledPastTime`).
+- Al reprogramar se refrescan eventos, cotizaciones y disponibilidad de staff.
+- Ajustes de espaciado en `WrapperAlert`.
+
 ## [0.15.0] - 2026-10-04
 
 ### Added
