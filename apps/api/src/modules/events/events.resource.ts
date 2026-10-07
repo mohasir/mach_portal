@@ -117,6 +117,53 @@ export type EventStaffRow = {
   assignedAt: Date;
 };
 
+export type StaffConflictRow = {
+  staffId: string;
+  name: string;
+  conflictingEvent: { id: string; quoteNumber: string; eventTime: string | null };
+};
+
+export type ScheduleSnapshot = { date: string | null; time: string | null };
+
+export type RescheduleWrite = {
+  eventId: string;
+  quoteId: string;
+  from: ScheduleSnapshot;
+  to: { date: string; time: string | null };
+  reasonId: string;
+  reasonName: string;
+  note?: string;
+  staffConflicts: { staffId: string; name: string }[];
+  userId: string;
+};
+
+export type EventRescheduleRow = {
+  id: string;
+  fromDate: string | null;
+  fromTime: string | null;
+  toDate: string;
+  toTime: string | null;
+  reasonName: string;
+  note: string | null;
+  staffConflicts: { staffId: string; name: string }[];
+  rescheduledByName: string | null;
+  rescheduledAt: Date;
+};
+
+export const eventRescheduleResource = (row: EventRescheduleRow) => ({
+  id: row.id,
+  fromDate: row.fromDate,
+  fromTime: row.fromTime,
+  toDate: row.toDate,
+  toTime: row.toTime,
+  reasonName: row.reasonName,
+  note: row.note,
+  staffConflicts: row.staffConflicts,
+  rescheduledByName: row.rescheduledByName,
+  rescheduledAt: row.rescheduledAt,
+});
+export type EventRescheduleResource = ReturnType<typeof eventRescheduleResource>;
+
 export type EventPaymentRow = {
   id: string;
   method: PaymentMethod;
@@ -183,14 +230,17 @@ export const buildEventDetail = (
   eventRow: EventWithNames,
   lineRows: PublicQuoteLine[],
   optionRows: PublicQuoteLineOption[],
+  selectionsIncomplete: boolean,
   staffRows: EventStaffRow[],
   paymentRows: EventPaymentRow[],
   attachmentRows: EventPaymentAttachmentRow[],
   historyRows: EventHistoryRow[],
+  rescheduleRows: EventRescheduleRow[],
   optionsSelectionDeadlineDays: number,
 ) => {
   const totalPaid = paymentRows.reduce((sum, p) => sum + p.amount, 0);
-  const selectionsPending = !eventRow.selectionsConfirmedAt;
+  const selectionsPending =
+    selectionsIncomplete && !eventRow.completedAt && !eventRow.quoteCancelled;
   return {
     ...eventListItemResource(eventRow),
     lines: buildQuoteLineDetails(lineRows, optionRows),
@@ -204,6 +254,7 @@ export const buildEventDetail = (
         ? subtractDays(eventRow.eventDate, optionsSelectionDeadlineDays)
         : null,
     history: historyRows.map(eventHistoryResource),
+    reschedules: rescheduleRows.map(eventRescheduleResource),
   };
 };
 export type EventDetailResource = ReturnType<typeof buildEventDetail>;

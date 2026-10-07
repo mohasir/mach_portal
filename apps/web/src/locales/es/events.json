@@ -18,6 +18,7 @@
   },
   "status": {
     "upcoming": "Próximo",
+    "pastDue": "Vencido",
     "completed": "Realizado",
     "cancelled": "Cancelado"
   },
@@ -53,6 +54,7 @@
       "content": "Esta acción no se puede deshacer.",
       "ok": "Marcar realizado"
     },
+    "reschedule": "Reprogramar",
     "cancel": "Cancelar evento",
     "cancelConfirm": {
       "title": "¿Cancelar evento?",
@@ -74,7 +76,13 @@
       "selectionsUpdated": "actualizó la selección de estaciones",
       "paymentRegistered": "registró un pago de {{amount}}",
       "paymentRemoved": "eliminó un pago de {{amount}}",
-      "completed": "marcó el evento como realizado"
+      "completed": "marcó el evento como realizado",
+      "rescheduled": "reprogramó el evento al {{to}} ({{reason}})"
+    },
+    "reschedules": {
+      "title": "Reprogramaciones",
+      "reason": "Motivo",
+      "staffConflicts": "Guardado con conflictos de staff: {{names}}"
     },
     "composition": {
       "title": "Composición"
@@ -146,6 +154,34 @@
       "title": "Adjuntos",
       "empty": "Sin adjuntos subidos",
       "sharedBy": "Subido por {{name}} el {{date}}"
+    }
+  },
+  "reschedule": {
+    "title": "Reprogramar evento",
+    "summaryTitle": "Evento",
+    "currentSchedule": "Fecha actual",
+    "formTitle": "Nueva fecha",
+    "date": "Fecha",
+    "time": "Hora",
+    "unparsedTime": "La hora actual (\"{{time}}\") no tiene un formato reconocible. Elige una hora o el evento quedará sin hora.",
+    "reason": "Motivo",
+    "reasonPlaceholder": "Selecciona un motivo",
+    "note": "Nota",
+    "notePlaceholder": "Agrega contexto sobre el cambio",
+    "submit": "Guardar",
+    "success": "Evento reprogramado",
+    "staffConflictsTitle": "Personal no disponible",
+    "staffConflictsDescription": "El siguiente personal ya tiene otro evento asignado en este horario:",
+    "eventConflictsTitle": "Otros eventos en la misma fecha y hora",
+    "staffConflictConfirm": {
+      "title": "¿Guardar cambios con conflicto de horario?",
+      "content": "Algunos miembros del equipo ya tienen otros eventos asignados en ese día. Si continúas, se reprogramará el evento pero se mantendrán las asignaciones cruzadas.",
+      "ok": "Guardar igual"
+    },
+    "validation": {
+      "dateRequired": "Fecha requerida",
+      "reasonRequired": "Motivo requerido",
+      "noteRequired": "Este motivo requiere una nota"
     }
   },
   "assignStaff": {

@@ -1,0 +1,41 @@
+{
+  "title": "Motivos de reprogramación",
+  "index": {
+    "add": "Nuevo motivo"
+  },
+  "columns": {
+    "name": "Nombre",
+    "requiresNote": "Requiere nota",
+    "status": "Estado"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "actions": {
+    "activate": "Activar",
+    "deactivate": "Desactivar"
+  },
+  "deactivateConfirm": {
+    "title": "¿Desactivar «{{name}}»?",
+    "content": "Dejará de aparecer al reprogramar eventos.",
+    "caption": "Las reprogramaciones que ya lo usan lo seguirán mostrando."
+  },
+  "form": {
+    "name": "Nombre",
+    "namePlaceholder": "Ej. Solicitado por el cliente, Clima",
+    "requiresNote": "Requiere nota",
+    "requiresNoteHint": "Al reprogramar con este motivo, la nota será obligatoria.",
+    "save": "Guardar"
+  },
+  "create": {
+    "title": "Nuevo motivo de reprogramación"
+  },
+  "edit": {
+    "title": "Editar motivo de reprogramación"
+  },
+  "empty": "No hay motivos de reprogramación",
+  "validation": {
+    "nameRequired": "Nombre requerido"
+  }
+}

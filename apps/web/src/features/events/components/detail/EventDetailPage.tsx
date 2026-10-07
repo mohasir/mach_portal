@@ -12,12 +12,14 @@ import { EventAttachments } from './EventAttachments';
 import { EventHeader } from './EventHeader';
 import { EventComposition } from './EventComposition';
 import { EventHistoryCard } from './EventHistoryCard';
+import { EventReschedulesCard } from './EventReschedulesCard';
 import { EventPayments, type EventDetailWithPayments } from './EventPayments';
 import { EventStaffPanel } from './EventStaffPanel';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface EventDetailPageProps {
   eventId: string;
+  initialTab?: string;
 }
 
 function hasPaymentsData(event: EventDetail): event is EventDetailWithPayments {
@@ -30,7 +32,7 @@ function hasHistoryData(
   return event.history !== null;
 }
 
-export function EventDetailPage({ eventId }: EventDetailPageProps) {
+export function EventDetailPage({ eventId, initialTab }: EventDetailPageProps) {
   const { t } = useTranslation('events');
   const router = useRouter();
   const can = useCan();
@@ -82,8 +84,14 @@ export function EventDetailPage({ eventId }: EventDetailPageProps) {
       <div className="flex flex-col gap-4">
         <EventHeader event={event} />
         <WrapperCard>
-          <Tabs items={tabItems} />
+          <Tabs
+            items={tabItems}
+            defaultActiveKey={
+              tabItems.some((item) => item.key === initialTab) ? initialTab : undefined
+            }
+          />
         </WrapperCard>
+        {event.reschedules && <EventReschedulesCard reschedules={event.reschedules} />}
         {hasHistoryData(event) && <EventHistoryCard history={event.history} />}
       </div>
     </div>

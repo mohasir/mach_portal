@@ -4,6 +4,7 @@ import { seedClients } from './clients';
 import { seedStaff } from './staff';
 import { seedCatalog } from './catalog';
 import { seedEventTypes } from './eventTypes';
+import { seedRescheduleReasons } from './rescheduleReasons';
 import { seedConfig } from './config';
 import { seedQuoteStages } from './quoteStages';
 import { seedQuotePdfTemplate } from './quotePdfTemplate';
@@ -35,6 +36,7 @@ async function main() {
     await seedAdminUsers();
     await seedCatalog();
     await seedEventTypes();
+    await seedRescheduleReasons();
     await seedConfig();
     await seedQuoteStages();
     await seedQuotePdfTemplate();

@@ -7,6 +7,7 @@ export * from './clients';
 export * from './staff';
 export * from './catalog';
 export * from './eventTypes';
+export * from './rescheduleReasons';
 export * from './config';
 export * from './quotes';
 export * from './events';

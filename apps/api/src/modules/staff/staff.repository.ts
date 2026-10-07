@@ -1,9 +1,10 @@
-import { and, asc, count, desc, eq, ilike, isNull, notInArray, or, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, notInArray, or, type SQL } from 'drizzle-orm';
 import type { CreateStaffInput, StaffListQuery, UpdateStaffInput } from '@repo/schemas';
 import type { Database } from '../../db';
 import { events, eventStaff, quotes, staff } from '../../db/schema';
 import { resolvePagination } from '../../lib/utils/pagination';
 import { publicStaffColumns } from './staff.resource';
+import { staffBusyOnDate } from './staff.availability';
 
 const sortColumns = {
   name: staff.name,
@@ -75,7 +76,7 @@ export class StaffRepository {
       .from(eventStaff)
       .innerJoin(events, eq(eventStaff.eventId, events.id))
       .innerJoin(quotes, eq(events.quoteId, quotes.id))
-      .where(and(eq(events.eventDate, date), isNull(quotes.archivedAt)));
+      .where(staffBusyOnDate(date));
 
     return this.db
       .select(publicStaffColumns)

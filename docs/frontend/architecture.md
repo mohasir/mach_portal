@@ -338,6 +338,15 @@ export { useXList, useCreateX, useUpdateX, useDeleteX } from './hooks/useX';
 export type { X } from './types';
 ```
 
+### 3.7 Tests (Vitest)
+
+Se prueban con **Vitest** (entorno `node`) las funciones puras: helpers de `lib/` (fechas, acceso por
+ruta) y `helpers.ts` de cada feature. Los componentes React no tienen tests.
+
+- Archivos `*.test.ts` junto al código. Correr con `pnpm --filter web test` (o `pnpm test` en la raíz).
+- Alias `@/` disponible (configurado en `apps/web/vitest.config.ts`).
+- Para lógica que depende de "ahora", fijar el reloj con `vi.useFakeTimers()` + `vi.setSystemTime(...)`.
+
 ---
 
 ## 4. Tablas: `DataTable` + `useDataTable` (obligatorio)
@@ -483,6 +492,8 @@ Tres capas complementarias; la autorización **real** siempre la hace la API:
 3. **API** (backend): `protectedProcedure` / `guardedProcedure` — el único límite de autorización confiable.
 
 Rutas y permisos viven en `lib/auth/navigation.ts` (`PROTECTED_ROUTES`/`AUTH_ROUTES`/redirects) y `lib/auth/route-access.ts` (`ROUTE_ACCESS`: prefijo → `PermissionCheck`).
+
+Una ruta con segmento dinámico que exige más que el ítem de navegación con el que comparte prefijo (ej. `/admin/events/[id]/reschedule` pide `EVENT:RESCHEDULE`, no el `EVENT:READ` de `/admin/events`) se declara en `ROUTE_PATTERNS` de `route-access.ts` (regex → `PermissionCheck`), que se evalúa antes que los ítems.
 
 ---
 

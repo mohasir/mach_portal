@@ -22,6 +22,8 @@ const {
   VIEW_SUMMARY,
   VIEW_QUOTES_CHART,
   VIEW_TOP_PRODUCTS,
+  RESCHEDULE,
+  VIEW_RESCHEDULES,
 } = ACTIONS;
 const CRUD = [CREATE, READ, UPDATE, DELETE] as const;
 // Settings resources are singleton rows or fixed catalogs — no create/delete.
@@ -36,7 +38,10 @@ const DASHBOARD_VIEWS = [READ, VIEW_SUMMARY, VIEW_QUOTES_CHART, VIEW_TOP_PRODUCT
 
 export const permissionsMatrix = [
   { resource: RESOURCES.DASHBOARD, actions: DASHBOARD_VIEWS },
-  { resource: RESOURCES.EVENT, actions: [...CRUD, MANAGE_SELECTIONS, MANAGE_STAFF_ASSIGNMENTS] },
+  {
+    resource: RESOURCES.EVENT,
+    actions: [...CRUD, MANAGE_SELECTIONS, MANAGE_STAFF_ASSIGNMENTS, RESCHEDULE, VIEW_RESCHEDULES],
+  },
   { resource: RESOURCES.PAYMENT, actions: [CREATE, READ, DELETE, ACTIONS.UPLOAD_ATTACHMENT] },
   { resource: RESOURCES.CLIENT, actions: CRUD },
   {
@@ -48,6 +53,7 @@ export const permissionsMatrix = [
   { resource: RESOURCES.PRODUCT, actions: [...CRUD, DISABLE, ENABLE] },
   { resource: RESOURCES.PRICE_TIERS, actions: CRUD },
   { resource: RESOURCES.EVENT_TYPE, actions: CRUD },
+  { resource: RESOURCES.RESCHEDULE_REASON, actions: [VIEW, ...CRUD] },
   { resource: RESOURCES.TAX_RATES, actions: VIEW_UPDATE },
   { resource: RESOURCES.QUOTE_DEFAULTS, actions: VIEW_UPDATE },
   { resource: RESOURCES.QUOTE_STAGES, actions: VIEW_UPDATE },

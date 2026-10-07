@@ -1,0 +1,41 @@
+{
+  "title": "Reschedule reasons",
+  "index": {
+    "add": "New reason"
+  },
+  "columns": {
+    "name": "Name",
+    "requiresNote": "Requires note",
+    "status": "Status"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "actions": {
+    "activate": "Activate",
+    "deactivate": "Deactivate"
+  },
+  "deactivateConfirm": {
+    "title": "Deactivate \"{{name}}\"?",
+    "content": "It will no longer be offered when rescheduling events.",
+    "caption": "Past reschedules that used it will still show it."
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "E.g. Client request, Weather",
+    "requiresNote": "Requires note",
+    "requiresNoteHint": "When rescheduling with this reason, the note will be mandatory.",
+    "save": "Save"
+  },
+  "create": {
+    "title": "New reschedule reason"
+  },
+  "edit": {
+    "title": "Edit reschedule reason"
+  },
+  "empty": "No reschedule reasons",
+  "validation": {
+    "nameRequired": "Name is required"
+  }
+}

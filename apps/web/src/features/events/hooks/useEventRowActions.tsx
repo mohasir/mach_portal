@@ -1,6 +1,7 @@
 'use client';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { CheckCircle, UserPlus, XCircle } from 'lucide-react';
+import { TbCalendarRepeat } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { RowActionItem } from '@/components/shared/DataTable';
@@ -15,6 +16,7 @@ interface UseEventRowActionsParams {
 export function useEventRowActions({ onAssignStaff }: UseEventRowActionsParams) {
   const { t } = useTranslation('events');
   const router = useRouter();
+  const pathname = usePathname();
   const { markCompleted } = useMarkEventCompleted();
   const { cancelQuote } = useCancelQuote();
 
@@ -32,6 +34,16 @@ export function useEventRowActions({ onAssignStaff }: UseEventRowActionsParams) 
           icon: <UserPlus size={16} />,
           guard: { [RESOURCES.EVENT]: [ACTIONS.MANAGE_STAFF_ASSIGNMENTS] },
           onClick: () => onAssignStaff(event),
+        },
+        {
+          key: 'reschedule',
+          label: t('detail.reschedule'),
+          icon: <TbCalendarRepeat size={16} />,
+          guard: { [RESOURCES.EVENT]: [ACTIONS.RESCHEDULE] },
+          onClick: () =>
+            router.push(
+              `/admin/events/${event.id}/reschedule?returnTo=${encodeURIComponent(pathname)}`,
+            ),
         },
         {
           key: 'markCompleted',

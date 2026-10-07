@@ -76,3 +76,16 @@ export const updateEventSelectionsSchema = z.object({
   selections: z.array(eventLineSelectionSchema),
 });
 export type UpdateEventSelectionsInput = z.infer<typeof updateEventSelectionsSchema>;
+
+export const checkRescheduleSchema = z.object({
+  eventId: z.uuid(),
+  eventDate: z.iso.date(),
+  eventTime: optionalText(20),
+});
+export type CheckRescheduleQuery = z.infer<typeof checkRescheduleSchema>;
+
+export const rescheduleEventSchema = checkRescheduleSchema.extend({
+  reasonId: z.uuid(),
+  note: optionalText(500),
+});
+export type RescheduleEventInput = z.infer<typeof rescheduleEventSchema>;
