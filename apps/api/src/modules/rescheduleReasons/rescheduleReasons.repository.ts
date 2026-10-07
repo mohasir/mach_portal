@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, ilike, ne, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, ne, sql, type SQL } from 'drizzle-orm';
 import type {
   CreateRescheduleReasonInput,
   RescheduleReasonsListQuery,
@@ -31,7 +31,7 @@ export class RescheduleReasonsRepository {
       .select(publicRescheduleReasonColumns)
       .from(rescheduleReasons)
       .where(where)
-      .orderBy(orderBy)
+      .orderBy(orderBy, asc(rescheduleReasons.name))
       .limit(limit)
       .offset(offset);
 
@@ -67,7 +67,14 @@ export class RescheduleReasonsRepository {
       .then((r) => r[0]);
   }
 
-  create(data: CreateRescheduleReasonInput) {
+  async getMaxSortOrder() {
+    const [row] = await this.db
+      .select({ value: sql<number>`coalesce(max(${rescheduleReasons.sortOrder}), -1)::int` })
+      .from(rescheduleReasons);
+    return row?.value ?? -1;
+  }
+
+  create(data: CreateRescheduleReasonInput & { sortOrder: number }) {
     return this.db
       .insert(rescheduleReasons)
       .values(data)

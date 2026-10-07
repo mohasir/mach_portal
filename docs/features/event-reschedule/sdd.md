@@ -459,3 +459,30 @@ En `features/events/`:
 
 **Docs**
 - `docs/mach-bar-domain.md` — D19, excepción a D13.
+
+---
+
+## 9. Pendientes
+
+### 9.1 Hora pasada en el día de hoy
+
+**Estado:** abierto, requiere análisis antes de implementar. Origen: comentario de review en el PR #14
+(`events.service.ts`, regla `DATE_IN_PAST`).
+
+**Problema:** `DATE_IN_PAST` compara solo el día. Si se llama a la API directamente, se puede
+reprogramar a hoy con una hora que ya pasó (ej. hoy `08:00` cuando son las `15:00`). El picker del
+front lo impide, pero la API no.
+
+**Por qué no alcanza comparar contra el reloj de `America/New_York`:**
+- `eventTime` es texto sin zona horaria: es la hora local del evento, que puede estar en otro estado
+  de EE.UU. (otra zona horaria). Comparar contra la hora de Nueva York puede desfasar hasta 3 horas.
+- El "hoy" del server ya usa `todayInBusinessTimezone()` (Nueva York fijo), con la misma limitación
+  para el día.
+- El picker usa la hora del navegador del usuario, que tampoco es necesariamente la del evento.
+
+**A analizar:**
+- De dónde sale la zona horaria del evento (derivarla del `state`, guardarla en el evento o en la
+  cotización, o una zona única del negocio).
+- Si la regla aplica igual en el builder de cotizaciones (`checkAvailability` / pickers), para que
+  "fecha / hora válida" siga siendo una sola regla (R11).
+- Cómo se alinean server y picker sobre el "ahora" de referencia.

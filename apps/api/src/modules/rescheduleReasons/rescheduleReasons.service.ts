@@ -38,7 +38,8 @@ export class RescheduleReasonsService {
 
   async create(input: CreateRescheduleReasonInput) {
     if (await this.repo.findByName(input.name)) throw nameTaken();
-    return rescheduleReasonResource(await this.repo.create(input));
+    const sortOrder = (await this.repo.getMaxSortOrder()) + 1;
+    return rescheduleReasonResource(await this.repo.create({ ...input, sortOrder }));
   }
 
   async update(id: string, input: UpdateRescheduleReasonInput) {

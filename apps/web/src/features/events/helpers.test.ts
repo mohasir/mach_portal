@@ -8,6 +8,15 @@ describe('isSameSchedule', () => {
     expect(isSameSchedule(current, { eventDate: '2026-10-17', eventTime: '17:30' })).toBe(true);
   });
 
+  it('treats a stored H:mm time and the same HH:mm time as the same', () => {
+    expect(
+      isSameSchedule(
+        { eventDate: '2026-10-17', eventTime: '9:00' },
+        { eventDate: '2026-10-17', eventTime: '09:00' },
+      ),
+    ).toBe(true);
+  });
+
   it('is false when only the date changes', () => {
     expect(isSameSchedule(current, { eventDate: '2026-11-20', eventTime: '17:30' })).toBe(false);
   });

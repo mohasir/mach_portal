@@ -77,6 +77,14 @@ export const updateEventSelectionsSchema = z.object({
 });
 export type UpdateEventSelectionsInput = z.infer<typeof updateEventSelectionsSchema>;
 
+// `eventTime` is free text: pickers save "HH:mm", but older rows may hold "9:00". Comparing two
+// times goes through this so "9:00" and "09:00" count as the same; anything else stays as is.
+export const normalizeEventTime = (time: string | null | undefined): string | null => {
+  if (!time) return null;
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
+  return match ? `${match[1]!.padStart(2, '0')}:${match[2]}` : time;
+};
+
 export const checkRescheduleSchema = z.object({
   eventId: z.uuid(),
   eventDate: z.iso.date(),

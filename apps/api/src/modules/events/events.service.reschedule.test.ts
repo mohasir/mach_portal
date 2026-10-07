@@ -131,6 +131,15 @@ describe('EventsService.reschedule', () => {
     );
   });
 
+  it('treats a stored H:mm time and the same HH:mm time as unchanged', async () => {
+    fakes.eventsRepo.findForReschedule.mockResolvedValue({ ...upcomingEvent(), eventTime: '9:00' });
+    await rejectsWith(
+      run(input({ eventDate: '2026-10-20', eventTime: '09:00' })),
+      'BAD_REQUEST',
+      'EVENT_SAME_SCHEDULE',
+    );
+  });
+
   it('accepts changing only the time', async () => {
     await run(input({ eventDate: '2026-10-20', eventTime: '20:00' }));
     expect(fakes.eventsRepo.reschedule).toHaveBeenCalledOnce();
@@ -189,6 +198,25 @@ describe('EventsService.reschedule', () => {
     ]);
     await run();
     expect(fakes.eventsRepo.findStaffConflicts).toHaveBeenCalledWith(EVENT_ID, '2026-10-25');
+    expect(fakes.eventsRepo.reschedule).toHaveBeenCalledWith(
+      expect.objectContaining({ staffConflicts: [{ staffId: 's1', name: 'Ana' }] }),
+    );
+  });
+
+  it('records each clashing staff member once even with several clashing events', async () => {
+    fakes.eventsRepo.findStaffConflicts.mockResolvedValue([
+      {
+        staffId: 's1',
+        name: 'Ana',
+        conflictingEvent: { id: 'e2', quoteNumber: 'Q-0002', eventTime: '12:00' },
+      },
+      {
+        staffId: 's1',
+        name: 'Ana',
+        conflictingEvent: { id: 'e3', quoteNumber: 'Q-0003', eventTime: '20:00' },
+      },
+    ]);
+    await run();
     expect(fakes.eventsRepo.reschedule).toHaveBeenCalledWith(
       expect.objectContaining({ staffConflicts: [{ staffId: 's1', name: 'Ana' }] }),
     );

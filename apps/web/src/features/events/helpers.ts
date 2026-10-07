@@ -6,7 +6,7 @@ import {
   Wallet,
   type LucideIcon,
 } from 'lucide-react';
-import type { PaymentMethod } from '@repo/schemas';
+import { normalizeEventTime, type PaymentMethod } from '@repo/schemas';
 import { isPastDate } from '@/lib/date';
 import type { Event, EventDetail } from './types';
 
@@ -63,4 +63,4 @@ export const isSameSchedule = (
 ) =>
   !!next.eventDate &&
   next.eventDate === current.eventDate &&
-  (next.eventTime ?? null) === current.eventTime;
+  normalizeEventTime(next.eventTime) === normalizeEventTime(current.eventTime);

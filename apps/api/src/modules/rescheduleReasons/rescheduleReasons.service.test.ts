@@ -8,6 +8,7 @@ function makeRepo() {
   return {
     findPaginated: vi.fn(),
     findByName: vi.fn().mockResolvedValue(undefined),
+    getMaxSortOrder: vi.fn().mockResolvedValue(2),
     create: vi.fn().mockResolvedValue(reason),
     updateById: vi.fn().mockResolvedValue(reason),
     setActive: vi.fn().mockResolvedValue(reason),
@@ -34,6 +35,15 @@ describe('RescheduleReasonsService', () => {
 
   it('create returns the new reason', async () => {
     await expect(service.create({ name: 'Clima', requiresNote: false })).resolves.toEqual(reason);
+  });
+
+  it('create appends the reason after the last one in catalog order', async () => {
+    await service.create({ name: 'Proveedor', requiresNote: false });
+    expect(repo.create).toHaveBeenCalledWith({
+      name: 'Proveedor',
+      requiresNote: false,
+      sortOrder: 3,
+    });
   });
 
   it('update checks duplicates excluding its own id', async () => {

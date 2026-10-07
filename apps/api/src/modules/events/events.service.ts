@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { TRPCError } from '@trpc/server';
 import {
+  normalizeEventTime,
   paginationMeta,
   type AssignStaffInput,
   type CheckRescheduleQuery,
@@ -148,7 +149,10 @@ export class EventsService {
       throw badRequest(ErrorCodes.event.DATE_IN_PAST);
     }
     const toTime = input.eventTime ?? null;
-    if (input.eventDate === event.eventDate && toTime === event.eventTime) {
+    if (
+      input.eventDate === event.eventDate &&
+      normalizeEventTime(toTime) === normalizeEventTime(event.eventTime)
+    ) {
       throw badRequest(ErrorCodes.event.SAME_SCHEDULE);
     }
 
@@ -171,7 +175,9 @@ export class EventsService {
       reasonId: reason.id,
       reasonName: reason.name,
       note: input.note,
-      staffConflicts: conflicts.map(({ staffId, name }) => ({ staffId, name })),
+      staffConflicts: [
+        ...new Map(conflicts.map(({ staffId, name }) => [staffId, { staffId, name }])).values(),
+      ],
       userId,
     });
     if (!updated) throw notFound();
