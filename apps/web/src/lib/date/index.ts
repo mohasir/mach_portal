@@ -1,4 +1,4 @@
-import dayjs from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -71,3 +71,17 @@ export const isPastDate = (value?: DateInput | null) =>
   !!value && dayjs(value).isBefore(dayjs(), 'day');
 
 export const isAfter = (value: DateInput, other: DateInput) => dayjs(value).isAfter(dayjs(other));
+
+// Shared by every event date/time picker (quote builder, reschedule) so "a valid schedule"
+// means the same thing everywhere.
+export const disabledPastDate = (current: Dayjs) => current.isBefore(dayjs(), 'day');
+
+export const disabledPastTime = (selectedDate: Dayjs | null | undefined) => () => {
+  if (!selectedDate || !selectedDate.isSame(dayjs(), 'day')) return {};
+  const now = dayjs();
+  return {
+    disabledHours: () => Array.from({ length: now.hour() }, (_, h) => h),
+    disabledMinutes: (selectedHour: number) =>
+      selectedHour === now.hour() ? Array.from({ length: now.minute() }, (_, m) => m) : [],
+  };
+};

@@ -32,12 +32,12 @@ export function AlertContent({
 
   return (
     <div>
-      <div className="mb-1.5 flex items-center gap-1.5">
+      <div className="mb-2 flex items-center gap-2">
         {showIcon && <span className={iconColorClass}>{TYPE_ICONS[iconType]}</span>}
         <span className={`text-sm font-bold ${TITLE_TEXT_CLASS}`}>{title}</span>
       </div>
       {description && (
-        <div className={`text-sm leading-4.5 ${DESCRIPTION_TEXT_CLASS}`}>{description}</div>
+        <div className={`text-sm leading-5 ${DESCRIPTION_TEXT_CLASS}`}>{description}</div>
       )}
     </div>
   );

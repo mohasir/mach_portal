@@ -2,7 +2,7 @@ import { ACTIONS, RESOURCES } from '@repo/guards';
 
 import type { NavItem } from '../types';
 
-const { READ } = ACTIONS;
+const { READ, VIEW } = ACTIONS;
 
 export const DASHBOARD_ITEM: NavItem = {
   label: 'nav.home',
@@ -82,6 +82,13 @@ export const EVENT_TYPES_ITEM: NavItem = {
   guard: { [RESOURCES.EVENT_TYPE]: [READ] },
 };
 
+export const RESCHEDULE_REASONS_ITEM: NavItem = {
+  label: 'nav.rescheduleReasons',
+  href: '/admin/reschedule-reasons',
+  icon: 'rescheduleReasons',
+  guard: { [RESOURCES.RESCHEDULE_REASON]: [VIEW] },
+};
+
 export const SETTINGS_ITEM: NavItem = {
   label: 'nav.settings',
   href: '/admin/settings',
@@ -127,6 +134,7 @@ export const NAV_ITEMS = {
   STAFF: STAFF_ITEM,
   CATALOG_PRODUCTS: CATALOG_PRODUCTS_ITEM,
   EVENT_TYPES: EVENT_TYPES_ITEM,
+  RESCHEDULE_REASONS: RESCHEDULE_REASONS_ITEM,
   SETTINGS: SETTINGS_ITEM,
   OPTIONS: OPTIONS_ITEM,
   USERS: USERS_ITEM,

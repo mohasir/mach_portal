@@ -18,6 +18,7 @@
   },
   "status": {
     "upcoming": "Upcoming",
+    "pastDue": "Past due",
     "completed": "Completed",
     "cancelled": "Cancelled"
   },
@@ -53,6 +54,7 @@
       "content": "This action can't be undone.",
       "ok": "Mark completed"
     },
+    "reschedule": "Reschedule",
     "cancel": "Cancel event",
     "cancelConfirm": {
       "title": "Cancel event?",
@@ -74,7 +76,13 @@
       "selectionsUpdated": "updated the station selections",
       "paymentRegistered": "registered a payment of {{amount}}",
       "paymentRemoved": "removed a payment of {{amount}}",
-      "completed": "marked the event as completed"
+      "completed": "marked the event as completed",
+      "rescheduled": "rescheduled the event to {{to}} ({{reason}})"
+    },
+    "reschedules": {
+      "title": "Reschedules",
+      "reason": "Reason",
+      "staffConflicts": "Saved with staff conflicts: {{names}}"
     },
     "composition": {
       "title": "Composition"
@@ -146,6 +154,34 @@
       "title": "Attachments",
       "empty": "No attachments uploaded",
       "sharedBy": "Uploaded by {{name}} on {{date}}"
+    }
+  },
+  "reschedule": {
+    "title": "Reschedule event",
+    "summaryTitle": "Event",
+    "currentSchedule": "Current date",
+    "formTitle": "New date",
+    "date": "Date",
+    "time": "Time",
+    "unparsedTime": "The current time (\"{{time}}\") is not in a recognizable format. Pick a time or the event will be left without one.",
+    "reason": "Reason",
+    "reasonPlaceholder": "Select a reason",
+    "note": "Note",
+    "notePlaceholder": "Add context about the change",
+    "submit": "Save",
+    "success": "Event rescheduled",
+    "staffConflictsTitle": "Staff unavailable",
+    "staffConflictsDescription": "The following staff already have another event assigned at this time:",
+    "eventConflictsTitle": "Other events at the same date and time",
+    "staffConflictConfirm": {
+      "title": "Save changes with a schedule conflict?",
+      "content": "Some team members already have other events assigned on that day. If you continue, the event will be rescheduled but the overlapping assignments will be kept.",
+      "ok": "Save anyway"
+    },
+    "validation": {
+      "dateRequired": "Date is required",
+      "reasonRequired": "Reason is required",
+      "noteRequired": "This reason requires a note"
     }
   },
   "assignStaff": {

@@ -17,7 +17,7 @@ export const ADMIN_MENU: NavGroup[] = [
   },
   {
     group: 'nav.groups.catalog',
-    items: [NAV_ITEMS.CATALOG_PRODUCTS, NAV_ITEMS.EVENT_TYPES],
+    items: [NAV_ITEMS.CATALOG_PRODUCTS, NAV_ITEMS.EVENT_TYPES, NAV_ITEMS.RESCHEDULE_REASONS],
   },
   {
     group: 'nav.groups.users',

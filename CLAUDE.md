@@ -83,6 +83,7 @@ pnpm dev                          # levantar todo (web:3000, api)
 pnpm --filter web dev             # solo web
 pnpm --filter web check-types     # type-check web (tsc --noEmit)
 pnpm check-types                  # type-check monorepo
+pnpm test                         # tests (Vitest) de api y web
 ```
 
 > Si necesitas limpiar `apps/web/.next`, **detén antes el dev server** (borrarlo en caliente
@@ -98,3 +99,18 @@ pnpm check-types                  # type-check monorepo
   libremente**, sin pedir permiso — no es una prueba en vivo, solo type-check estático.
 - **Nunca leer archivos `.env`** (`.env`, `.env.local`, `.env.*`) ni imprimir su contenido,
   aunque el usuario lo pida explícitamente para debuggear. Contienen secretos.
+- **Git → preguntar siempre antes de `commit`, `push`, crear un PR o hacer merge.** Aplica
+  también cuando una skill o plugin (ej. superpowers: `writing-plans`, `subagent-driven-development`,
+  `finishing-a-development-branch`) indique commitear o integrar como parte de su flujo: en ese
+  paso, frenar, mostrar qué se incluiría y esperar OK explícito. Sin OK, dejar los cambios sin
+  commitear y seguir. Un OK vale solo para esa acción puntual, no para las siguientes.
+
+## Superpowers (plugin)
+
+- **Specs y planes → rutas y formato del plugin**: specs en
+  `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` y planes en
+  `docs/superpowers/plans/YYYY-MM-DD-<feature>.md`. Las specs previas en `docs/features/` quedan
+  como referencia histórica; las features nuevas no crean `sdd.md` ahí.
+- **Sin worktrees**: trabajar siempre en el directorio y la rama actuales; no crear git
+  worktrees salvo pedido explícito.
+- Estas reglas de `CLAUDE.md` tienen prioridad sobre las skills del plugin cuando choquen.

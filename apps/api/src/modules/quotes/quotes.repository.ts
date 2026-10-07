@@ -412,6 +412,14 @@ export class QuotesRepository {
   // Advisory availability check (quotes.service.ts checkAvailability) — deliberately not
   // scoped by ownerFilter: the whole point is surfacing OTHER people's bookings too.
   findByDateTime(eventDate: string, eventTime: string, excludeQuoteId?: string) {
+    return this.findBookings(eventDate, eventTime, excludeQuoteId);
+  }
+
+  findByDate(eventDate: string, excludeQuoteId?: string) {
+    return this.findBookings(eventDate, undefined, excludeQuoteId);
+  }
+
+  private findBookings(eventDate: string, eventTime?: string, excludeQuoteId?: string) {
     return this.db
       .select({
         id: quotes.id,
@@ -425,7 +433,7 @@ export class QuotesRepository {
       .where(
         and(
           eq(quotes.eventDate, eventDate),
-          eq(quotes.eventTime, eventTime),
+          eventTime ? eq(quotes.eventTime, eventTime) : undefined,
           ne(quotes.stageId, QUOTE_STAGE.CANCELLED),
           isNull(quotes.archivedAt),
           excludeQuoteId ? ne(quotes.id, excludeQuoteId) : undefined,

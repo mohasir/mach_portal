@@ -29,6 +29,7 @@ export function EventComposition({ event, lines, catalog }: EventCompositionProp
   const [viewingOpen, setViewingOpen] = useState(false);
 
   const canManageSelections = can({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_SELECTIONS] });
+  const canEditSelections = canManageSelections && event.status === 'upcoming';
 
   const openViewing = (sheetLine: SheetLine) => {
     setViewing(sheetLine);
@@ -56,7 +57,9 @@ export function EventComposition({ event, lines, catalog }: EventCompositionProp
                 line={line}
                 product={product}
                 onShow={() => openViewing({ line, product })}
-                onEditSelection={() => openEditing({ line, product })}
+                onEditSelection={
+                  canEditSelections ? () => openEditing({ line, product }) : undefined
+                }
               />
             ) : (
               <QuickLineCard key={line.id} mode="readOnly" line={line} product={product} />

@@ -1,19 +1,30 @@
 import { randomUUID } from 'node:crypto';
 import { TRPCError } from '@trpc/server';
 import {
+  normalizeEventTime,
   paginationMeta,
   type AssignStaffInput,
+  type CheckRescheduleQuery,
   type EventsCalendarQuery,
   type EventsListQuery,
   type RegisterEventPaymentInput,
   type RemoveEventPaymentAttachmentInput,
   type RemoveStaffInput,
+  type RescheduleEventInput,
   type UpdateEventSelectionsInput,
 } from '@repo/schemas';
-import { AppError, ErrorCodes } from '../../lib/errors';
+import { AppError, ErrorCodes, type ErrorCode } from '../../lib/errors';
 import { getStorageProvider, type StorageProvider } from '../../lib/storage';
+import { todayInBusinessTimezone } from '../../lib/utils/date';
 import { ConfigRepository } from '../config/config.repository';
+import { NotificationsRepository } from '../notifications/notifications.repository';
+import type {
+  EventRescheduledData,
+  NotificationActor,
+} from '../notifications/notifications.resource';
 import { QuotesRepository } from '../quotes/quotes.repository';
+import { quoteAvailabilityConflictResource } from '../quotes/quotes.resource';
+import { RescheduleReasonsRepository } from '../rescheduleReasons/rescheduleReasons.repository';
 import { validateLineSelections } from '../quotes/quotes.validation';
 import { EventsRepository } from './events.repository';
 import {
@@ -26,6 +37,9 @@ import {
 
 function notFound() {
   return new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.event.NOT_FOUND) });
+}
+function badRequest(code: ErrorCode) {
+  return new TRPCError({ code: 'BAD_REQUEST', cause: new AppError(code) });
 }
 function invalidSelections() {
   return new TRPCError({
@@ -56,6 +70,8 @@ export class EventsService {
     private repo: EventsRepository,
     private quotesRepo: QuotesRepository,
     private configRepo: ConfigRepository,
+    private rescheduleReasonsRepo: RescheduleReasonsRepository,
+    private notificationsRepo: NotificationsRepository,
     private storage: StorageProvider = getStorageProvider(),
   ) {}
 
@@ -91,12 +107,98 @@ export class EventsService {
       result.eventRow,
       result.lineRows,
       result.optionRows,
+      result.selectionsIncomplete,
       result.staffRows,
       result.paymentRows,
       result.attachmentRows,
       result.historyRows,
+      result.rescheduleRows,
       appRow?.optionsSelectionDeadlineDays ?? 0,
     );
+  }
+
+  private async findReschedulable(eventId: string, ownerId?: string) {
+    await this.assertAccessible(eventId, ownerId);
+    const event = await this.repo.findForReschedule(eventId);
+    if (!event) throw notFound();
+    return event;
+  }
+
+  async checkReschedule(input: CheckRescheduleQuery, ownerId?: string) {
+    const event = await this.findReschedulable(input.eventId, ownerId);
+    const [staffConflicts, bookings] = await Promise.all([
+      this.repo.findStaffConflicts(event.id, input.eventDate),
+      input.eventTime
+        ? this.quotesRepo.findByDateTime(input.eventDate, input.eventTime, event.quoteId)
+        : this.quotesRepo.findByDate(input.eventDate, event.quoteId),
+    ]);
+    return { staffConflicts, eventConflicts: bookings.map(quoteAvailabilityConflictResource) };
+  }
+
+  async reschedule(
+    input: RescheduleEventInput,
+    userId: string,
+    actor: NotificationActor,
+    ownerId?: string,
+  ) {
+    const event = await this.findReschedulable(input.eventId, ownerId);
+    if (event.completedAt || event.quoteCancelled) {
+      throw badRequest(ErrorCodes.event.NOT_RESCHEDULABLE);
+    }
+    if (input.eventDate < todayInBusinessTimezone()) {
+      throw badRequest(ErrorCodes.event.DATE_IN_PAST);
+    }
+    const toTime = input.eventTime ?? null;
+    if (
+      input.eventDate === event.eventDate &&
+      normalizeEventTime(toTime) === normalizeEventTime(event.eventTime)
+    ) {
+      throw badRequest(ErrorCodes.event.SAME_SCHEDULE);
+    }
+
+    const reason = await this.rescheduleReasonsRepo.findById(input.reasonId);
+    if (!reason) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        cause: new AppError(ErrorCodes.rescheduleReason.NOT_FOUND),
+      });
+    }
+    if (!reason.isActive) throw badRequest(ErrorCodes.rescheduleReason.INACTIVE);
+    if (reason.requiresNote && !input.note) throw badRequest(ErrorCodes.event.NOTE_REQUIRED);
+
+    const conflicts = await this.repo.findStaffConflicts(event.id, input.eventDate);
+    const updated = await this.repo.reschedule({
+      eventId: event.id,
+      quoteId: event.quoteId,
+      from: { date: event.eventDate, time: event.eventTime },
+      to: { date: input.eventDate, time: toTime },
+      reasonId: reason.id,
+      reasonName: reason.name,
+      note: input.note,
+      staffConflicts: [
+        ...new Map(conflicts.map(({ staffId, name }) => [staffId, { staffId, name }])).values(),
+      ],
+      userId,
+    });
+    if (!updated) throw notFound();
+
+    const data: EventRescheduledData = {
+      source: 'user',
+      actor,
+      quoteNumber: event.quoteNumber,
+      clientName: event.clientName,
+      fromDate: event.eventDate,
+      toDate: input.eventDate,
+      toTime,
+    };
+    await this.notificationsRepo.create({
+      type: 'event_rescheduled',
+      data,
+      entityType: 'event',
+      entityId: event.id,
+      excludedUserId: userId,
+    });
+    return eventResource(updated);
   }
 
   async updateSelections(
@@ -108,12 +210,7 @@ export class EventsService {
     await this.assertAccessible(eventId, ownerId);
     const event = await this.repo.findForSelectionsUpdate(eventId);
     if (!event) throw notFound();
-    if (event.completedAt) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        cause: new AppError(ErrorCodes.event.COMPLETED),
-      });
-    }
+    await this.assertOpen(eventId);
 
     const quoteLines = await this.quotesRepo.findLinesByQuoteId(event.quoteId);
     const byLineId = new Map(input.selections.map((s) => [s.quoteLineId, s]));
@@ -235,15 +332,13 @@ export class EventsService {
     return eventResource(updated);
   }
 
+  private async assertOpen(eventId: string) {
+    if (await this.repo.isClosed(eventId)) throw badRequest(ErrorCodes.event.CLOSED);
+  }
+
   async assignStaff(input: AssignStaffInput, userId: string, ownerId?: string) {
     await this.assertAccessible(input.eventId, ownerId);
-    const completed = await this.repo.isCompleted(input.eventId);
-    if (completed) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        cause: new AppError(ErrorCodes.eventStaff.EVENT_COMPLETED),
-      });
-    }
+    await this.assertOpen(input.eventId);
     const alreadyAssigned = await this.repo.isStaffAssigned(input.eventId, input.staffId);
     if (alreadyAssigned) {
       throw new TRPCError({
@@ -256,6 +351,7 @@ export class EventsService {
 
   async removeStaff(input: RemoveStaffInput, userId: string, ownerId?: string) {
     await this.assertAccessible(input.eventId, ownerId);
+    await this.assertOpen(input.eventId);
     const removed = await this.repo.removeStaff(input, userId);
     if (!removed) {
       throw new TRPCError({

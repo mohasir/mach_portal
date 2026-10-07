@@ -19,6 +19,7 @@ import {
   Wallet,
   Workflow,
 } from 'lucide-react';
+import { TbCalendarTime } from 'react-icons/tb';
 import optionCalendarIcon from '@/assets/icons/option_calendar_icon.svg';
 import optionPaymentIcon from '@/assets/icons/option_payment_icon.svg';
 import optionGenericIcon from '@/assets/icons/option_generic_icon.svg';
@@ -38,6 +39,7 @@ export const IconMap: Record<string, ReactNode> = {
   catalog: <Package size={iconSize} />,
   prices: <DollarSign size={iconSize} />,
   eventTypes: <CalendarCog size={iconSize} />,
+  rescheduleReasons: <TbCalendarTime size={iconSize} />,
   settings: <Settings size={iconSize} />,
   more: <LayoutGrid size={iconSize} />,
   users: <UserCog size={iconSize} />,
@@ -53,6 +55,7 @@ export const IconCardOptionsMap: Record<string, StaticImageData> = {
   staff: optionGenericIcon,
   catalog: optionStationIcon,
   eventTypes: optionGenericIcon,
+  rescheduleReasons: optionGenericIcon,
   settings: optionGenericIcon,
   users: optionGenericIcon,
 };

@@ -10,6 +10,7 @@ import { WrapperCard } from '@/components/shared/WrapperCard';
 import { WrapperDatePicker } from '@/components/shared/WrapperDatePicker';
 import { WrapperTimePicker } from '@/components/shared/WrapperTimePicker';
 import { useConfig } from '@/features/settings';
+import { disabledPastDate, disabledPastTime } from '@/lib/date';
 import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 import CITIES_BY_STATE from '../../citiesByState.json';
 import { useQuoteBuilder, type QuoteBuilderState } from '../../hooks/useQuoteBuilder';
@@ -63,18 +64,6 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
   const cityOptions = (selectedState ? (CITIES_BY_STATE_MAP[selectedState] ?? []) : []).map(
     (city) => ({ value: city, label: city }),
   );
-
-  const disabledDate = (current: Dayjs) => current.isBefore(dayjs(), 'day');
-
-  const disabledTime = () => {
-    if (!eventDate || !eventDate.isSame(dayjs(), 'day')) return {};
-    const now = dayjs();
-    return {
-      disabledHours: () => Array.from({ length: now.hour() }, (_, h) => h),
-      disabledMinutes: (selectedHour: number) =>
-        selectedHour === now.hour() ? Array.from({ length: now.minute() }, (_, m) => m) : [],
-    };
-  };
 
   const initialValues: EventFormValues = {
     eventTypeId: state.eventTypeId ?? undefined,
@@ -143,7 +132,7 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
       <WrapperDatePicker
         className="w-full"
         sheetTitle={t('builder.event.date')}
-        disabledDate={disabledDate}
+        disabledDate={disabledPastDate}
       />
     </Form.Item>
   );
@@ -160,7 +149,7 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
         sheetTitle={t('builder.event.time')}
         minuteStep={15}
         classNames={{ popup: { content: 'min-w-[150px]' } }}
-        disabledTime={disabledTime}
+        disabledTime={disabledPastTime(eventDate)}
       />
     </Form.Item>
   );

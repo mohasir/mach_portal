@@ -1,6 +1,6 @@
 # SDD — Reprogramación de eventos (cambio de fecha y hora)
 
-> Documento de diseño técnico. Estado: **propuesto, no implementado**.
+> Documento de diseño técnico. Estado: **implementado** (plan: `docs/superpowers/plans/2026-10-06-event-reschedule.md`).
 > Specs que rigen la implementación: `docs/backend/architecture.md` y `docs/frontend/architecture.md`.
 
 ---
@@ -34,22 +34,29 @@ La fecha del evento alimenta varias piezas, todas afectadas por un cambio:
 
 ### Dentro de alcance
 
-- **Catálogo de motivos de reprogramación**: CRUD nuevo con página propia y resource propio.
+- **Catálogo de motivos de reprogramación**: CRUD nuevo con página propia (ítem de navegación, solo
+  superadmin) y resource propio.
 - **Acción nueva `RESCHEDULE`** sobre `RESOURCES.EVENT`.
+- **Pantalla dedicada de reprogramación** (`/admin/events/[id]/reschedule`), con los mismos inputs de
+  fecha y hora que el builder de cotizaciones.
 - **Previsualización de conflictos** antes de guardar: staff asignado que choca en la nueva fecha y
   otros eventos en la misma fecha y hora.
 - **Mutación de reprogramación**: fecha, hora, motivo obligatorio y nota (obligatoria si el motivo
   lo exige).
 - **Sincronización** de la nueva fecha y hora en `events` **y** `quotes`.
-- **Histórico de reprogramaciones** en tabla propia, visible solo para superadmin.
-- **Notificación** a admins (in-app) y al staff afectado (ver §6, pregunta abierta 1).
+- **Histórico de reprogramaciones** en tabla propia, visible para todo rol con acceso al evento
+  (permiso `VIEW_RESCHEDULES`).
+- **Acción "Reprogramar" en el listado de eventos**, además del botón del detalle.
+- **Notificación in-app** a admins.
 
-### Fuera de alcance (por ahora)
+### Fuera de alcance
 
 - Cambiar dirección, ciudad o estado del evento.
 - Desasignar staff automáticamente cuando choca.
 - Tag o indicador "Reprogramado" en el evento: el historial alcanza.
 - Reprogramar eventos realizados o cancelados.
+- Avisar al staff: el staff no es usuario del sistema (tabla `staff` sin login).
+- Límite de reprogramaciones por evento: no hay tope.
 
 ---
 
@@ -75,37 +82,58 @@ export const rescheduleReasons = pgTable('reschedule_reasons', {
 - **Soft-delete** (`isActive`): las reprogramaciones históricas referencian el motivo, así que no se
   borra. Los inactivos no aparecen en el select del formulario, pero sí se muestran en el historial.
 
-Seed inicial sugerido: Solicitud del cliente, Clima, Disponibilidad del local, Disponibilidad de
-staff, Otro (`requiresNote`).
+Seed inicial: Solicitado por el cliente, Clima, Otro (`requiresNote`).
 
 ### 3.2 Permisos (`@repo/guards`)
 
-- `RESOURCES.RESCHEDULE_REASON = 'reschedule_reason'`, con `CRUD` en `permissions.matrix.ts`.
+- `RESOURCES.RESCHEDULE_REASON = 'reschedule_reason'`, con `[VIEW, ...CRUD]` en
+  `permissions.matrix.ts`.
 - `rolesPermissionsMatrix`:
 
 | Rol | Grant |
 |---|---|
-| superadmin | `CRUD` |
-| admin | `CRUD` |
+| superadmin | `VIEW` + `CRUD` |
+| admin | `READ` |
 | operator | — |
 | member | — |
+
+Las dos acciones de lectura se separan:
+
+- **`VIEW`** gatea la página del catálogo (ítem de navegación + route-access). Solo superadmin.
+- **`READ`** gatea el endpoint `list`. El admin lo necesita para poblar el `Select` de motivos en la
+  pantalla de reprogramación, pero no ve la página ni la entrada en la navegación.
+
+Difiere de `event_types`, cuyo ítem de navegación se gatea con `READ`: acá `READ` sola no alcanza
+para ver la página.
 
 ### 3.3 API
 
 Módulo `apps/api/src/modules/rescheduleReasons/` (`resource → repository → service → router`), espejo
 de `eventTypes`:
 
-- `list` (`READ`) — paginado (`Paginated`), con filtro `isActive`.
-- `create` (`CREATE`), `update` (`UPDATE`), `toggleActive` (`UPDATE`).
+- `list` (`READ`) — paginado (`Paginated`), con filtro `isActive`. Lo usan la página del catálogo
+  (superadmin) y el `Select` de la pantalla de reprogramación (superadmin y admin).
+- `create` (`CREATE`), `update` (`UPDATE`), `toggleActive` (`UPDATE`) — solo superadmin.
 - Errores en `ErrorCodes.rescheduleReason` (`NOT_FOUND`, `NAME_TAKEN`).
 - Schemas Zod en `packages/schemas/src/rescheduleReasons.ts`.
 
 ### 3.4 Web
 
-- Feature `apps/web/src/features/reschedule-reasons/`, espejo de `features/event-types/`
-  (`DataTable` en desktop + card en móvil, hooks tRPC, `<Can>`, i18n es/en).
-- Ruta `apps/web/src/app/admin/reschedule-reasons/` y entrada en la navegación, gateada por
-  `RESCHEDULE_REASON:READ`.
+- Feature `apps/web/src/features/reschedule-reasons/` según `docs/frontend/architecture.md` §4:
+  `DataTable` en desktop y **card en móvil** (`mobileRenderType="card"` + `renderCard` con
+  `RescheduleReasonCard`), hooks tRPC, `<Can>`, i18n es/en. No se toma `features/event-types/` como
+  modelo de tabla: es la única feature que muestra la tabla en móvil (`mobileRenderType="list"`).
+- Row actions (`useRescheduleReasonRowActions`, compartidas por columnas y card): copiar id, editar y
+  activar / desactivar, con la convención de soft-delete del catálogo: `TbTrashFilled` (desactivar,
+  `danger`) y `TbRestore` (reactivar), `size={16}`. Desactivar pide confirmación
+  (`confirm` de la row action):
+  - Título: *¿Desactivar «{nombre}»?*
+  - Contenido: *Dejará de aparecer al reprogramar eventos.*
+  - Caption: *Las reprogramaciones que ya lo usan lo seguirán mostrando.*
+- Ruta `apps/web/src/app/admin/reschedule-reasons/` e ítem de navegación propio
+  (`RESCHEDULE_REASONS_ITEM` en `lib/navigation/constants/items.ts`, en el grupo de catálogo junto a
+  `EVENT_TYPES`), gateado por `RESCHEDULE_REASON:VIEW`. El mismo guard protege la ruta
+  (route-access).
 
 ---
 
@@ -162,14 +190,17 @@ Agregar esta excepción como decisión nueva en `docs/mach-bar-domain.md`.
 
 - `ACTIONS.RESCHEDULE = 'reschedule'`, agregada a `RESOURCES.EVENT` en `permissions.matrix.ts`.
 - `EVENT_FULL` pasa a incluir `RESCHEDULE` → superadmin y admin.
-- Operator **no** la recibe (ver §6, pregunta abierta 2).
-- El histórico de reprogramaciones se devuelve solo a superadmin, igual que `history` en
-  `events.router.ts::getById`.
+- Operator **no** la recibe, ni siquiera con scope `own`.
+- `ACTIONS.VIEW_RESCHEDULES = 'view_reschedules'`, también en `RESOURCES.EVENT`: gatea el histórico
+  de reprogramaciones, separado de `RESCHEDULE` (puede verlo quien no reprograma). Lo reciben
+  superadmin y admin (vía `EVENT_FULL`) y operator (con su scope `own`, así que solo para sus eventos).
+- El log de actividad general (`history`) **no cambia**: sigue siendo solo superadmin.
 
 ### 4.4 Reglas de negocio
 
-1. Solo eventos **próximos**: rechazar si `completedAt` no es null o si la quote está cancelada /
-   archivada (`ErrorCodes.event.NOT_RESCHEDULABLE`).
+1. Solo eventos **próximos**: rechazar si `completedAt` no es null o si la quote está cancelada
+   (`ErrorCodes.event.NOT_RESCHEDULABLE`). Una quote archivada responde `EVENT_NOT_FOUND`, como el
+   resto de mutaciones de eventos (`isAccessible`).
 2. Se permite reprogramar un evento cuya fecha ya pasó pero que no se marcó como realizado.
 3. La nueva fecha no puede ser pasada (`ErrorCodes.event.DATE_IN_PAST`).
 4. La nueva fecha / hora debe ser distinta de la actual (`ErrorCodes.event.SAME_SCHEDULE`). Se puede
@@ -180,6 +211,7 @@ Agregar esta excepción como decisión nueva en `docs/mach-bar-domain.md`.
 7. Los conflictos **no bloquean**: el server los recalcula al guardar y los persiste en
    `staffConflicts`.
 8. Scope `own`: aplica `ownerScope(ctx)` como el resto de mutaciones de eventos.
+9. Sin límite de reprogramaciones por evento.
 
 ### 4.5 Conflictos de staff
 
@@ -209,10 +241,11 @@ reschedule: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.RESCHEDULE] })
   .mutation(...)
 ```
 
-- `checkReschedule` combina `findStaffConflicts` + `quotesRepo.findByDateTime(date, time, quoteId)`.
-  `findByDateTime` exige la hora (filtra por `eventTime`), y la hora es opcional: sin hora,
-  `eventConflicts` se calcula por fecha (`quotesRepo.findByDate(date, quoteId)`, nuevo), así el
-  aviso de doble reserva no queda vacío solo porque falte la hora.
+- `checkReschedule` combina `findStaffConflicts` + el chequeo de doble reserva que ya usa el builder
+  (`quotes.service.ts::checkAvailability` → `quotesRepo.findByDateTime(date, time, quoteId)`), sin
+  duplicar esa lógica. `findByDateTime` exige la hora (filtra por `eventTime`), y la hora es
+  opcional: sin hora, `eventConflicts` se calcula por fecha (`quotesRepo.findByDate(date, quoteId)`,
+  nuevo), así el aviso de doble reserva no queda vacío solo porque falte la hora.
 - `reschedule`, en una transacción (`EventsRepository.reschedule`):
   1. `UPDATE events SET event_date, event_time`.
   2. `UPDATE quotes SET event_date, event_time` (por `events.quoteId`).
@@ -223,7 +256,8 @@ reschedule: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.RESCHEDULE] })
      recordatorio ya salió con la fecha vieja, nunca crearía uno nuevo, y el feed seguiría
      mostrando el plazo viejo. Al borrarlo, el próximo cron lo recrea con la fecha nueva.
 - Notificación: después de la transacción (ver §4.7).
-- `getById` suma `reschedules` (con `reasonName` y `rescheduledByName`), `null` si no es superadmin.
+- `getById` suma `reschedules` (con `reasonName` y `rescheduledByName`), `null` sin
+  `EVENT:VIEW_RESCHEDULES`.
 
 Schemas Zod en `packages/schemas/src/events.ts`.
 
@@ -241,29 +275,65 @@ Schemas Zod en `packages/schemas/src/events.ts`.
   } & NotificationVisualData;   // source: 'user'
   ```
   Requiere su render en `features/notifications` y las claves i18n.
-- **Staff afectado**: pendiente de definición (ver §6, pregunta abierta 1).
+- **Staff**: no se notifica (no es usuario del sistema).
 
 ### 4.8 Web
 
 En `features/events/`:
 
-- **Botón "Reprogramar"** (`CalendarClock`, lucide) en la card del encabezado de `EventHeader.tsx`,
-  junto a "Marcar realizado". Visible si `isUpcoming` y gateado con `<Can>` `EVENT:RESCHEDULE`.
-- **`RescheduleEventSheet`**: bottom sheet en móvil y modal en desktop. Campos:
-  - Fecha (`DatePicker`, deshabilita días pasados) y hora (`TimePicker`), precargadas con los valores
-    actuales.
-  - Motivo (`Select` con motivos activos).
-  - Nota (`TextArea`), obligatoria si el motivo seleccionado tiene `requiresNote`.
-- **Previsualización**: al cambiar fecha / hora se llama a `checkReschedule` (debounce). Si hay
-  conflictos se muestra un `WrapperAlert` **no bloqueante** con la lista de staff que choca (y el
-  evento con el que choca), y aparte los eventos en la misma fecha y hora.
+- **Puntos de entrada**, ambos visibles solo en eventos próximos y gateados por `EVENT:RESCHEDULE`;
+  icono `TbCalendarRepeat` (Tabler vía `react-icons/tb`):
+  - Botón "Reprogramar" en la card del encabezado de `EventHeader.tsx`, junto a "Marcar realizado".
+  - Row action "Reprogramar" en el listado (`useEventRowActions`, tabla y card móvil). Navega con
+    `?returnTo=<ruta actual>` para volver al listado y no al detalle.
+- **Pantalla `RescheduleEventPage`** en `apps/web/src/app/admin/events/[id]/reschedule/page.tsx`:
+  - Ruta gateada por `EVENT:RESCHEDULE`: `route-access.ts` tiene `ROUTE_PATTERNS` para rutas con
+    segmento dinámico (sin él heredaría `EVENT:READ` de `/admin/events`), y la página muestra
+    `AccessDenied` si falta el permiso. Si el evento no es reprogramable (realizado o cancelado),
+    redirige al detalle.
+  - Vuelta (guardar, cancelar, flecha atrás): a `returnTo` si es una ruta `/admin` o `/admin/…`
+    (cualquier otro valor se ignora para no abrir un redirect a otro sitio); si no, al detalle.
+  - Layout mobile-first en una columna: card de resumen (cliente, número de cotización, fecha / hora
+    actuales) y card del formulario.
+  - **Botones Cancelar / Guardar**: en móvil, barra fija abajo como el quote builder
+    (`fixed inset-x-0 bottom-0 z-10 border-t bg-white p-3`, página con `pb-24`); en desktop, al pie
+    del formulario. **Guardar queda deshabilitado mientras fecha y hora sean las actuales**
+    (`isSameSchedule` en `features/events/helpers.ts`, espejo de `SAME_SCHEDULE`); en ese estado
+    tampoco se consulta `checkReschedule`.
+- **Campos del formulario**:
+  - Fecha y hora con **los mismos inputs del builder de cotizaciones**: `WrapperDatePicker` y
+    `WrapperTimePicker` con `sheetTitle`, `minuteStep={15}`, `disabledPastDate` / `disabledPastTime`
+    (helper compartido en `src/lib/date`, también usado por `EventSection`), y feedback
+    `hasFeedback` / `validateStatus` (validando → warning si hay conflictos → check si no).
+    Precargados con los valores actuales. Si la hora guardada es texto libre que no parsea como
+    `HH:mm`, el picker queda vacío y se muestra un aviso: guardar sin elegir hora la borra.
+  - Motivo (`Select` con motivos activos en orden de catálogo, vía `rescheduleReasons.list` con
+    `READ`, solo si hay permiso). **Preseleccionado el primero** (`sortOrder`; con el seed,
+    "Solicitado por el cliente").
+  - Nota (`TextArea`, máx. 500), obligatoria si el motivo tiene `requiresNote`.
+- **Previsualización de conflictos**: al cambiar fecha / hora se llama a `checkReschedule` con
+  debounce de 400 ms. Los avisos van **dentro del formulario, debajo de fecha y hora**, y solo si hay
+  conflictos (sin conflictos alcanza con el check de los campos):
+  - Staff — título *Personal no disponible*, texto *El siguiente personal ya tiene otro evento
+    asignado en este horario:* y una fila por choque: **Kevin Zhang**: 12:00 pm (000014 ↗). Los
+    6 dígitos finales del número de cotización son un link (pestaña nueva, `TbExternalLink`) al
+    detalle del otro evento en la pestaña Staff (`/admin/events/<id>?tab=staff`; el detalle acepta
+    `?tab=` y lo ignora si la pestaña no existe o no está permitida).
+  - Otros eventos en la misma fecha (y hora, si se eligió).
 - **Confirmación al guardar**, solo si hay conflictos de staff (`useConfirmModal` en móvil,
-  `modal.confirm` en desktop):
-  > *La fecha presenta conflictos con miembros del staff. ¿Estás seguro de guardar en esta fecha?*
-- **Historial**: sección "Reprogramaciones" en `EventHistoryCard` (solo superadmin), con fecha
-  anterior → nueva, motivo, nota, quién y cuándo.
-- Hooks: `useRescheduleEvent`, `useCheckReschedule` en `features/events/hooks/`. Invalidar
-  `events.getById`, `events.list`, `events.calendar` y `quotes.getById` al guardar.
+  `modal.confirm` en desktop). La decisión se toma con un `checkReschedule` fresco para los valores
+  que se guardan (`useFetchRescheduleCheck`), no con la previsualización, que puede estar
+  desfasada por el debounce:
+  - Título: *¿Guardar cambios con conflicto de horario?*
+  - Contenido: *Algunos miembros del equipo ya tienen otros eventos asignados en ese día. Si
+    continúas, se reprogramará el evento pero se mantendrán las asignaciones cruzadas.*
+  - Botón: *Guardar igual*.
+- **Historial**: card propia `EventReschedulesCard` en el detalle (fecha anterior → nueva, motivo,
+  nota, staff en conflicto, quién y cuándo), visible con `EVENT:VIEW_RESCHEDULES` e independiente
+  de `EventHistoryCard` (log general, solo superadmin, que suma la línea "reprogramó el evento al…").
+- Hooks en `features/events/hooks/useReschedule.ts`: `useCheckReschedule`, `useFetchRescheduleCheck`,
+  `useRescheduleEvent`. Al guardar invalida `events.*`, `quotes.*` (lista, detalle, doble reserva) y
+  `staff.getAvailability`.
 - i18n es/en en `locales/*/events.json`. Fechas con `useDateFormatter`.
 
 ---
@@ -279,34 +349,38 @@ En `features/events/`:
 | R5 | Acción `RESCHEDULE` separada de `UPDATE` | Permite dar o quitar la capacidad de reprogramar sin tocar el resto de permisos del evento. |
 | R6 | Conflictos de staff no bloquean, pero exigen confirmación y quedan registrados | El choque puede ser intencional (staff que cubre dos eventos el mismo día). |
 | R7 | Disponibilidad de staff por día, con un solo criterio de "ocupado" | Los eventos no tienen hora de fin; `findAvailable` y los conflictos comparten la condición para no contradecirse. |
-| R8 | Historial visible solo para superadmin | Consistente con `event_history`. |
+| R8 | Historial de reprogramaciones visible para todo rol con acceso al evento, con permiso propio `VIEW_RESCHEDULES` | Ver no implica poder reprogramar; el log general sigue solo para superadmin. |
+| R9 | Catálogo de motivos: `VIEW` gatea la página, `READ` el listado | El admin elige motivos al reprogramar sin poder ver ni administrar el catálogo. |
+| R10 | Reprogramación en pantalla propia, no en sheet / modal | Formulario + previsualización de conflictos necesitan espacio, sobre todo en móvil. |
+| R11 | Mismos pickers y reglas de fecha / hora que el builder | Una sola experiencia y una sola regla de "fecha / hora válida" en toda la app. |
+| R12 | Guardar deshabilitado sin cambio de fecha / hora | Evita una llamada que el server rechazaría (`SAME_SCHEDULE`). |
+| R13 | Motivo por defecto = primero del catálogo, no por nombre | Igual que R4: comparar por nombre se rompe al renombrar. |
 
 ---
 
-## 6. Preguntas abiertas / pendientes
+## 6. Decisiones cerradas
 
-1. **Notificación al staff afectado.** El staff **no es usuario del sistema** (tabla `staff`: nombre,
-   teléfono, email, sin login), así que no puede recibir notificaciones in-app, y la API no tiene
-   infraestructura de email ni SMS. Opciones:
-   - **a)** Fuera de esta fase: al guardar, mostrar el staff asignado con su teléfono / email para que
-     el admin les avise manualmente. *(Recomendada para v1.)*
-   - **b)** Agregar envío de email (proveedor nuevo, plantillas, manejo de errores). Es una feature en
-     sí misma; mejor en su propio SDD.
-   - También definir **a quién** se avisa: ¿a todo el staff asignado al evento, o solo a los que
-     chocan?
-2. **¿Operator puede reprogramar** sus propios eventos (scope `own`)? Propuesta: no.
-3. **¿Límite de reprogramaciones** por evento? Propuesta: sin límite.
+1. **Staff**: no se le avisa. No es usuario del sistema.
+2. **Operator**: no puede reprogramar, ni sus propios eventos; sí ve el historial de
+   reprogramaciones de sus eventos.
+3. **Límite de reprogramaciones**: sin límite.
+4. **CRUD de motivos**: solo superadmin. El admin solo lee el listado desde la pantalla de
+   reprogramación (ver §3.2).
+5. **Catálogo de motivos**: ítem de navegación propio.
 
 ---
 
 ## 7. Plan de verificación
 
-**Type-check**: `pnpm check-types`.
+**Automático**: `pnpm test` (Vitest: reglas de `EventsService.reschedule` / `checkReschedule`,
+`RescheduleReasonsService`, permisos, pickers, `route-access`, `isSameSchedule`) y
+`pnpm check-types`.
 
 **Manual (móvil primero, después desktop):**
 
-1. Catálogo: crear, editar, desactivar y reactivar motivos; nombre duplicado rechazado; operator no
-   ve la página.
+1. Catálogo (superadmin): crear, editar, desactivar (con confirmación) y reactivar motivos; nombre
+   duplicado rechazado; en móvil se ve como cards. Admin y operator no ven el ítem de navegación y la ruta los rechaza; el admin sí ve
+   los motivos activos en el `Select` de la pantalla de reprogramación.
 2. Reprogramar un evento próximo sin staff → fecha nueva en el detalle, el calendario, la lista y la
    cotización; el PDF aparece como desactualizado.
 3. Cambiar solo la hora.
@@ -316,41 +390,99 @@ En `features/events/`:
 6. Fecha pasada → rechazada. Evento realizado o cancelado → botón oculto y API rechaza.
 7. Evento con la fecha vencida y no realizado → se puede reprogramar; la alerta "pasó la fecha"
    desaparece.
-8. Superadmin ve el historial de reprogramaciones; admin no.
+8. Superadmin, admin y operator (en sus eventos) ven la card "Reprogramaciones"; el historial
+   general sigue solo para superadmin.
 9. Admins (excepto quien reprogramó) reciben la notificación `event_rescheduled`.
 10. Evento con selecciones pendientes y recordatorio ya enviado → tras reprogramar, el recordatorio
     viejo desaparece del feed y el cron crea uno nuevo con el plazo de la fecha nueva.
 11. Reprogramar sin hora a una fecha con otra reserva → aparece el aviso de doble reserva.
 12. Staff con un evento cancelado (no archivado) en la fecha nueva → no figura como conflicto y sí
     como disponible en la asignación.
+13. Pickers: días pasados deshabilitados; con la fecha de hoy, horas pasadas deshabilitadas; pasos
+    de 15 min; en móvil abren como sheet, igual que en el builder. El builder sigue igual tras
+    extraer `disabledDate` / `disabledTime`.
+14. Entrar por URL a `/admin/events/[id]/reschedule` de un evento realizado o cancelado → redirige
+    al detalle; como operator → sin acceso.
+15. Sin cambiar fecha ni hora → Guardar deshabilitado y sin checks de conflicto.
+16. Desde el listado de eventos → acción "Reprogramar" → guardar o cancelar vuelve al listado.
+17. Link del número de cotización en la alerta de staff → abre el otro evento en la pestaña Staff,
+    en otra pestaña del navegador.
+18. Tras reprogramar, la lista de cotizaciones y la disponibilidad de staff muestran la fecha nueva
+    sin recargar.
 
 ---
 
 ## 8. Archivos afectados (referencia)
 
 **Packages**
-- `packages/guards/src/constants/actions.ts` — `RESCHEDULE`.
+- `packages/guards/src/constants/actions.ts` — `RESCHEDULE`, `VIEW_RESCHEDULES`.
 - `packages/guards/src/constants/resources.ts` — `RESCHEDULE_REASON`.
 - `packages/guards/src/mappings/permissions.matrix.ts`, `rolesPermissions.matrix.ts`.
 - `packages/schemas/src/rescheduleReasons.ts` (nuevo), `packages/schemas/src/events.ts`,
   `packages/schemas/src/index.ts`.
 
 **API**
-- `apps/api/src/db/schema/rescheduleReasons.ts` (nuevo), `events.ts`, `index.ts` + migración.
+- `apps/api/src/db/schema/rescheduleReasons.ts` (nuevo), `events.ts`, `index.ts` (`db:push`).
 - `apps/api/src/db/seeds/` — seed de motivos.
 - `apps/api/src/modules/rescheduleReasons/` (nuevo).
-- `apps/api/src/modules/events/events.{router,service,repository,resource}.ts`.
+- `apps/api/src/modules/events/events.{router,service,repository,resource,controller}.ts`.
+- `apps/api/src/modules/staff/staff.availability.ts` (nuevo, `staffBusyOnDate`), `staff.repository.ts`.
+- `apps/api/src/modules/quotes/quotes.repository.ts` — `findByDate`.
 - `apps/api/src/modules/notifications/notifications.resource.ts`.
 - `apps/api/src/core/trpc/router.ts` — registrar `rescheduleReasons`.
 - Error codes (`ErrorCodes.event`, `ErrorCodes.rescheduleReason`).
 
 **Web**
 - `apps/web/src/features/reschedule-reasons/` (nuevo) + `app/admin/reschedule-reasons/`.
-- `apps/web/src/features/events/components/detail/EventHeader.tsx`, `EventHistoryCard.tsx`,
-  `RescheduleEventSheet.tsx` (nuevo), `hooks/`.
+- `apps/web/src/features/events/components/detail/` — `EventHeader.tsx`, `EventHistoryCard.tsx`,
+  `EventReschedulesCard.tsx` (nuevo), `EventDetailPage.tsx` (`?tab=`).
+- `apps/web/src/features/events/components/reschedule/` (nuevo) — `RescheduleEventPage.tsx`,
+  `RescheduleConflicts.tsx`.
+- `apps/web/src/features/events/hooks/useReschedule.ts` (nuevo), `useEventRowActions.tsx`,
+  `helpers.ts` (`isSameSchedule`).
+- `apps/web/src/app/admin/events/[id]/reschedule/page.tsx` (nuevo), `[id]/page.tsx` (`?tab=`).
+- `apps/web/src/lib/auth/route-access.ts` — `ROUTE_PATTERNS`.
+- `apps/web/src/lib/hooks/useDebouncedValue.ts` (nuevo).
+- `apps/web/src/features/quotes/components/builder/EventSection.tsx` — usar el helper extraído.
+- `apps/web/src/lib/date/` — helper compartido `disabledPastDate` / `disabledPastTime`.
 - `apps/web/src/features/notifications/` — render de `event_rescheduled`.
-- Navegación del admin.
+- `apps/web/src/lib/navigation/constants/items.ts`, `config.ts`, `icons.tsx` — ítem
+  `RESCHEDULE_REASONS` (`TbCalendarTime`).
 - `apps/web/src/locales/{es,en}/` — `events.json`, `notifications`, catálogo de motivos.
 
+**Tests (Vitest, nuevo)**
+- `apps/api/vitest.config.ts`, `apps/api/src/test/setup.ts`, `apps/web/vitest.config.ts`, script
+  `test` en ambas apps y en la raíz (`turbo run test`).
+- `*.test.ts` junto al código: `events.service.reschedule`, `events.permissions`,
+  `rescheduleReasons.service`, `lib/utils/date`, `lib/date/pickers`, `lib/auth/route-access`,
+  `features/events/helpers`.
+
 **Docs**
-- `docs/mach-bar-domain.md` — excepción a D13.
+- `docs/mach-bar-domain.md` — D19, excepción a D13.
+
+---
+
+## 9. Pendientes
+
+### 9.1 Hora pasada en el día de hoy
+
+**Estado:** abierto, requiere análisis antes de implementar. Origen: comentario de review en el PR #14
+(`events.service.ts`, regla `DATE_IN_PAST`).
+
+**Problema:** `DATE_IN_PAST` compara solo el día. Si se llama a la API directamente, se puede
+reprogramar a hoy con una hora que ya pasó (ej. hoy `08:00` cuando son las `15:00`). El picker del
+front lo impide, pero la API no.
+
+**Por qué no alcanza comparar contra el reloj de `America/New_York`:**
+- `eventTime` es texto sin zona horaria: es la hora local del evento, que puede estar en otro estado
+  de EE.UU. (otra zona horaria). Comparar contra la hora de Nueva York puede desfasar hasta 3 horas.
+- El "hoy" del server ya usa `todayInBusinessTimezone()` (Nueva York fijo), con la misma limitación
+  para el día.
+- El picker usa la hora del navegador del usuario, que tampoco es necesariamente la del evento.
+
+**A analizar:**
+- De dónde sale la zona horaria del evento (derivarla del `state`, guardarla en el evento o en la
+  cotización, o una zona única del negocio).
+- Si la regla aplica igual en el builder de cotizaciones (`checkAvailability` / pickers), para que
+  "fecha / hora válida" siga siendo una sola regla (R11).
+- Cómo se alinean server y picker sobre el "ahora" de referencia.

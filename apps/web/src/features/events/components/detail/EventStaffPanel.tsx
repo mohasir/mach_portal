@@ -37,7 +37,7 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
     modal.confirm({ ...options, okButtonProps: { danger: true } });
   };
 
-  const canAssign = canManageStaff && event.status !== 'completed';
+  const canEditStaff = canManageStaff && event.status === 'upcoming';
 
   return (
     <>
@@ -45,7 +45,7 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
         <Typography.Title className="font-heading text-lg text-brown m-0!">
           {t('detail.staff.title')}
         </Typography.Title>
-        {canAssign && (
+        {canEditStaff && (
           <Button
             type="primary"
             size="small"
@@ -73,7 +73,7 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
                   ) : undefined
                 }
               />
-              {canManageStaff && (
+              {canEditStaff && (
                 <Button
                   type="text"
                   danger

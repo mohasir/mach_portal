@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { DataTableRowActions } from '@/components/shared/DataTable';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
-import { EVENT_STATUS_COLORS } from '../helpers';
+import { EVENT_STATUS_COLORS, getEventDisplayStatus } from '../helpers';
 import { useEventRowActions } from '../hooks/useEventRowActions';
 import type { Event } from '../types';
 
@@ -40,9 +40,10 @@ export function useEventsColumns({
       title: t('columns.status'),
       dataIndex: 'status',
       key: 'status',
-      render: (status: Event['status']) => (
-        <Tag color={EVENT_STATUS_COLORS[status]}>{t(`status.${status}`)}</Tag>
-      ),
+      render: (_: Event['status'], row: Event) => {
+        const status = getEventDisplayStatus(row);
+        return <Tag color={EVENT_STATUS_COLORS[status]}>{t(`status.${status}`)}</Tag>;
+      },
     },
     {
       title: t('columns.total'),

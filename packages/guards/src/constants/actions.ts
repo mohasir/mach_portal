@@ -16,6 +16,8 @@ export const ACTIONS = {
   VIEW_SUMMARY: 'view_summary',
   VIEW_QUOTES_CHART: 'view_quotes_chart',
   VIEW_TOP_PRODUCTS: 'view_top_products',
+  RESCHEDULE: 'reschedule',
+  VIEW_RESCHEDULES: 'view_reschedules',
 } as const;
 
 export type ActionType = (typeof ACTIONS)[keyof typeof ACTIONS];
