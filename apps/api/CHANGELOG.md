@@ -5,6 +5,44 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.14.0] - 2026-10-04
+
+### Added
+
+- Preferencias por usuario: tabla `user_preferences` (una fila jsonb por usuario) y módulo
+  `userPreferences` (`get` / `update`, solo sesión), con defaults por clave para no migrar al sumar
+  preferencias nuevas. El merge de preferencias es atómico.
+- Cotizaciones: filtros compartidos por lista y pipeline (`quotesFiltersSchema`), opción de ocultar
+  vencidas (`app_settings.hide_stale_quotes`, recurso `PIPELINE_PREFERENCES`) e inclusión de
+  archivadas con la acción nueva `QUOTE/VIEW_ARCHIVED` (superadmin). El filtrado de vencidas se hace
+  en el server, con el corte en el día hábil del negocio.
+- Pagos: la lista acepta `clientIds`, `eventTypeIds` y `methods` como arrays.
+- Aviso de cambio de tasas: columna `quotes.declined_rates` (jsonb) y endpoints
+  `quotes.rateDrift` / `quotes.resolveRateDrift` (`QUOTE.UPDATE` + `ownerScope`). Al aceptar se
+  recalculan los montos y se regenera el PDF si existe; al rechazar se guarda lo rechazado y no se
+  vuelve a preguntar hasta otro cambio de config. Se habilita con `app_settings.prompt_rate_changes`
+  (default `false`).
+
+### Changed
+
+- Resolución de tasas unificada en `resolveQuoteRates` (`@repo/schemas`), compartida con el builder:
+  la cotización usa siempre sus tasas guardadas y solo un cambio de estado toma la tasa de la config.
+  `update` solo lee la config en ese caso.
+- Búsqueda de cotizaciones con comodines literales (`%`, `_`) y pipeline sin límite de columnas.
+
+### Fixed
+
+- Al editar una cotización enviada se perdían el recargo por tarjeta y el depósito elegidos; al
+  quitar el estado se conserva el impuesto enviado y, si no se manda depósito, el guardado.
+- Guardar los valores por defecto de cotizaciones fallaba con `CONFIG_SEQUENCE_BELOW_LAST` una vez
+  superado el inicio de secuencia.
+- Las cotizaciones archivadas son de solo lectura.
+
+### Deploy
+
+- Requiere `pnpm --filter api db:push` **antes** del deploy: tabla `user_preferences` y columnas
+  `quotes.declined_rates`, `app_settings.hide_stale_quotes` y `app_settings.prompt_rate_changes`.
+
 ## [0.13.0] - 2026-09-05
 
 ### Added

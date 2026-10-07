@@ -5,6 +5,65 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.15.0] - 2026-10-04
+
+### Added
+
+- Preferencias por usuario de idioma y formato de hora (12h / 24h) en Configuración. El idioma se
+  cambia solo desde ahí (sale el selector del topbar) y el formato de hora se aplica en toda la app
+  vía `useDateFormatter`.
+- Pickers de fecha y hora en bottom sheet en móvil (`WrapperDatePicker`, `WrapperTimePicker`):
+  calendario con stepper de mes y rueda de horas / minutos en pasos de 15 min (AM/PM solo en 12h),
+  con las horas pasadas deshabilitadas para hoy. En desktop siguen los popovers de AntD.
+- Cotizaciones: barra compartida de búsqueda y filtros para tabla y pipeline (`SearchInput`, botón
+  Filtros con contador, chips de estado, asignado —incluye "Yo"—, tipo de evento y borradores,
+  `ViewModeToggle`, cantidad de resultados y limpiar).
+- Cotizaciones: opciones de vista por usuario para ocultar las vencidas (si el superadmin habilita
+  la opción) e incluir las archivadas, que se ven en solo lectura, con tag en la tabla y columna
+  propia en el pipeline. Chips "Vencidas" y "Archivadas".
+- Cards del pipeline con botón "Editar" (cotizaciones pendientes / enviadas) y los tags de borrador,
+  vencida y fecha pasada arriba del número.
+- Pagos: filtros con chips (fecha de pago, cliente con buscador, tipo de evento y método, multi
+  selección) y nuevo `FilterChipDateRange` con presets (Hoy, Últimos 7 días, Este mes, Mes pasado) y
+  rango personalizado. Sale el bottom sheet de filtros anterior.
+- Aviso de cambio de tasas: si el impuesto por estado o el recargo por tarjeta de la configuración
+  cambiaron desde que se guardó una cotización pendiente, el builder pregunta si actualizarlas
+  ("Dejar en 10%" / "Aplicar 12%"). También se pregunta al pasarla de Pendiente a Enviada. Se
+  activa desde Configuración → Funcionalidades → "Sugerir actualización de tasas" (solo
+  superadmin, apagado por defecto).
+- Componentes compartidos: `FilterToolbar` (cotizaciones y pagos) y `WrapperTooltip` (tooltip global
+  con `caption` opcional, que se abre con tap en móvil).
+
+### Changed
+
+- Encabezado del detalle de evento rediseñado: card propia con sus alertas agrupadas y la hora con
+  el formato del usuario.
+- Las cotizaciones guardadas conservan sus tasas: ya no toman solas las de la configuración al
+  editarlas. Solo un cambio de estado de la cotización toma la tasa de impuesto vigente.
+- El recargo por tarjeta pasa de "Valores por defecto de cotizaciones" a la card de Impuestos.
+- La sección "Preferencias" de Configuración pasa a llamarse "Funcionalidades".
+- "Configuración de vista" muestra las descripciones en un tooltip de info en vez de captions.
+- El botón de guardar del builder es siempre "Guardar cambios" (sólido).
+- Los PDFs de cotización usan una URL con cache-busting, así siempre se descarga el último generado.
+- Los dividers tienen un gris neutro visible en toda la app.
+
+### Fixed
+
+- Al editar una cotización enviada se perdían el recargo por tarjeta y el depósito elegidos.
+- La sugerencia del cargo por larga distancia respeta `applyTaxByState`.
+- No se podían guardar los valores por defecto de cotizaciones una vez numeradas cotizaciones más
+  allá del inicio de secuencia (`CONFIG_SEQUENCE_BELOW_LAST`): el form muestra el próximo número
+  real.
+- Los forms de Configuración solo se remontan cuando cambian sus propios valores.
+- Pickers: respetan los forms de solo lectura, el paginado de meses ya no elige una fecha y las
+  columnas de la rueda no se pisan entre sí.
+- Pipeline: columnas sin límite de altura, búsqueda con comodines literales y ajustes del toolbar.
+- Filtros de pagos: los presets de fecha se conservan por nombre, una fecha de fin sola se pinta y
+  los pagos del mismo día se aceptan sin importar la zona horaria.
+- Los chips de filtros ocultos se conservan y el corte de "vencidas" usa el día hábil del negocio.
+- `ConfirmModal` usa `mask.closable` (API de AntD v6).
+- El build de pre-push corre en su propia carpeta y ya no rompe un dev server en marcha.
+
 ## [0.14.0] - 2026-09-05
 
 ### Added
