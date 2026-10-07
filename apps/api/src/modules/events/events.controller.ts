@@ -3,7 +3,9 @@ import { z } from 'zod';
 import { db } from '../../db';
 import { ErrorCodes } from '../../lib/errors';
 import { ConfigRepository } from '../config/config.repository';
+import { NotificationsRepository } from '../notifications/notifications.repository';
 import { QuotesRepository } from '../quotes/quotes.repository';
+import { RescheduleReasonsRepository } from '../rescheduleReasons/rescheduleReasons.repository';
 import { EventsRepository } from './events.repository';
 import { EventsService } from './events.service';
 
@@ -11,6 +13,8 @@ const service = new EventsService(
   new EventsRepository(db),
   new QuotesRepository(db),
   new ConfigRepository(db),
+  new RescheduleReasonsRepository(db),
+  new NotificationsRepository(db),
 );
 
 export async function uploadPaymentAttachment(req: Request, res: Response) {

@@ -50,6 +50,8 @@ const {
   VIEW_SUMMARY,
   VIEW_QUOTES_CHART,
   VIEW_TOP_PRODUCTS,
+  RESCHEDULE,
+  VIEW_RESCHEDULES,
 } = ACTIONS;
 
 const CRUD = [CREATE, READ, UPDATE, DELETE];
@@ -61,7 +63,13 @@ const READ_ONLY = [READ];
 const VIEW_UPDATE = [VIEW, UPDATE];
 
 const PAYMENT_FULL = [CREATE, READ, DELETE, UPLOAD_ATTACHMENT];
-const EVENT_FULL = [...CRUD, MANAGE_SELECTIONS, MANAGE_STAFF_ASSIGNMENTS];
+const EVENT_FULL = [
+  ...CRUD,
+  MANAGE_SELECTIONS,
+  MANAGE_STAFF_ASSIGNMENTS,
+  RESCHEDULE,
+  VIEW_RESCHEDULES,
+];
 const DASHBOARD_FULL = [READ, VIEW_SUMMARY, VIEW_QUOTES_CHART, VIEW_TOP_PRODUCTS];
 // Only admin/superadmin can override a quote line's numPersons/price away from the
 // catalog's price tiers, or reassign a quote to another user — operator (scope 'own')
@@ -85,6 +93,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.PRODUCT]: PRODUCT_FULL,
       [RESOURCES.PRICE_TIERS]: CRUD,
       [RESOURCES.EVENT_TYPE]: CRUD,
+      [RESOURCES.RESCHEDULE_REASON]: [VIEW, ...CRUD],
       [RESOURCES.TAX_RATES]: VIEW_UPDATE,
       [RESOURCES.QUOTE_DEFAULTS]: VIEW_UPDATE,
       [RESOURCES.QUOTE_STAGES]: VIEW_UPDATE,
@@ -111,6 +120,8 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.PRODUCT]: PRODUCT_ADMIN,
       [RESOURCES.PRICE_TIERS]: CRUD,
       [RESOURCES.EVENT_TYPE]: CRUD,
+      // Only to populate the reason picker when rescheduling; the catalog page needs VIEW.
+      [RESOURCES.RESCHEDULE_REASON]: READ_ONLY,
       [RESOURCES.TAX_RATES]: VIEW_UPDATE,
       [RESOURCES.QUOTE_DEFAULTS]: VIEW_UPDATE,
       // [RESOURCES.QUOTE_STAGES]: VIEW_ONLY,
@@ -123,7 +134,10 @@ export const rolesPermissionsMatrix = [
   {
     role: ROLES.OPERATOR,
     permissions: {
-      [RESOURCES.EVENT]: { actions: [READ, MANAGE_STAFF_ASSIGNMENTS], scope: 'own' },
+      [RESOURCES.EVENT]: {
+        actions: [READ, MANAGE_STAFF_ASSIGNMENTS, VIEW_RESCHEDULES],
+        scope: 'own',
+      },
       [RESOURCES.CLIENT]: CRUD,
       [RESOURCES.QUOTE]: { actions: CRUD, scope: 'own' },
       [RESOURCES.PIPELINE]: CRUD,

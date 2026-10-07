@@ -1,13 +1,14 @@
 {
   "name": "web",
-  "version": "0.14.0",
+  "version": "0.16.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@ant-design/cssinjs": "^2",
@@ -51,6 +52,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5.7"
+    "typescript": "^5.7",
+    "vitest": "^4.1.11"
   }
 }

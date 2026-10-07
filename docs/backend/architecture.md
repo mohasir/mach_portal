@@ -264,6 +264,32 @@ export const appRouter = router({ <module>: xRouter /* , ... */ });
 export type AppRouter = typeof appRouter;
 ```
 
+### 3.6 Tests (Vitest)
+
+Las reglas de negocio del service se prueban con **Vitest**, sin base de datos: el service recibe
+sus repositorios por constructor, así que el test lo instancia con objetos falsos que implementan
+solo los métodos que usa (`vi.fn()`, casteados `as unknown as XRepository`).
+
+```ts
+// modules/<module>/<module>.service.test.ts
+const repo = { findByName: vi.fn().mockResolvedValue(undefined), create: vi.fn() };
+const service = new XService(repo as unknown as XRepository);
+
+it('rejects a duplicated name', async () => {
+  repo.findByName.mockResolvedValue({ id: 'other' });
+  await expect(service.create({ name: 'A' })).rejects.toMatchObject({
+    code: 'CONFLICT',
+    cause: { code: 'X_ALREADY_EXISTS' },
+  });
+});
+```
+
+- Archivos `*.test.ts` junto al código. Correr con `pnpm --filter api test` (o `pnpm test` en la raíz).
+- `src/test/setup.ts` mockea `src/env.ts` (valida `process.env` al importarse), así los tests no
+  necesitan `.env`.
+- Para "hoy", fijar el reloj con `vi.useFakeTimers()` + `vi.setSystemTime(...)`.
+- Las queries del repository (SQL) no tienen tests: necesitarían Postgres.
+
 ---
 
 ## 4. tRPC base (`trpc/`)

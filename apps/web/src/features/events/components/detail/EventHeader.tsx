@@ -2,18 +2,20 @@
 import { useRouter } from 'next/navigation';
 import { App, Button, Card, Space, Tag } from 'antd';
 import { CheckCircle, XCircle } from 'lucide-react';
+import { TbCalendarRepeat } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
+import { ACTIONS, RESOURCES } from '@repo/guards';
 import { AddressLines } from '@/components/shared/AddressLines';
 import { useConfirmModal, useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { QuoteNumberHeader } from '@/components/shared/QuoteNumberHeader';
 import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useCancelQuote } from '@/features/quotes';
-import { isPastDate } from '@/lib/date';
+import { Can } from '@/lib/auth/Can';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { copyToClipboard } from '@/lib/utils/clipboard';
-import { EVENT_STATUS_COLORS } from '../../helpers';
+import { EVENT_STATUS_COLORS, getEventDisplayStatus, isEventPastDue } from '../../helpers';
 import { useMarkEventCompleted } from '../../hooks/useEventPayments';
 import type { EventDetail } from '../../types';
 
@@ -33,7 +35,8 @@ export function EventHeader({ event }: EventHeaderProps) {
   const { cancelQuote, isPending: isCancelling } = useCancelQuote();
 
   const isUpcoming = event.status === 'upcoming';
-  const isPastDue = isUpcoming && isPastDate(event.eventDate);
+  const isPastDue = isEventPastDue(event);
+  const displayStatus = getEventDisplayStatus(event);
 
   const onMarkCompleted = () => {
     const options = {
@@ -115,6 +118,14 @@ export function EventHeader({ event }: EventHeaderProps) {
               >
                 {t('detail.markCompleted')}
               </Button>
+              <Can allowed={{ [RESOURCES.EVENT]: [ACTIONS.RESCHEDULE] }}>
+                <Button
+                  icon={<TbCalendarRepeat size={14} />}
+                  onClick={() => router.push(`/admin/events/${event.id}/reschedule`)}
+                >
+                  {t('detail.reschedule')}
+                </Button>
+              </Can>
               <Button
                 danger
                 icon={<XCircle size={14} />}
@@ -138,7 +149,7 @@ export function EventHeader({ event }: EventHeaderProps) {
               {event.eventDate ? date(event.eventDate) : '—'}
               {event.eventTime ? ` · ${time(event.eventTime)}` : ''}
             </span>
-            <Tag color={EVENT_STATUS_COLORS[event.status]}>{t(`status.${event.status}`)}</Tag>
+            <Tag color={EVENT_STATUS_COLORS[displayStatus]}>{t(`status.${displayStatus}`)}</Tag>
           </div>
           <AddressLines
             address={event.address}

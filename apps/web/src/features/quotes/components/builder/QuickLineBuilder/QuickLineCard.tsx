@@ -26,7 +26,7 @@ type QuickLineCardProps = QuickLineCardBaseProps &
       }
     | {
         mode: 'selection';
-        onEditSelection: () => void;
+        onEditSelection?: () => void;
         onShow: () => void;
         line: { selections: { optionGroupId: string; optionIds: string[] }[] };
       }
@@ -166,13 +166,15 @@ export function QuickLineCard(props: QuickLineCardProps) {
                   aria-label={t('builder.lines.show')}
                   className="bg-primary text-ivory"
                 />
-                <IconButton
-                  icon={ListChecks}
-                  size="xs"
-                  onClick={props.onEditSelection}
-                  aria-label={t('builder.lines.editSelections')}
-                  className="bg-primary text-ivory"
-                />
+                {props.onEditSelection && (
+                  <IconButton
+                    icon={ListChecks}
+                    size="xs"
+                    onClick={props.onEditSelection}
+                    aria-label={t('builder.lines.editSelections')}
+                    className="bg-primary text-ivory"
+                  />
+                )}
               </>
             )}
             {mode !== 'selection' && (

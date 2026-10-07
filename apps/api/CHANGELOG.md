@@ -5,6 +5,78 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.15.0] - 2026-10-07
+
+### Added
+
+- Reprogramación de eventos: `events.checkReschedule` (conflictos de staff por día y doble reserva
+  por fecha / hora) y `events.reschedule`. En una transacción actualiza la fecha y hora del evento
+  **y** de su cotización, registra `event_reschedules` y `event_history`, y borra el recordatorio de
+  selecciones viejo para que el cron lo recree. Notifica a admins (`event_rescheduled`).
+- Reglas de reprogramación: solo eventos próximos, fecha no pasada, fecha / hora distinta de la
+  actual (las horas `H:mm` y `HH:mm` se comparan normalizadas), motivo activo y nota cuando el motivo
+  la exige. Los conflictos no bloquean y quedan registrados (una vez por persona).
+- Módulo `rescheduleReasons` (list / create / update / toggleActive) con seed inicial: Solicitado
+  por el cliente, Clima, Otro (requiere nota). Los motivos nuevos se agregan al final del orden.
+- Permisos: `EVENT:RESCHEDULE` (superadmin, admin), `EVENT:VIEW_RESCHEDULES` (superadmin, admin,
+  operator en sus eventos) y recurso `RESCHEDULE_REASON` (superadmin: VIEW + CRUD; admin: READ).
+  `events.getById` devuelve `reschedules` según `VIEW_RESCHEDULES`.
+- Tests con Vitest en api y web (`pnpm test`).
+
+### Changed
+
+- **Breaking:** `EVENT_CLOSED` reemplaza a `EVENT_COMPLETED` y `EVENT_STAFF_EVENT_COMPLETED`. No se
+  pueden cambiar staff ni selecciones de eventos realizados o cancelados.
+- Un solo criterio de "staff ocupado ese día" (cotización no archivada y no cancelada) para la
+  disponibilidad y los conflictos: un evento cancelado ya no bloquea al staff.
+- `selectionsPending` se calcula según si quedan selecciones incompletas, y el recordatorio usa el
+  mismo criterio.
+
+### Deploy
+
+- Requiere `pnpm --filter api db:push` **antes** del deploy (tablas `reschedule_reasons` y
+  `event_reschedules`) y `pnpm --filter api db:seed` para los motivos iniciales.
+- Entorno local: `docker-compose.yaml` pasa a Postgres 18; los volúmenes `pgdata` existentes hay que
+  recrearlos.
+
+## [0.14.0] - 2026-10-04
+
+### Added
+
+- Preferencias por usuario: tabla `user_preferences` (una fila jsonb por usuario) y módulo
+  `userPreferences` (`get` / `update`, solo sesión), con defaults por clave para no migrar al sumar
+  preferencias nuevas. El merge de preferencias es atómico.
+- Cotizaciones: filtros compartidos por lista y pipeline (`quotesFiltersSchema`), opción de ocultar
+  vencidas (`app_settings.hide_stale_quotes`, recurso `PIPELINE_PREFERENCES`) e inclusión de
+  archivadas con la acción nueva `QUOTE/VIEW_ARCHIVED` (superadmin). El filtrado de vencidas se hace
+  en el server, con el corte en el día hábil del negocio.
+- Pagos: la lista acepta `clientIds`, `eventTypeIds` y `methods` como arrays.
+- Aviso de cambio de tasas: columna `quotes.declined_rates` (jsonb) y endpoints
+  `quotes.rateDrift` / `quotes.resolveRateDrift` (`QUOTE.UPDATE` + `ownerScope`). Al aceptar se
+  recalculan los montos y se regenera el PDF si existe; al rechazar se guarda lo rechazado y no se
+  vuelve a preguntar hasta otro cambio de config. Se habilita con `app_settings.prompt_rate_changes`
+  (default `false`).
+
+### Changed
+
+- Resolución de tasas unificada en `resolveQuoteRates` (`@repo/schemas`), compartida con el builder:
+  la cotización usa siempre sus tasas guardadas y solo un cambio de estado toma la tasa de la config.
+  `update` solo lee la config en ese caso.
+- Búsqueda de cotizaciones con comodines literales (`%`, `_`) y pipeline sin límite de columnas.
+
+### Fixed
+
+- Al editar una cotización enviada se perdían el recargo por tarjeta y el depósito elegidos; al
+  quitar el estado se conserva el impuesto enviado y, si no se manda depósito, el guardado.
+- Guardar los valores por defecto de cotizaciones fallaba con `CONFIG_SEQUENCE_BELOW_LAST` una vez
+  superado el inicio de secuencia.
+- Las cotizaciones archivadas son de solo lectura.
+
+### Deploy
+
+- Requiere `pnpm --filter api db:push` **antes** del deploy: tabla `user_preferences` y columnas
+  `quotes.declined_rates`, `app_settings.hide_stale_quotes` y `app_settings.prompt_rate_changes`.
+
 ## [0.13.0] - 2026-09-05
 
 ### Added

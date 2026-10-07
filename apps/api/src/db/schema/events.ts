@@ -13,6 +13,7 @@ import { paymentMethodEnum, stateEnum } from './enums';
 import { clients } from './clients';
 import { eventTypes } from './eventTypes';
 import { quotes } from './quotes';
+import { rescheduleReasons } from './rescheduleReasons';
 import { staff } from './staff';
 import { user } from './auth';
 
@@ -90,6 +91,29 @@ export const eventHistory = pgTable('event_history', {
   data: jsonb('data').notNull(),
   changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
   changedAt: timestamp('changed_at').defaultNow().notNull(),
+});
+
+// One row per date/time change. `from*` are nullable because the event's own date/time are.
+export const eventReschedules = pgTable('event_reschedules', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  eventId: uuid('event_id')
+    .notNull()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  fromDate: date('from_date', { mode: 'string' }),
+  fromTime: text('from_time'),
+  toDate: date('to_date', { mode: 'string' }).notNull(),
+  toTime: text('to_time'),
+  reasonId: uuid('reason_id')
+    .notNull()
+    .references(() => rescheduleReasons.id),
+  note: text('note'),
+  // Staff that clashed on the new date when it was saved, kept for audit.
+  staffConflicts: jsonb('staff_conflicts')
+    .$type<{ staffId: string; name: string }[]>()
+    .notNull()
+    .default([]),
+  rescheduledById: text('rescheduled_by_id').references(() => user.id, { onDelete: 'set null' }),
+  rescheduledAt: timestamp('rescheduled_at').defaultNow().notNull(),
 });
 
 export const eventPaymentAttachments = pgTable('event_payment_attachments', {

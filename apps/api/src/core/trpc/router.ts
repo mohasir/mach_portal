@@ -6,6 +6,7 @@ import { clientsRouter } from '../../modules/clients/clients.router';
 import { staffRouter } from '../../modules/staff/staff.router';
 import { productsRouter } from '../../modules/products/products.router';
 import { eventTypesRouter } from '../../modules/eventTypes/eventTypes.router';
+import { rescheduleReasonsRouter } from '../../modules/rescheduleReasons/rescheduleReasons.router';
 import { configRouter } from '../../modules/config/config.router';
 import { quotesRouter } from '../../modules/quotes/quotes.router';
 import { eventsRouter } from '../../modules/events/events.router';
@@ -21,6 +22,7 @@ export const appRouter = router({
   staff: staffRouter,
   products: productsRouter,
   eventTypes: eventTypesRouter,
+  rescheduleReasons: rescheduleReasonsRouter,
   config: configRouter,
   quotes: quotesRouter,
   events: eventsRouter,

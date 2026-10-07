@@ -24,7 +24,14 @@ export function NotificationCard({ item }: NotificationCardProps) {
   // than baking a locale-specific format into the payload.
   const values =
     data.source === 'user'
-      ? { ...data, actorName: data.actor.name }
+      ? 'toDate' in data
+        ? {
+            ...data,
+            actorName: data.actor.name,
+            fromDate: data.fromDate ? date(data.fromDate) : '—',
+            toDate: date(data.toDate),
+          }
+        : { ...data, actorName: data.actor.name }
       : 'eventDate' in data
         ? { ...data, eventDate: date(data.eventDate), deadline: date(data.deadline) }
         : data;

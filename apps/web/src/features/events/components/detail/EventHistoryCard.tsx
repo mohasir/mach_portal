@@ -8,6 +8,7 @@ import type { EventDetail } from '../../types';
 
 type EventHistoryList = NonNullable<EventDetail['history']>;
 type EventHistoryEntry = EventHistoryList[number];
+type ScheduleSnapshot = { date: string | null; time: string | null };
 
 interface EventHistoryCardProps {
   history: EventHistoryList;
@@ -15,9 +16,12 @@ interface EventHistoryCardProps {
 
 export function EventHistoryCard({ history }: EventHistoryCardProps) {
   const { t } = useTranslation('events');
-  const { dateTime } = useDateFormatter();
+  const { date, dateTime, time } = useDateFormatter();
   const { money } = useMoneyFormatter();
   const unknownUser = t('detail.history.unknownUser');
+
+  const schedule = (dateValue: string | null, timeValue: string | null) =>
+    `${dateValue ? date(dateValue) : '—'}${timeValue ? ` · ${time(timeValue)}` : ''}`;
 
   const describe = (entry: EventHistoryEntry): string => {
     const data = (entry.data ?? {}) as Record<string, unknown>;
@@ -34,6 +38,13 @@ export function EventHistoryCard({ history }: EventHistoryCardProps) {
         return t('detail.history.paymentRemoved', { amount: money(Number(data.amount) || 0) });
       case 'completed':
         return t('detail.history.completed');
+      case 'rescheduled': {
+        const to = data.to as ScheduleSnapshot | undefined;
+        return t('detail.history.rescheduled', {
+          to: to ? schedule(to.date, to.time) : '—',
+          reason: data.reasonName ?? '—',
+        });
+      }
       default:
         return entry.type;
     }

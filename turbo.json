@@ -3,12 +3,20 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "public/sw.js", "public/sw.js.map", "public/swe-worker-*.js"],
-      "env": ["API_URL"]
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        ".next-prepush/**",
+        "public/sw.js",
+        "public/sw.js.map",
+        "public/swe-worker-*.js"
+      ],
+      "env": ["API_URL", "NEXT_DIST_DIR"]
     },
     "dev": { "cache": false, "persistent": true },
     "lint": {},
     "check-types": { "dependsOn": ["^check-types"] },
+    "test": { "dependsOn": ["^check-types"], "outputs": [] },
     "db:push": { "cache": false }
   }
 }

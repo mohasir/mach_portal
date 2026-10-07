@@ -12,6 +12,7 @@ import esClients from '@/locales/es/clients.json';
 import esStaff from '@/locales/es/staff.json';
 import esCatalog from '@/locales/es/catalog.json';
 import esEventTypes from '@/locales/es/eventTypes.json';
+import esRescheduleReasons from '@/locales/es/rescheduleReasons.json';
 import esSettings from '@/locales/es/settings.json';
 import esQuotes from '@/locales/es/quotes.json';
 import esEvents from '@/locales/es/events.json';
@@ -28,6 +29,7 @@ import enClients from '@/locales/en/clients.json';
 import enStaff from '@/locales/en/staff.json';
 import enCatalog from '@/locales/en/catalog.json';
 import enEventTypes from '@/locales/en/eventTypes.json';
+import enRescheduleReasons from '@/locales/en/rescheduleReasons.json';
 import enSettings from '@/locales/en/settings.json';
 import enQuotes from '@/locales/en/quotes.json';
 import enEvents from '@/locales/en/events.json';
@@ -52,6 +54,7 @@ i18n.use(initReactI18next).init({
       staff: esStaff,
       catalog: esCatalog,
       eventTypes: esEventTypes,
+      rescheduleReasons: esRescheduleReasons,
       settings: esSettings,
       quotes: esQuotes,
       events: esEvents,
@@ -70,6 +73,7 @@ i18n.use(initReactI18next).init({
       staff: enStaff,
       catalog: enCatalog,
       eventTypes: enEventTypes,
+      rescheduleReasons: enRescheduleReasons,
       settings: enSettings,
       quotes: enQuotes,
       events: enEvents,
@@ -91,6 +95,7 @@ i18n.use(initReactI18next).init({
     'staff',
     'catalog',
     'eventTypes',
+    'rescheduleReasons',
     'settings',
     'quotes',
     'events',

@@ -6,14 +6,27 @@ import {
   Wallet,
   type LucideIcon,
 } from 'lucide-react';
-import type { PaymentMethod } from '@repo/schemas';
+import { normalizeEventTime, type PaymentMethod } from '@repo/schemas';
+import { isPastDate } from '@/lib/date';
 import type { Event, EventDetail } from './types';
 
-export const EVENT_STATUS_COLORS: Record<Event['status'], string> = {
+/** Display-only status: a past-due event is still `upcoming` for every business rule. */
+export type EventDisplayStatus = Event['status'] | 'pastDue';
+
+export const EVENT_STATUS_COLORS: Record<EventDisplayStatus, string> = {
   upcoming: 'blue',
+  pastDue: 'orange',
   completed: 'green',
   cancelled: 'red',
 };
+
+/** Not marked as completed although the event date already went by. */
+export const isEventPastDue = (event: Pick<Event, 'status' | 'eventDate'>) =>
+  event.status === 'upcoming' && isPastDate(event.eventDate);
+
+export const getEventDisplayStatus = (
+  event: Pick<Event, 'status' | 'eventDate'>,
+): EventDisplayStatus => (isEventPastDue(event) ? 'pastDue' : event.status);
 
 export const PAYMENT_STATUS_COLORS: Record<NonNullable<EventDetail['paymentStatus']>, string> = {
   pending: 'red',
@@ -40,3 +53,14 @@ export const PAYMENT_METHOD_ICONS: Record<PaymentMethod, LucideIcon> = {
   check: ScrollText,
   zelle: Wallet,
 };
+
+type Schedule = { eventDate: string | null; eventTime: string | null };
+
+// Mirrors the API's SAME_SCHEDULE rule, so the form can block a save the server would reject.
+export const isSameSchedule = (
+  current: Schedule,
+  next: { eventDate?: string; eventTime?: string },
+) =>
+  !!next.eventDate &&
+  next.eventDate === current.eventDate &&
+  normalizeEventTime(next.eventTime) === normalizeEventTime(current.eventTime);

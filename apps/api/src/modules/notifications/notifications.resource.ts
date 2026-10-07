@@ -1,7 +1,8 @@
 import { ROLES, type RoleType } from '@repo/guards';
 import { notifications } from '../../db/schema';
 
-export type NotificationType = 'quote_confirmed' | 'quote_cancelled' | 'event_selections_reminder';
+export type NotificationType =
+  'quote_confirmed' | 'quote_cancelled' | 'event_selections_reminder' | 'event_rescheduled';
 
 // Audience per type, resolved in code rather than a DB column — a single source of truth,
 // easy to extend when a new type needs a different audience. Superadmin is deliberately
@@ -10,6 +11,7 @@ export const NOTIFICATION_TYPE_ROLES: Record<NotificationType, RoleType[]> = {
   quote_confirmed: [ROLES.ADMIN],
   quote_cancelled: [ROLES.ADMIN],
   event_selections_reminder: [ROLES.ADMIN],
+  event_rescheduled: [ROLES.ADMIN],
 };
 
 export type NotificationActor = { name: string; image: string | null };
@@ -30,7 +32,16 @@ export type EventSelectionsReminderData = {
   deadline: string;
 } & NotificationVisualData;
 
-export type NotificationData = QuoteStageChangeData | EventSelectionsReminderData;
+export type EventRescheduledData = {
+  quoteNumber: string;
+  clientName: string;
+  fromDate: string | null;
+  toDate: string;
+  toTime: string | null;
+} & NotificationVisualData;
+
+export type NotificationData =
+  QuoteStageChangeData | EventSelectionsReminderData | EventRescheduledData;
 
 export const publicNotificationColumns = {
   id: notifications.id,

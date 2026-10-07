@@ -32,17 +32,27 @@ import {
   eventHistory,
   eventPayments,
   eventPaymentAttachments,
+  eventReschedules,
   eventStaff,
   eventTypes,
+  notifications,
+  optionGroups,
   quoteLineOptions,
   quoteLines,
   quotes,
+  rescheduleReasons,
   staff,
   user,
 } from '../../db/schema';
 import { resolvePagination } from '../../lib/utils/pagination';
 import { publicQuoteLineColumns, publicQuoteLineOptionColumns } from '../quotes/quotes.resource';
-import { publicEventColumns, type EventStaffRow } from './events.resource';
+import { staffBusyOnDate } from '../staff/staff.availability';
+import {
+  publicEventColumns,
+  type EventStaffRow,
+  type RescheduleWrite,
+  type StaffConflictRow,
+} from './events.resource';
 
 const sortColumns = {
   eventDate: events.eventDate,
@@ -51,6 +61,22 @@ const sortColumns = {
 } as const;
 
 const assignedToUser = alias(user, 'assigned_to_user');
+
+// Single source of truth for "selections pending": some line of the event's quote has an
+// active `select` group with no option chosen. Matches the per-station count shown in the UI.
+// Only valid in a WHERE clause (see findById).
+const selectionsIncomplete = sql<boolean>`exists (
+  select 1 from ${quoteLines}
+  inner join ${optionGroups} on ${optionGroups.productId} = ${quoteLines.productId}
+  where ${quoteLines.quoteId} = ${events.quoteId}
+    and ${optionGroups.selectionType} = 'select'
+    and ${optionGroups.isActive}
+    and not exists (
+      select 1 from ${quoteLineOptions}
+      where ${quoteLineOptions.quoteLineId} = ${quoteLines.id}
+        and ${quoteLineOptions.optionGroupId} = ${optionGroups.id}
+    )
+)`;
 
 export class EventsRepository {
   constructor(private db: Database) {}
@@ -199,14 +225,32 @@ export class EventsRepository {
           .where(inArray(quoteLineOptions.quoteLineId, lineIds))
       : [];
 
+    // Filter rather than select: in a single-table SELECT list Drizzle drops the table prefix
+    // from every column, which leaves the correlated subquery ambiguous.
+    const incompleteRows = await this.db
+      .select({ id: events.id })
+      .from(events)
+      .where(and(eq(events.id, id), selectionsIncomplete));
+
     const staffRows = await this.findStaff(id);
     const paymentRows = await this.findPayments(id);
     const attachmentRows = paymentRows.length
       ? await this.findAttachmentsByPaymentIds(paymentRows.map((p) => p.id))
       : [];
     const historyRows = await this.findHistory(id);
+    const rescheduleRows = await this.findReschedules(id);
 
-    return { eventRow, lineRows, optionRows, staffRows, paymentRows, attachmentRows, historyRows };
+    return {
+      eventRow,
+      lineRows,
+      optionRows,
+      selectionsIncomplete: incompleteRows.length > 0,
+      staffRows,
+      paymentRows,
+      attachmentRows,
+      historyRows,
+      rescheduleRows,
+    };
   }
 
   findHistory(eventId: string) {
@@ -424,13 +468,18 @@ export class EventsRepository {
     });
   }
 
-  async isCompleted(eventId: string) {
+  /** Completed or cancelled (via its quote): no further changes allowed. */
+  async isClosed(eventId: string) {
     const [row] = await this.db
-      .select({ completedAt: events.completedAt })
+      .select({
+        completedAt: events.completedAt,
+        quoteCancelled: sql<boolean>`${quotes.stageId} = ${QUOTE_STAGE.CANCELLED}`,
+      })
       .from(events)
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
       .where(eq(events.id, eventId))
       .limit(1);
-    return !!row?.completedAt;
+    return !!row?.completedAt || !!row?.quoteCancelled;
   }
 
   async isStaffAssigned(eventId: string, staffId: string) {
@@ -482,6 +531,129 @@ export class EventsRepository {
     });
   }
 
+  async findForReschedule(eventId: string) {
+    const [row] = await this.db
+      .select({
+        id: events.id,
+        quoteId: events.quoteId,
+        eventDate: events.eventDate,
+        eventTime: events.eventTime,
+        completedAt: events.completedAt,
+        quoteCancelled: sql<boolean>`${quotes.stageId} = ${QUOTE_STAGE.CANCELLED}`,
+        quoteNumber: quotes.number,
+        clientName: clients.name,
+      })
+      .from(events)
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
+      .innerJoin(clients, eq(events.clientId, clients.id))
+      .where(and(eq(events.id, eventId), isNull(quotes.archivedAt)))
+      .limit(1);
+    return row;
+  }
+
+  findReschedules(eventId: string) {
+    return this.db
+      .select({
+        id: eventReschedules.id,
+        fromDate: eventReschedules.fromDate,
+        fromTime: eventReschedules.fromTime,
+        toDate: eventReschedules.toDate,
+        toTime: eventReschedules.toTime,
+        reasonName: rescheduleReasons.name,
+        note: eventReschedules.note,
+        staffConflicts: eventReschedules.staffConflicts,
+        rescheduledByName: user.name,
+        rescheduledAt: eventReschedules.rescheduledAt,
+      })
+      .from(eventReschedules)
+      .innerJoin(rescheduleReasons, eq(eventReschedules.reasonId, rescheduleReasons.id))
+      .leftJoin(user, eq(eventReschedules.rescheduledById, user.id))
+      .where(eq(eventReschedules.eventId, eventId))
+      .orderBy(desc(eventReschedules.rescheduledAt));
+  }
+
+  // The quote is written too (only its date/time) so the calendar, double-booking check,
+  // quote filters and PDF all keep reading a single date; the original survives in
+  // event_reschedules.
+  reschedule(data: RescheduleWrite) {
+    const { eventId, quoteId, from, to, userId } = data;
+    return this.db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(events)
+        .set({ eventDate: to.date, eventTime: to.time })
+        .where(eq(events.id, eventId))
+        .returning(publicEventColumns);
+      if (!updated) return undefined;
+
+      await tx
+        .update(quotes)
+        .set({ eventDate: to.date, eventTime: to.time })
+        .where(eq(quotes.id, quoteId));
+
+      await tx.insert(eventReschedules).values({
+        eventId,
+        fromDate: from.date,
+        fromTime: from.time,
+        toDate: to.date,
+        toTime: to.time,
+        reasonId: data.reasonId,
+        note: data.note ?? null,
+        staffConflicts: data.staffConflicts,
+        rescheduledById: userId,
+      });
+
+      await tx.insert(eventHistory).values({
+        eventId,
+        type: 'rescheduled',
+        data: { from, to, reasonName: data.reasonName },
+        changedById: userId,
+      });
+
+      // The reminder job dedupes by (type, entityId), so a reminder already sent for the old
+      // date would block a new one forever; dropping it lets the next run recreate it.
+      await tx
+        .delete(notifications)
+        .where(
+          and(
+            eq(notifications.type, 'event_selections_reminder'),
+            eq(notifications.entityId, eventId),
+          ),
+        );
+
+      return updated;
+    });
+  }
+
+  // Staff assigned to this event who are also on another busy event that day. A staff member
+  // on two other events that day shows up once per clashing event.
+  async findStaffConflicts(eventId: string, date: string): Promise<StaffConflictRow[]> {
+    const otherAssignment = alias(eventStaff, 'other_assignment');
+    const rows = await this.db
+      .select({
+        staffId: eventStaff.staffId,
+        name: staff.name,
+        conflictingEventId: events.id,
+        quoteNumber: quotes.number,
+        eventTime: events.eventTime,
+      })
+      .from(eventStaff)
+      .innerJoin(staff, eq(eventStaff.staffId, staff.id))
+      .innerJoin(otherAssignment, eq(otherAssignment.staffId, eventStaff.staffId))
+      .innerJoin(events, eq(otherAssignment.eventId, events.id))
+      .innerJoin(quotes, eq(events.quoteId, quotes.id))
+      .where(and(eq(eventStaff.eventId, eventId), ne(events.id, eventId), staffBusyOnDate(date)));
+
+    return rows.map((row) => ({
+      staffId: row.staffId,
+      name: row.name,
+      conflictingEvent: {
+        id: row.conflictingEventId,
+        quoteNumber: row.quoteNumber,
+        eventTime: row.eventTime,
+      },
+    }));
+  }
+
   // Candidates for the "selections pending" reminder job (jobs/eventReminders.job.ts) — the
   // actual deadline math (vs. optionsSelectionDeadlineDays) happens in JS, not here.
   findPendingSelectionsCandidates() {
@@ -497,7 +669,7 @@ export class EventsRepository {
       .innerJoin(clients, eq(events.clientId, clients.id))
       .where(
         and(
-          isNull(events.selectionsConfirmedAt),
+          selectionsIncomplete,
           isNull(events.completedAt),
           isNotNull(events.eventDate),
           isNull(quotes.archivedAt),
@@ -508,7 +680,7 @@ export class EventsRepository {
 
   async findForSelectionsUpdate(eventId: string) {
     const [row] = await this.db
-      .select({ id: events.id, quoteId: events.quoteId, completedAt: events.completedAt })
+      .select({ id: events.id, quoteId: events.quoteId })
       .from(events)
       .where(eq(events.id, eventId))
       .limit(1);
