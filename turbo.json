@@ -9,6 +9,7 @@
     "dev": { "cache": false, "persistent": true },
     "lint": {},
     "check-types": { "dependsOn": ["^check-types"] },
+    "test": { "dependsOn": ["^check-types"], "outputs": [] },
     "db:push": { "cache": false }
   }
 }

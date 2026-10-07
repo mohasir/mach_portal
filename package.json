@@ -10,6 +10,7 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types --filter='*'",
+    "test": "turbo run test",
     "db:push": "turbo run db:push",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "prepare": "husky"
