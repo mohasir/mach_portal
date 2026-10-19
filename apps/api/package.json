@@ -11,6 +11,8 @@
     "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
+    "db:migrate": "tsx src/db/scripts/migrate.ts",
+    "db:baseline": "tsx src/db/scripts/markBaseline.ts",
     "db:studio": "drizzle-kit studio",
     "db:reset": "tsx src/db/scripts/reset.ts",
     "db:seed": "tsx src/db/seeds/index.ts",
