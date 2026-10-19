@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { admin } from 'better-auth/plugins';
+import { admin, organization } from 'better-auth/plugins';
 import { ac, roles, DEFAULT_ROLE, ADMIN_ROLES } from '@repo/guards';
 import { db } from '../db';
 import { user } from '../db/schema';
@@ -25,6 +25,7 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       mustChangePassword: { type: 'boolean', defaultValue: false, input: false },
+      isPlatformAdmin: { type: 'boolean', defaultValue: false, input: false },
     },
   },
   plugins: [
@@ -33,6 +34,16 @@ export const auth = betterAuth({
       roles,
       defaultRole: DEFAULT_ROLE,
       adminRoles: ADMIN_ROLES,
+    }),
+    organization({
+      teams: { enabled: false },
+      schema: {
+        organization: {
+          additionalFields: {
+            customDomain: { type: 'string', required: false },
+          },
+        },
+      },
     }),
   ],
 });

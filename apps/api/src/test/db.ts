@@ -16,8 +16,8 @@ export async function resetDb(): Promise<void> {
   await testDb.execute(sql.raw(`TRUNCATE ${tables} RESTART IDENTITY CASCADE`));
 }
 
-// organization/member/is_platform_admin are accessed with raw SQL because their
-// schema is added after this harness; they are only usable once those tables exist.
+// Raw SQL keeps fixtures independent of the Drizzle schema objects and of the
+// Better Auth hooks that would otherwise run on inserts.
 export async function createTestTenant(
   slug: string,
   name: string = slug,
