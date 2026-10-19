@@ -14,6 +14,14 @@ const schema = z.object({
     .pipe(z.array(z.url()).min(1)),
   // Canonical web origin used to build password setup/reset links
   WEB_APP_URL: z.url(),
+  // Root domain tenants hang off as subdomains; may include a port (e.g. localhost:3000).
+  APP_BASE_DOMAIN: z
+    .string()
+    .min(1)
+    .regex(/^[a-z0-9.-]+(?::\d+)?$/i, 'Must be a bare host[:port] without scheme or path'),
+  APP_PROTOCOL: z.enum(['http', 'https']).default('https'),
+  // Shared secret the web proxy sends so the API can trust the forwarded tenant host.
+  INTERNAL_PROXY_KEY: z.string().min(16),
   PORT: z.coerce.number().default(8080),
   STORAGE_PROVIDER: z.enum(['r2']).default('r2'),
   R2_ACCOUNT_ID: z.string().min(1),
