@@ -1,9 +1,11 @@
 import { pgTable, uuid, text, jsonb, timestamp, unique } from 'drizzle-orm/pg-core';
+import { tenantId } from './tenantColumn';
 
 export const templates = pgTable(
   'templates',
   {
     id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: tenantId(),
     type: text('type').notNull(),
     locale: text('locale').notNull().default('es'),
     content: jsonb('content').notNull(),
@@ -12,5 +14,5 @@ export const templates = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [unique('templates_type_locale_unique').on(t.type, t.locale)],
+  (t) => [unique('templates_tenant_type_locale_unique').on(t.tenantId, t.type, t.locale)],
 );

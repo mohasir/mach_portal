@@ -9,6 +9,8 @@ import {
   timestamp,
   boolean,
   jsonb,
+  unique,
+  index,
 } from 'drizzle-orm/pg-core';
 import type { QuoteRates } from '@repo/schemas';
 import { stateEnum } from './enums';
@@ -16,9 +18,11 @@ import { clients } from './clients';
 import { eventTypes } from './eventTypes';
 import { products, optionGroups, options } from './catalog';
 import { user } from './auth';
+import { tenantId } from './tenantColumn';
 
 export const discountTypeEnum = pgEnum('discount_type', ['fixed', 'percent']);
 
+// Fixed pipeline catalog shared by every tenant (read-only reference data), so it has no tenant_id.
 export const quoteStages = pgTable('quote_stages', {
   id: integer('id').primaryKey(),
   label: text('label').notNull(),
@@ -27,108 +31,136 @@ export const quoteStages = pgTable('quote_stages', {
   sortOrder: integer('sort_order').notNull(),
 });
 
-export const quotes = pgTable('quotes', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  seq: integer('seq').notNull().unique(),
-  number: text('number').notNull().unique(), // 'QUOYYYYMMDD-NNNNNN'
-  clientId: uuid('client_id')
-    .notNull()
-    .references(() => clients.id),
-  eventTypeId: uuid('event_type_id').references(() => eventTypes.id),
-  eventDate: date('event_date', { mode: 'string' }),
-  eventTime: text('event_time'),
-  state: stateEnum('state'),
-  address: text('address'),
-  city: text('city'),
-  notes: text('notes'),
-  clientNotes: text('client_notes'),
-  subtotal: integer('subtotal').notNull().default(0),
-  discountType: discountTypeEnum('discount_type'),
-  discountValue: numeric('discount_value', { mode: 'number', precision: 10, scale: 5 }),
-  discountAmount: integer('discount_amount').notNull().default(0),
-  longDistanceAmount: integer('long_distance_amount').notNull().default(0),
-  taxRate: numeric('tax_rate', { mode: 'number', precision: 6, scale: 5 }).notNull(),
-  taxAmount: integer('tax_amount').notNull().default(0),
-  total: integer('total').notNull().default(0),
-  applyCardSurcharge: boolean('apply_card_surcharge').notNull().default(false),
-  cardSurchargeRate: numeric('card_surcharge_rate', { mode: 'number', precision: 4, scale: 3 })
-    .notNull()
-    .default(0.09),
-  cardSurchargeAmount: integer('card_surcharge_amount').notNull().default(0),
-  depositRate: numeric('deposit_rate', { mode: 'number', precision: 4, scale: 3 })
-    .notNull()
-    .default(0.5),
-  depositAmount: integer('deposit_amount').notNull().default(0),
-  // Config rates the user chose not to apply to this pending quote (quoteRateDrift), so the same
-  // difference isn't offered again until config changes once more.
-  declinedRates: jsonb('declined_rates').$type<QuoteRates>(),
-  stageId: integer('stage_id')
-    .notNull()
-    .default(1) // QUOTE_STAGE.PENDING
-    .references(() => quoteStages.id),
-  isDraft: boolean('is_draft').notNull().default(true),
-  selectOptionsAtQuote: boolean('select_options_at_quote').notNull().default(false),
-  validUntil: date('valid_until', { mode: 'string' }),
-  createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
-  assignedToId: text('assigned_to_id').references(() => user.id, { onDelete: 'set null' }),
-  pdfUrl: text('pdf_url'),
-  pdfKey: text('pdf_key'),
-  pdfGeneratedAt: timestamp('pdf_generated_at'),
-  archivedAt: timestamp('archived_at'),
-  archivedById: text('archived_by_id').references(() => user.id, { onDelete: 'set null' }),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
+export const quotes = pgTable(
+  'quotes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: tenantId(),
+    seq: integer('seq').notNull(),
+    number: text('number').notNull(), // 'QUOYYYYMMDD-NNNNNN'
+    clientId: uuid('client_id')
+      .notNull()
+      .references(() => clients.id),
+    eventTypeId: uuid('event_type_id').references(() => eventTypes.id),
+    eventDate: date('event_date', { mode: 'string' }),
+    eventTime: text('event_time'),
+    state: stateEnum('state'),
+    address: text('address'),
+    city: text('city'),
+    notes: text('notes'),
+    clientNotes: text('client_notes'),
+    subtotal: integer('subtotal').notNull().default(0),
+    discountType: discountTypeEnum('discount_type'),
+    discountValue: numeric('discount_value', { mode: 'number', precision: 10, scale: 5 }),
+    discountAmount: integer('discount_amount').notNull().default(0),
+    longDistanceAmount: integer('long_distance_amount').notNull().default(0),
+    taxRate: numeric('tax_rate', { mode: 'number', precision: 6, scale: 5 }).notNull(),
+    taxAmount: integer('tax_amount').notNull().default(0),
+    total: integer('total').notNull().default(0),
+    applyCardSurcharge: boolean('apply_card_surcharge').notNull().default(false),
+    cardSurchargeRate: numeric('card_surcharge_rate', { mode: 'number', precision: 4, scale: 3 })
+      .notNull()
+      .default(0.09),
+    cardSurchargeAmount: integer('card_surcharge_amount').notNull().default(0),
+    depositRate: numeric('deposit_rate', { mode: 'number', precision: 4, scale: 3 })
+      .notNull()
+      .default(0.5),
+    depositAmount: integer('deposit_amount').notNull().default(0),
+    // Config rates the user chose not to apply to this pending quote (quoteRateDrift), so the same
+    // difference isn't offered again until config changes once more.
+    declinedRates: jsonb('declined_rates').$type<QuoteRates>(),
+    stageId: integer('stage_id')
+      .notNull()
+      .default(1) // QUOTE_STAGE.PENDING
+      .references(() => quoteStages.id),
+    isDraft: boolean('is_draft').notNull().default(true),
+    selectOptionsAtQuote: boolean('select_options_at_quote').notNull().default(false),
+    validUntil: date('valid_until', { mode: 'string' }),
+    createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
+    assignedToId: text('assigned_to_id').references(() => user.id, { onDelete: 'set null' }),
+    pdfUrl: text('pdf_url'),
+    pdfKey: text('pdf_key'),
+    pdfGeneratedAt: timestamp('pdf_generated_at'),
+    archivedAt: timestamp('archived_at'),
+    archivedById: text('archived_by_id').references(() => user.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    unique('quotes_tenant_seq_unique').on(t.tenantId, t.seq),
+    unique('quotes_tenant_number_unique').on(t.tenantId, t.number),
+  ],
+);
 
-export const quoteLines = pgTable('quote_lines', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  quoteId: uuid('quote_id')
-    .notNull()
-    .references(() => quotes.id, { onDelete: 'cascade' }),
-  productId: uuid('product_id')
-    .notNull()
-    .references(() => products.id),
-  numPersons: integer('num_persons').notNull(),
-  subtotal: integer('subtotal').notNull(),
-  sortOrder: integer('sort_order').default(0).notNull(),
-});
+export const quoteLines = pgTable(
+  'quote_lines',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: tenantId(),
+    quoteId: uuid('quote_id')
+      .notNull()
+      .references(() => quotes.id, { onDelete: 'cascade' }),
+    productId: uuid('product_id')
+      .notNull()
+      .references(() => products.id),
+    numPersons: integer('num_persons').notNull(),
+    subtotal: integer('subtotal').notNull(),
+    sortOrder: integer('sort_order').default(0).notNull(),
+  },
+  (t) => [index('quote_lines_tenant_idx').on(t.tenantId)],
+);
 
-export const quoteLineOptions = pgTable('quote_line_options', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  quoteLineId: uuid('quote_line_id')
-    .notNull()
-    .references(() => quoteLines.id, { onDelete: 'cascade' }),
-  optionId: uuid('option_id')
-    .notNull()
-    .references(() => options.id),
-  optionGroupId: uuid('option_group_id')
-    .notNull()
-    .references(() => optionGroups.id),
-});
+export const quoteLineOptions = pgTable(
+  'quote_line_options',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: tenantId(),
+    quoteLineId: uuid('quote_line_id')
+      .notNull()
+      .references(() => quoteLines.id, { onDelete: 'cascade' }),
+    optionId: uuid('option_id')
+      .notNull()
+      .references(() => options.id),
+    optionGroupId: uuid('option_group_id')
+      .notNull()
+      .references(() => optionGroups.id),
+  },
+  (t) => [index('quote_line_options_tenant_idx').on(t.tenantId)],
+);
 
-export const quoteStageHistory = pgTable('quote_stage_history', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  quoteId: uuid('quote_id')
-    .notNull()
-    .references(() => quotes.id, { onDelete: 'cascade' }),
-  fromStageId: integer('from_stage_id').references(() => quoteStages.id),
-  toStageId: integer('to_stage_id')
-    .notNull()
-    .references(() => quoteStages.id),
-  changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
-  changedAt: timestamp('changed_at').defaultNow().notNull(),
-});
+export const quoteStageHistory = pgTable(
+  'quote_stage_history',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: tenantId(),
+    quoteId: uuid('quote_id')
+      .notNull()
+      .references(() => quotes.id, { onDelete: 'cascade' }),
+    fromStageId: integer('from_stage_id').references(() => quoteStages.id),
+    toStageId: integer('to_stage_id')
+      .notNull()
+      .references(() => quoteStages.id),
+    changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
+    changedAt: timestamp('changed_at').defaultNow().notNull(),
+  },
+  (t) => [index('quote_stage_history_tenant_idx').on(t.tenantId)],
+);
 
-export const quoteAssignmentHistory = pgTable('quote_assignment_history', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  quoteId: uuid('quote_id')
-    .notNull()
-    .references(() => quotes.id, { onDelete: 'cascade' }),
-  fromUserId: text('from_user_id').references(() => user.id, { onDelete: 'set null' }),
-  toUserId: text('to_user_id').references(() => user.id, { onDelete: 'set null' }),
-  changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
-  changedAt: timestamp('changed_at').defaultNow().notNull(),
-});
+export const quoteAssignmentHistory = pgTable(
+  'quote_assignment_history',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: tenantId(),
+    quoteId: uuid('quote_id')
+      .notNull()
+      .references(() => quotes.id, { onDelete: 'cascade' }),
+    fromUserId: text('from_user_id').references(() => user.id, { onDelete: 'set null' }),
+    toUserId: text('to_user_id').references(() => user.id, { onDelete: 'set null' }),
+    changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
+    changedAt: timestamp('changed_at').defaultNow().notNull(),
+  },
+  (t) => [index('quote_assignment_history_tenant_idx').on(t.tenantId)],
+);
