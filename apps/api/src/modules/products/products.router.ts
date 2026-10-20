@@ -23,6 +23,7 @@ const create = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.CREATE] });
 const update = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.UPDATE] });
 const disable = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.DISABLE] });
 const enable = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.ENABLE] });
+const duplicate = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.DUPLICATE] });
 
 const groupsRouter = router({
   create: create
@@ -77,6 +78,9 @@ export const productsRouter = router({
   update: update
     .input(z.object({ id: z.uuid(), data: updateProductSchema }))
     .mutation(({ input }) => service.updateProduct(input.id, input.data)),
+  duplicate: duplicate
+    .input(catalogIdSchema)
+    .mutation(({ input }) => service.duplicateProduct(input.id)),
   disable: disable
     .input(catalogIdSchema)
     .mutation(({ input }) => service.toggleProductActive(input.id, false)),
