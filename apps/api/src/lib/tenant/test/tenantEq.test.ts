@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { PgDialect, pgTable, text } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
-import { tenantEq } from './tenantEq';
+import { tenantEq } from '../tenantEq';
 
 const sample = pgTable('sample', { tenantId: text('tenant_id').notNull() });
 const dialect = new PgDialect();

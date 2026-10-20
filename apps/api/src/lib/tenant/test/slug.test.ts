@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isValidSlug, RESERVED_SLUGS } from './slug';
+import { isValidSlug, RESERVED_SLUGS } from '../slug';
 
 describe('isValidSlug', () => {
   it('accepts a lowercase alphanumeric slug with hyphens', () => {

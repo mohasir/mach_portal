@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { env } from '../../env';
-import { tenantUrl } from './tenantUrl';
+import { env } from '../../../env';
+import { tenantUrl } from '../tenantUrl';
 
 const original = { protocol: env.APP_PROTOCOL, domain: env.APP_BASE_DOMAIN };
 

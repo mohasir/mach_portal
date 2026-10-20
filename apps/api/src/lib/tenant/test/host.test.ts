@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseTenantSlug } from './host';
+import { parseTenantSlug } from '../host';
 
 describe('parseTenantSlug', () => {
   const base = 'oravitech.test';
