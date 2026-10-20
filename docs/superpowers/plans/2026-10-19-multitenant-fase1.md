@@ -12,7 +12,8 @@
 
 ## Global Constraints
 
-- Rama: partir de `multitenant`; sin worktrees; **nunca `git push`**; **preguntar al usuario antes de cada commit** (CLAUDE.md): cada tarea termina en un *checkpoint* que muestra `git status` y espera OK. Mensajes de commit en inglés, con la línea `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
+- Rama: partir de `multitenant`; sin worktrees; **nunca `git push`**; **preguntar al usuario antes de cada commit** (CLAUDE.md): cada tarea termina en un *checkpoint* que muestra `git status` y espera OK. Mensajes de commit en inglés y **sin ninguna atribución a Claude** (ni `Co-Authored-By` ni "Generated with"), tampoco en PRs.
+- Ubicación de los tests: los tests de un directorio viven en una subcarpeta `test/` de ese mismo directorio (p. ej. código en `src/lib/tenant/` → tests en `src/lib/tenant/test/`; `src/modules/clients/` → `src/modules/clients/test/`), nunca sueltos junto al código. Los nombres `*.test.ts` / `*.int.test.ts` no cambian. Los paths de tests que aparecen en las tareas siguientes se leen con esta regla.
 - Comentarios de código en inglés y solo cuando explican un *porqué* no obvio; sin referencias al chat.
 - Nunca leer archivos `.env`; nunca levantar servidores (`pnpm dev`) ni probar en vivo. `pnpm --filter api check-types` y `pnpm --filter web check-types` se pueden correr libremente.
 - Las pruebas de integración (`*.int.test.ts`) necesitan un Postgres de prueba (`TEST_DATABASE_URL`, p. ej. el de `docker-compose.yaml`) que **levanta el usuario**; si no está disponible, dejar el comando documentado y pedirle que las corra.
@@ -353,4 +354,5 @@
 - [ ] **Step 1:** `pnpm check-types`, `pnpm test` y `pnpm --filter api test:int` en verde (la última la corre el usuario si no hay Postgres de prueba disponible; reportar la salida real); `pnpm --filter api db:generate` sin cambios pendientes.
 - [ ] **Step 2:** Revisión contra el spec, sección por sección (modelo, resolución/auth, rutas de Express, aislamiento, entornos, pruebas): listar cualquier requisito sin cubrir. Confirmar que no queda `// TODO(task-…)` ni referencias a `env.WEB_ORIGIN`/`env.WEB_APP_URL`/`appSettings.id`/`guardSession`.
 - [ ] **Step 3:** Entregar al usuario: lista de verificaciones manuales pendientes en `staging-mt` (host reenviado, `trustedOrigins`, cookies por subdominio, checklist de regresión) y los dos ensayos de migración.
-- [ ] **Step 4: Checkpoint:** PR hacia `multitenant` solo con OK explícito del usuario.
+- [ ] **Step 4 (pendiente anotado por el usuario):** mover a subcarpetas `test/` los tests que quedaron sueltos antes de la regla de ubicación: `src/db/schema/tenantTables.test.ts`, `src/db/scripts/markBaseline.int.test.ts`, `src/test/dbGuard.test.ts` y `src/test/db.smoke.int.test.ts` si corresponde, y los de módulos anteriores a este trabajo (`src/modules/events/events.permissions.test.ts`, `src/modules/events/events.service.reschedule.test.ts`, `src/modules/rescheduleReasons/rescheduleReasons.service.test.ts`, `src/lib/utils/date.test.ts`). Ajustar imports, confirmar que el conteo de tests no cambia y que las configs de Vitest siguen recogiéndolos; pedir OK al usuario antes de ejecutarlo.
+- [ ] **Step 5: Checkpoint:** PR hacia `multitenant` solo con OK explícito del usuario.
