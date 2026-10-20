@@ -7,7 +7,8 @@
   },
   "actions": {
     "activate": "Activate",
-    "deactivate": "Deactivate"
+    "deactivate": "Deactivate",
+    "duplicate": "Duplicate"
   },
   "form": {
     "save": "Save"
@@ -25,6 +26,10 @@
       "description": "Description",
       "descriptionPlaceholder": "Short description (optional)",
       "isPremium": "Premium"
+    },
+    "duplicateConfirm": {
+      "title": "Duplicate this station?",
+      "content": "A copy will be created with its services, items and price packages."
     },
     "disableConfirm": {
       "title": "Deactivate this station?",

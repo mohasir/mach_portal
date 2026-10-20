@@ -50,6 +50,20 @@ export class ProductsService {
     return productResource(await this.repo.createProduct(input));
   }
 
+  async duplicateProduct(id: string) {
+    const source = await this.repo.findProductById(id);
+    if (!source) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
+
+    let name = `${source.name} (copia)`;
+    for (let n = 2; await this.repo.findProductByName(name); n++) {
+      name = `${source.name} (copia ${n})`;
+    }
+
+    const copy = await this.repo.duplicateProduct(id, name);
+    if (!copy) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
+    return productResource(copy);
+  }
+
   async updateProduct(id: string, input: UpdateProductInput) {
     const updated = await this.repo.updateProduct(id, input);
     if (!updated) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });

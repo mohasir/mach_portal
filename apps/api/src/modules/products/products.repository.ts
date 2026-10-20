@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, max } from 'drizzle-orm';
 import type {
   CreateOptionGroupInput,
   CreateOptionInput,
@@ -73,6 +73,15 @@ export class ProductsRepository {
       .then((r) => r[0]);
   }
 
+  findProductById(id: string) {
+    return this.db
+      .select({ id: products.id, name: products.name })
+      .from(products)
+      .where(eq(products.id, id))
+      .limit(1)
+      .then((r) => r[0]);
+  }
+
   private async replaceTiers(tx: Tx, productId: string, tiers: PriceTierInput[]) {
     await tx.delete(productPriceTiers).where(eq(productPriceTiers.productId, productId));
     if (tiers.length > 0) {
@@ -99,6 +108,72 @@ export class ProductsRepository {
         .returning(publicProductColumns);
       await this.replaceTiers(tx, product!.id, data.tiers);
       return product!;
+    });
+  }
+
+  duplicateProduct(id: string, name: string) {
+    return this.db.transaction(async (tx) => {
+      const [source] = await tx.select().from(products).where(eq(products.id, id));
+      if (!source) return undefined;
+
+      const [last] = await tx.select({ value: max(products.sortOrder) }).from(products);
+      const [copy] = await tx
+        .insert(products)
+        .values({
+          name,
+          description: source.description,
+          isPremium: source.isPremium,
+          isActive: true,
+          sortOrder: (last?.value ?? -1) + 1,
+        })
+        .returning(publicProductColumns);
+
+      const tiers = await tx
+        .select()
+        .from(productPriceTiers)
+        .where(eq(productPriceTiers.productId, id));
+      if (tiers.length > 0) {
+        await tx.insert(productPriceTiers).values(
+          tiers.map((tier) => ({
+            productId: copy!.id,
+            numPersons: tier.numPersons,
+            price: tier.price,
+            sortOrder: tier.sortOrder,
+          })),
+        );
+      }
+
+      const groups = await tx.select().from(optionGroups).where(eq(optionGroups.productId, id));
+      for (const group of groups) {
+        const [groupCopy] = await tx
+          .insert(optionGroups)
+          .values({
+            productId: copy!.id,
+            label: group.label,
+            selectionType: group.selectionType,
+            maxSelect: group.maxSelect,
+            isActive: group.isActive,
+            sortOrder: group.sortOrder,
+          })
+          .returning({ id: optionGroups.id });
+        const groupOptions = await tx
+          .select()
+          .from(options)
+          .where(eq(options.optionGroupId, group.id));
+        if (groupOptions.length > 0) {
+          await tx.insert(options).values(
+            groupOptions.map((option) => ({
+              optionGroupId: groupCopy!.id,
+              name: option.name,
+              description: option.description,
+              isActive: option.isActive,
+              sortOrder: option.sortOrder,
+            })),
+          );
+        }
+      }
+
+      return copy!;
     });
   }
 
