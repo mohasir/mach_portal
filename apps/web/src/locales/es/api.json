@@ -12,6 +12,8 @@
     "PRODUCT_ALREADY_EXISTS": "Ya existe una estación con ese nombre",
     "OPTION_GROUP_NOT_FOUND": "La sección no existe",
     "OPTION_NOT_FOUND": "El ítem no existe",
+    "OPTION_GROUP_IN_USE": "La sección ya se usó en cotizaciones, no se puede eliminar. Desactivala en su lugar",
+    "OPTION_IN_USE": "El ítem ya se usó en cotizaciones, no se puede eliminar. Desactivalo en su lugar",
     "EVENT_TYPE_NOT_FOUND": "El tipo de evento no existe",
     "EVENT_TYPE_ALREADY_EXISTS": "Ya existe un tipo de evento con ese nombre",
     "RESCHEDULE_REASON_NOT_FOUND": "Motivo de reprogramación no encontrado",

@@ -23,6 +23,7 @@ const create = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.CREATE] });
 const update = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.UPDATE] });
 const disable = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.DISABLE] });
 const enable = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.ENABLE] });
+const deleteOption = guardedProcedure({ [RESOURCES.PRODUCT_OPTION]: [ACTIONS.DELETE] });
 const duplicate = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.DUPLICATE] });
 
 const groupsRouter = router({
@@ -32,6 +33,9 @@ const groupsRouter = router({
   update: update
     .input(z.object({ id: z.uuid(), data: updateOptionGroupSchema }))
     .mutation(({ input }) => service.updateOptionGroup(input.id, input.data)),
+  delete: deleteOption
+    .input(catalogIdSchema)
+    .mutation(({ input }) => service.deleteOptionGroup(input.id)),
   disable: disable
     .input(catalogIdSchema)
     .mutation(({ input }) => service.toggleOptionGroupActive(input.id, false)),
@@ -48,6 +52,9 @@ const optionsRouter = router({
   update: update
     .input(z.object({ id: z.uuid(), data: updateOptionSchema }))
     .mutation(({ input }) => service.updateOption(input.id, input.data)),
+  delete: deleteOption
+    .input(catalogIdSchema)
+    .mutation(({ input }) => service.deleteOption(input.id)),
   disable: disable
     .input(catalogIdSchema)
     .mutation(({ input }) => service.toggleOptionActive(input.id, false)),

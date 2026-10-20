@@ -8,7 +8,8 @@
   "actions": {
     "activate": "Activar",
     "deactivate": "Desactivar",
-    "duplicate": "Duplicar"
+    "duplicate": "Duplicar",
+    "deletePermanently": "Eliminar permanentemente"
   },
   "form": {
     "save": "Guardar"
@@ -66,6 +67,10 @@
     "includedShort": "incluido",
     "create": { "title": "Nueva sección" },
     "edit": { "title": "Editar sección" },
+    "deleteConfirm": {
+      "title": "¿Eliminar esta sección permanentemente?",
+      "content": "Se eliminarán también todos sus ítems. Esta acción no se puede deshacer."
+    },
     "selectionType": {
       "select": "Seleccionable",
       "included": "Incluido"
@@ -92,6 +97,10 @@
     "empty": "Sin ítems",
     "create": { "title": "Nuevo ítem" },
     "edit": { "title": "Editar ítem" },
+    "deleteConfirm": {
+      "title": "¿Eliminar este ítem permanentemente?",
+      "content": "Esta acción no se puede deshacer."
+    },
     "form": {
       "name": "Nombre",
       "namePlaceholder": "Nombre del ítem",

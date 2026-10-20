@@ -92,6 +92,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.PIPELINE]: CRUD,
       [RESOURCES.STAFF]: CRUD,
       [RESOURCES.PRODUCT]: PRODUCT_FULL,
+      [RESOURCES.PRODUCT_OPTION]: [DELETE],
       [RESOURCES.PRICE_TIERS]: CRUD,
       [RESOURCES.EVENT_TYPE]: CRUD,
       [RESOURCES.RESCHEDULE_REASON]: [VIEW, ...CRUD],
@@ -119,6 +120,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.PIPELINE]: CRUD,
       [RESOURCES.STAFF]: CRUD,
       [RESOURCES.PRODUCT]: PRODUCT_ADMIN,
+      [RESOURCES.PRODUCT_OPTION]: [DELETE],
       [RESOURCES.PRICE_TIERS]: CRUD,
       [RESOURCES.EVENT_TYPE]: CRUD,
       // Only to populate the reason picker when rescheduling; the catalog page needs VIEW.

@@ -11,6 +11,7 @@ export function useOptionGroupMutations() {
 
   const create = useMutation(trpc.products.groups.create.mutationOptions({ onSuccess: invalidate, onError }));
   const update = useMutation(trpc.products.groups.update.mutationOptions({ onSuccess: invalidate, onError }));
+  const remove = useMutation(trpc.products.groups.delete.mutationOptions({ onSuccess: invalidate, onError }));
   const disable = useMutation(
     trpc.products.groups.disable.mutationOptions({ onSuccess: invalidate, onError }),
   );
@@ -22,6 +23,8 @@ export function useOptionGroupMutations() {
   return {
     createOptionGroup: (data: CreateOptionGroupInput) => create.mutateAsync(data),
     updateOptionGroup: (id: string, data: UpdateOptionGroupInput) => update.mutateAsync({ id, data }),
+    deleteOptionGroup: (id: string) => remove.mutateAsync({ id }),
+    isDeleting: remove.isPending,
     disableOptionGroup: (id: string) => disable.mutateAsync({ id }),
     enableOptionGroup: (id: string) => enable.mutateAsync({ id }),
     reorderOptionGroups: (ids: string[]) => reorder.mutateAsync({ ids }),

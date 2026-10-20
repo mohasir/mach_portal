@@ -15,11 +15,11 @@ import { useCatalogSortable } from '../hooks/useCatalogSortable';
 import { ReorderControl } from './ReorderControl';
 import { OptionList } from './OptionList';
 import { OptionFormModal } from './OptionFormModal';
-import type { Option, OptionGroup } from '../types';
+import type { CatalogOption, CatalogOptionGroup } from '../types';
 
 interface OptionGroupPanelProps {
-  group: OptionGroup;
-  onEdit: (group: OptionGroup) => void;
+  group: CatalogOptionGroup;
+  onEdit: (group: CatalogOptionGroup) => void;
 }
 
 export function OptionGroupPanel({ group, onEdit }: OptionGroupPanelProps) {
@@ -34,7 +34,7 @@ export function OptionGroupPanel({ group, onEdit }: OptionGroupPanelProps) {
   const [confirm, confirmContextHolder] = useActionConfirm();
   const sortable = useCatalogSortable();
   const { setNodeRef, style, isDragging, dragHandleProps } = useSortableRow(group.id, sortable);
-  const [editingOption, setEditingOption] = useState<Option | null>(null);
+  const [editingOption, setEditingOption] = useState<CatalogOption | null>(null);
   const [isCreateOptionOpen, setCreateOptionOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
