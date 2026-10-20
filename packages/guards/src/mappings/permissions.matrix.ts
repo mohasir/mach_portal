@@ -52,6 +52,7 @@ export const permissionsMatrix = [
   { resource: RESOURCES.PIPELINE, actions: CRUD },
   { resource: RESOURCES.STAFF, actions: CRUD },
   { resource: RESOURCES.PRODUCT, actions: [...CRUD, DISABLE, ENABLE, DUPLICATE] },
+  { resource: RESOURCES.PRODUCT_OPTION, actions: [DELETE] },
   { resource: RESOURCES.PRICE_TIERS, actions: CRUD },
   { resource: RESOURCES.EVENT_TYPE, actions: CRUD },
   { resource: RESOURCES.RESCHEDULE_REASON, actions: [VIEW, ...CRUD] },

@@ -13,6 +13,10 @@ const copy = {
 
 function makeRepo() {
   return {
+    isOptionUsed: vi.fn().mockResolvedValue(false),
+    deleteOption: vi.fn().mockResolvedValue({ id: 'opt-1' }),
+    isOptionGroupUsed: vi.fn().mockResolvedValue(false),
+    deleteOptionGroup: vi.fn().mockResolvedValue({ id: 'grp-1' }),
     findProductById: vi.fn().mockResolvedValue({ id: 'id-1', name: 'Barra' }),
     findProductByName: vi.fn().mockResolvedValue(undefined),
     duplicateProduct: vi.fn().mockResolvedValue(copy),
@@ -49,5 +53,65 @@ describe('ProductsService.duplicateProduct', () => {
       cause: { code: 'PRODUCT_NOT_FOUND' },
     });
     expect(repo.duplicateProduct).not.toHaveBeenCalled();
+  });
+});
+
+describe('ProductsService permanent delete', () => {
+  let repo: ReturnType<typeof makeRepo>;
+  let service: ProductsService;
+
+  beforeEach(() => {
+    repo = makeRepo();
+    service = new ProductsService(repo as unknown as ProductsRepository);
+  });
+
+  it('deletes an option that no quote used', async () => {
+    await expect(service.deleteOption('opt-1')).resolves.toEqual({ id: 'opt-1' });
+  });
+
+  it('rejects deleting an option already used in a quote', async () => {
+    repo.isOptionUsed.mockResolvedValue(true);
+    await expect(service.deleteOption('opt-1')).rejects.toMatchObject({
+      code: 'CONFLICT',
+      cause: { code: 'OPTION_IN_USE' },
+    });
+    expect(repo.deleteOption).not.toHaveBeenCalled();
+  });
+
+  it('maps a foreign key violation raised during the delete to IN_USE', async () => {
+    repo.deleteOption.mockRejectedValue({ cause: { code: '23503' } });
+    await expect(service.deleteOption('opt-1')).rejects.toMatchObject({
+      code: 'CONFLICT',
+      cause: { code: 'OPTION_IN_USE' },
+    });
+  });
+
+  it('maps a foreign key violation on a group delete to IN_USE', async () => {
+    repo.deleteOptionGroup.mockRejectedValue({ code: '23503' });
+    await expect(service.deleteOptionGroup('grp-1')).rejects.toMatchObject({
+      code: 'CONFLICT',
+      cause: { code: 'OPTION_GROUP_IN_USE' },
+    });
+  });
+
+  it('rejects deleting an unknown option', async () => {
+    repo.deleteOption.mockResolvedValue(undefined);
+    await expect(service.deleteOption('nope')).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+      cause: { code: 'OPTION_NOT_FOUND' },
+    });
+  });
+
+  it('deletes a group that no quote used', async () => {
+    await expect(service.deleteOptionGroup('grp-1')).resolves.toEqual({ id: 'grp-1' });
+  });
+
+  it('rejects deleting a group already used in a quote', async () => {
+    repo.isOptionGroupUsed.mockResolvedValue(true);
+    await expect(service.deleteOptionGroup('grp-1')).rejects.toMatchObject({
+      code: 'CONFLICT',
+      cause: { code: 'OPTION_GROUP_IN_USE' },
+    });
+    expect(repo.deleteOptionGroup).not.toHaveBeenCalled();
   });
 });

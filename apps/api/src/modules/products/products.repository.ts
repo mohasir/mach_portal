@@ -9,7 +9,13 @@ import type {
   UpdateProductInput,
 } from '@repo/schemas';
 import type { Database } from '../../db';
-import { options, optionGroups, productPriceTiers, products } from '../../db/schema';
+import {
+  options,
+  optionGroups,
+  productPriceTiers,
+  products,
+  quoteLineOptions,
+} from '../../db/schema';
 import {
   publicOptionColumns,
   publicOptionGroupColumns,
@@ -50,6 +56,20 @@ export class ProductsRepository {
     ]);
 
     return { productRows, tierRows, groupRows, optionRows };
+  }
+
+  async findUsage() {
+    const rows = await this.db
+      .selectDistinct({
+        optionId: quoteLineOptions.optionId,
+        optionGroupId: quoteLineOptions.optionGroupId,
+      })
+      .from(quoteLineOptions);
+
+    return {
+      optionIds: new Set(rows.map((r) => r.optionId)),
+      groupIds: new Set(rows.map((r) => r.optionGroupId)),
+    };
   }
 
   async findPricesTree() {
@@ -252,6 +272,23 @@ export class ProductsRepository {
       .then((r) => r[0]);
   }
 
+  isOptionGroupUsed(id: string) {
+    return this.db
+      .select({ id: quoteLineOptions.id })
+      .from(quoteLineOptions)
+      .where(eq(quoteLineOptions.optionGroupId, id))
+      .limit(1)
+      .then((r) => r.length > 0);
+  }
+
+  deleteOptionGroup(id: string) {
+    return this.db
+      .delete(optionGroups)
+      .where(eq(optionGroups.id, id))
+      .returning({ id: optionGroups.id })
+      .then((r) => r[0]);
+  }
+
   setOptionGroupActive(id: string, isActive: boolean) {
     return this.db
       .update(optionGroups)
@@ -289,6 +326,23 @@ export class ProductsRepository {
       .set({ name: data.name, description: data.description ?? null })
       .where(eq(options.id, id))
       .returning(publicOptionColumns)
+      .then((r) => r[0]);
+  }
+
+  isOptionUsed(id: string) {
+    return this.db
+      .select({ id: quoteLineOptions.id })
+      .from(quoteLineOptions)
+      .where(eq(quoteLineOptions.optionId, id))
+      .limit(1)
+      .then((r) => r.length > 0);
+  }
+
+  deleteOption(id: string) {
+    return this.db
+      .delete(options)
+      .where(eq(options.id, id))
+      .returning({ id: options.id })
       .then((r) => r[0]);
   }
 

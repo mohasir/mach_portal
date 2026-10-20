@@ -14,3 +14,17 @@ describe('product duplicate permission', () => {
     expect(canDuplicate(ROLES.OPERATOR)).toBe(false);
   });
 });
+
+describe('product option delete permission', () => {
+  const canDeleteOption = (role: string) =>
+    hasPermission(role, { [RESOURCES.PRODUCT_OPTION]: [ACTIONS.DELETE] });
+
+  it('superadmin and admin can permanently delete groups and options', () => {
+    expect(canDeleteOption(ROLES.SUPERADMIN)).toBe(true);
+    expect(canDeleteOption(ROLES.ADMIN)).toBe(true);
+  });
+
+  it('operator cannot', () => {
+    expect(canDeleteOption(ROLES.OPERATOR)).toBe(false);
+  });
+});
