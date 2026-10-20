@@ -5,6 +5,14 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.16.1] - 2026-10-20
+
+### Fixed
+
+- El PDF de la cotización listaba los grupos y opciones desactivados del menú de la estación, aun
+  en cotizaciones nuevas. Ahora los omite; las estaciones desactivadas se siguen resolviendo para
+  que las cotizaciones existentes conserven su línea.
+
 ## [0.16.0] - 2026-10-20
 
 ### Added
