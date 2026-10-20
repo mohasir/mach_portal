@@ -13,8 +13,10 @@ import { eventsRouter } from '../../modules/events/events.router';
 import { paymentsRouter } from '../../modules/payments/payments.router';
 import { templatesRouter } from '../../modules/templates/templates.router';
 import { notificationsRouter } from '../../modules/notifications/notifications.router';
+import { tenantRouter } from '../../modules/tenant/tenant.router';
 
 export const appRouter = router({
+  tenant: tenantRouter,
   dashboard: dashboardRouter,
   users: usersRouter,
   userPreferences: userPreferencesRouter,

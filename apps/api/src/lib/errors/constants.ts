@@ -6,6 +6,9 @@ export const ErrorCodes = {
     CANNOT_EDIT_OWN_ROLE: 'USER_CANNOT_EDIT_OWN_ROLE',
     MUST_CHANGE_PASSWORD: 'USER_MUST_CHANGE_PASSWORD',
   },
+  tenant: {
+    NOT_FOUND: 'TENANT_NOT_FOUND',
+  },
   client: {
     NOT_FOUND: 'CLIENT_NOT_FOUND',
   },

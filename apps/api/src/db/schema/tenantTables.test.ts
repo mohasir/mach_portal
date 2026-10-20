@@ -89,8 +89,6 @@ describe('tenant scoping of the schema', () => {
   it('keeps the exempt list in sync with the schema', () => {
     const names = allTables.map(tableName);
     for (const exempt of TENANT_EXEMPT_TABLES) {
-      // Created by a later task.
-      if (exempt === 'platform_access_log') continue;
       expect(names, exempt).toContain(exempt);
     }
   });

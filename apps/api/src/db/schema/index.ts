@@ -11,3 +11,4 @@ export * from './events';
 export * from './templates';
 export * from './notifications';
 export * from './userPreferences';
+export * from './platformAccessLog';
