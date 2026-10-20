@@ -88,6 +88,9 @@ export type OptionGroupResource = ReturnType<typeof optionGroupResource>;
 export type OptionResource = ReturnType<typeof optionResource>;
 
 export type OptionGroupWithOptions = OptionGroupResource & { options: OptionResource[] };
+
+// Ids already referenced by quote lines; those rows can only be deactivated, never deleted.
+export type CatalogUsage = { optionIds: Set<string>; groupIds: Set<string> };
 export type ProductWithGroups = ProductResource & {
   priceTiers: TierResource[];
   optionGroups: OptionGroupWithOptions[];
@@ -132,3 +135,26 @@ export const buildPricesList = (
       tierRows.filter((tier) => tier.productId === product.id),
     ),
   );
+
+export type CatalogProduct = Omit<ProductWithGroups, 'optionGroups'> & {
+  optionGroups: (Omit<OptionGroupWithOptions, 'options'> & {
+    isUsed: boolean;
+    options: (OptionResource & { isUsed: boolean })[];
+  })[];
+};
+
+export const withCatalogUsage = (
+  tree: ProductWithGroups[],
+  usage: CatalogUsage,
+): CatalogProduct[] =>
+  tree.map((product) => ({
+    ...product,
+    optionGroups: product.optionGroups.map((group) => ({
+      ...group,
+      isUsed: usage.groupIds.has(group.id),
+      options: group.options.map((option) => ({
+        ...option,
+        isUsed: usage.optionIds.has(option.id),
+      })),
+    })),
+  }));

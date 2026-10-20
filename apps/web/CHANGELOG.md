@@ -12,6 +12,9 @@ y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 - Duplicar estación: botón "Duplicar" en el detalle de la estación (Catálogo), con confirmación.
   Crea "<nombre> (copia)" con sus servicios, ítems y paquetes de precios, y navega al detalle de la
   copia. Visible solo con el permiso `PRODUCT:DUPLICATE`.
+- Eliminar permanentemente grupos y opciones: botón en el modal de edición, con confirmación.
+  Solo se muestra si nunca se usaron en una cotización (si no, hay que desactivarlos) y con el
+  permiso `PRODUCT_OPTION:DELETE`. Al borrar un grupo se eliminan también sus opciones.
 
 ## [0.16.0] - 2026-10-07
 
