@@ -18,9 +18,11 @@ export const ErrorCodes = {
   },
   optionGroup: {
     NOT_FOUND: 'OPTION_GROUP_NOT_FOUND',
+    IN_USE: 'OPTION_GROUP_IN_USE',
   },
   option: {
     NOT_FOUND: 'OPTION_NOT_FOUND',
+    IN_USE: 'OPTION_IN_USE',
   },
   eventType: {
     NOT_FOUND: 'EVENT_TYPE_NOT_FOUND',

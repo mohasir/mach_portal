@@ -39,6 +39,7 @@ const {
   DELETE,
   DISABLE,
   ENABLE,
+  DUPLICATE,
   UPLOAD_ATTACHMENT,
   VIEW,
   MANAGE_SELECTIONS,
@@ -57,8 +58,8 @@ const {
 const CRUD = [CREATE, READ, UPDATE, DELETE];
 // Superadmin gets both DISABLE and ENABLE; admin can disable but not re-enable
 // (a soft-deleted product/section/item needs superadmin to bring back).
-const PRODUCT_FULL = [...CRUD, DISABLE, ENABLE];
-const PRODUCT_ADMIN = [...CRUD, DISABLE];
+const PRODUCT_FULL = [...CRUD, DISABLE, ENABLE, DUPLICATE];
+const PRODUCT_ADMIN = [...CRUD, DISABLE, DUPLICATE];
 const READ_ONLY = [READ];
 const VIEW_UPDATE = [VIEW, UPDATE];
 
@@ -91,6 +92,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.PIPELINE]: CRUD,
       [RESOURCES.STAFF]: CRUD,
       [RESOURCES.PRODUCT]: PRODUCT_FULL,
+      [RESOURCES.PRODUCT_OPTION]: [DELETE],
       [RESOURCES.PRICE_TIERS]: CRUD,
       [RESOURCES.EVENT_TYPE]: CRUD,
       [RESOURCES.RESCHEDULE_REASON]: [VIEW, ...CRUD],
@@ -118,6 +120,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.PIPELINE]: CRUD,
       [RESOURCES.STAFF]: CRUD,
       [RESOURCES.PRODUCT]: PRODUCT_ADMIN,
+      [RESOURCES.PRODUCT_OPTION]: [DELETE],
       [RESOURCES.PRICE_TIERS]: CRUD,
       [RESOURCES.EVENT_TYPE]: CRUD,
       // Only to populate the reason picker when rescheduling; the catalog page needs VIEW.

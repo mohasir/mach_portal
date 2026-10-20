@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, max } from 'drizzle-orm';
 import type {
   CreateOptionGroupInput,
   CreateOptionInput,
@@ -9,7 +9,13 @@ import type {
   UpdateProductInput,
 } from '@repo/schemas';
 import type { Database } from '../../db';
-import { options, optionGroups, productPriceTiers, products } from '../../db/schema';
+import {
+  options,
+  optionGroups,
+  productPriceTiers,
+  products,
+  quoteLineOptions,
+} from '../../db/schema';
 import {
   publicOptionColumns,
   publicOptionGroupColumns,
@@ -52,6 +58,20 @@ export class ProductsRepository {
     return { productRows, tierRows, groupRows, optionRows };
   }
 
+  async findUsage() {
+    const rows = await this.db
+      .selectDistinct({
+        optionId: quoteLineOptions.optionId,
+        optionGroupId: quoteLineOptions.optionGroupId,
+      })
+      .from(quoteLineOptions);
+
+    return {
+      optionIds: new Set(rows.map((r) => r.optionId)),
+      groupIds: new Set(rows.map((r) => r.optionGroupId)),
+    };
+  }
+
   async findPricesTree() {
     const [productRows, tierRows] = await Promise.all([
       this.db.select(publicProductColumns).from(products).orderBy(asc(products.sortOrder)),
@@ -69,6 +89,15 @@ export class ProductsRepository {
       .select({ id: products.id })
       .from(products)
       .where(eq(products.name, name))
+      .limit(1)
+      .then((r) => r[0]);
+  }
+
+  findProductById(id: string) {
+    return this.db
+      .select({ id: products.id, name: products.name })
+      .from(products)
+      .where(eq(products.id, id))
       .limit(1)
       .then((r) => r[0]);
   }
@@ -99,6 +128,72 @@ export class ProductsRepository {
         .returning(publicProductColumns);
       await this.replaceTiers(tx, product!.id, data.tiers);
       return product!;
+    });
+  }
+
+  duplicateProduct(id: string, name: string) {
+    return this.db.transaction(async (tx) => {
+      const [source] = await tx.select().from(products).where(eq(products.id, id));
+      if (!source) return undefined;
+
+      const [last] = await tx.select({ value: max(products.sortOrder) }).from(products);
+      const [copy] = await tx
+        .insert(products)
+        .values({
+          name,
+          description: source.description,
+          isPremium: source.isPremium,
+          isActive: true,
+          sortOrder: (last?.value ?? -1) + 1,
+        })
+        .returning(publicProductColumns);
+
+      const tiers = await tx
+        .select()
+        .from(productPriceTiers)
+        .where(eq(productPriceTiers.productId, id));
+      if (tiers.length > 0) {
+        await tx.insert(productPriceTiers).values(
+          tiers.map((tier) => ({
+            productId: copy!.id,
+            numPersons: tier.numPersons,
+            price: tier.price,
+            sortOrder: tier.sortOrder,
+          })),
+        );
+      }
+
+      const groups = await tx.select().from(optionGroups).where(eq(optionGroups.productId, id));
+      for (const group of groups) {
+        const [groupCopy] = await tx
+          .insert(optionGroups)
+          .values({
+            productId: copy!.id,
+            label: group.label,
+            selectionType: group.selectionType,
+            maxSelect: group.maxSelect,
+            isActive: group.isActive,
+            sortOrder: group.sortOrder,
+          })
+          .returning({ id: optionGroups.id });
+        const groupOptions = await tx
+          .select()
+          .from(options)
+          .where(eq(options.optionGroupId, group.id));
+        if (groupOptions.length > 0) {
+          await tx.insert(options).values(
+            groupOptions.map((option) => ({
+              optionGroupId: groupCopy!.id,
+              name: option.name,
+              description: option.description,
+              isActive: option.isActive,
+              sortOrder: option.sortOrder,
+            })),
+          );
+        }
+      }
+
+      return copy!;
     });
   }
 
@@ -177,6 +272,23 @@ export class ProductsRepository {
       .then((r) => r[0]);
   }
 
+  isOptionGroupUsed(id: string) {
+    return this.db
+      .select({ id: quoteLineOptions.id })
+      .from(quoteLineOptions)
+      .where(eq(quoteLineOptions.optionGroupId, id))
+      .limit(1)
+      .then((r) => r.length > 0);
+  }
+
+  deleteOptionGroup(id: string) {
+    return this.db
+      .delete(optionGroups)
+      .where(eq(optionGroups.id, id))
+      .returning({ id: optionGroups.id })
+      .then((r) => r[0]);
+  }
+
   setOptionGroupActive(id: string, isActive: boolean) {
     return this.db
       .update(optionGroups)
@@ -214,6 +326,23 @@ export class ProductsRepository {
       .set({ name: data.name, description: data.description ?? null })
       .where(eq(options.id, id))
       .returning(publicOptionColumns)
+      .then((r) => r[0]);
+  }
+
+  isOptionUsed(id: string) {
+    return this.db
+      .select({ id: quoteLineOptions.id })
+      .from(quoteLineOptions)
+      .where(eq(quoteLineOptions.optionId, id))
+      .limit(1)
+      .then((r) => r.length > 0);
+  }
+
+  deleteOption(id: string) {
+    return this.db
+      .delete(options)
+      .where(eq(options.id, id))
+      .returning({ id: options.id })
       .then((r) => r[0]);
   }
 

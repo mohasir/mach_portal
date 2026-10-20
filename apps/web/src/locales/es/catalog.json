@@ -7,7 +7,9 @@
   },
   "actions": {
     "activate": "Activar",
-    "deactivate": "Desactivar"
+    "deactivate": "Desactivar",
+    "duplicate": "Duplicar",
+    "deletePermanently": "Eliminar permanentemente"
   },
   "form": {
     "save": "Guardar"
@@ -25,6 +27,10 @@
       "description": "Descripción",
       "descriptionPlaceholder": "Descripción breve (opcional)",
       "isPremium": "Premium"
+    },
+    "duplicateConfirm": {
+      "title": "¿Duplicar esta estación?",
+      "content": "Se creará una copia con sus servicios, ítems y paquetes de precios."
     },
     "disableConfirm": {
       "title": "¿Desactivar esta estación?",
@@ -61,6 +67,10 @@
     "includedShort": "incluido",
     "create": { "title": "Nueva sección" },
     "edit": { "title": "Editar sección" },
+    "deleteConfirm": {
+      "title": "¿Eliminar esta sección permanentemente?",
+      "content": "Se eliminarán también todos sus ítems. Esta acción no se puede deshacer."
+    },
     "selectionType": {
       "select": "Seleccionable",
       "included": "Incluido"
@@ -87,6 +97,10 @@
     "empty": "Sin ítems",
     "create": { "title": "Nuevo ítem" },
     "edit": { "title": "Editar ítem" },
+    "deleteConfirm": {
+      "title": "¿Eliminar este ítem permanentemente?",
+      "content": "Esta acción no se puede deshacer."
+    },
     "form": {
       "name": "Nombre",
       "namePlaceholder": "Nombre del ítem",

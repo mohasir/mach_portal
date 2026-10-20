@@ -7,7 +7,9 @@
   },
   "actions": {
     "activate": "Activate",
-    "deactivate": "Deactivate"
+    "deactivate": "Deactivate",
+    "duplicate": "Duplicate",
+    "deletePermanently": "Delete permanently"
   },
   "form": {
     "save": "Save"
@@ -25,6 +27,10 @@
       "description": "Description",
       "descriptionPlaceholder": "Short description (optional)",
       "isPremium": "Premium"
+    },
+    "duplicateConfirm": {
+      "title": "Duplicate this station?",
+      "content": "A copy will be created with its services, items and price packages."
     },
     "disableConfirm": {
       "title": "Deactivate this station?",
@@ -61,6 +67,10 @@
     "includedShort": "included",
     "create": { "title": "New section" },
     "edit": { "title": "Edit section" },
+    "deleteConfirm": {
+      "title": "Delete this section permanently?",
+      "content": "All its items will be deleted too. This cannot be undone."
+    },
     "selectionType": {
       "select": "Selectable",
       "included": "Included"
@@ -87,6 +97,10 @@
     "empty": "No items",
     "create": { "title": "New item" },
     "edit": { "title": "Edit item" },
+    "deleteConfirm": {
+      "title": "Delete this item permanently?",
+      "content": "This cannot be undone."
+    },
     "form": {
       "name": "Name",
       "namePlaceholder": "Item name",

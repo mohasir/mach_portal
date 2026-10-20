@@ -5,6 +5,23 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.16.0] - 2026-10-20
+
+### Added
+
+- `products.duplicate`: en una transacción copia la estación con sus paquetes de precios, grupos de
+  opciones y opciones (conserva el estado activo y el orden de cada uno). La copia queda activa y
+  al final del orden, con nombre "<nombre> (copia)", "(copia 2)", etc. si ya existe.
+- Permiso `PRODUCT:DUPLICATE` (superadmin, admin).
+- `products.groups.delete` y `products.options.delete`: eliminan un grupo u opción solo si ninguna
+  cotización los usó; si no, responden `OPTION_GROUP_IN_USE` / `OPTION_IN_USE`. Un grupo borra en
+  cascada sus opciones, y una violación de FK por una carrera con una cotización nueva también se
+  responde como "en uso".
+- `products.catalog` (admin) devuelve `isUsed` en cada grupo y opción; `products.list` y el PDF de
+  cotización no lo incluyen ni pagan la consulta.
+- Permiso `PRODUCT_OPTION:DELETE` (superadmin, admin).
+- Tests de `duplicateProduct`, de eliminar grupos y opciones, y de los permisos.
+
 ## [0.15.0] - 2026-10-07
 
 ### Added
