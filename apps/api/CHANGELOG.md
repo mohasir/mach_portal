@@ -5,6 +5,16 @@ Todos los cambios notables de Mach Portal (API) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.16.0] - 2026-10-20
+
+### Added
+
+- `products.duplicate`: en una transacción copia la estación con sus paquetes de precios, grupos de
+  opciones y opciones (conserva el estado activo y el orden de cada uno). La copia queda activa y
+  al final del orden, con nombre "<nombre> (copia)", "(copia 2)", etc. si ya existe.
+- Permiso `PRODUCT:DUPLICATE` (superadmin, admin).
+- Tests de `duplicateProduct` y del permiso.
+
 ## [0.15.0] - 2026-10-07
 
 ### Added

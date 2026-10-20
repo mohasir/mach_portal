@@ -5,6 +5,14 @@ Todos los cambios notables de Mach Portal (web) se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.17.0] - 2026-10-20
+
+### Added
+
+- Duplicar estación: botón "Duplicar" en el detalle de la estación (Catálogo), con confirmación.
+  Crea "<nombre> (copia)" con sus servicios, ítems y paquetes de precios, y navega al detalle de la
+  copia. Visible solo con el permiso `PRODUCT:DUPLICATE`.
+
 ## [0.16.0] - 2026-10-07
 
 ### Added
