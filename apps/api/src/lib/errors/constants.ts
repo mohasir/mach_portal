@@ -6,6 +6,10 @@ export const ErrorCodes = {
     CANNOT_EDIT_OWN_ROLE: 'USER_CANNOT_EDIT_OWN_ROLE',
     MUST_CHANGE_PASSWORD: 'USER_MUST_CHANGE_PASSWORD',
   },
+  // Mirrors Better Auth's own error code strings; do not rename.
+  auth: {
+    INVALID_EMAIL_OR_PASSWORD: 'INVALID_EMAIL_OR_PASSWORD',
+  },
   tenant: {
     NOT_FOUND: 'TENANT_NOT_FOUND',
   },

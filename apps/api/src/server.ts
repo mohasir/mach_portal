@@ -3,6 +3,7 @@ import cors from 'cors';
 import { toNodeHandler } from 'better-auth/node';
 import { createExpressMiddleware } from '@trpc/server/adapters/express';
 import { auth } from './lib/auth';
+import { isAllowedOrigin } from './lib/tenant/allowedOrigin';
 import { appRouter } from './core/trpc/router';
 import { createContext } from './core/trpc/context';
 import { env } from './env';
@@ -11,7 +12,17 @@ import { registerCrons } from './crons';
 
 const app = express();
 
-app.use(cors({ origin: env.WEB_ORIGIN, credentials: true })); // env.WEB_ORIGIN is a string[]
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      isAllowedOrigin(origin).then(
+        (allowed) => callback(null, allowed),
+        () => callback(null, false),
+      );
+    },
+    credentials: true,
+  }),
+);
 
 app.use(['/api/auth', '/trpc'], (_req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');

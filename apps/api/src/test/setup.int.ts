@@ -6,7 +6,6 @@ vi.mock('../env', () => ({
     DATABASE_URL: process.env['TEST_DATABASE_URL'],
     BETTER_AUTH_SECRET: 'test-secret-test-secret',
     BETTER_AUTH_URL: 'http://localhost:8080',
-    WEB_ORIGIN: ['http://localhost:3000'],
     WEB_APP_URL: 'http://localhost:3000',
     PORT: 8080,
     STORAGE_PROVIDER: 'r2',

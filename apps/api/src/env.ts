@@ -5,13 +5,6 @@ const schema = z.object({
   DATABASE_URL: z.url(),
   BETTER_AUTH_SECRET: z.string().min(16),
   BETTER_AUTH_URL: z.url(),
-  // Comma-separated list so the same API can trust multiple web origins
-  // (e.g. localhost for the browser + a LAN IP for testing on mobile).
-  WEB_ORIGIN: z
-    .string()
-    .min(1)
-    .transform((value) => value.split(',').map((origin) => origin.trim()))
-    .pipe(z.array(z.url()).min(1)),
   // Canonical web origin used to build password setup/reset links
   WEB_APP_URL: z.url(),
   // Root domain tenants hang off as subdomains; may include a port (e.g. localhost:3000).

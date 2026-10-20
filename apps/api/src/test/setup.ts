@@ -7,7 +7,6 @@ vi.mock('../env', () => ({
     DATABASE_URL: 'postgres://test:test@localhost:5432/test',
     BETTER_AUTH_SECRET: 'test-secret-test-secret',
     BETTER_AUTH_URL: 'http://localhost:8080',
-    WEB_ORIGIN: ['http://localhost:3000'],
     WEB_APP_URL: 'http://localhost:3000',
     APP_BASE_DOMAIN: 'oravitech.test',
     APP_PROTOCOL: 'https',
