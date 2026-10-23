@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { Button, Flex, Result, Spin } from 'antd';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { useSession } from '@/lib/auth/client';
+import { signOut, useSession } from '@/lib/auth/client';
 import { DEFAULT_REDIRECT_LOGIN, isProtectedRoute } from '@/lib/auth/navigation';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -24,7 +24,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     if (redirected.current) return;
     redirected.current = true;
-    router.replace(DEFAULT_REDIRECT_LOGIN);
+    // Clears a stale session cookie that fails validation, otherwise the middleware bounces /login back.
+    signOut()
+      .catch(() => {})
+      .finally(() => router.replace(DEFAULT_REDIRECT_LOGIN));
   }, [protectedRoute, isPending, isServerError, session, router]);
 
   if (!protectedRoute) return <>{children}</>;
