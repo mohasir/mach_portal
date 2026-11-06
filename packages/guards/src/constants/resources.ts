@@ -7,6 +7,7 @@ export const RESOURCES = {
   PIPELINE: 'pipeline',
   STAFF: 'staff',
   PRODUCT: 'product',
+  PRODUCT_OPTION: 'product_option',
   PRICE_TIERS: 'price_tiers',
   EVENT_TYPE: 'event_type',
   RESCHEDULE_REASON: 'reschedule_reason',
