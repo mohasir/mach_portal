@@ -1,4 +1,4 @@
-`Configuración → General → Estados de cotización` la gestiona el equipo de soporte de Mach Bar —
+`Configuración → General → Estados de cotización` la gestiona el equipo de soporte de OraviCloud —
 no aparece en la Configuración del cliente, aunque comparta pantalla con otras tarjetas que sí se
 pueden editar.
 

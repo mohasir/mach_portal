@@ -3,7 +3,7 @@ This section is about your own account — any user can see it, no matter their 
 ## Profile
 
 `Settings → Profile`: you can edit your Name. Email and role are shown but aren't editable from
-here — if you need those changed, ask Mach Bar's support team.
+here — if you need those changed, ask OraviCloud's support team.
 
 Right there you'll also find the "Change password" card: it asks for your current password, the
 new one (minimum 8 characters) and its confirmation.

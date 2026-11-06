@@ -1,4 +1,4 @@
-La gestión de cuentas de usuario (`Usuarios`) la administra el equipo de soporte de Mach Bar —
+La gestión de cuentas de usuario (`Usuarios`) la administra el equipo de soporte de OraviCloud —
 no aparece en el menú para ningún rol del cliente.
 
 ## Pedir un usuario nuevo

@@ -1,4 +1,4 @@
-`Settings → Preferences` is managed by Mach Bar's support team — it doesn't even show up in your
+`Settings → Preferences` is managed by OraviCloud's support team — it doesn't even show up in your
 Settings menu. These are the two things you can ask to be changed there.
 
 ## Sortable catalog

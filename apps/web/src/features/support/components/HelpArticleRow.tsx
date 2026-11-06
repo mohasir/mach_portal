@@ -23,7 +23,7 @@ export function HelpArticleRow({ article, showDescription = true }: HelpArticleR
           <div className="text-muted text-xs">{article.description}</div>
         )}
       </div>
-      <ChevronRight size={18} className="text-primary mt-1 shrink-0" />
+      <ChevronRight size={18} className="text-navy mt-1 shrink-0" />
     </button>
   );
 }

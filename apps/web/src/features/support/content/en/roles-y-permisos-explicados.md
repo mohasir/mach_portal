@@ -11,7 +11,7 @@ articles mention it instead of repeating it.
   account gets until it's assigned a different one.
 
 Some things (user account management, certain system settings) aren't handled by any role on
-your team — they're managed by Mach Bar's support team. Articles that mention them call this out
+your team — they're managed by OraviCloud's support team. Articles that mention them call this out
 specifically.
 
 ## Table by area
@@ -36,4 +36,4 @@ specifically.
 - If someone's missing a button or an entire tab that you can see, it's probably role-based — not
   necessarily a system bug.
 - Anything marked "managed by support" doesn't depend on your role: nobody on your team has it
-  available, you need to ask Mach Bar's support team for it.
+  available, you need to ask OraviCloud's support team for it.

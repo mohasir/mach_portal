@@ -1,4 +1,4 @@
-`Settings → General → Quote stages` is managed by Mach Bar's support team — it doesn't show up in
+`Settings → General → Quote stages` is managed by OraviCloud's support team — it doesn't show up in
 your Settings, even though it shares a screen with other cards you can edit.
 
 ## What you can ask support to change

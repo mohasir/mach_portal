@@ -21,15 +21,15 @@ export function HelpCategoryPanel({ category }: HelpCategoryPanelProps) {
         onClick={() => toggleCategory(category.slug)}
         className="flex w-full min-w-0 items-center gap-2 text-left"
       >
-        <IconBadge icon={category.icon} shape="square" className="bg-primary/8 text-primary" />
+        <IconBadge icon={category.icon} shape="square" className="bg-primary/8 text-navy" />
         <div className="min-w-0 flex-1">
           <div className="text-base font-medium">{category.label}</div>
           {category.caption && <div className="text-muted text-xs">{category.caption}</div>}
         </div>
         {expanded ? (
-          <ChevronDown size={20} className="text-primary shrink-0" />
+          <ChevronDown size={20} className="text-navy shrink-0" />
         ) : (
-          <ChevronRight size={20} className="text-primary shrink-0" />
+          <ChevronRight size={20} className="text-navy shrink-0" />
         )}
       </button>
 

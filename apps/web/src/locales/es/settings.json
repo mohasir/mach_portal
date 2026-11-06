@@ -251,7 +251,7 @@
   },
   "about": {
     "title": "Acerca de",
-    "description": "Sistema de gestión de cotizaciones, eventos y clientes de Mach Snack Bar & Drinks",
+    "description": "Sistema de gestión de cotizaciones, eventos y clientes",
     "version": "v{{version}}"
   },
   "validation": {

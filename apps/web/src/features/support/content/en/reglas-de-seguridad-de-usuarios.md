@@ -1,4 +1,4 @@
-Since user account management is handled by Mach Bar's support team, this is mostly informational:
+Since user account management is handled by OraviCloud's support team, this is mostly informational:
 they have a couple of built-in protections so nobody accidentally locks themselves out.
 
 - The account currently being used can't be deleted.

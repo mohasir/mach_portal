@@ -1,4 +1,4 @@
-`Configuración → Preferencias` la gestiona el equipo de soporte de Mach Bar — ni siquiera aparece
+`Configuración → Preferencias` la gestiona el equipo de soporte de OraviCloud — ni siquiera aparece
 en el menú de Configuración del cliente. Estas son las dos cosas que se pueden pedir cambiar ahí.
 
 ## Catálogo ordenable

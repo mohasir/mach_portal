@@ -13,12 +13,12 @@ desactivar algo no les afecta — solo deja de estar disponible para cotizacione
 ![Elemento inactivo con el ícono para reactivarlo](/support/activar-desactivar-reordenar-catalogo/1.png)
 
 > El rol Admin puede desactivar, pero reactivar algo requiere pedírselo al equipo de soporte de
-> Mach Bar.
+> OraviCloud.
 
 ## Reordenar con drag & drop
 
 Estaciones, secciones e ítems se pueden reordenar arrastrando desde el ícono de 6 puntos. Esto se
-puede **apagar globalmente**, a pedido, por el equipo de soporte de Mach Bar. Si se apaga, el
+puede **apagar globalmente**, a pedido, por el equipo de soporte de OraviCloud. Si se apaga, el
 ícono de arrastre desaparece de toda la app y el orden queda fijo tal cual esté guardado.
 
 ![Ícono de arrastre para reordenar](/support/activar-desactivar-reordenar-catalogo/2.png)

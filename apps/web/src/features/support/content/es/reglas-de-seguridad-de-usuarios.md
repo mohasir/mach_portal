@@ -1,4 +1,4 @@
-Como la gestión de cuentas de usuario la hace el equipo de soporte de Mach Bar, esto es más que
+Como la gestión de cuentas de usuario la hace el equipo de soporte de OraviCloud, esto es más que
 nada informativo: tienen un par de protecciones incorporadas para no bloquearse su propio acceso
 sin querer.
 

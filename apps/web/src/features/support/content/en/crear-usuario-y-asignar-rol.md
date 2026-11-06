@@ -1,4 +1,4 @@
-User account management (`Users`) is handled by Mach Bar's support team — it doesn't show up in
+User account management (`Users`) is handled by OraviCloud's support team — it doesn't show up in
 the menu for any client role.
 
 ## Requesting a new user

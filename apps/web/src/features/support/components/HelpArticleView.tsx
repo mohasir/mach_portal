@@ -97,7 +97,7 @@ export function HelpArticleView({
           <ul className="flex flex-col gap-1.5">
             {headings.map((heading) => (
               <li key={heading.id}>
-                <a href={`#${heading.id}`} className="text-primary text-sm underline">
+                <a href={`#${heading.id}`} className="text-navy text-sm underline">
                   {heading.text}
                 </a>
               </li>
@@ -105,7 +105,7 @@ export function HelpArticleView({
           </ul>
         </WrapperCard>
       )}
-      <div className="text-black text-base [&_h2]:text-black flex flex-col gap-3 [&_h2]:mt-2 [&_h2]:text-xl [&_h2]:font-bold [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:marker:text-primary [&_ul]:marker:text-xl [&_ol]:list-decimal [&_ol]:pl-5 [&_img]:max-w-full [&_img]:rounded-lg [&_img]:border [&_img]:border-line [&_pre]:bg-primary/5 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:whitespace-pre-wrap [&_pre]:wrap-break-word [&_code]:bg-primary/5 [&_code]:rounded [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-sm [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_table]:w-full [&_table]:border-collapse [&_th]:border-line [&_th]:border [&_th]:bg-primary/5 [&_th]:p-2 [&_th]:text-left [&_th]:text-sm [&_th]:font-medium [&_td]:border-line [&_td]:border [&_td]:p-2 [&_td]:align-top [&_td]:text-sm [&_thead_tr>*]:border-t-0 [&_tbody_tr:last-child>*]:border-b-0 [&_tr>*:first-child]:border-l-0 [&_tr>*:last-child]:border-r-0">
+      <div className="text-black text-base [&_h2]:text-black flex flex-col gap-3 [&_h2]:mt-2 [&_h2]:text-xl [&_h2]:font-bold [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:marker:text-navy [&_ul]:marker:text-xl [&_ol]:list-decimal [&_ol]:pl-5 [&_img]:max-w-full [&_img]:rounded-lg [&_img]:border [&_img]:border-line [&_pre]:bg-primary/5 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:whitespace-pre-wrap [&_pre]:wrap-break-word [&_code]:bg-primary/5 [&_code]:rounded [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-sm [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_table]:w-full [&_table]:border-collapse [&_th]:border-line [&_th]:border [&_th]:bg-primary/5 [&_th]:p-2 [&_th]:text-left [&_th]:text-sm [&_th]:font-medium [&_td]:border-line [&_td]:border [&_td]:p-2 [&_td]:align-top [&_td]:text-sm [&_thead_tr>*]:border-t-0 [&_tbody_tr:last-child>*]:border-b-0 [&_tr>*:first-child]:border-l-0 [&_tr>*:last-child]:border-r-0">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
@@ -126,7 +126,7 @@ export function HelpArticleView({
             ),
             blockquote: ({ children }) => (
               <blockquote className="border-primary bg-primary/5 rounded-r-lg border-l-4 py-3 px-4">
-                <div className="text-primary mb-1 flex items-center gap-1.5 text-sm font-semibold">
+                <div className="text-navy mb-1 flex items-center gap-1.5 text-sm font-semibold">
                   <Info size={16} />
                   {t('note')}
                 </div>
@@ -135,11 +135,11 @@ export function HelpArticleView({
             ),
             a: ({ href, children }) =>
               href?.startsWith('/') ? (
-                <Link href={href} className="text-primary underline">
+                <Link href={href} className="text-navy underline">
                   {children}
                 </Link>
               ) : (
-                <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                <a href={href} target="_blank" rel="noopener noreferrer" className="text-navy underline">
                   {children}
                 </a>
               ),

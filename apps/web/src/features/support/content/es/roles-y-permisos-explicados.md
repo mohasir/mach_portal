@@ -11,7 +11,7 @@ este Centro de Ayuda la mencionan en vez de repetirla.
   cualquier cuenta nueva hasta que se le asigne otro rol.
 
 Algunas cosas (gestión de cuentas de usuario, ciertas configuraciones del sistema) no las maneja
-ningún rol del equipo — las administra el equipo de soporte de Mach Bar. Los artículos que las
+ningún rol del equipo — las administra el equipo de soporte de OraviCloud. Los artículos que las
 mencionan lo aclaran puntualmente.
 
 ## Tabla por área
@@ -36,4 +36,4 @@ mencionan lo aclaran puntualmente.
 - Si a alguien le falta un botón o una pestaña entera que otra persona sí ve, probablemente sea
   por rol — no es necesariamente un error del sistema.
 - Lo marcado como "gestionado por soporte" no depende del rol de cada uno: nadie del equipo lo
-  tiene disponible, hay que pedírselo al equipo de soporte de Mach Bar.
+  tiene disponible, hay que pedírselo al equipo de soporte de OraviCloud.

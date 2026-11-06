@@ -3,7 +3,7 @@ Esta sección es sobre la cuenta propia — la ve cualquier usuario, sin importa
 ## Perfil
 
 `Configuración → Perfil`: permite editar el Nombre. El email y el rol se muestran pero no son
-editables desde acá — para cambiarlos hay que pedírselo al equipo de soporte de Mach Bar.
+editables desde acá — para cambiarlos hay que pedírselo al equipo de soporte de OraviCloud.
 
 Ahí mismo está la tarjeta "Cambiar contraseña": pide la contraseña actual, la nueva (mínimo 8
 caracteres) y su confirmación.

@@ -12,13 +12,13 @@ something doesn't affect them — it just stops being available for new quotes.
 
 ![An inactive item with the icon to reactivate it](/support/activar-desactivar-reordenar-catalogo/1.png)
 
-> The Admin role can deactivate, but reactivating something requires asking Mach Bar's support
+> The Admin role can deactivate, but reactivating something requires asking OraviCloud's support
 > team.
 
 ## Reordering with drag & drop
 
 Stations, sections and items can be reordered by dragging from the 6-dot icon. This can be
-**turned off globally**, on request, by Mach Bar's support team — if it's off, the drag icon
+**turned off globally**, on request, by OraviCloud's support team — if it's off, the drag icon
 disappears everywhere in the app and the order stays fixed as saved.
 
 ![Drag icon used to reorder](/support/activar-desactivar-reordenar-catalogo/2.png)

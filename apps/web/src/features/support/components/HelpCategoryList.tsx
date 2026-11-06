@@ -29,7 +29,7 @@ export function HelpCategoryList() {
   return (
     <div className="flex flex-col gap-6 pb-20">
       <div className="flex flex-col items-center gap-4 py-4 text-center">
-        <Typography.Title level={3} className="font-heading text-brown m-0!">
+        <Typography.Title level={3} className="font-heading text-navy m-0!">
           {t('hero.title')}
         </Typography.Title>
         <Input.Search

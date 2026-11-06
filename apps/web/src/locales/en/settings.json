@@ -251,7 +251,7 @@
   },
   "about": {
     "title": "About",
-    "description": "Quote, event, and client management system for Mach Snack Bar & Drinks",
+    "description": "Quote, event, and client management system",
     "version": "v{{version}}"
   },
   "validation": {

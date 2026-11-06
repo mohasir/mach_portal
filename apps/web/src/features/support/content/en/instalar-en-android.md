@@ -1,4 +1,4 @@
-Mach Portal can be added to an Android phone or tablet's home screen to open like an app, without
+OraviCloud can be added to an Android phone or tablet's home screen to open like an app, without
 the browser's address bar. It's not a Google Play download — it's a shortcut that uses the same
 browser.
 
@@ -9,7 +9,7 @@ browser.
 These steps are for **Chrome**, the most common browser on Android — other browsers have an
 equivalent option, though the menu may look different.
 
-**Step 1:** Open Mach Portal in Chrome and sign in normally.
+**Step 1:** Open OraviCloud in Chrome and sign in normally.
 
 **Step 2:** If an "Install app" banner shows up at the bottom of the screen, tap it directly and
 skip to step 4.
