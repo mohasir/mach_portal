@@ -1,12 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RescheduleEventInput } from '@repo/schemas';
-import type { StorageProvider } from '../../lib/storage';
-import type { ConfigRepository } from '../config/config.repository';
-import type { NotificationsRepository } from '../notifications/notifications.repository';
-import type { QuotesRepository } from '../quotes/quotes.repository';
-import type { RescheduleReasonsRepository } from '../rescheduleReasons/rescheduleReasons.repository';
-import type { EventsRepository } from './events.repository';
-import { EventsService } from './events.service';
+import type { StorageProvider } from '../../../lib/storage';
+import type { ConfigRepository } from '../../config/config.repository';
+import type { NotificationsRepository } from '../../notifications/notifications.repository';
+import type { QuotesRepository } from '../../quotes/quotes.repository';
+import type { RescheduleReasonsRepository } from '../../rescheduleReasons/rescheduleReasons.repository';
+import type { StaffRepository } from '../../staff/staff.repository';
+import type { EventsRepository } from '../events.repository';
+import { EventsService } from '../events.service';
 
 const EVENT_ID = '00000000-0000-4000-8000-000000000001';
 const QUOTE_ID = '00000000-0000-4000-8000-000000000002';
@@ -52,6 +53,7 @@ function makeFakes() {
     {} as ConfigRepository,
     reasonsRepo as unknown as RescheduleReasonsRepository,
     notificationsRepo as unknown as NotificationsRepository,
+    {} as StaffRepository,
     {} as StorageProvider,
   );
   return { service, eventsRepo, quotesRepo, reasonsRepo, notificationsRepo };

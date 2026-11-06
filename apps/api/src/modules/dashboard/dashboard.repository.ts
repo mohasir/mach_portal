@@ -1,18 +1,23 @@
 import { and, count, desc, eq, isNull, sql } from 'drizzle-orm';
 import { QUOTE_STAGE } from '@repo/schemas';
 import type { Database } from '../../db';
+import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { events, eventPayments, quotes, quoteLines, products } from '../../db/schema';
 
 export class DashboardRepository {
-  constructor(private db: Database) {}
+  constructor(
+    private db: Database,
+    private tenantId: string,
+  ) {}
 
   async countEvents(month: number, year: number) {
     const [row] = await this.db
       .select({ value: count() })
       .from(events)
-      .innerJoin(quotes, eq(events.quoteId, quotes.id))
+      .innerJoin(quotes, and(eq(events.quoteId, quotes.id), tenantEq(quotes, this.tenantId)))
       .where(
         and(
+          tenantEq(events, this.tenantId),
           isNull(quotes.archivedAt),
           sql`extract(month from ${events.eventDate}) = ${month}`,
           sql`extract(year from ${events.eventDate}) = ${year}`,
@@ -25,10 +30,11 @@ export class DashboardRepository {
     const [row] = await this.db
       .select({ value: sql<number>`coalesce(sum(${eventPayments.amount}), 0)::int` })
       .from(eventPayments)
-      .innerJoin(events, eq(eventPayments.eventId, events.id))
-      .innerJoin(quotes, eq(events.quoteId, quotes.id))
+      .innerJoin(events, and(eq(eventPayments.eventId, events.id), tenantEq(events, this.tenantId)))
+      .innerJoin(quotes, and(eq(events.quoteId, quotes.id), tenantEq(quotes, this.tenantId)))
       .where(
         and(
+          tenantEq(eventPayments, this.tenantId),
           isNull(quotes.archivedAt),
           sql`extract(month from ${eventPayments.paidAt}) = ${month}`,
           sql`extract(year from ${eventPayments.paidAt}) = ${year}`,
@@ -43,6 +49,7 @@ export class DashboardRepository {
       .from(quotes)
       .where(
         and(
+          tenantEq(quotes, this.tenantId),
           isNull(quotes.archivedAt),
           sql`extract(month from ${quotes.createdAt}) = ${month}`,
           sql`extract(year from ${quotes.createdAt}) = ${year}`,
@@ -58,7 +65,13 @@ export class DashboardRepository {
         value: count(),
       })
       .from(quotes)
-      .where(and(isNull(quotes.archivedAt), sql`extract(year from ${quotes.createdAt}) = ${year}`))
+      .where(
+        and(
+          tenantEq(quotes, this.tenantId),
+          isNull(quotes.archivedAt),
+          sql`extract(year from ${quotes.createdAt}) = ${year}`,
+        ),
+      )
       .groupBy(sql`extract(month from ${quotes.createdAt})`)
       .orderBy(sql`extract(month from ${quotes.createdAt})`);
   }
@@ -71,10 +84,14 @@ export class DashboardRepository {
         value: count(),
       })
       .from(quoteLines)
-      .innerJoin(quotes, eq(quoteLines.quoteId, quotes.id))
-      .innerJoin(products, eq(quoteLines.productId, products.id))
+      .innerJoin(quotes, and(eq(quoteLines.quoteId, quotes.id), tenantEq(quotes, this.tenantId)))
+      .innerJoin(
+        products,
+        and(eq(quoteLines.productId, products.id), tenantEq(products, this.tenantId)),
+      )
       .where(
         and(
+          tenantEq(quoteLines, this.tenantId),
           eq(quotes.stageId, QUOTE_STAGE.CONFIRMED),
           isNull(quotes.archivedAt),
           sql`extract(month from ${quotes.eventDate}) = ${month}`,
@@ -90,9 +107,10 @@ export class DashboardRepository {
     const [row] = await this.db
       .select({ value: count() })
       .from(quoteLines)
-      .innerJoin(quotes, eq(quoteLines.quoteId, quotes.id))
+      .innerJoin(quotes, and(eq(quoteLines.quoteId, quotes.id), tenantEq(quotes, this.tenantId)))
       .where(
         and(
+          tenantEq(quoteLines, this.tenantId),
           eq(quotes.stageId, QUOTE_STAGE.CONFIRMED),
           isNull(quotes.archivedAt),
           sql`extract(month from ${quotes.eventDate}) = ${month}`,

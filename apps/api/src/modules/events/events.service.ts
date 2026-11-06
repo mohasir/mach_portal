@@ -26,6 +26,7 @@ import { QuotesRepository } from '../quotes/quotes.repository';
 import { quoteAvailabilityConflictResource } from '../quotes/quotes.resource';
 import { RescheduleReasonsRepository } from '../rescheduleReasons/rescheduleReasons.repository';
 import { validateLineSelections } from '../quotes/quotes.validation';
+import { StaffRepository } from '../staff/staff.repository';
 import { EventsRepository } from './events.repository';
 import {
   eventCalendarItemResource,
@@ -72,6 +73,7 @@ export class EventsService {
     private configRepo: ConfigRepository,
     private rescheduleReasonsRepo: RescheduleReasonsRepository,
     private notificationsRepo: NotificationsRepository,
+    private staffRepo: StaffRepository,
     private storage: StorageProvider = getStorageProvider(),
   ) {}
 
@@ -267,22 +269,33 @@ export class EventsService {
     if (!payment) throw new AppError(ErrorCodes.eventPayment.NOT_FOUND, undefined, 404);
 
     const ext = EXTENSION_BY_MIME[file.mimetype] ?? 'bin';
-    const key = `event-payments/${randomUUID()}.${ext}`;
+    // Older attachments keep the unprefixed key they were stored with; every read and delete
+    // goes through the stored key, never a rebuilt one.
+    const key = `t/${this.repo.tenantId}/event-payments/${randomUUID()}.${ext}`;
     const { url } = await this.storage.upload({
       key,
       body: file.buffer,
       contentType: file.mimetype,
     });
 
-    const row = await this.repo.createAttachment({
-      paymentId,
-      key,
-      url,
-      fileName: file.originalname,
-      mimeType: file.mimetype,
-      size: file.size,
-      createdById: uploadedById,
-    });
+    let row: Awaited<ReturnType<EventsRepository['createAttachment']>>;
+    try {
+      row = await this.repo.createAttachment({
+        paymentId,
+        key,
+        url,
+        fileName: file.originalname,
+        mimeType: file.mimetype,
+        size: file.size,
+        createdById: uploadedById,
+      });
+    } catch (err) {
+      // Best effort: without a row nothing references the object, so it would only leak space.
+      await this.storage
+        .delete(key)
+        .catch((cleanupErr) => console.error('storage delete failed', cleanupErr));
+      throw err;
+    }
     // The insert's returning row has no join to `user` — the immediate upload response
     // doesn't need the uploader's display name; the frontend refetches via `getById`
     // (which does join it) right after, so this only affects this one response's shape.
@@ -339,6 +352,10 @@ export class EventsService {
   async assignStaff(input: AssignStaffInput, userId: string, ownerId?: string) {
     await this.assertAccessible(input.eventId, ownerId);
     await this.assertOpen(input.eventId);
+    // event_staff has no tenant-aware FK, so the staff id must be resolved inside the tenant.
+    if (!(await this.staffRepo.findById(input.staffId))) {
+      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.staff.NOT_FOUND) });
+    }
     const alreadyAssigned = await this.repo.isStaffAssigned(input.eventId, input.staffId);
     if (alreadyAssigned) {
       throw new TRPCError({

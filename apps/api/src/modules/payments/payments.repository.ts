@@ -15,7 +15,9 @@ import {
 import type { PaymentsIncomeQuery, PaymentsListQuery } from '@repo/schemas';
 import type { Database } from '../../db';
 import { clients, events, eventPayments, eventTypes, quotes, user } from '../../db/schema';
+import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
+import { containsPattern } from '../../lib/utils/search';
 
 const sortColumns = {
   paidAt: eventPayments.paidAt,
@@ -24,7 +26,24 @@ const sortColumns = {
 } as const;
 
 export class PaymentsRepository {
-  constructor(private db: Database) {}
+  constructor(
+    private db: Database,
+    private tenantId: string,
+  ) {}
+
+  // Every joined tenant table is matched inside its own ON clause, so a payment whose event,
+  // quote or client belongs to another tenant is dropped instead of leaking.
+  private eventJoin() {
+    return and(eq(eventPayments.eventId, events.id), tenantEq(events, this.tenantId));
+  }
+
+  private quoteJoin() {
+    return and(eq(events.quoteId, quotes.id), tenantEq(quotes, this.tenantId));
+  }
+
+  private clientJoin() {
+    return and(eq(events.clientId, clients.id), tenantEq(clients, this.tenantId));
+  }
 
   private baseSelect() {
     return this.db
@@ -41,10 +60,13 @@ export class PaymentsRepository {
         createdByName: user.name,
       })
       .from(eventPayments)
-      .innerJoin(events, eq(eventPayments.eventId, events.id))
-      .innerJoin(quotes, eq(events.quoteId, quotes.id))
-      .innerJoin(clients, eq(events.clientId, clients.id))
-      .leftJoin(eventTypes, eq(events.eventTypeId, eventTypes.id))
+      .innerJoin(events, this.eventJoin())
+      .innerJoin(quotes, this.quoteJoin())
+      .innerJoin(clients, this.clientJoin())
+      .leftJoin(
+        eventTypes,
+        and(eq(events.eventTypeId, eventTypes.id), tenantEq(eventTypes, this.tenantId)),
+      )
       .leftJoin(user, eq(eventPayments.createdById, user.id));
   }
 
@@ -52,8 +74,9 @@ export class PaymentsRepository {
     const { search, sortBy, sortDir, dateFrom, dateTo, clientIds, eventTypeIds, methods } = query;
 
     const where = and(
+      tenantEq(eventPayments, this.tenantId),
       isNull(quotes.archivedAt),
-      search ? ilike(clients.name, `%${search}%`) : undefined,
+      search ? ilike(clients.name, containsPattern(search)) : undefined,
       dateFrom ? gte(eventPayments.paidAt, dateFrom) : undefined,
       dateTo ? lte(eventPayments.paidAt, dateTo) : undefined,
       clientIds?.length ? inArray(events.clientId, clientIds) : undefined,
@@ -72,9 +95,9 @@ export class PaymentsRepository {
     const [row] = await this.db
       .select({ value: count() })
       .from(eventPayments)
-      .innerJoin(events, eq(eventPayments.eventId, events.id))
-      .innerJoin(quotes, eq(events.quoteId, quotes.id))
-      .innerJoin(clients, eq(events.clientId, clients.id))
+      .innerJoin(events, this.eventJoin())
+      .innerJoin(quotes, this.quoteJoin())
+      .innerJoin(clients, this.clientJoin())
       .where(where);
     return row?.value ?? 0;
   }
@@ -83,6 +106,7 @@ export class PaymentsRepository {
     const { dateFrom, dateTo, groupBy } = query;
 
     const where = and(
+      tenantEq(eventPayments, this.tenantId),
       isNull(quotes.archivedAt),
       dateFrom ? gte(eventPayments.paidAt, dateFrom) : undefined,
       dateTo ? lte(eventPayments.paidAt, dateTo) : undefined,
@@ -98,8 +122,8 @@ export class PaymentsRepository {
         count: count(),
       })
       .from(eventPayments)
-      .innerJoin(events, eq(eventPayments.eventId, events.id))
-      .innerJoin(quotes, eq(events.quoteId, quotes.id))
+      .innerJoin(events, this.eventJoin())
+      .innerJoin(quotes, this.quoteJoin())
       .where(where)
       .groupBy(sql`period`)
       .orderBy(sql`period`);

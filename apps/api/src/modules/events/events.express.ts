@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { ATTACHMENT_ALLOWED_MIME_TYPES, ATTACHMENT_MAX_SIZE_BYTES } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
 import { AppError, ErrorCodes } from '../../lib/errors';
-import { guardSession } from '../../core/express/middleware/guardSession';
+import { guardTenantSession } from '../../core/express/middleware/guardTenantSession';
 import { createUploadMiddleware } from '../../core/express/middleware/upload';
 import { createUploadErrorHandler } from '../../core/express/middleware/uploadErrorHandler';
 import { uploadPaymentAttachment } from './events.controller';
@@ -17,7 +17,7 @@ export const eventAttachmentsRouter = Router();
 
 eventAttachmentsRouter.post(
   '/:paymentId/attachments',
-  guardSession({ [RESOURCES.PAYMENT]: [ACTIONS.UPLOAD_ATTACHMENT] }),
+  guardTenantSession({ [RESOURCES.PAYMENT]: [ACTIONS.UPLOAD_ATTACHMENT] }),
   upload.single('file'),
   uploadPaymentAttachment,
 );

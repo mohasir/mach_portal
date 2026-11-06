@@ -5,22 +5,18 @@ import {
   dashboardTopProductsQuerySchema,
 } from '@repo/schemas';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
-import { db } from '../../db';
-import { DashboardRepository } from './dashboard.repository';
-import { DashboardService } from './dashboard.service';
-
-const service = new DashboardService(new DashboardRepository(db));
+import { dashboardModule } from './dashboard.module';
 
 export const dashboardRouter = router({
   summary: guardedProcedure({ [RESOURCES.DASHBOARD]: [ACTIONS.VIEW_SUMMARY] })
     .input(dashboardSummaryQuerySchema)
-    .query(({ input }) => service.summary(input)),
+    .query(({ ctx, input }) => dashboardModule(ctx).summary(input)),
 
   quotesByMonth: guardedProcedure({ [RESOURCES.DASHBOARD]: [ACTIONS.VIEW_QUOTES_CHART] })
     .input(dashboardQuotesByMonthQuerySchema)
-    .query(({ input }) => service.quotesByMonth(input)),
+    .query(({ ctx, input }) => dashboardModule(ctx).quotesByMonth(input)),
 
   topProducts: guardedProcedure({ [RESOURCES.DASHBOARD]: [ACTIONS.VIEW_TOP_PRODUCTS] })
     .input(dashboardTopProductsQuerySchema)
-    .query(({ input }) => service.topProducts(input)),
+    .query(({ ctx, input }) => dashboardModule(ctx).topProducts(input)),
 });

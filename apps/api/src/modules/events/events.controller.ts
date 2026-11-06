@@ -1,23 +1,15 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { db } from '../../db';
 import { ErrorCodes } from '../../lib/errors';
-import { ConfigRepository } from '../config/config.repository';
-import { NotificationsRepository } from '../notifications/notifications.repository';
-import { QuotesRepository } from '../quotes/quotes.repository';
-import { RescheduleReasonsRepository } from '../rescheduleReasons/rescheduleReasons.repository';
-import { EventsRepository } from './events.repository';
-import { EventsService } from './events.service';
+import { eventsModuleFromTenant } from './events.module';
 
-const service = new EventsService(
-  new EventsRepository(db),
-  new QuotesRepository(db),
-  new ConfigRepository(db),
-  new RescheduleReasonsRepository(db),
-  new NotificationsRepository(db),
-);
-
+// Mounted behind guardTenantSession, which sets res.locals.tenantId and userId only after every
+// tenant, membership and permission check passed.
 export async function uploadPaymentAttachment(req: Request, res: Response) {
+  const tenantId = res.locals['tenantId'] as string | undefined;
+  const userId = res.locals['userId'] as string | undefined;
+  if (!tenantId || !userId) throw new Error('uploadPaymentAttachment requires guardTenantSession');
+
   const parsedId = z.uuid().safeParse(req.params['paymentId']);
   if (!parsedId.success) {
     res.status(400).json({ errorCode: ErrorCodes.eventPayment.NOT_FOUND });
@@ -27,10 +19,10 @@ export async function uploadPaymentAttachment(req: Request, res: Response) {
     res.status(400).json({ errorCode: ErrorCodes.eventPayment.ATTACHMENT_INVALID_TYPE });
     return;
   }
-  const attachment = await service.addPaymentAttachment(
+  const attachment = await eventsModuleFromTenant(tenantId).addPaymentAttachment(
     parsedId.data,
     req.file,
-    (res.locals['userId'] as string | undefined) ?? null,
+    userId,
   );
   res.status(201).json(attachment);
 }

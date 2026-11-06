@@ -1,18 +1,14 @@
 import { paymentsIncomeQuerySchema, paymentsListQuerySchema } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
-import { db } from '../../db';
-import { PaymentsRepository } from './payments.repository';
-import { PaymentsService } from './payments.service';
-
-const service = new PaymentsService(new PaymentsRepository(db));
+import { paymentsModule } from './payments.module';
 
 export const paymentsRouter = router({
   list: guardedProcedure({ [RESOURCES.PAYMENT]: [ACTIONS.READ] })
     .input(paymentsListQuerySchema)
-    .query(({ input }) => service.list(input)),
+    .query(({ ctx, input }) => paymentsModule(ctx).list(input)),
 
   income: guardedProcedure({ [RESOURCES.PAYMENT]: [ACTIONS.READ] })
     .input(paymentsIncomeQuerySchema)
-    .query(({ input }) => service.income(input)),
+    .query(({ ctx, input }) => paymentsModule(ctx).income(input)),
 });
