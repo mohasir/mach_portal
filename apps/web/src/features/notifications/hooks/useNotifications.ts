@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-query';
 import type { NotificationsListQuery } from '@repo/schemas';
 import { useTRPC } from '@/lib/trpc/client';
+import { getApiErrorCode } from '@/lib/error/apiErrorCode';
 import { useApiError } from '@/lib/error/useApiError';
 
 // Sin websockets/push en este MVP — polling simple; barato porque son pocas filas.
@@ -72,7 +73,15 @@ export function useMarkNotificationRead() {
   const invalidate = useInvalidateNotifications();
 
   const mutation = useMutation(
-    trpc.notifications.markRead.mutationOptions({ onSuccess: invalidate, onError }),
+    trpc.notifications.markRead.mutationOptions({
+      onSuccess: invalidate,
+      // A notification outside this organization reads as not found; there is nothing to report,
+      // just refresh the lists so it disappears.
+      onError: (error) => {
+        if (getApiErrorCode(error) === 'NOTIFICATION_NOT_FOUND') return invalidate();
+        onError(error);
+      },
+    }),
   );
 
   return {

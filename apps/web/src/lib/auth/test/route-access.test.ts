@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ACTIONS, RESOURCES } from '@repo/guards';
-import { resolveRouteAccess } from './route-access';
+import { resolveRouteAccess } from '../route-access';
 
 describe('resolveRouteAccess', () => {
   it('requires EVENT:RESCHEDULE on the reschedule screen', () => {

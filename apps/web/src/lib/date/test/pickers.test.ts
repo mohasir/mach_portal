@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { disabledPastDate, disabledPastTime } from './index';
+import { disabledPastDate, disabledPastTime } from '../index';
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i);
 

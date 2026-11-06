@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isSameSchedule } from './helpers';
+import { isSameSchedule } from '../helpers';
 
 describe('isSameSchedule', () => {
   const current = { eventDate: '2026-10-17', eventTime: '17:30' };

@@ -64,5 +64,9 @@
     "copied": "Link copied",
     "expiryNotice": "This link expires in 24 hours. If it's not used, you'll need to generate a new one.",
     "shareVia": "Share via"
+  },
+  "existingAccount": {
+    "title": "User added",
+    "description": "{{email}} already had an account, so they were added to the organization. Their sign-in details were not changed."
   }
 }
