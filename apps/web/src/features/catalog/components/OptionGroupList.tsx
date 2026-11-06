@@ -9,11 +9,11 @@ import { useOptionGroupMutations } from '../hooks/useOptionGroupMutations';
 import { SortableList } from './SortableList';
 import { OptionGroupPanel } from './OptionGroupPanel';
 import { OptionGroupFormModal } from './OptionGroupFormModal';
-import type { OptionGroup } from '../types';
+import type { CatalogOptionGroup } from '../types';
 
 interface OptionGroupListProps {
   productId: string;
-  groups: OptionGroup[];
+  groups: CatalogOptionGroup[];
 }
 
 export function OptionGroupList({ productId, groups }: OptionGroupListProps) {
@@ -21,7 +21,7 @@ export function OptionGroupList({ productId, groups }: OptionGroupListProps) {
   const can = useCan();
   const canCreate = can({ [RESOURCES.PRODUCT]: [ACTIONS.CREATE] });
   const { reorderOptionGroups } = useOptionGroupMutations();
-  const [editing, setEditing] = useState<OptionGroup | null>(null);
+  const [editing, setEditing] = useState<CatalogOptionGroup | null>(null);
   const [isCreateOpen, setCreateOpen] = useState(false);
 
   const ids = groups.map((g) => g.id);

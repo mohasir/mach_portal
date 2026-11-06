@@ -5,6 +5,7 @@ export const ACTIONS = {
   DELETE: 'delete',
   DISABLE: 'disable',
   ENABLE: 'enable',
+  DUPLICATE: 'duplicate',
   UPLOAD_ATTACHMENT: 'upload_attachment',
   VIEW: 'view',
   MANAGE_SELECTIONS: 'manage_selections',
