@@ -8,7 +8,7 @@ import type {
   UpdateOptionInput,
   UpdateProductInput,
 } from '@repo/schemas';
-import { AppError, ErrorCodes } from '../../lib/errors';
+import { AppError, ErrorCodes, isPgError, PG_UNIQUE_VIOLATION } from '../../lib/errors';
 import { ProductsRepository } from './products.repository';
 import {
   buildPricesList,
@@ -28,7 +28,8 @@ export class ProductsService {
   }
 
   async catalog(includeInactive: boolean) {
-    const { productRows, tierRows, groupRows, optionRows } = await this.repo.findTree(includeInactive);
+    const { productRows, tierRows, groupRows, optionRows } =
+      await this.repo.findTree(includeInactive);
     return buildProductTree(productRows, tierRows, groupRows, optionRows);
   }
 
@@ -39,26 +40,41 @@ export class ProductsService {
 
   async updateProductTiers(id: string, tiers: PriceTierInput[]) {
     const result = await this.repo.updateTiers(id, tiers);
-    if (!result) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
+    if (!result)
+      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
     return productWithTiersResource(result.product, result.tierRows);
   }
 
   // ── product ──
   async createProduct(input: CreateProductInput) {
     const existing = await this.repo.findProductByName(input.name);
-    if (existing) throw new TRPCError({ code: 'CONFLICT', cause: new AppError(ErrorCodes.product.ALREADY_EXISTS) });
+    if (existing)
+      throw new TRPCError({
+        code: 'CONFLICT',
+        cause: new AppError(ErrorCodes.product.ALREADY_EXISTS),
+      });
     return productResource(await this.repo.createProduct(input));
   }
 
   async updateProduct(id: string, input: UpdateProductInput) {
-    const updated = await this.repo.updateProduct(id, input);
-    if (!updated) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
+    const updated = await this.repo.updateProduct(id, input).catch((error: unknown) => {
+      if (isPgError(error, PG_UNIQUE_VIOLATION, 'products_tenant_name')) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          cause: new AppError(ErrorCodes.product.ALREADY_EXISTS),
+        });
+      }
+      throw error;
+    });
+    if (!updated)
+      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
     return productResource(updated);
   }
 
   async toggleProductActive(id: string, isActive: boolean) {
     const updated = await this.repo.setProductActive(id, isActive);
-    if (!updated) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
+    if (!updated)
+      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
     return productResource(updated);
   }
 
@@ -69,18 +85,29 @@ export class ProductsService {
 
   // ── option_group ──
   async createOptionGroup(input: CreateOptionGroupInput) {
-    return optionGroupResource(await this.repo.createOptionGroup(input));
+    const created = await this.repo.createOptionGroup(input);
+    if (!created)
+      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
+    return optionGroupResource(created);
   }
 
   async updateOptionGroup(id: string, input: UpdateOptionGroupInput) {
     const updated = await this.repo.updateOptionGroup(id, input);
-    if (!updated) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.optionGroup.NOT_FOUND) });
+    if (!updated)
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        cause: new AppError(ErrorCodes.optionGroup.NOT_FOUND),
+      });
     return optionGroupResource(updated);
   }
 
   async toggleOptionGroupActive(id: string, isActive: boolean) {
     const updated = await this.repo.setOptionGroupActive(id, isActive);
-    if (!updated) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.optionGroup.NOT_FOUND) });
+    if (!updated)
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        cause: new AppError(ErrorCodes.optionGroup.NOT_FOUND),
+      });
     return optionGroupResource(updated);
   }
 
@@ -91,18 +118,26 @@ export class ProductsService {
 
   // ── option ──
   async createOption(input: CreateOptionInput) {
-    return optionResource(await this.repo.createOption(input));
+    const created = await this.repo.createOption(input);
+    if (!created)
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        cause: new AppError(ErrorCodes.optionGroup.NOT_FOUND),
+      });
+    return optionResource(created);
   }
 
   async updateOption(id: string, input: UpdateOptionInput) {
     const updated = await this.repo.updateOption(id, input);
-    if (!updated) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.option.NOT_FOUND) });
+    if (!updated)
+      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.option.NOT_FOUND) });
     return optionResource(updated);
   }
 
   async toggleOptionActive(id: string, isActive: boolean) {
     const updated = await this.repo.setOptionActive(id, isActive);
-    if (!updated) throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.option.NOT_FOUND) });
+    if (!updated)
+      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.option.NOT_FOUND) });
     return optionResource(updated);
   }
 

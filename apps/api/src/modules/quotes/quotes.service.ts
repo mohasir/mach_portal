@@ -27,7 +27,7 @@ import { ProductsRepository } from '../products/products.repository';
 import { buildProductTree } from '../products/products.resource';
 import { TemplatesRepository } from '../templates/templates.repository';
 import { quotePdfTemplateResource } from '../templates/templates.resource';
-import { QuotesRepository } from './quotes.repository';
+import { QuotesRepository, type MissingRef } from './quotes.repository';
 import { buildQuotePdfPayload } from './quotes.pdf';
 import { validateLineSelections, type CatalogContext } from './quotes.validation';
 import {
@@ -55,6 +55,16 @@ function configNotFound() {
 function notFound() {
   return new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.quote.NOT_FOUND) });
 }
+const missingRefCodes = {
+  client: ErrorCodes.client.NOT_FOUND,
+  eventType: ErrorCodes.eventType.NOT_FOUND,
+  user: ErrorCodes.user.NOT_FOUND,
+} as const;
+
+function refNotFound({ missingRef }: MissingRef) {
+  return new TRPCError({ code: 'NOT_FOUND', cause: new AppError(missingRefCodes[missingRef]) });
+}
+
 function invalidLines() {
   return new TRPCError({
     code: 'BAD_REQUEST',
@@ -171,10 +181,9 @@ export class QuotesService {
   async create(input: CreateQuoteInput, userId: string, canManagePricing: boolean) {
     await this.validateLines(input.lines, canManagePricing);
 
-    const [stateRows, appRow, maxSeq] = await Promise.all([
+    const [stateRows, appRow] = await Promise.all([
       this.configRepo.findStateSettings(),
       this.configRepo.findAppSettings(),
-      this.repo.getMaxSeq(),
     ]);
     if (!appRow) throw configNotFound();
 
@@ -195,14 +204,10 @@ export class QuotesService {
       depositRate,
     });
 
-    const seq = Math.max(maxSeq, appRow.quoteSeqStart - 1) + 1;
-    const number = buildQuoteNumber(now, seq);
     const validUntil = addMonths(now, appRow.quoteValidityMonths);
 
     const created = await this.repo.insertFull(
       {
-        seq,
-        number,
         clientId: input.clientId,
         eventTypeId: input.eventTypeId ?? null,
         eventDate: input.eventDate ?? null,
@@ -220,9 +225,11 @@ export class QuotesService {
         createdById: userId,
         ...totals,
       },
+      (seq) => buildQuoteNumber(now, seq),
       input.lines,
       input.newClient,
     );
+    if ('missingRef' in created) throw refNotFound(created);
 
     if (canGeneratePdf(created)) {
       void this.generatePdf(created.id).catch((err) => {
@@ -268,6 +275,7 @@ export class QuotesService {
       input.newClient,
     );
     if (!updated) throw notFound();
+    if ('missingRef' in updated) throw refNotFound(updated);
 
     // Editing a quote that's already a finished sales document (see canGeneratePdf) leaves
     // its PDF out of date — regenerate it in the background so the save itself doesn't wait
@@ -440,6 +448,7 @@ export class QuotesService {
   async assign(id: string, assignedToId: string | null, changedById: string) {
     const updated = await this.repo.assignById(id, assignedToId, changedById);
     if (!updated) throw notFound();
+    if ('missingRef' in updated) throw refNotFound(updated);
     return quoteResource(updated);
   }
 

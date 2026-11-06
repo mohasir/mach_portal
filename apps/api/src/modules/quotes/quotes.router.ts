@@ -11,21 +11,7 @@ import {
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS, hasPermission, resolveResourceScope } from '@repo/guards';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
-import { db } from '../../db';
-import { ConfigRepository } from '../config/config.repository';
-import { NotificationsRepository } from '../notifications/notifications.repository';
-import { ProductsRepository } from '../products/products.repository';
-import { TemplatesRepository } from '../templates/templates.repository';
-import { QuotesRepository } from './quotes.repository';
-import { QuotesService } from './quotes.service';
-
-const service = new QuotesService(
-  new QuotesRepository(db),
-  new ConfigRepository(db),
-  new ProductsRepository(db),
-  new TemplatesRepository(db),
-  new NotificationsRepository(db),
-);
+import { quotesModule } from './quotes.module';
 
 const read = guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.READ] });
 const update = guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.UPDATE] });
@@ -59,53 +45,57 @@ function archivedScope<T extends { includeArchived?: boolean; archived?: boolean
 export const quotesRouter = router({
   list: read
     .input(quotesListQuerySchema)
-    .query(({ input, ctx }) => service.list(archivedScope(input, ctx), ownerScope(ctx))),
+    .query(({ ctx, input }) => quotesModule(ctx).list(archivedScope(input, ctx), ownerScope(ctx))),
   getById: read
     .input(z.object({ id: z.uuid() }))
-    .query(({ input, ctx }) => service.getById(input.id, ownerScope(ctx), canViewArchived(ctx))),
+    .query(({ ctx, input }) =>
+      quotesModule(ctx).getById(input.id, ownerScope(ctx), canViewArchived(ctx)),
+    ),
   // Deliberately NOT ownerScope'd — advisory heads-up that should surface everyone's
   // bookings for that date/time, not just the caller's own.
   checkAvailability: read
     .input(checkQuoteAvailabilitySchema)
-    .query(({ input }) => service.checkAvailability(input)),
+    .query(({ ctx, input }) => quotesModule(ctx).checkAvailability(input)),
   generatePdf: read
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input, ctx }) => service.generatePdf(input.id, ownerScope(ctx))),
+    .mutation(({ ctx, input }) => quotesModule(ctx).generatePdf(input.id, ownerScope(ctx))),
   // Same operation as `generatePdf`, gated to a stricter permission — forces a new PDF
   // even when the current one isn't stale (superadmin only, see rolesPermissions.matrix.ts).
   regeneratePdf: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.REGENERATE_PDF] })
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input, ctx }) => service.generatePdf(input.id, ownerScope(ctx))),
+    .mutation(({ ctx, input }) => quotesModule(ctx).generatePdf(input.id, ownerScope(ctx))),
   board: guardedProcedure({ [RESOURCES.PIPELINE]: [ACTIONS.READ] })
     .input(quotesBoardQuerySchema)
-    .query(({ input, ctx }) => service.board(archivedScope(input, ctx), ownerScope(ctx))),
+    .query(({ ctx, input }) => quotesModule(ctx).board(archivedScope(input, ctx), ownerScope(ctx))),
 
   create: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] })
     .input(createQuoteSchema)
-    .mutation(({ input, ctx }) => service.create(input, ctx.user.id, canManagePricing(ctx))),
+    .mutation(({ ctx, input }) =>
+      quotesModule(ctx).create(input, ctx.user.id, canManagePricing(ctx)),
+    ),
   update: update
     .input(z.object({ id: z.uuid(), data: updateQuoteSchema }))
-    .mutation(({ input, ctx }) =>
-      service.update(input.id, input.data, canManagePricing(ctx), ownerScope(ctx)),
+    .mutation(({ ctx, input }) =>
+      quotesModule(ctx).update(input.id, input.data, canManagePricing(ctx), ownerScope(ctx)),
     ),
   // Gated to QUOTE.UPDATE: only someone who can reprice the quote is asked about new config rates.
   rateDrift: update
     .input(z.object({ id: z.uuid() }))
-    .query(({ input, ctx }) => service.rateDrift(input.id, ownerScope(ctx))),
+    .query(({ ctx, input }) => quotesModule(ctx).rateDrift(input.id, ownerScope(ctx))),
   resolveRateDrift: update
     .input(resolveQuoteRateDriftSchema)
-    .mutation(({ input, ctx }) =>
-      service.resolveRateDrift(input.id, input.accept, ownerScope(ctx)),
+    .mutation(({ ctx, input }) =>
+      quotesModule(ctx).resolveRateDrift(input.id, input.accept, ownerScope(ctx)),
     ),
   updateStage: update
     .input(updateQuoteStageSchema)
-    .mutation(({ input, ctx }) =>
-      service.updateStage(input.id, input.stageId, ctx.user.id, ownerScope(ctx)),
+    .mutation(({ ctx, input }) =>
+      quotesModule(ctx).updateStage(input.id, input.stageId, ctx.user.id, ownerScope(ctx)),
     ),
   approve: update
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input, ctx }) =>
-      service.approve(
+    .mutation(({ ctx, input }) =>
+      quotesModule(ctx).approve(
         input.id,
         ctx.user.id,
         { name: ctx.user.name, image: ctx.user.image ?? null },
@@ -114,8 +104,8 @@ export const quotesRouter = router({
     ),
   cancel: update
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input, ctx }) =>
-      service.cancel(
+    .mutation(({ ctx, input }) =>
+      quotesModule(ctx).cancel(
         input.id,
         ctx.user.id,
         { name: ctx.user.name, image: ctx.user.image ?? null },
@@ -124,12 +114,16 @@ export const quotesRouter = router({
     ),
   canArchive: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.DELETE] })
     .input(z.object({ id: z.uuid() }))
-    .query(({ input, ctx }) => service.canArchive(input.id, ownerScope(ctx))),
+    .query(({ ctx, input }) => quotesModule(ctx).canArchive(input.id, ownerScope(ctx))),
   archive: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.DELETE] })
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input, ctx }) => service.archive(input.id, ctx.user.id, ownerScope(ctx))),
+    .mutation(({ ctx, input }) =>
+      quotesModule(ctx).archive(input.id, ctx.user.id, ownerScope(ctx)),
+    ),
 
   assign: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.MANAGE_ASSIGNMENT] })
     .input(assignQuoteSchema)
-    .mutation(({ input, ctx }) => service.assign(input.id, input.assignedToId, ctx.user.id)),
+    .mutation(({ ctx, input }) =>
+      quotesModule(ctx).assign(input.id, input.assignedToId, ctx.user.id),
+    ),
 });

@@ -12,11 +12,7 @@ import {
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
-import { db } from '../../db';
-import { ProductsRepository } from './products.repository';
-import { ProductsService } from './products.service';
-
-const service = new ProductsService(new ProductsRepository(db));
+import { productsModule } from './products.module';
 
 const read = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.READ] });
 const create = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.CREATE] });
@@ -27,65 +23,71 @@ const enable = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.ENABLE] });
 const groupsRouter = router({
   create: create
     .input(createOptionGroupSchema)
-    .mutation(({ input }) => service.createOptionGroup(input)),
+    .mutation(({ ctx, input }) => productsModule(ctx).createOptionGroup(input)),
   update: update
     .input(z.object({ id: z.uuid(), data: updateOptionGroupSchema }))
-    .mutation(({ input }) => service.updateOptionGroup(input.id, input.data)),
+    .mutation(({ ctx, input }) => productsModule(ctx).updateOptionGroup(input.id, input.data)),
   disable: disable
     .input(catalogIdSchema)
-    .mutation(({ input }) => service.toggleOptionGroupActive(input.id, false)),
+    .mutation(({ ctx, input }) => productsModule(ctx).toggleOptionGroupActive(input.id, false)),
   enable: enable
     .input(catalogIdSchema)
-    .mutation(({ input }) => service.toggleOptionGroupActive(input.id, true)),
+    .mutation(({ ctx, input }) => productsModule(ctx).toggleOptionGroupActive(input.id, true)),
   reorder: update
     .input(catalogReorderSchema)
-    .mutation(({ input }) => service.reorderOptionGroups(input.ids)),
+    .mutation(({ ctx, input }) => productsModule(ctx).reorderOptionGroups(input.ids)),
 });
 
 const optionsRouter = router({
-  create: create.input(createOptionSchema).mutation(({ input }) => service.createOption(input)),
+  create: create
+    .input(createOptionSchema)
+    .mutation(({ ctx, input }) => productsModule(ctx).createOption(input)),
   update: update
     .input(z.object({ id: z.uuid(), data: updateOptionSchema }))
-    .mutation(({ input }) => service.updateOption(input.id, input.data)),
+    .mutation(({ ctx, input }) => productsModule(ctx).updateOption(input.id, input.data)),
   disable: disable
     .input(catalogIdSchema)
-    .mutation(({ input }) => service.toggleOptionActive(input.id, false)),
+    .mutation(({ ctx, input }) => productsModule(ctx).toggleOptionActive(input.id, false)),
   enable: enable
     .input(catalogIdSchema)
-    .mutation(({ input }) => service.toggleOptionActive(input.id, true)),
+    .mutation(({ ctx, input }) => productsModule(ctx).toggleOptionActive(input.id, true)),
   reorder: update
     .input(catalogReorderSchema)
-    .mutation(({ input }) => service.reorderOptions(input.ids)),
+    .mutation(({ ctx, input }) => productsModule(ctx).reorderOptions(input.ids)),
 });
 
 const priceTiersUpdate = guardedProcedure({ [RESOURCES.PRICE_TIERS]: [ACTIONS.UPDATE] });
 
 const pricesRouter = router({
-  list: read.query(() => service.pricesList()),
+  list: read.query(({ ctx }) => productsModule(ctx).pricesList()),
   update: priceTiersUpdate
     .input(z.object({ id: z.uuid(), data: updateProductTiersSchema }))
-    .mutation(({ input }) => service.updateProductTiers(input.id, input.data.tiers)),
+    .mutation(({ ctx, input }) =>
+      productsModule(ctx).updateProductTiers(input.id, input.data.tiers),
+    ),
 });
 
 export const productsRouter = router({
-  list: read.query(() => service.list()),
+  list: read.query(({ ctx }) => productsModule(ctx).list()),
   catalog: read
     .input(z.object({ includeInactive: z.boolean().default(true) }).optional())
-    .query(({ input }) => service.catalog(input?.includeInactive ?? true)),
+    .query(({ ctx, input }) => productsModule(ctx).catalog(input?.includeInactive ?? true)),
 
-  create: create.input(createProductSchema).mutation(({ input }) => service.createProduct(input)),
+  create: create
+    .input(createProductSchema)
+    .mutation(({ ctx, input }) => productsModule(ctx).createProduct(input)),
   update: update
     .input(z.object({ id: z.uuid(), data: updateProductSchema }))
-    .mutation(({ input }) => service.updateProduct(input.id, input.data)),
+    .mutation(({ ctx, input }) => productsModule(ctx).updateProduct(input.id, input.data)),
   disable: disable
     .input(catalogIdSchema)
-    .mutation(({ input }) => service.toggleProductActive(input.id, false)),
+    .mutation(({ ctx, input }) => productsModule(ctx).toggleProductActive(input.id, false)),
   enable: enable
     .input(catalogIdSchema)
-    .mutation(({ input }) => service.toggleProductActive(input.id, true)),
+    .mutation(({ ctx, input }) => productsModule(ctx).toggleProductActive(input.id, true)),
   reorder: update
     .input(catalogReorderSchema)
-    .mutation(({ input }) => service.reorderProducts(input.ids)),
+    .mutation(({ ctx, input }) => productsModule(ctx).reorderProducts(input.ids)),
 
   groups: groupsRouter,
   options: optionsRouter,
