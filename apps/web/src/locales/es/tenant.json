@@ -1,0 +1,30 @@
+{
+  "select": {
+    "title": "Elegí una organización",
+    "subtitle": "Seleccioná con cuál querés trabajar.",
+    "mine": "Tus organizaciones",
+    "all": "Todas las organizaciones",
+    "searchPlaceholder": "Buscar organización",
+    "noResults": "No hay organizaciones que coincidan",
+    "current": "Actual",
+    "loadError": "No se pudieron cargar tus organizaciones",
+    "retry": "Reintentar",
+    "signOut": "Cerrar sesión"
+  },
+  "empty": {
+    "title": "Sin organización",
+    "subtitle": "Tu cuenta no pertenece a ninguna organización. Pedile acceso a un administrador."
+  },
+  "platform": {
+    "banner": "Modo plataforma: estás en {{name}} con acceso de administrador de plataforma.",
+    "switch": "Cambiar"
+  },
+  "gate": {
+    "errorTitle": "No se pudo cargar la organización",
+    "errorSubtitle": "Intentá de nuevo en unos momentos.",
+    "retry": "Reintentar"
+  },
+  "menu": {
+    "switch": "Cambiar de organización"
+  }
+}

@@ -1,27 +1,33 @@
 'use client';
 import { Button, Drawer } from 'antd';
 import { useRouter } from 'next/navigation';
-import { LogOut, Settings } from 'lucide-react';
+import { ArrowLeftRight, LogOut, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { RoleTag } from '@/components/shared/RoleTag';
-import { signOut, useSession } from '@/lib/auth/client';
+import { useCanSwitchTenant, useSignOut } from '@/features/tenant';
+import { useSession } from '@/lib/auth/client';
+import { SELECT_ORGANIZATION_ROUTE } from '@/lib/auth/navigation';
 
 export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation('admin');
+  const { t: tt } = useTranslation('tenant');
+  const canSwitchTenant = useCanSwitchTenant();
   const router = useRouter();
   const { data } = useSession();
   const user = data?.user;
   const role = (user as { role?: string | null } | undefined)?.role;
 
-  const onLogout = async () => {
-    await signOut();
-    router.replace('/login');
-  };
+  const onLogout = useSignOut();
 
   const onSettings = () => {
     onClose();
     router.push('/admin/settings');
+  };
+
+  const onSwitchTenant = () => {
+    onClose();
+    router.push(SELECT_ORGANIZATION_ROUTE);
   };
 
   return (
@@ -51,6 +57,17 @@ export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => vo
           >
             {t('nav.settings')}
           </Button>
+          {canSwitchTenant && (
+            <Button
+              type="text"
+              block
+              icon={<ArrowLeftRight size={16} />}
+              onClick={onSwitchTenant}
+              className="justify-start"
+            >
+              {tt('menu.switch')}
+            </Button>
+          )}
           <Button
             type="text"
             danger

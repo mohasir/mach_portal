@@ -1,9 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { App, Button, Form, Input, Typography } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
+import { broadcastSessionChange } from '@/features/tenant';
 import { signIn } from '@/lib/auth/client';
+import { getLoginErrorKey } from '../helpers';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 
 type AuthInput = { email: string; password: string };
@@ -12,8 +15,15 @@ export function AuthPage() {
   const { t } = useTranslation('auth');
   const { message } = App.useApp();
   const router = useRouter();
+  const qc = useQueryClient();
   const [form] = Form.useForm<AuthInput>();
   const [loading, setLoading] = useState(false);
+
+  // Logout leaves the cache to this screen: clearing it while the authenticated page is still
+  // mounted would refetch every active query without a session.
+  useEffect(() => {
+    qc.clear();
+  }, [qc]);
 
   const onFinish = async (values: AuthInput) => {
     setLoading(true);
@@ -21,9 +31,12 @@ export function AuthPage() {
       const res = await signIn.email({ email: values.email, password: values.password });
 
       if (res.error) {
-        message.error(res.error.message ?? t('errors.signinFailed'));
+        message.error(t(getLoginErrorKey(res.error.code)));
         return;
       }
+      // Nothing cached by a previous account may survive into this session.
+      qc.clear();
+      broadcastSessionChange('login');
       message.success(t('signinSuccess'));
       router.replace('/admin');
     } catch (err) {

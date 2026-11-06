@@ -19,6 +19,7 @@ import esEvents from '@/locales/es/events.json';
 import esPayments from '@/locales/es/payments.json';
 import esNotifications from '@/locales/es/notifications.json';
 import esSupport from '@/locales/es/support.json';
+import esTenant from '@/locales/es/tenant.json';
 import enCommon from '@/locales/en/common.json';
 import enApi from '@/locales/en/api.json';
 import enAuth from '@/locales/en/auth.json';
@@ -36,6 +37,7 @@ import enEvents from '@/locales/en/events.json';
 import enPayments from '@/locales/en/payments.json';
 import enNotifications from '@/locales/en/notifications.json';
 import enSupport from '@/locales/en/support.json';
+import enTenant from '@/locales/en/tenant.json';
 
 export const locales = LOCALES;
 export type Locale = AppLocale;
@@ -61,6 +63,7 @@ i18n.use(initReactI18next).init({
       payments: esPayments,
       notifications: esNotifications,
       support: esSupport,
+      tenant: esTenant,
     },
     en: {
       common: enCommon,
@@ -80,6 +83,7 @@ i18n.use(initReactI18next).init({
       payments: enPayments,
       notifications: enNotifications,
       support: enSupport,
+      tenant: enTenant,
     },
   },
   lng: defaultLocale,
@@ -102,6 +106,7 @@ i18n.use(initReactI18next).init({
     'payments',
     'notifications',
     'support',
+    'tenant',
   ],
   defaultNS: 'common',
   interpolation: { escapeValue: false },

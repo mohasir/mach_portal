@@ -1,0 +1,30 @@
+{
+  "select": {
+    "title": "Choose an organization",
+    "subtitle": "Pick the one you want to work with.",
+    "mine": "Your organizations",
+    "all": "All organizations",
+    "searchPlaceholder": "Search organizations",
+    "noResults": "No organizations match your search",
+    "current": "Current",
+    "loadError": "We couldn't load your organizations",
+    "retry": "Retry",
+    "signOut": "Sign out"
+  },
+  "empty": {
+    "title": "No organization",
+    "subtitle": "Your account doesn't belong to any organization. Ask an administrator for access."
+  },
+  "platform": {
+    "banner": "Platform mode: you are in {{name}} with platform administrator access.",
+    "switch": "Switch"
+  },
+  "gate": {
+    "errorTitle": "We couldn't load the organization",
+    "errorSubtitle": "Please try again in a moment.",
+    "retry": "Retry"
+  },
+  "menu": {
+    "switch": "Switch organization"
+  }
+}

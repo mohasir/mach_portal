@@ -1,23 +1,34 @@
 'use client';
 import { Dropdown, Flex, Typography, type MenuProps } from 'antd';
-import { LogOut } from 'lucide-react';
+import { ArrowLeftRight, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { AvatarUser } from '@/components/shared/AvatarUser';
-import { signOut, useSession } from '@/lib/auth/client';
+import { useCanSwitchTenant, useSignOut } from '@/features/tenant';
+import { useSession } from '@/lib/auth/client';
+import { SELECT_ORGANIZATION_ROUTE } from '@/lib/auth/navigation';
 
 export function UserMenu() {
   const { t } = useTranslation('admin');
+  const { t: tt } = useTranslation('tenant');
   const router = useRouter();
   const { data } = useSession();
   const user = data?.user;
+  const canSwitchTenant = useCanSwitchTenant();
 
-  const onLogout = async () => {
-    await signOut();
-    router.replace('/login');
-  };
+  const onLogout = useSignOut();
 
   const items: MenuProps['items'] = [
+    ...(canSwitchTenant
+      ? [
+          {
+            key: 'switchTenant',
+            icon: <ArrowLeftRight size={16} />,
+            label: tt('menu.switch'),
+            onClick: () => router.push(SELECT_ORGANIZATION_ROUTE),
+          },
+        ]
+      : []),
     {
       key: 'logout',
       icon: <LogOut size={16} />,
