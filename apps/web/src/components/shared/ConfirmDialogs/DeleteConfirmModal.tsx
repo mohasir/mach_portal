@@ -43,7 +43,7 @@ export function DeleteConfirmModal({
           </div>
         </div>
         {title && (
-          <Typography.Title level={4} className="font-heading font-bold text-brown m-0!">
+          <Typography.Title level={4} className="font-heading font-bold text-navy m-0!">
             {title}
           </Typography.Title>
         )}

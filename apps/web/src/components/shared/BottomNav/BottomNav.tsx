@@ -25,7 +25,7 @@ export function BottomNav() {
       <button
         key={item.href}
         onClick={() => router.push(item.href!)}
-        className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-4 ${active ? 'text-primary font-semibold' : 'text-muted'}`}
+        className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-4 ${active ? 'text-navy font-semibold' : 'text-muted'}`}
       >
         {IconMap[item.icon!]}
         <span className="text-xs">{t(item.label)}</span>

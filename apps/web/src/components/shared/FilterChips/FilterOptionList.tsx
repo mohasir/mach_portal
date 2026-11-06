@@ -60,7 +60,7 @@ export function FilterOptionList({
         visible.map((option) => (
           <label
             key={option.value}
-            className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-olive-faint"
+            className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-mist"
           >
             {option.icon}
             <span className="min-w-0 flex-1 truncate">{option.label}</span>

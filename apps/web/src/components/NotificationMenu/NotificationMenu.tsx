@@ -38,7 +38,7 @@ export function NotificationMenu() {
 
   const content = (
     <div className="w-72">
-      <Typography.Text strong className="text-brown">
+      <Typography.Text strong className="text-navy">
         {t('title')}
       </Typography.Text>
 

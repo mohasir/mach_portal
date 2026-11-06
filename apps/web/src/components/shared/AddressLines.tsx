@@ -24,7 +24,7 @@ export function AddressLines({
   const cityState = [city, stateLabel].filter(Boolean).join(', ');
   if (!address && !cityState) return null;
 
-  const icon = showIcon && <TbMapPinFilled size={14} className="text-primary shrink-0" />;
+  const icon = showIcon && <TbMapPinFilled size={14} className="text-navy shrink-0" />;
 
   if (lines === 1) {
     return (
@@ -38,7 +38,7 @@ export function AddressLines({
   return (
     <div className={`flex items-start gap-1 ${className ?? ''}`}>
       <div className="flex items-center justify-center h-5">
-        {showIcon && <TbMapPinFilled size={14} className="text-primary shrink-0" />}
+        {showIcon && <TbMapPinFilled size={14} className="text-navy shrink-0" />}
       </div>
       <div className="min-w-0">
         {address && <div>{address}</div>}

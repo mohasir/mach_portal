@@ -15,10 +15,10 @@ export function WelcomeScreen() {
 
   return (
     <Flex vertical align="center" justify="center" className="min-h-[60vh] px-4 text-center">
-      <div className="bg-olive-faint flex size-16 items-center justify-center rounded-2xl">
-        <Sparkles size={32} className="text-primary" />
+      <div className="bg-mist flex size-16 items-center justify-center rounded-2xl">
+        <Sparkles size={32} className="text-navy" />
       </div>
-      <Title level={2} className="font-heading text-brown mt-6 mb-2">
+      <Title level={2} className="font-heading text-navy mt-6 mb-2">
         {name ? t('welcome.titleNamed', { name }) : t('welcome.title')}
       </Title>
       <Paragraph className="text-muted m-0 max-w-md">

@@ -23,7 +23,7 @@ export function IconBadge({
   shape = 'circle',
   badgeSize = 'md',
   rounded,
-  className = 'bg-primary/10 text-brown',
+  className = 'bg-primary/10 text-navy',
 }: IconBadgeProps) {
   const roundedClass = rounded ?? (shape === 'circle' ? 'rounded-full' : 'rounded-xl');
   return (

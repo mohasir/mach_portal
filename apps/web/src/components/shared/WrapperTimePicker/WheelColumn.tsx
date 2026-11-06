@@ -78,7 +78,7 @@ export function WheelColumn<T extends string | number>({
           aria-disabled={item.disabled}
           onClick={() => scrollTo(index)}
           className={`flex h-11 snap-center items-center justify-center text-2xl tabular-nums transition-colors ${
-            index === centeredIndex ? 'text-brown font-medium' : 'text-muted'
+            index === centeredIndex ? 'text-navy font-medium' : 'text-muted'
           } ${item.disabled ? 'opacity-30' : ''}`}
         >
           {item.label}

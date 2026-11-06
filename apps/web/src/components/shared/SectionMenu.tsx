@@ -34,11 +34,11 @@ export function SectionMenu({ items, activeKey, onSelect }: SectionMenuProps) {
                 group ? 'md:pl-5' : ''
               } ${
                 active
-                  ? 'bg-gray-100 text-primary'
+                  ? 'bg-gray-100 text-navy'
                   : 'text-muted hover:bg-gray-100 hover:text-foreground'
               }`}
             >
-              {Icon && <Icon size={18} className={active ? 'text-brown' : 'text-muted'} />}
+              {Icon && <Icon size={18} className={active ? 'text-navy' : 'text-muted'} />}
               {label}
             </button>
           </Fragment>

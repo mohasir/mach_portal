@@ -54,7 +54,7 @@ export function TimeWheel({ value, onChange, is12h, minuteStep, disabled }: Time
     <div className="relative flex items-center justify-center gap-2 py-2 mask-[linear-gradient(to_bottom,transparent,black_30%,black_70%,transparent)]">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-4 top-1/2 h-11 -translate-y-1/2 rounded-xl border border-line bg-olive-faint"
+        className="pointer-events-none absolute inset-x-4 top-1/2 h-11 -translate-y-1/2 rounded-xl border border-line bg-mist"
       />
       <WheelColumn
         ariaLabel={t('pickers.hours')}

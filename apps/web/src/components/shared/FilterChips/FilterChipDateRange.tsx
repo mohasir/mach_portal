@@ -99,7 +99,7 @@ export function FilterChipDateRange({
                 onClick={() => applyRange({ preset: key })}
                 className={`h-12 cursor-pointer rounded-lg px-4 text-left transition-colors ${
                   appliedPreset === key
-                    ? 'bg-primary/10 font-medium text-primary'
+                    ? 'bg-primary/10 font-medium text-navy'
                     : 'bg-background hover:bg-primary/5'
                 }`}
               >
@@ -123,7 +123,7 @@ export function FilterChipDateRange({
             <button
               type="button"
               onClick={() => setCustom(false)}
-              className="mx-4 mb-3 flex w-fit cursor-pointer items-center gap-1 text-sm text-muted hover:text-primary"
+              className="mx-4 mb-3 flex w-fit cursor-pointer items-center gap-1 text-sm text-muted hover:text-navy"
             >
               <ChevronLeft size={16} />
               {t('back')}

@@ -1,23 +1,19 @@
 'use client';
 import { Button, Flex, Result, Typography } from 'antd';
-import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { RoleTag } from '@/components/shared/RoleTag';
-import { signOut, useSession } from '@/lib/auth/client';
+import { useSignOut } from '@/features/tenant';
+import { useSession } from '@/lib/auth/client';
 
 export function AccountLocked() {
   const { t } = useTranslation('auth');
   const { t: ta } = useTranslation('admin');
-  const router = useRouter();
   const { data } = useSession();
   const user = data?.user;
   const role = (user as { role?: string | null } | undefined)?.role;
 
-  const onSignOut = async () => {
-    await signOut();
-    router.replace('/login');
-  };
+  const onSignOut = useSignOut();
 
   return (
     <div className="flex min-h-full flex-col">
@@ -32,7 +28,7 @@ export function AccountLocked() {
           showDetails={false}
         />
         <div className="min-w-0">
-          <Typography.Text className="text-brown block truncate text-base font-medium">
+          <Typography.Text className="text-navy block truncate text-base font-medium">
             {ta('topbar.greeting', { name: user?.name ?? user?.email ?? '' })}
           </Typography.Text>
           <RoleTag role={role} />

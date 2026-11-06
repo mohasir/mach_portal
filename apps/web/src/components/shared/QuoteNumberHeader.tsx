@@ -52,7 +52,7 @@ export function QuoteNumberHeader({
                   badgeSize="sm"
                   size={14}
                   rounded="rounded-lg"
-                  className="bg-primary/5 text-primary"
+                  className="bg-primary/5 text-navy"
                 />
               }
               onClick={onViewQuote}
@@ -70,7 +70,7 @@ export function QuoteNumberHeader({
                     badgeSize="sm"
                     size={14}
                     rounded="rounded-lg"
-                    className="bg-primary/5 text-primary"
+                    className="bg-primary/5 text-navy"
                   />
                 }
                 onClick={onCopyLink}

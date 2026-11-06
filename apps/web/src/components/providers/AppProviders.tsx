@@ -9,7 +9,7 @@ import i18n from '@/lib/i18n/config';
 import type { Locale } from '@/lib/i18n/config';
 import { useLocaleStore } from '@/lib/stores/locale.store';
 import { TRPCReactProvider } from '@/lib/trpc/provider';
-import { machBarTheme } from '@/theme/antd';
+import { oraviCloudTheme } from '@/theme/antd';
 import { AuthProvider } from './AuthProvider';
 import { SettingsProvider } from './SettingsProvider';
 
@@ -24,7 +24,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   }, [locale]);
 
   return (
-    <ConfigProvider theme={machBarTheme} locale={ANTD_LOCALES[locale] ?? esES}>
+    <ConfigProvider theme={oraviCloudTheme} locale={ANTD_LOCALES[locale] ?? esES}>
       <App>
         <I18nextProvider i18n={i18n}>
           <div className="flex h-dvh flex-col overflow-hidden">

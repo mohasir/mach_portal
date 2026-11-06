@@ -44,7 +44,7 @@ export function AvatarUser({
     <div className={`flex min-w-0 gap-3 ${hasDetails ? 'items-start' : 'items-center'}`}>
       {avatar}
       <div className="min-w-0">
-        <Typography.Text strong className="text-brown block truncate">
+        <Typography.Text strong className="text-navy block truncate">
           {name || '—'}
         </Typography.Text>
         {email ? (

@@ -45,7 +45,7 @@ export function UserMenu() {
           image={user?.image}
           showDetails={false}
         />
-        <Typography.Text className="text-brown hidden font-medium md:inline">
+        <Typography.Text className="text-navy hidden font-medium md:inline">
           {user?.name ?? user?.email}
         </Typography.Text>
       </Flex>

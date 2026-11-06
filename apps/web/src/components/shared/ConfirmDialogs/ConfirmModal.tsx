@@ -26,7 +26,7 @@ const TYPE_STYLES: Record<
     icon: TbHelpSquareRoundedFilled,
     bg: 'bg-primary/10',
     bgStrong: 'bg-primary/20',
-    text: 'text-primary',
+    text: 'text-navy',
   },
   warning: {
     icon: TbAlertTriangleFilled,
@@ -99,7 +99,7 @@ export function ConfirmModal({
             <Icon size={28} className={text} />
           </div>
         </div>
-        <Typography.Title level={4} className="font-heading font-bold text-brown m-0!">
+        <Typography.Title level={4} className="font-heading font-bold text-navy m-0!">
           {title}
         </Typography.Title>
         {content && (

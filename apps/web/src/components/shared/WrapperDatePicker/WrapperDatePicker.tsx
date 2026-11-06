@@ -81,7 +81,7 @@ export function WrapperDatePicker({
       >
         {open && (
           <Calendar
-            className="mach-picked-calendar"
+            className="oravi-picked-calendar"
             fullscreen={false}
             value={panel}
             onPanelChange={setPanel}

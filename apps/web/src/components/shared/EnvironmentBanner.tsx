@@ -2,8 +2,8 @@ import { TbDeviceDesktopFilled, TbFlaskFilled } from 'react-icons/tb';
 import { env, showEnvBanner } from '@/env';
 
 const COLORS_BY_ENV: Record<string, string> = {
-  local: 'bg-yellow-500 text-brown/90',
-  staging: 'bg-green-600 text-ivory',
+  local: 'bg-yellow-500 text-navy/90',
+  staging: 'bg-green-600 text-sand',
 };
 
 const ICON_BY_ENV: Record<string, typeof TbFlaskFilled> = {
@@ -14,7 +14,7 @@ const ICON_BY_ENV: Record<string, typeof TbFlaskFilled> = {
 export function EnvironmentBanner() {
   if (!showEnvBanner) return null;
 
-  const colors = COLORS_BY_ENV[env.NEXT_PUBLIC_APP_ENV] ?? 'bg-green-600 text-ivory';
+  const colors = COLORS_BY_ENV[env.NEXT_PUBLIC_APP_ENV] ?? 'bg-green-600 text-sand';
   const Icon = ICON_BY_ENV[env.NEXT_PUBLIC_APP_ENV] ?? TbFlaskFilled;
 
   return (

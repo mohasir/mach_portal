@@ -24,7 +24,7 @@ export const DEFAULT_ICON_BY_TYPE: Record<WrapperAlertType, WrapperAlertIconType
   error: 'error',
 };
 
-export const TITLE_TEXT_CLASS = 'text-[#080705]';
+export const TITLE_TEXT_CLASS = 'text-navy';
 export const DESCRIPTION_TEXT_CLASS = 'text-gray-600';
 
 export const ALERT_COLORS: Record<WrapperAlertType, AlertColorSet> = {
@@ -32,15 +32,15 @@ export const ALERT_COLORS: Record<WrapperAlertType, AlertColorSet> = {
     bg: 'bg-primary/10',
     border: 'border-primary/40',
     buttonBg: 'bg-primary',
-    buttonText: 'text-ivory',
+    buttonText: 'text-on-primary',
     close: 'bg-primary/20 hover:bg-primary/40',
-    iconColor: 'text-primary',
+    iconColor: 'text-navy',
   },
   success: {
     bg: 'bg-success/10',
     border: 'border-success/40',
     buttonBg: 'bg-success',
-    buttonText: 'text-ivory',
+    buttonText: 'text-sand',
     close: 'bg-success/20 hover:bg-success/40',
     iconColor: 'text-success',
   },
@@ -48,7 +48,7 @@ export const ALERT_COLORS: Record<WrapperAlertType, AlertColorSet> = {
     bg: 'bg-info/10',
     border: 'border-info/40',
     buttonBg: 'bg-info',
-    buttonText: 'text-ivory',
+    buttonText: 'text-sand',
     close: 'bg-info/20 hover:bg-info/40',
     iconColor: 'text-info',
   },
@@ -56,7 +56,7 @@ export const ALERT_COLORS: Record<WrapperAlertType, AlertColorSet> = {
     bg: 'bg-warning/12',
     border: 'border-warning/40',
     buttonBg: 'bg-warning',
-    buttonText: 'text-ivory',
+    buttonText: 'text-sand',
     close: 'bg-warning/20 hover:bg-warning/40',
     iconColor: 'text-warning',
   },
@@ -64,7 +64,7 @@ export const ALERT_COLORS: Record<WrapperAlertType, AlertColorSet> = {
     bg: 'bg-error/10',
     border: 'border-error/40',
     buttonBg: 'bg-error',
-    buttonText: 'text-ivory',
+    buttonText: 'text-sand',
     close: 'bg-error/20 hover:bg-error/40',
     iconColor: 'text-error',
   },

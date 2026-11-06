@@ -80,7 +80,7 @@ export function DataTable<TData extends object>({
 
   return (
     <div
-      className={`mach-datatable flex flex-col gap-4 ${cardMode ? ' mach-datatable--mobile-card' : ''}`}
+      className={`oravi-datatable flex flex-col gap-4 ${cardMode ? ' oravi-datatable--mobile-card' : ''}`}
     >
       {onSearch && (
         <Input.Search

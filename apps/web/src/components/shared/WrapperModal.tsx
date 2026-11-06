@@ -15,7 +15,7 @@ export function WrapperModal({ classNames, closeIcon, ...props }: ModalProps) {
             icon={TbX}
             shape="square"
             badgeSize="sm"
-            className="bg-primary/10 text-primary"
+            className="bg-primary/10 text-navy"
             rounded="rounded-lg"
           />
         )

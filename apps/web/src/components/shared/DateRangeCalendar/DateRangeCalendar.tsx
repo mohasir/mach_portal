@@ -80,7 +80,7 @@ export function DateRangeCalendar({ value, onChange, disabledDate }: DateRangeCa
         {field('to')}
       </div>
       <Calendar
-        className="mach-picked-calendar"
+        className="oravi-picked-calendar"
         fullscreen={false}
         value={panel}
         onPanelChange={setPanel}

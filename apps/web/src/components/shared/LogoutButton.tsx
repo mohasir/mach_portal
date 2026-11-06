@@ -1,9 +1,8 @@
 'use client';
 import { Button } from 'antd';
 import { LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { signOut } from '@/lib/auth/client';
+import { useSignOut } from '@/features/tenant';
 import { IconBadge } from './IconBadge';
 
 interface LogoutButtonProps {
@@ -13,12 +12,8 @@ interface LogoutButtonProps {
 
 export function LogoutButton({ collapsed = false, iconOnly = false }: LogoutButtonProps) {
   const { t } = useTranslation('admin');
-  const router = useRouter();
 
-  const onLogout = async () => {
-    await signOut();
-    router.replace('/login');
-  };
+  const onLogout = useSignOut();
 
   if (iconOnly) {
     return (
@@ -26,7 +21,7 @@ export function LogoutButton({ collapsed = false, iconOnly = false }: LogoutButt
         type="text"
         shape="circle"
         danger
-        icon={<IconBadge icon={LogOut} className="bg-salmon/20 text-error" />}
+        icon={<IconBadge icon={LogOut} className="bg-error/20 text-error" />}
         onClick={onLogout}
         aria-label={t('common.logout')}
       />

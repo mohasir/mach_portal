@@ -9,7 +9,7 @@ export function Copy() {
       <p className="text-caption text-muted text-center">
         {t('footer.copyright', { year: dayjs().year(), appName: t('appName') })}
       </p>
-      <p className="text-caption text-primary text-center">{t('footer.developedBy')}</p>
+      <p className="text-caption text-navy text-center">{t('footer.developedBy')}</p>
     </div>
   );
 }

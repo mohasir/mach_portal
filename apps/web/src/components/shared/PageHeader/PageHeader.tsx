@@ -79,7 +79,7 @@ export function PageHeader({
             aria-label={t('back')}
           />
         )}
-        <Typography.Title level={1} className="font-heading text-brown m-0 min-w-0">
+        <Typography.Title level={1} className="font-heading text-navy m-0 min-w-0">
           {title}
         </Typography.Title>
         {titleSuffix}

@@ -40,7 +40,7 @@ export function WrapperCard({
         <div className="mb-4 flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {title && (
-              <Typography.Title className="font-heading text-lg text-brown m-0!">
+              <Typography.Title className="font-heading text-lg text-navy m-0!">
                 {title}
               </Typography.Title>
             )}

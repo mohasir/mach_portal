@@ -41,7 +41,7 @@ export function SidebarNav({ collapsed = false, onNavigate }: SidebarNavProps) {
     theme: 'light' as const,
     selectedKeys: activeKey ? [activeKey] : [],
     onClick,
-    className: 'mach-sidebar-menu border-none! bg-transparent!',
+    className: 'oravi-sidebar-menu border-none! bg-transparent!',
   };
 
   return (

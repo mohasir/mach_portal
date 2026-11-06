@@ -24,7 +24,7 @@ export function CalendarHeader({ value, onChange }: CalendarHeaderProps) {
         aria-label={t('pickers.prevMonth')}
         onClick={() => onChange(value.subtract(1, 'month'))}
       />
-      <span className="text-base font-medium text-brown">{monthYear(value.toDate())}</span>
+      <span className="text-base font-medium text-navy">{monthYear(value.toDate())}</span>
       <Button
         type="text"
         shape="circle"

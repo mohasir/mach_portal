@@ -78,7 +78,7 @@ export function AttachmentUploadModal({
             return true;
           }}
         >
-          <p className="text-brown flex justify-center">
+          <p className="text-navy flex justify-center">
             <UploadCloud size={32} />
           </p>
           <p className="ant-upload-text">{dragText}</p>
