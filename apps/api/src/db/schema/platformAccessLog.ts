@@ -17,5 +17,9 @@ export const platformAccessLog = pgTable(
     type: text('type', { enum: ['query', 'mutation'] }).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (t) => [index('platform_access_log_tenant_created_idx').on(t.tenantId, t.createdAt)],
+  (t) => [
+    index('platform_access_log_tenant_created_idx').on(t.tenantId, t.createdAt),
+    // Every user delete checks the restrict FK; without this index that check scans the log.
+    index('platform_access_log_user_idx').on(t.userId),
+  ],
 );

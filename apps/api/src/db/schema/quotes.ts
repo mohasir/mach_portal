@@ -11,6 +11,7 @@ import {
   jsonb,
   unique,
   index,
+  primaryKey,
 } from 'drizzle-orm/pg-core';
 import type { QuoteRates } from '@repo/schemas';
 import { stateEnum } from './enums';
@@ -22,7 +23,8 @@ import { tenantId } from './tenantColumn';
 
 export const discountTypeEnum = pgEnum('discount_type', ['fixed', 'percent']);
 
-// Fixed pipeline catalog shared by every tenant (read-only reference data), so it has no tenant_id.
+// Fixed pipeline catalog shared by every tenant, so it has no tenant_id; each tenant's label,
+// color and description overrides live in quote_stage_settings.
 export const quoteStages = pgTable('quote_stages', {
   id: integer('id').primaryKey(),
   label: text('label').notNull(),
@@ -30,6 +32,26 @@ export const quoteStages = pgTable('quote_stages', {
   description: text('description'),
   sortOrder: integer('sort_order').notNull(),
 });
+
+// Per-tenant presentation overrides of the global stages; a null column falls back to the
+// default in `quote_stages`.
+export const quoteStageSettings = pgTable(
+  'quote_stage_settings',
+  {
+    tenantId: tenantId(),
+    stageId: integer('stage_id')
+      .notNull()
+      .references(() => quoteStages.id),
+    label: text('label'),
+    color: text('color'),
+    description: text('description'),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.tenantId, t.stageId] })],
+);
 
 export const quotes = pgTable(
   'quotes',

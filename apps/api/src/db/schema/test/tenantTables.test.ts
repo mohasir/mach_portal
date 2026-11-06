@@ -1,9 +1,9 @@
 import { is } from 'drizzle-orm';
 import { getTableConfig, index, PgTable, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
-import { organization } from './auth';
-import * as schema from './index';
-import { TENANT_EXEMPT_TABLES } from './tenantColumn';
+import { organization } from '../auth';
+import * as schema from '../index';
+import { TENANT_EXEMPT_TABLES } from '../tenantColumn';
 
 const allTables = Object.values(schema).filter((v) => is(v, PgTable)) as unknown as PgTable[];
 
