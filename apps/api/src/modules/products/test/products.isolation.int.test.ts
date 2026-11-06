@@ -1,6 +1,16 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { options, optionGroups, productPriceTiers, products } from '../../../db/schema';
+import {
+  clients,
+  options,
+  optionGroups,
+  productPriceTiers,
+  products,
+  quoteLineOptions,
+  quoteLines,
+  quoteStages,
+  quotes,
+} from '../../../db/schema';
 import { seedTwoTenants, resetDb, testDb, type TestTenant } from '../../../test/db';
 import { ProductsRepository } from '../products.repository';
 import { ProductsService } from '../products.service';
@@ -27,6 +37,45 @@ async function seedCatalog(tenant: TestTenant, name: string): Promise<Seeded> {
     .values({ tenantId: tenant.id, optionGroupId: group!.id, name: `${name} option` })
     .returning({ id: options.id });
   return { productId: product!.id, groupId: group!.id, optionId: option!.id };
+}
+
+// Records `optionId` / `groupId` as used by a quote line of `tenant`. The ids may belong to
+// another tenant: foreign keys are not tenant-aware, which is exactly what the tests exercise.
+let quoteCounter = 0;
+
+async function useInQuote(
+  tenant: TestTenant,
+  productId: string,
+  groupId: string,
+  optionId: string,
+) {
+  // Global catalog table, so it can already exist from an earlier call in the same test.
+  await testDb
+    .insert(quoteStages)
+    .values({ id: 1, label: 'stage 1', color: '#000000', sortOrder: 1 })
+    .onConflictDoNothing();
+  const nextSeq = ++quoteCounter;
+  const [client] = await testDb
+    .insert(clients)
+    .values({ tenantId: tenant.id, name: `client ${tenant.slug}` })
+    .returning({ id: clients.id });
+  const [quote] = await testDb
+    .insert(quotes)
+    .values({
+      tenantId: tenant.id,
+      seq: nextSeq,
+      number: `Q-${tenant.slug}-${nextSeq}`,
+      clientId: client!.id,
+      taxRate: 0,
+    })
+    .returning({ id: quotes.id });
+  const [line] = await testDb
+    .insert(quoteLines)
+    .values({ tenantId: tenant.id, quoteId: quote!.id, productId, numPersons: 10, subtotal: 1000 })
+    .returning({ id: quoteLines.id });
+  await testDb
+    .insert(quoteLineOptions)
+    .values({ tenantId: tenant.id, quoteLineId: line!.id, optionId, optionGroupId: groupId });
 }
 
 describe('products tenant isolation', () => {
@@ -241,5 +290,126 @@ describe('products tenant isolation', () => {
       .from(productPriceTiers)
       .where(eq(productPriceTiers.tenantId, b.id));
     expect(strays.map((t) => t.numPersons).sort()).toEqual([10, 50]);
+  });
+
+  describe('usage, permanent delete and duplicate', () => {
+    it('findUsage lists only the ids used by quote lines of the tenant', async () => {
+      await useInQuote(b, sb.productId, sb.groupId, sb.optionId);
+      const usageA = await repoA.findUsage();
+      expect([...usageA.optionIds, ...usageA.groupIds]).toEqual([]);
+      const usageB = await repoB.findUsage();
+      expect([...usageB.optionIds]).toEqual([sb.optionId]);
+      expect([...usageB.groupIds]).toEqual([sb.groupId]);
+    });
+
+    it('isOptionUsed and isOptionGroupUsed ignore usage recorded by another tenant', async () => {
+      // A stray B line pointing at A rows: only B sees the rows as used.
+      await useInQuote(b, sa.productId, sa.groupId, sa.optionId);
+      expect(await repoA.isOptionUsed(sa.optionId)).toBe(false);
+      expect(await repoA.isOptionGroupUsed(sa.groupId)).toBe(false);
+      expect(await repoB.isOptionUsed(sa.optionId)).toBe(true);
+      expect(await repoB.isOptionGroupUsed(sa.groupId)).toBe(true);
+    });
+
+    it('deleteOption and deleteOptionGroup cannot remove another tenant rows', async () => {
+      expect(await repoA.deleteOption(sb.optionId)).toBeUndefined();
+      expect(await repoA.deleteOptionGroup(sb.groupId)).toBeUndefined();
+      expect(await testDb.select().from(options).where(eq(options.id, sb.optionId))).toHaveLength(
+        1,
+      );
+      expect(
+        await testDb.select().from(optionGroups).where(eq(optionGroups.id, sb.groupId)),
+      ).toHaveLength(1);
+    });
+
+    it('deleteOption and deleteOptionGroup remove the tenant own rows', async () => {
+      expect(await repoA.deleteOption(sa.optionId)).toEqual({ id: sa.optionId });
+      expect(await testDb.select().from(options).where(eq(options.id, sa.optionId))).toHaveLength(
+        0,
+      );
+      expect(await repoA.deleteOptionGroup(sa.groupId)).toEqual({ id: sa.groupId });
+      expect(
+        await testDb.select().from(optionGroups).where(eq(optionGroups.id, sa.groupId)),
+      ).toHaveLength(0);
+    });
+
+    it('the service refuses to delete an option or group used by a quote', async () => {
+      await useInQuote(a, sa.productId, sa.groupId, sa.optionId);
+      const service = new ProductsService(repoA);
+      await expect(service.deleteOption(sa.optionId)).rejects.toMatchObject({
+        code: 'CONFLICT',
+        cause: { code: 'OPTION_IN_USE' },
+      });
+      await expect(service.deleteOptionGroup(sa.groupId)).rejects.toMatchObject({
+        code: 'CONFLICT',
+        cause: { code: 'OPTION_GROUP_IN_USE' },
+      });
+    });
+
+    it('the service answers NOT_FOUND when deleting an option of another tenant', async () => {
+      await expect(new ProductsService(repoA).deleteOption(sb.optionId)).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+        cause: { code: 'OPTION_NOT_FOUND' },
+      });
+    });
+
+    it('catalog flags isUsed only from the tenant own quote lines', async () => {
+      await useInQuote(a, sa.productId, sa.groupId, sa.optionId);
+      await useInQuote(b, sb.productId, sb.groupId, sb.optionId);
+      const [product] = await new ProductsService(repoA).catalog(true);
+      expect(product?.optionGroups.map((g) => g.isUsed)).toEqual([true]);
+      expect(product?.optionGroups[0]?.options.map((o) => o.isUsed)).toEqual([true]);
+    });
+
+    it('findProductById does not see another tenant product', async () => {
+      expect(await repoA.findProductById(sb.productId)).toBeUndefined();
+      expect((await repoA.findProductById(sa.productId))?.name).toBe('Menu A');
+    });
+
+    it('duplicateProduct cannot copy another tenant product', async () => {
+      expect(await repoA.duplicateProduct(sb.productId, 'Copy')).toBeUndefined();
+      expect(await testDb.select().from(products).where(eq(products.name, 'Copy'))).toHaveLength(0);
+    });
+
+    it('duplicateProduct copies tiers, groups and options stamped with the tenant', async () => {
+      const copy = await repoA.duplicateProduct(sa.productId, 'Menu A (copia)');
+      const [row] = await testDb.select().from(products).where(eq(products.id, copy!.id));
+      expect(row?.tenantId).toBe(a.id);
+      const tiers = await testDb
+        .select()
+        .from(productPriceTiers)
+        .where(eq(productPriceTiers.productId, copy!.id));
+      expect(tiers.map((t) => [t.numPersons, t.tenantId])).toEqual([[10, a.id]]);
+      const groups = await testDb
+        .select()
+        .from(optionGroups)
+        .where(eq(optionGroups.productId, copy!.id));
+      expect(groups.map((g) => [g.label, g.tenantId])).toEqual([['Menu A group', a.id]]);
+      const copied = await testDb
+        .select()
+        .from(options)
+        .where(eq(options.optionGroupId, groups[0]!.id));
+      expect(copied.map((o) => [o.name, o.tenantId])).toEqual([['Menu A option', a.id]]);
+      // The source and the other tenant keep their own rows.
+      expect(
+        await testDb.select().from(options).where(eq(options.optionGroupId, sb.groupId)),
+      ).toHaveLength(1);
+    });
+
+    it('duplicateProduct computes sortOrder from the tenant products only', async () => {
+      await testDb.update(products).set({ sortOrder: 50 }).where(eq(products.id, sb.productId));
+      const copy = await repoA.duplicateProduct(sa.productId, 'Menu A (copia)');
+      expect(copy?.sortOrder).toBe(1);
+    });
+
+    it('the service names the copy after the source and avoids names taken in the tenant', async () => {
+      const service = new ProductsService(repoA);
+      expect(await service.duplicateProduct(sa.productId)).toMatchObject({
+        name: 'Menu A (copia)',
+      });
+      expect(await service.duplicateProduct(sa.productId)).toMatchObject({
+        name: 'Menu A (copia 2)',
+      });
+    });
   });
 });

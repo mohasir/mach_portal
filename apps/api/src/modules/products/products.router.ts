@@ -19,6 +19,8 @@ const create = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.CREATE] });
 const update = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.UPDATE] });
 const disable = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.DISABLE] });
 const enable = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.ENABLE] });
+const deleteOption = guardedProcedure({ [RESOURCES.PRODUCT_OPTION]: [ACTIONS.DELETE] });
+const duplicate = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.DUPLICATE] });
 
 const groupsRouter = router({
   create: create
@@ -27,6 +29,9 @@ const groupsRouter = router({
   update: update
     .input(z.object({ id: z.uuid(), data: updateOptionGroupSchema }))
     .mutation(({ ctx, input }) => productsModule(ctx).updateOptionGroup(input.id, input.data)),
+  delete: deleteOption
+    .input(catalogIdSchema)
+    .mutation(({ ctx, input }) => productsModule(ctx).deleteOptionGroup(input.id)),
   disable: disable
     .input(catalogIdSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).toggleOptionGroupActive(input.id, false)),
@@ -45,6 +50,9 @@ const optionsRouter = router({
   update: update
     .input(z.object({ id: z.uuid(), data: updateOptionSchema }))
     .mutation(({ ctx, input }) => productsModule(ctx).updateOption(input.id, input.data)),
+  delete: deleteOption
+    .input(catalogIdSchema)
+    .mutation(({ ctx, input }) => productsModule(ctx).deleteOption(input.id)),
   disable: disable
     .input(catalogIdSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).toggleOptionActive(input.id, false)),
@@ -79,6 +87,9 @@ export const productsRouter = router({
   update: update
     .input(z.object({ id: z.uuid(), data: updateProductSchema }))
     .mutation(({ ctx, input }) => productsModule(ctx).updateProduct(input.id, input.data)),
+  duplicate: duplicate
+    .input(catalogIdSchema)
+    .mutation(({ ctx, input }) => productsModule(ctx).duplicateProduct(input.id)),
   disable: disable
     .input(catalogIdSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).toggleProductActive(input.id, false)),

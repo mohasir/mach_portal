@@ -1,4 +1,4 @@
-import { and, asc, eq, type SQL } from 'drizzle-orm';
+import { and, asc, eq, max, type SQL } from 'drizzle-orm';
 import type {
   CreateOptionGroupInput,
   CreateOptionInput,
@@ -10,7 +10,13 @@ import type {
 } from '@repo/schemas';
 import type { Database, Tx } from '../../db';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
-import { options, optionGroups, productPriceTiers, products } from '../../db/schema';
+import {
+  options,
+  optionGroups,
+  productPriceTiers,
+  products,
+  quoteLineOptions,
+} from '../../db/schema';
 import {
   publicOptionColumns,
   publicOptionGroupColumns,
@@ -66,6 +72,22 @@ export class ProductsRepository {
     return { productRows, tierRows, groupRows, optionRows };
   }
 
+  // Catalog rows that a quote line already references; they can only be deactivated.
+  async findUsage() {
+    const rows = await this.db
+      .selectDistinct({
+        optionId: quoteLineOptions.optionId,
+        optionGroupId: quoteLineOptions.optionGroupId,
+      })
+      .from(quoteLineOptions)
+      .where(tenantEq(quoteLineOptions, this.tenantId));
+
+    return {
+      optionIds: new Set(rows.map((r) => r.optionId)),
+      groupIds: new Set(rows.map((r) => r.optionGroupId)),
+    };
+  }
+
   async findPricesTree() {
     const [productRows, tierRows] = await Promise.all([
       this.db
@@ -88,6 +110,15 @@ export class ProductsRepository {
       .select({ id: products.id })
       .from(products)
       .where(and(eq(products.name, name), tenantEq(products, this.tenantId)))
+      .limit(1)
+      .then((r) => r[0]);
+  }
+
+  findProductById(id: string) {
+    return this.db
+      .select({ id: products.id, name: products.name })
+      .from(products)
+      .where(and(eq(products.id, id), tenantEq(products, this.tenantId)))
       .limit(1)
       .then((r) => r[0]);
   }
@@ -124,6 +155,87 @@ export class ProductsRepository {
         .returning(publicProductColumns);
       await this.replaceTiers(tx, product!.id, data.tiers);
       return product!;
+    });
+  }
+
+  duplicateProduct(id: string, name: string) {
+    return this.db.transaction(async (tx) => {
+      const [source] = await tx
+        .select()
+        .from(products)
+        .where(and(eq(products.id, id), tenantEq(products, this.tenantId)));
+      if (!source) return undefined;
+
+      const [last] = await tx
+        .select({ value: max(products.sortOrder) })
+        .from(products)
+        .where(tenantEq(products, this.tenantId));
+      const [copy] = await tx
+        .insert(products)
+        .values({
+          name,
+          description: source.description,
+          isPremium: source.isPremium,
+          isActive: true,
+          sortOrder: (last?.value ?? -1) + 1,
+          tenantId: this.tenantId,
+        })
+        .returning(publicProductColumns);
+
+      const tiers = await tx
+        .select()
+        .from(productPriceTiers)
+        .where(
+          and(eq(productPriceTiers.productId, id), tenantEq(productPriceTiers, this.tenantId)),
+        );
+      if (tiers.length > 0) {
+        await tx.insert(productPriceTiers).values(
+          tiers.map((tier) => ({
+            productId: copy!.id,
+            numPersons: tier.numPersons,
+            price: tier.price,
+            sortOrder: tier.sortOrder,
+            tenantId: this.tenantId,
+          })),
+        );
+      }
+
+      const groups = await tx
+        .select()
+        .from(optionGroups)
+        .where(and(eq(optionGroups.productId, id), tenantEq(optionGroups, this.tenantId)));
+      for (const group of groups) {
+        const [groupCopy] = await tx
+          .insert(optionGroups)
+          .values({
+            productId: copy!.id,
+            label: group.label,
+            selectionType: group.selectionType,
+            maxSelect: group.maxSelect,
+            isActive: group.isActive,
+            sortOrder: group.sortOrder,
+            tenantId: this.tenantId,
+          })
+          .returning({ id: optionGroups.id });
+        const groupOptions = await tx
+          .select()
+          .from(options)
+          .where(and(eq(options.optionGroupId, group.id), tenantEq(options, this.tenantId)));
+        if (groupOptions.length > 0) {
+          await tx.insert(options).values(
+            groupOptions.map((option) => ({
+              optionGroupId: groupCopy!.id,
+              name: option.name,
+              description: option.description,
+              isActive: option.isActive,
+              sortOrder: option.sortOrder,
+              tenantId: this.tenantId,
+            })),
+          );
+        }
+      }
+
+      return copy!;
     });
   }
 
@@ -212,6 +324,23 @@ export class ProductsRepository {
       .then((r) => r[0]);
   }
 
+  isOptionGroupUsed(id: string) {
+    return this.db
+      .select({ id: quoteLineOptions.id })
+      .from(quoteLineOptions)
+      .where(and(eq(quoteLineOptions.optionGroupId, id), tenantEq(quoteLineOptions, this.tenantId)))
+      .limit(1)
+      .then((r) => r.length > 0);
+  }
+
+  deleteOptionGroup(id: string) {
+    return this.db
+      .delete(optionGroups)
+      .where(and(eq(optionGroups.id, id), tenantEq(optionGroups, this.tenantId)))
+      .returning({ id: optionGroups.id })
+      .then((r) => r[0]);
+  }
+
   setOptionGroupActive(id: string, isActive: boolean) {
     return this.db
       .update(optionGroups)
@@ -258,6 +387,23 @@ export class ProductsRepository {
       .set({ name: data.name, description: data.description ?? null })
       .where(and(eq(options.id, id), tenantEq(options, this.tenantId)))
       .returning(publicOptionColumns)
+      .then((r) => r[0]);
+  }
+
+  isOptionUsed(id: string) {
+    return this.db
+      .select({ id: quoteLineOptions.id })
+      .from(quoteLineOptions)
+      .where(and(eq(quoteLineOptions.optionId, id), tenantEq(quoteLineOptions, this.tenantId)))
+      .limit(1)
+      .then((r) => r.length > 0);
+  }
+
+  deleteOption(id: string) {
+    return this.db
+      .delete(options)
+      .where(and(eq(options.id, id), tenantEq(options, this.tenantId)))
+      .returning({ id: options.id })
       .then((r) => r[0]);
   }
 
