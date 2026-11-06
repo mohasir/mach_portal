@@ -1,27 +1,20 @@
 import type { Metadata, Viewport } from 'next';
-import { Marcellus, Work_Sans } from 'next/font/google';
+import { Fustat } from 'next/font/google';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { AppProviders } from '@/components/providers';
-import { MB } from '@/theme/antd';
+import { BRAND } from '@/theme/antd';
 import '@/theme/globals.css';
 
-const marcellus = Marcellus({
-  weight: '400',
+const fustat = Fustat({
+  weight: ['300', '400', '500', '600', '700'],
   subsets: ['latin'],
-  variable: '--font-marcellus',
-  display: 'swap',
-});
-
-const workSans = Work_Sans({
-  weight: ['300', '400', '500', '600'],
-  subsets: ['latin'],
-  variable: '--font-work-sans',
+  variable: '--font-fustat',
   display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'Mach Portal',
-  description: 'Mach Portal Application',
+  title: 'OraviCloud',
+  description: 'OraviCloud',
   icons: {
     icon: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
@@ -29,20 +22,20 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Mach Portal',
+    title: 'OraviCloud',
   },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: MB.olive,
+  themeColor: BRAND.navy,
   viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${marcellus.variable} ${workSans.variable}`}>
+    <html lang="es" className={fustat.variable}>
       <body>
         <AntdRegistry layer>
           <AppProviders>{children}</AppProviders>

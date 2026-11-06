@@ -21,31 +21,19 @@
   --color-blacker: #35393c;
 
   /* ── Brand colors ── */
-  --color-brown: #4a2c2a;
-  --color-brown-mid: #7a4a47;
-  --color-mustard: #dacd6b;
-  --color-ivory: #f7eed2;
-  --color-ivory-dark: #ede1b8;
-  --color-salmon: #f28a86;
-  --color-olive: #91922a;
-  --color-olive-faint: #f4f4e8;
-  --color-taupe: #d8d4c8;
+  --color-navy: #14243e;
+  --color-navy-mid: #3a4c6b;
+  --color-mist: #e7eaf1;
+  --color-blue: #394f9a;
+  --color-blue-light: #8d9ccb;
+  --color-sand: #edeee8;
+  --color-sand-dark: #dcddd3;
+  --color-on-primary: #ffffff;
 
-  /* ── Avatar palette (lib/utils/name.ts) ── */
   --color-red: #e13348;
-  --color-cocoa: #6f4e47;
-  --color-terracotta: #b86b5d;
-  --color-copper: #d58c62;
-  --color-honey: #e8b86a;
-  --color-moss: #727a3d;
-  --color-sage: #a7ad63;
-  --color-slate-green: #5f7a6b;
-  --color-teal: #66818a;
-  --color-violet-gray: #7b6f91;
-  --color-mauve: #b77b91;
 
-  --font-sans: var(--font-work-sans);
-  --font-heading: var(--font-marcellus);
+  --font-sans: var(--font-fustat);
+  --font-heading: var(--font-fustat);
 
   /* ── Animations ── */
   /* One outward pulse from the element's edge. The 8px spread fits inside the 8px padding of
@@ -87,7 +75,7 @@
      Cards (the default, used everywhere in this app) get colorBorderSecondary
      (barely visible) and no shadow at all. Bump the border to the app's regular
      colorBorder token so every Card reads as a raised surface. The shadow is a
-     brand-tinted olive instead of AntD's flat gray tertiary shadow, and softer
+     brand-tinted navy instead of AntD's flat gray tertiary shadow, and softer
      (single layer, wide blur) than AntD's default triple-layer shadow. */
   .ant-card {
     border-color: var(--ant-color-border);
@@ -131,7 +119,7 @@
 
   /* Phones collapse the DataTable to a single card column; drop the now-empty header row. */
   @media (max-width: 575px) {
-    .mach-datatable .ant-table-thead {
+    .oravi-datatable .ant-table-thead {
       display: none;
     }
 
@@ -139,7 +127,7 @@
        .ant-table-cell inline padding would inset the card. Block padding is
        trimmed too — AntD's default (sized for a dense table row) stacks
        between adjacent cells and reads as an oversized gap between cards. */
-    .mach-datatable--mobile-card .ant-table-cell {
+    .oravi-datatable--mobile-card .ant-table-cell {
       padding-inline: 0;
       padding-block: 6px;
     }
@@ -148,8 +136,8 @@
        not a CSS :hover — on touch that fires on tap and stays until another
        tap elsewhere, so a row reads as "stuck" selected. No hover concept on
        mobile, so drop the highlight entirely. */
-    .mach-datatable .ant-table-tbody > tr > td.ant-table-cell-row-hover,
-    .mach-datatable .ant-table-tbody > tr.ant-table-row:hover > td {
+    .oravi-datatable .ant-table-tbody > tr > td.ant-table-cell-row-hover,
+    .oravi-datatable .ant-table-tbody > tr.ant-table-row:hover > td {
       background: inherit;
     }
 
@@ -157,23 +145,21 @@
        feature's renderCard) with its own background and edge; AntD's own
        colorBgContainer + per-cell border-bottom behind it just reads as a
        redundant sheet of "paper" plus a stray divider line under every card. */
-    .mach-datatable--mobile-card .ant-table,
-    .mach-datatable--mobile-card .ant-table-container {
+    .oravi-datatable--mobile-card .ant-table,
+    .oravi-datatable--mobile-card .ant-table-container {
       background: transparent;
     }
-    .mach-datatable--mobile-card .ant-table-tbody > tr > td {
+    .oravi-datatable--mobile-card .ant-table-tbody > tr > td {
       background: transparent;
       border-bottom: none;
     }
   }
 
-  /* Main sidebar's active nav item: light tint "pill" (matches the settings
-     page's custom sub-menu) instead of AntD's default solid-fill selected
-     item. Scoped to .mach-sidebar-menu only — the Menu theme tokens
+  /* Main sidebar's active nav item: soft mist-tinted "pill" with navy text. Scoped to .oravi-sidebar-menu only — the Menu theme tokens
      (theme/antd.ts) stay untouched for any other Menu instance. */
-  .mach-sidebar-menu .ant-menu-item-selected {
-    background-color: var(--color-olive-faint);
-    color: var(--ant-color-primary);
+  .oravi-sidebar-menu .ant-menu-item-selected {
+    background-color: var(--color-mist);
+    color: var(--color-navy);
     font-weight: 600;
   }
 
@@ -242,7 +228,7 @@
   .ant-input-outlined:hover,
   .ant-input-number-outlined:hover,
   .ant-picker-outlined:hover {
-    border-color: #6b6c1f; /* MB.oliveDark (theme/antd.ts) */
+    border-color: var(--color-navy);
   }
   .ant-input-outlined:focus,
   .ant-input-outlined:focus-within,
@@ -256,7 +242,7 @@
     --ant-select-border-color: rgba(0, 0, 0, 0.35);
   }
   .ant-select-outlined:hover {
-    --ant-select-border-color: #6b6c1f; /* MB.oliveDark (theme/antd.ts) */
+    --ant-select-border-color: var(--color-navy);
   }
   .ant-select-outlined.ant-select-focused {
     --ant-select-border-color: var(--ant-color-primary);
@@ -327,7 +313,7 @@
 
   /* Calendars that paint the picked day(s) themselves (fullCellRender). AntD's own "selected"
      day just follows the month being browsed, so it must not look picked there. */
-  .mach-picked-calendar .ant-picker-cell-selected .ant-picker-cell-inner {
+  .oravi-picked-calendar .ant-picker-cell-selected .ant-picker-cell-inner {
     background: transparent;
     color: inherit;
   }

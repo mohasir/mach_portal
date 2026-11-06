@@ -1,4 +1,4 @@
-# Styling Guide — Mach Portal
+# Styling Guide — OraviCloud
 
 Stack: **AntD v6 · Tailwind v4**
 
@@ -10,7 +10,7 @@ La regla principal: **AntD para componentes y layout, Tailwind para lo que AntD 
 
 ```
 AntD token system (antd.ts)
-  └── cssVar { key: '_,:root,mb-theme' }
+  └── cssVar { key: '_,:root,oravi-theme' }
         └── genera --ant-color-* en :root
               └── globals.css @theme mapea → clases Tailwind
 ```
@@ -23,7 +23,7 @@ No usar CSS modules. No usar inline styles. No hardcodear colores hex en compone
 
 ### Fuente de verdad
 
-`src/lib/theme/antd.ts` — contiene el objeto `MB` con todos los colores de marca y el `machBarTheme` para AntD.
+`src/lib/theme/antd.ts` — contiene el objeto `BRAND` con todos los colores de marca y el `oraviCloudTheme` para AntD.
 
 ### Cómo fluyen los tokens
 
@@ -41,13 +41,16 @@ No usar CSS modules. No usar inline styles. No hardcodear colores hex en compone
 
 **Colores de marca** (no cubiertos por AntD) — definidos directamente en `@theme`:
 
-| Clase Tailwind                | Valor     | Uso                  |
-| ----------------------------- | --------- | -------------------- |
-| `text-brown` / `bg-brown`     | `#4a2c2a` | Headings, nav dark   |
-| `text-mustard` / `bg-mustard` | `#dacd6b` | Highlight, accent    |
-| `bg-ivory`                    | `#f7eed2` | Cotizaciones, quotes |
-| `text-salmon`                 | `#f28a86` | Alertas, warnings    |
-| `bg-olive-faint`              | `#f4f4e8` | Fondos sutiles       |
+| Clase Tailwind                    | Valor     | Uso                                          |
+| --------------------------------- | --------- | -------------------------------------------- |
+| `bg-primary` / `text-navy`        | `#14243e` | Primario: botones, selección, headings, texto |
+| `text-on-primary`                 | `#ffffff` | Texto sobre `bg-primary`                     |
+| `text-blue` / `bg-blue`           | `#394f9a` | Acento secundario, links                     |
+| `bg-sand` / `bg-sand-dark`        | `#edeee8` | Fondo de página, headers de tabla/card       |
+| `bg-mist`                         | `#e7eaf1` | Fondos sutiles / hover                       |
+
+El verde `#d2da73` vive solo en el logo; no se usa en la UI.
+
 
 ---
 
@@ -66,13 +69,13 @@ Las fuentes usan Next.js font optimization — no importar desde Google Fonts di
 
 | `level` | HTML   | Tamaño | Color        |
 | ------- | ------ | ------ | ------------ |
-| `1`     | `<h1>` | 28px   | brown (auto) |
-| `2`     | `<h2>` | 22px   | brown (auto) |
-| `3`     | `<h3>` | 16px   | brown (auto) |
-| `4`     | `<h4>` | 14px   | brown (auto) |
-| `5`     | `<h5>` | 13px   | brown (auto) |
+| `1`     | `<h1>` | 28px   | navy (auto) |
+| `2`     | `<h2>` | 22px   | navy (auto) |
+| `3`     | `<h3>` | 16px   | navy (auto) |
+| `4`     | `<h4>` | 14px   | navy (auto) |
+| `5`     | `<h5>` | 13px   | navy (auto) |
 
-`colorTextHeading` está mapeado a `MB.brown` — el color es automático. Para Marcellus agregá `font-heading!`:
+`colorTextHeading` está mapeado a `BRAND.navy` — el color es automático. Para Marcellus agregá `font-heading!`:
 
 ```tsx
 <Typography.Title level={1} className="font-heading!">
@@ -83,7 +86,7 @@ Las fuentes usan Next.js font optimization — no importar desde Google Fonts di
 ### Typography.Text — variantes semánticas (props AntD)
 
 ```tsx
-<Typography.Text type="secondary">muted</Typography.Text>   // usa colorTextSecondary = MB.muted
+<Typography.Text type="secondary">muted</Typography.Text>   // usa colorTextSecondary = BRAND.muted
 <Typography.Text type="danger">error</Typography.Text>
 <Typography.Text type="warning">warning</Typography.Text>
 <Typography.Text type="success">success</Typography.Text>
@@ -198,7 +201,7 @@ Escala de menor a mayor intrusión. **Usá siempre el primer nivel que resuelva 
 **1. Clase Tailwind en el componente** (preferido) — para el elemento raíz:
 
 ```tsx
-<Typography.Title level={2} className="font-heading text-brown mb-6">
+<Typography.Title level={2} className="font-heading text-navy mb-6">
 <Form.Item className="mb-0">
 <Button className="mt-2 text-muted">
 ```

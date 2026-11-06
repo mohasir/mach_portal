@@ -1,4 +1,4 @@
-# CLAUDE.md — Mach Portal
+# CLAUDE.md — OraviCloud
 
 Monorepo Turborepo + pnpm.
 - `apps/web` — Next.js 15 · React 19 · **AntD v6 · Tailwind v4** · i18next (es/en)
@@ -35,7 +35,7 @@ Monorepo Turborepo + pnpm.
 
 - **Estilos → seguir `docs/frontend/styling-guide.md`.** Es la fuente de verdad de estilos:
   AntD v6 para componentes/layout y Tailwind para overrides; tokens de marca en
-  `apps/web/src/theme/antd.ts` (objeto `MB` + `machBarTheme`). Prohibido: CSS modules,
+  `apps/web/src/theme/antd.ts` (objeto `BRAND` + `oraviCloudTheme`). Prohibido: CSS modules,
   inline styles y colores hex hardcodeados en componentes.
 
 - **Sobreescribir estilos de AntD → escala de overrides** de `docs/frontend/styling-guide.md`

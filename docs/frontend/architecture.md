@@ -85,7 +85,7 @@ apps/web/src/
 │   ├── UserProfile/            # menú de usuario (pieza del Topbar)
 │   └── shared/                 # DataTable/, PageHeader, PlaceholderPage, Sidebar/, Topbar/, Logo, ...
 │
-├── theme/                      # antd.ts (tokens MB + machBarTheme), globals.css
+├── theme/                      # antd.ts (tokens BRAND + oraviCloudTheme), globals.css
 ├── locales/{es,en}/            # common.json, admin.json, auth.json, <feature>.json, api.json
 ├── middleware.ts               # redirect en el borde + RBAC por ruta best-effort (cookieCache)
 └── env.ts                      # variables de entorno validadas
@@ -471,7 +471,7 @@ Notas:
 Orden **exacto** (de fuera hacia dentro):
 
 ```
-ConfigProvider (AntD theme = machBarTheme)
+ConfigProvider (AntD theme = oraviCloudTheme)
 └── App (AntD)                       # contexto para message/notification/modal (App.useApp)
     └── I18nextProvider
         └── TRPCReactProvider         # QueryClient + tRPC client (credentials: 'include')
@@ -634,7 +634,7 @@ El tenant de cada petición es la organización activa **de la sesión** (`sessi
 ## 11. UI (Ant Design + Tailwind)
 
 - Componentes desde **`antd`**, importados por nombre. No hay `@repo/ui`.
-- Tokens (marca MB, `machBarTheme`), AntD↔Tailwind, tipografía, **iconos (`lucide-react`)**, **fechas (`dayjs`)** y la **escala de overrides** están en **`styling-guide.md`** — lectura obligatoria y manda sobre cualquier decisión visual.
+- Tokens (marca `BRAND`, `oraviCloudTheme`), AntD↔Tailwind, tipografía, **iconos (`lucide-react`)**, **fechas (`dayjs`)** y la **escala de overrides** están en **`styling-guide.md`** — lectura obligatoria y manda sobre cualquier decisión visual.
 - Reglas rápidas: AntD para componentes/layout, Tailwind para overrides; nada de CSS modules, inline styles, ni hex hardcodeados; mensajes vía `App.useApp()` (no métodos estáticos); `!` de Tailwind como **sufijo** (`m-0!`).
 - **Tablas → siempre `DataTable`** (§4). Prohibido `<Table>` de AntD armado a mano en una feature y prohibido `@tanstack/react-table`.
 - **Estados de carga → `Skeleton` vs `Spin` según el caso** (ninguno prohibido; se elige por caso): usar **`Skeleton`** en la **primera carga** de contenido con forma conocida (páginas, detalles, tablas, cards, formularios que hidratan) — preserva el layout y baja la latencia percibida; usar **`Spin`** para **acciones/mutations** en vuelo (botón `loading`, guardado) y para **refetch sobre contenido ya renderizado** (overlay). Regla: _primera carga → `Skeleton`; acción o refresco de algo ya visible → `Spin`_.
