@@ -23,7 +23,7 @@ export function NotificationsCenterPage() {
         titleSuffix={
           unreadCount > 0 ? (
             <span
-              className="bg-info inline-flex h-4 min-w-4 items-center justify-center rounded-full px-0.5 font-semibold text-ivory leading-0"
+              className="bg-info inline-flex h-4 min-w-4 items-center justify-center rounded-full px-0.5 font-semibold text-sand leading-0"
               style={{
                 fontSize: hasMoreThanNine ? '8px' : '9px',
               }}
@@ -38,7 +38,7 @@ export function NotificationsCenterPage() {
           <Button
             type="link"
             size="small"
-            className="text-brown underline"
+            className="text-navy underline"
             onClick={() => void markAllNotificationsRead()}
           >
             {t('markAllRead')}

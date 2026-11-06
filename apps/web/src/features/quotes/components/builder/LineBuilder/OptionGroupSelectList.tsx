@@ -57,7 +57,7 @@ export function OptionGroupSelectList({
           const checkBadge = (
             <span
               className={`flex size-5 shrink-0 items-center justify-center rounded-full border ${
-                checked ? 'border-primary bg-primary text-ivory' : 'border-line'
+                checked ? 'border-primary bg-primary text-on-primary' : 'border-line'
               }`}
             >
               {checked && <Check size={12} />}

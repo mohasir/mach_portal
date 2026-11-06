@@ -92,7 +92,7 @@ export function QuoteSummary({
                   badgeSize="xs"
                   size={12}
                   rounded="rounded-md"
-                  className="bg-primary text-ivory"
+                  className="bg-primary text-on-primary"
                 />
               }
               onClick={() => setDepositSheetOpen(true)}
@@ -120,7 +120,7 @@ export function QuoteSummary({
                     setDepositSheetOpen(false);
                   }}
                   className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-base ${
-                    selected ? 'bg-primary/5 text-primary font-semibold' : ''
+                    selected ? 'bg-primary/5 text-navy font-semibold' : ''
                   }`}
                 >
                   {Math.round(rate * 100)}%{selected && <Check size={16} />}

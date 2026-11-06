@@ -10,13 +10,13 @@ import { useEventRowActions } from '../hooks/useEventRowActions';
 import { PAYMENT_STATUS_BAR_CLASSES, PAYMENT_STATUS_COLORS } from '../helpers';
 import type { Event } from '../types';
 
-type DateBadgeColor = 'olive' | 'mustard';
+type DateBadgeColor = 'mist' | 'blue';
 
 // Decorative theme for the day-of-month/weekday chip — not tied to event status (that stays
 // a Tag on the desktop table); differs by call site (listing vs dashboard widget).
 const DATE_BADGE_CLASSES: Record<DateBadgeColor, string> = {
-  olive: 'bg-olive-faint text-brown',
-  mustard: 'bg-mustard text-brown',
+  mist: 'bg-mist text-navy',
+  blue: 'bg-blue text-sand',
 };
 
 interface EventCardProps {
@@ -47,7 +47,7 @@ export function EventCard({
   onClick,
   onAssignStaff,
   showPaymentStatus,
-  colorDateBadge = 'olive',
+  colorDateBadge = 'mist',
   showActions = true,
   showEventType = true,
   variant = 'card',

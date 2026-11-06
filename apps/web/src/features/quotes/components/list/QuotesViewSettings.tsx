@@ -86,7 +86,7 @@ export function QuotesViewSettings() {
         iconSize={18}
         aria-label={t('viewSettings.title')}
         onClick={isDesktop ? undefined : () => setOpen(true)}
-        className="bg-primary/10 text-primary"
+        className="bg-primary/10 text-navy"
       />
     </div>
   );

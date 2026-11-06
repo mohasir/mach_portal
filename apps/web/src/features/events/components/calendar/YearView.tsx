@@ -56,7 +56,7 @@ export function YearView({ year, locale, onSelectDate }: YearViewProps) {
                     onClick={() => onSelectDate(cell)}
                     className={`mx-auto flex h-6 w-6 items-center justify-center rounded-full text-xs ${
                       inMonth ? '' : 'text-gray-300'
-                    } ${isToday ? 'border-primary text-primary border' : ''}`}
+                    } ${isToday ? 'border-primary text-navy border' : ''}`}
                   >
                     {cell.date()}
                   </button>

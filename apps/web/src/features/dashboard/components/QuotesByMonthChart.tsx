@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { DashboardQuotesByMonth } from '../types';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { WrapperCard } from '@/components/shared/WrapperCard';
-import { MB } from '@/theme/antd';
+import { BRAND } from '@/theme/antd';
 
 interface QuotesByMonthChartProps {
   year: number;
@@ -38,17 +38,17 @@ export function QuotesByMonthChart({ year, data, isLoading }: QuotesByMonthChart
         <div className="h-64 w-full overflow-x-auto">
           <ResponsiveContainer width="100%" height="100%" minWidth={480}>
             <BarChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-              <CartesianGrid vertical={false} stroke={MB.border} strokeOpacity={0.15} />
-              <XAxis dataKey="label" tickLine={false} axisLine={false} stroke={MB.muted} />
+              <CartesianGrid vertical={false} stroke={BRAND.border} strokeOpacity={0.15} />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} stroke={BRAND.muted} />
               <YAxis
                 allowDecimals={false}
                 tickLine={false}
                 axisLine={false}
-                stroke={MB.muted}
+                stroke={BRAND.muted}
                 width={28}
               />
-              <Tooltip cursor={{ fill: MB.oliveFaint }} />
-              <Bar dataKey="count" fill={MB.olive} radius={[4, 4, 0, 0]} />
+              <Tooltip cursor={{ fill: BRAND.mist }} />
+              <Bar dataKey="count" fill={BRAND.navy} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

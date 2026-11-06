@@ -137,7 +137,7 @@ export function DayView({
               <span
                 className={
                   isSelected
-                    ? 'bg-primary flex size-7 items-center justify-center rounded-full text-sm font-medium text-ivory'
+                    ? 'bg-primary flex size-7 items-center justify-center rounded-full text-sm font-medium text-on-primary'
                     : 'flex size-7 items-center justify-center text-sm font-medium'
                 }
               >

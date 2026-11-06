@@ -106,7 +106,7 @@ export function TermsAndConditionsEditor({
                   badgeSize="sm"
                   size={14}
                   rounded="rounded-lg"
-                  className="bg-salmon/20 text-error"
+                  className="bg-error/20 text-error"
                 />
               }
               onClick={(e) => {

@@ -53,7 +53,7 @@ export function SetPasswordPage() {
 
   return (
     <>
-      <Typography.Title level={2} className="font-heading text-brown mt-10 mb-2 text-center">
+      <Typography.Title level={2} className="font-heading text-navy mt-10 mb-2 text-center">
         {t(`setPassword.${reason}.title`)}
       </Typography.Title>
       <Typography.Text type="secondary" className="mb-6 block text-center">

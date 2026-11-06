@@ -11,7 +11,7 @@ export function AboutSettingsForm() {
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-between py-6 pt-10 text-center">
       <div className="flex flex-col items-center gap-2">
-        <Typography.Title level={2} className="font-heading text-brown m-0!">
+        <Typography.Title level={2} className="font-heading text-navy m-0!">
           {tCommon('appName')}
         </Typography.Title>
         <Typography.Text className="text-muted max-w-xs text-sm">

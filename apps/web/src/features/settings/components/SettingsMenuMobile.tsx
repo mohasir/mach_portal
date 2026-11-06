@@ -32,7 +32,7 @@ export function SettingsMenuMobile({ items, onSelect }: SettingsMenuMobileProps)
               onClick={() => onSelect(key)}
               className={`flex w-full items-center gap-3 py-2.5 text-left text-base`}
             >
-              <IconBadge icon={Icon} shape="square" className="bg-primary/8 text-primary" />
+              <IconBadge icon={Icon} shape="square" className="bg-primary/8 text-navy" />
               <span className="flex-1">{label}</span>
               <ChevronRight size={16} className="text-muted shrink-0" />
             </button>

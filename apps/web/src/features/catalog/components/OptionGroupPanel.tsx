@@ -87,7 +87,7 @@ export function OptionGroupPanel({ group, onEdit }: OptionGroupPanelProps) {
             <Button
               type="text"
               shape="square"
-              icon={<IconBadge icon={Plus} shape="square" className="bg-primary/20 text-primary" />}
+              icon={<IconBadge icon={Plus} shape="square" className="bg-primary/20 text-navy" />}
               onClick={() => setCreateOptionOpen(true)}
               aria-label={t('option.add')}
             />
@@ -100,7 +100,7 @@ export function OptionGroupPanel({ group, onEdit }: OptionGroupPanelProps) {
                 <IconBadge
                   icon={TbPencilFilled}
                   shape="square"
-                  className="bg-primary/20 text-primary"
+                  className="bg-primary/20 text-navy"
                 />
               }
               onClick={() => onEdit(group)}
@@ -117,7 +117,7 @@ export function OptionGroupPanel({ group, onEdit }: OptionGroupPanelProps) {
                     <IconBadge
                       icon={TbTrashFilled}
                       shape="square"
-                      className="bg-salmon/20 text-error"
+                      className="bg-error/20 text-error"
                     />
                   }
                   onClick={handleDisable}

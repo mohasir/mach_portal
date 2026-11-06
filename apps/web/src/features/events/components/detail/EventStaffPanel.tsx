@@ -42,7 +42,7 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
   return (
     <>
       <div className="flex justify-between mb-4">
-        <Typography.Title className="font-heading text-lg text-brown m-0!">
+        <Typography.Title className="font-heading text-lg text-navy m-0!">
           {t('detail.staff.title')}
         </Typography.Title>
         {canEditStaff && (
@@ -87,7 +87,7 @@ export function EventStaffPanel({ event }: EventStaffPanelProps) {
                       badgeSize="sm"
                       size={14}
                       rounded="rounded-lg"
-                      className="bg-salmon/20 text-error"
+                      className="bg-error/20 text-error"
                     />
                   }
                 />

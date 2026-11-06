@@ -46,7 +46,7 @@ export function PasswordSetupLinkResult({
   return (
     <div className="flex flex-col gap-8 mt-6">
       <div>
-        <Typography.Title level={4} className="text-brown mb-2">
+        <Typography.Title level={4} className="text-navy mb-2">
           {t(`passwordSetupLink.${variant}.title`)}
         </Typography.Title>
 

@@ -7,7 +7,7 @@ import type { OverlayScrollbars } from 'overlayscrollbars';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import { useQuoteStages } from '@/features/settings';
 import { hexToRgba } from '@/lib/utils/color';
-import { MB } from '@/theme/antd';
+import { BRAND } from '@/theme/antd';
 import type { PipelineColumnKey, QuoteCard as QuoteCardType } from '../../types';
 import { usePipelineScrollStore } from '../../pipelineScroll.store';
 import { QuoteCard } from './QuoteCard';
@@ -30,7 +30,7 @@ export function PipelineColumn({
   const isArchived = column === 'archived';
   const stageInfo = isArchived ? undefined : stageMap.get(column);
   // Archived isn't a stage (no admin-defined label/color) and nothing can be dropped into it.
-  const stage = isArchived ? { label: t('pipeline.archived'), color: MB.taupe } : stageInfo;
+  const stage = isArchived ? { label: t('pipeline.archived'), color: BRAND.sandDark } : stageInfo;
   const { setNodeRef, isOver } = useDroppable({
     id: column,
     disabled: !draggable || isArchived,

@@ -29,7 +29,7 @@ export function UpcomingEventsCard() {
     <WrapperCard
       title={t('dashboard.upcomingTitle')}
       extra={
-        <Link href="/admin/events" className="text-primary text-sm font-medium">
+        <Link href="/admin/events" className="text-navy text-sm font-medium">
           {t('dashboard.seeMore')}
         </Link>
       }
@@ -47,7 +47,7 @@ export function UpcomingEventsCard() {
                 row={event}
                 onClick={() => router.push(`/admin/events/${event.id}`)}
                 onAssignStaff={() => {}}
-                colorDateBadge="mustard"
+                colorDateBadge="blue"
                 showActions={false}
                 showEventType={false}
                 variant="plain"

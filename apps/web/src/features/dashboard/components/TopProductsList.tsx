@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
-import { MB } from '@/theme/antd';
+import { BRAND } from '@/theme/antd';
 import type { DashboardTopProducts } from '../types';
 
 interface TopProductsListProps {
@@ -36,22 +36,22 @@ export function TopProductsList({ data, isLoading, month, year }: TopProductsLis
       key: first.productId,
       name: first.productName,
       value: first.count,
-      fill: MB.olive,
-      dotClassName: 'bg-olive',
+      fill: BRAND.navy,
+      dotClassName: 'bg-navy',
     },
     second && {
       key: second.productId,
       name: second.productName,
       value: second.count,
-      fill: MB.salmon,
-      dotClassName: 'bg-salmon',
+      fill: BRAND.blue,
+      dotClassName: 'bg-blue',
     },
     otherCount > 0 && {
       key: 'other',
       name: t('topProducts.other'),
       value: otherCount,
-      fill: MB.taupe,
-      dotClassName: 'bg-taupe',
+      fill: BRAND.sandDark,
+      dotClassName: 'bg-sand-dark',
     },
   ];
   const slices = rawSlices.filter((slice): slice is DonutSlice => Boolean(slice));

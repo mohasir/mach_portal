@@ -42,7 +42,7 @@ export function RescheduleConflicts({ check, isChecking }: RescheduleConflictsPr
                       target="_blank"
                       rel="noopener noreferrer"
                       title={conflictingEvent.quoteNumber}
-                      className="text-primary inline-flex items-center gap-1 underline"
+                      className="text-navy inline-flex items-center gap-1 underline"
                     >
                       {conflictingEvent.quoteNumber.slice(-6)}
                       <TbExternalLink size={14} />

@@ -64,7 +64,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
           <WrapperCard>
             <div className="flex flex-col gap-3">
               <div className="flex items-start justify-between">
-                <div className="bg-olive-faint text-brown flex size-16 shrink-0 items-center justify-center rounded-2xl">
+                <div className="bg-mist text-navy flex size-16 shrink-0 items-center justify-center rounded-2xl">
                   {StationIcon && <StationIcon size={32} />}
                 </div>
                 {product.isActive
@@ -77,7 +77,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                           <IconBadge
                             icon={TbTrashFilled}
                             shape="square"
-                            className="bg-salmon/20 text-error"
+                            className="bg-error/20 text-error"
                           />
                         }
                         onClick={handleDisable}
@@ -117,16 +117,16 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                 </div>
               )}
 
-              <div className="divide-brown/10 flex items-stretch divide-x">
+              <div className="divide-navy/10 flex items-stretch divide-x">
                 <div className="flex items-center justify-center gap-1.5 px-1.5 py-1.5">
-                  <Layers size={14} className="text-brown shrink-0" />
-                  <span className="text-brown truncate text-sm font-medium">
+                  <Layers size={14} className="text-navy shrink-0" />
+                  <span className="text-navy truncate text-sm font-medium">
                     {t('product.optionGroupsCount', { count: product.optionGroups.length })}
                   </span>
                 </div>
                 <div className="flex items-center justify-center gap-1.5 px-1.5 py-1.5">
-                  <Wallet size={14} className="text-brown shrink-0" />
-                  <span className="text-brown truncate text-sm font-medium">
+                  <Wallet size={14} className="text-navy shrink-0" />
+                  <span className="text-navy truncate text-sm font-medium">
                     {t('product.priceTiersCount', { count: product.priceTiers.length })}
                   </span>
                 </div>

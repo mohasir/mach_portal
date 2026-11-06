@@ -20,7 +20,7 @@ export function ProfileSummaryCardMobile() {
         showDetails={false}
       />
       <Flex vertical>
-        <Typography.Text strong className="text-brown text-base">
+        <Typography.Text strong className="text-navy text-base">
           {user?.name || '—'}
         </Typography.Text>
         {user?.email && (

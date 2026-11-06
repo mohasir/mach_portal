@@ -18,7 +18,7 @@ export function StationSheetHeader({ product, numPersons, subtotal }: StationShe
 
   return (
     <div className="flex items-center gap-3">
-      <div className="bg-olive-faint text-brown flex size-20 shrink-0 items-center justify-center rounded-2xl">
+      <div className="bg-mist text-navy flex size-20 shrink-0 items-center justify-center rounded-2xl">
         <Icon size={40} />
       </div>
       <div className="flex min-w-0 flex-col gap-0.5">

@@ -82,7 +82,7 @@ export function QuoteRowCard({ row, onClick }: QuoteRowCardProps) {
             size="sm"
             onClick={() => router.push(`/admin/quotes/preview/${row.id}`)}
             aria-label={tc('detail')}
-            className="bg-primary text-ivory"
+            className="bg-primary text-on-primary"
           />
           {canEdit && (
             <IconButton
@@ -90,7 +90,7 @@ export function QuoteRowCard({ row, onClick }: QuoteRowCardProps) {
               size="sm"
               onClick={() => router.push(`/admin/quotes/${row.id}`)}
               aria-label={tc('edit')}
-              className="bg-primary text-ivory"
+              className="bg-primary text-on-primary"
             />
           )}
         </div>

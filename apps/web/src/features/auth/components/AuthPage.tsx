@@ -49,7 +49,7 @@ export function AuthPage() {
 
   return (
     <>
-      <Typography.Title level={2} className="font-heading text-brown mt-10 mb-6 text-center">
+      <Typography.Title level={2} className="font-heading text-navy mt-10 mb-6 text-center">
         {t('signinTitle')}
       </Typography.Title>
 

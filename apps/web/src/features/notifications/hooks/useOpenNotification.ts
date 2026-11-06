@@ -10,7 +10,7 @@ export function useOpenNotification() {
   const { markNotificationRead } = useMarkNotificationRead();
 
   return (item: Notification) => {
-    void markNotificationRead(item.id);
+    markNotificationRead(item.id).catch(() => undefined);
     const buildHref = NOTIFICATION_ENTITY_ROUTES[item.entityType];
     if (buildHref) router.push(buildHref(item.entityId));
   };

@@ -73,7 +73,7 @@ export function OptionRow({ option, onEdit }: OptionRowProps) {
                 badgeSize="sm"
                 size={14}
                 rounded="rounded-lg"
-                className="bg-primary/20 text-primary"
+                className="bg-primary/20 text-navy"
               />
             }
             onClick={() => onEdit(option)}
@@ -94,7 +94,7 @@ export function OptionRow({ option, onEdit }: OptionRowProps) {
                     badgeSize="sm"
                     size={14}
                     rounded="rounded-lg"
-                    className="bg-salmon/20 text-error"
+                    className="bg-error/20 text-error"
                   />
                 }
                 onClick={handleDisable}

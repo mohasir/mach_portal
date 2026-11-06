@@ -85,7 +85,7 @@ export function WeekView({
                 onClick={canCreate ? () => onSelectDate(day) : undefined}
               >
                 <span className="text-xs text-gray-500 uppercase">{day.format('ddd')}</span>
-                <span className={`text-lg font-medium ${isToday ? 'text-primary' : ''}`}>
+                <span className={`text-lg font-medium ${isToday ? 'text-navy' : ''}`}>
                   {day.format('D')}
                 </span>
               </div>
@@ -121,7 +121,7 @@ export function WeekView({
               <span
                 className={
                   isToday
-                    ? 'bg-primary flex h-7 w-7 items-center justify-center rounded-full text-base font-medium text-ivory'
+                    ? 'bg-primary flex h-7 w-7 items-center justify-center rounded-full text-base font-medium text-on-primary'
                     : 'text-base font-medium'
                 }
               >

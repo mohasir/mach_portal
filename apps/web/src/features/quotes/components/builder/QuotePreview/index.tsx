@@ -28,7 +28,7 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <Typography.Title level={4} className="font-heading text-brown m-0! shrink-0">
+      <Typography.Title level={4} className="font-heading text-navy m-0! shrink-0">
         {t('builder.preview.title')} {state.lines.length > 0 && `(${state.lines.length})`}
       </Typography.Title>
       <Divider className="mt-3 mb-3 shrink-0" />

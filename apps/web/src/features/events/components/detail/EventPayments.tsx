@@ -169,7 +169,7 @@ export function EventPayments({ event }: EventPaymentsProps) {
                           danger
                           onClick={() => onRemovePayment(payment.id)}
                           aria-label={t('detail.payments.remove')}
-                          className="bg-salmon/20 text-error"
+                          className="bg-error/20 text-error"
                         />
                       )}
                     </div>

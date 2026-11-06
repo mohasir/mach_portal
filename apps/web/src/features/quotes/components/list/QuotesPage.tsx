@@ -101,7 +101,7 @@ export function QuotesPage() {
             total={total}
           />
         )}
-        <Divider className="mt-3 mb-0 border-brown/30" />
+        <Divider className="mt-3 mb-0 border-navy/30" />
       </div>
 
       <div className="min-h-0 flex-1">

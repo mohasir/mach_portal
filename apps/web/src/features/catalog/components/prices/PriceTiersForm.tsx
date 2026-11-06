@@ -118,7 +118,7 @@ export function PriceTiersForm({ product }: PriceTiersFormProps) {
                         <IconBadge
                           icon={TbTrashFilled}
                           shape="square"
-                          className="bg-salmon/20 text-error"
+                          className="bg-error/20 text-error"
                         />
                       }
                       onClick={() => handleRemove(field.name, remove)}

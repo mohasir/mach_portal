@@ -52,7 +52,7 @@ export function DashboardPage() {
             <MetricCard
               label={t('stats.eventsCount')}
               value={summary?.eventsCount ?? 0}
-              bg="bg-olive-faint"
+              bg="bg-mist"
               loading={summaryLoading}
             />
           </Col>
@@ -60,7 +60,7 @@ export function DashboardPage() {
             <MetricCard
               label={t('stats.revenue')}
               value={money(summary?.revenue ?? 0)}
-              bg="bg-ivory"
+              bg="bg-sand"
               loading={summaryLoading}
             />
           </Col>
@@ -68,7 +68,7 @@ export function DashboardPage() {
             <MetricCard
               label={t('stats.quotesCount')}
               value={summary?.quotesCount ?? 0}
-              bg="bg-salmon/20"
+              bg="bg-blue/15"
               loading={summaryLoading}
             />
           </Col>
@@ -76,7 +76,7 @@ export function DashboardPage() {
             <MetricCard
               label={t('stats.closeRate')}
               value={`${Math.round((summary?.closeRate ?? 0) * 100)}%`}
-              bg="bg-mustard/20"
+              bg="bg-blue-light/30"
               loading={summaryLoading}
             />
           </Col>

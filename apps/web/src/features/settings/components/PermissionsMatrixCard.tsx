@@ -87,7 +87,7 @@ export function PermissionsMatrixCard() {
                     {VISIBLE_ROLES.map((role) => (
                       <div key={role} className="flex justify-center">
                         {isGranted(role, resource, action) ? (
-                          <FaSquareCheck size={18} className="text-primary" />
+                          <FaSquareCheck size={18} className="text-navy" />
                         ) : (
                           <FaRegSquare size={18} className="text-gray-300" />
                         )}

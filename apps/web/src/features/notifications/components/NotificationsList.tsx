@@ -41,7 +41,7 @@ export function NotificationsList() {
       {groups.map((group) => (
         <div key={group.key}>
           <div className="px-2">
-            <Typography.Text strong className="font-heading text-brown mb-2 block text-sm">
+            <Typography.Text strong className="font-heading text-navy mb-2 block text-sm">
               {t(`groups.${group.key}`)}
             </Typography.Text>
           </div>

@@ -19,7 +19,7 @@ export function MetricCard({ label, value, bg, loading }: MetricCardProps) {
         {loading ? (
           <Skeleton active title={{ width: 80 }} paragraph={false} />
         ) : (
-          <Typography.Title level={2} className="text-brown m-0!">
+          <Typography.Title level={2} className="text-navy m-0!">
             {value}
           </Typography.Title>
         )}

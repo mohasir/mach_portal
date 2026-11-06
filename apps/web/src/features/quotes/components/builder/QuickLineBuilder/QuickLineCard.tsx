@@ -70,7 +70,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
 
   return (
     <div className="border-line flex gap-3 rounded-xl border p-2">
-      <div className="bg-olive-faint text-brown flex size-12 shrink-0 items-center justify-center rounded-lg">
+      <div className="bg-mist text-navy flex size-12 shrink-0 items-center justify-center rounded-lg">
         <Icon size={22} />
       </div>
 
@@ -93,7 +93,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
                   badgeSize="xs"
                   size={12}
                   rounded="rounded-md"
-                  className="bg-salmon/20 text-error"
+                  className="bg-error/20 text-error"
                 />
               }
               onClick={props.onRemove}
@@ -150,7 +150,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
                     badgeSize="xs"
                     size={12}
                     rounded="rounded-md"
-                    className="bg-primary text-ivory"
+                    className="bg-primary text-on-primary"
                   />
                 }
                 onClick={() => setEditOpen(true)}
@@ -164,7 +164,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
                   size="xs"
                   onClick={props.onShow}
                   aria-label={t('builder.lines.show')}
-                  className="bg-primary text-ivory"
+                  className="bg-primary text-on-primary"
                 />
                 {props.onEditSelection && (
                   <IconButton
@@ -172,7 +172,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
                     size="xs"
                     onClick={props.onEditSelection}
                     aria-label={t('builder.lines.editSelections')}
-                    className="bg-primary text-ivory"
+                    className="bg-primary text-on-primary"
                   />
                 )}
               </>
