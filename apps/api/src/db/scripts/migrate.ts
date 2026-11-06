@@ -23,11 +23,17 @@ export function parseSetArgs(args: string[]): Record<string, string> {
   return settings;
 }
 
+// The server splits the `options` startup parameter on whitespace; a backslash escapes the
+// next character, so values such as a tenant name with spaces survive intact.
+export function escapeOption(value: string): string {
+  return value.replace(/[\\\s]/g, (char) => `\\${char}`);
+}
+
 export async function runMigrate(url: string, options: MigrateOptions = {}) {
   const { migrationsFolder = MIGRATIONS_FOLDER, settings = {} } = options;
   // Startup parameters make the values visible to migration SQL via current_setting().
   const connection = Object.entries(settings)
-    .map(([key, value]) => `-c ${key}=${value}`)
+    .map(([key, value]) => `-c ${escapeOption(`${key}=${value}`)}`)
     .join(' ');
   const sql = postgres(url, { max: 1, ...(connection && { connection: { options: connection } }) });
   try {
@@ -48,7 +54,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   main().then(
     () => process.exit(0),
     (error) => {
-      console.error('Migration failed:', error);
+      // Drizzle wraps the database error in a message that repeats the whole statement, which
+      // can be a long DO block; the reason (e.g. a RAISE EXCEPTION text) is in the cause.
+      const cause = error instanceof Error && error.cause instanceof Error ? error.cause : undefined;
+      console.error(`Migration failed: ${cause?.message ?? (error instanceof Error ? error.message : error)}`);
+      console.error('Nothing was applied: all pending migrations run in one transaction.');
+      if (cause && error instanceof Error) console.error(`\n${error.message.slice(0, 400)}…`);
       process.exit(1);
     },
   );

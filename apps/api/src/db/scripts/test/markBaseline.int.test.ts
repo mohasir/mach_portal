@@ -5,8 +5,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { markBaseline } from './markBaseline';
-import { parseSetArgs, runMigrate } from './migrate';
+import { markBaseline } from '../markBaseline';
+import { MIGRATIONS_FOLDER, parseSetArgs, runMigrate } from '../migrate';
 
 const serverUrl = process.env['TEST_DATABASE_URL'];
 if (!serverUrl) throw new Error('TEST_DATABASE_URL is required for integration tests');
@@ -21,6 +21,8 @@ const BASELINE_TABLES = 30;
 const created: string[] = [];
 const tmpDirs: string[] = [];
 let admin: postgres.Sql;
+// Only the 0000 entry of the real journal, so these assertions hold whatever comes after it.
+let baselineOnly: string;
 
 async function createDb(): Promise<{ url: string; sql: postgres.Sql }> {
   const name = `mt_baseline_test_${randomBytes(6).toString('hex')}`;
@@ -61,6 +63,15 @@ function writeMigrationsFolder(entries: { tag: string; when: number; sql: string
 
 beforeAll(() => {
   admin = postgres(serverUrl, { max: 1 });
+  const journal = JSON.parse(readFileSync(join(MIGRATIONS_FOLDER, 'meta/_journal.json'), 'utf8'));
+  const first = journal.entries[0];
+  baselineOnly = writeMigrationsFolder([
+    {
+      tag: first.tag,
+      when: first.when,
+      sql: readFileSync(join(MIGRATIONS_FOLDER, `${first.tag}.sql`), 'utf8'),
+    },
+  ]);
 });
 
 afterAll(async () => {
@@ -72,7 +83,7 @@ afterAll(async () => {
 describe('migrate on an empty database', () => {
   it('creates the full baseline schema and records it', async () => {
     const { url, sql } = await createDb();
-    await runMigrate(url);
+    await runMigrate(url, { migrationsFolder: baselineOnly });
     expect(await publicTableCount(sql)).toBe(BASELINE_TABLES);
     const rows = await sql`SELECT hash FROM drizzle.__drizzle_migrations`;
     expect(rows).toHaveLength(1);
@@ -83,12 +94,12 @@ describe('migrate on an empty database', () => {
 describe('markBaseline', () => {
   it('registers 0000 on a push-created database, keeping data and skipping DDL on migrate', async () => {
     const { url, sql } = await createDb();
-    await runMigrate(url);
+    await runMigrate(url, { migrationsFolder: baselineOnly });
     await sql`INSERT INTO reschedule_reasons (name) VALUES ('keep me')`;
     await sql.unsafe('DROP SCHEMA drizzle CASCADE');
 
     await markBaseline(url);
-    await runMigrate(url);
+    await runMigrate(url, { migrationsFolder: baselineOnly });
 
     expect(await sql`SELECT name FROM reschedule_reasons`).toEqual([{ name: 'keep me' }]);
     expect(await sql`SELECT id FROM drizzle.__drizzle_migrations`).toHaveLength(1);
@@ -98,7 +109,7 @@ describe('markBaseline', () => {
   it('records the same hash and created_at that migrate would', async () => {
     const a = await createDb();
     const b = await createDb();
-    await runMigrate(a.url);
+    await runMigrate(a.url, { migrationsFolder: baselineOnly });
     await b.sql.unsafe(baselineDdl());
     await markBaseline(b.url);
     const read = (sql: postgres.Sql) =>
@@ -116,7 +127,7 @@ describe('markBaseline', () => {
 
   it('refuses a database that is already marked', async () => {
     const { url, sql } = await createDb();
-    await runMigrate(url);
+    await runMigrate(url, { migrationsFolder: baselineOnly });
     await expect(markBaseline(url)).rejects.toThrow(/already/i);
     expect(await sql`SELECT id FROM drizzle.__drizzle_migrations`).toHaveLength(1);
     await sql.end();
@@ -164,6 +175,6 @@ describe('migrate transactionality and settings', () => {
 });
 
 function baselineDdl() {
-  const file = fileURLToPath(new URL('../../../drizzle/0000_baseline.sql', import.meta.url));
+  const file = fileURLToPath(new URL('../../../../drizzle/0000_baseline.sql', import.meta.url));
   return readFileSync(file, 'utf8').replaceAll('--> statement-breakpoint', '');
 }

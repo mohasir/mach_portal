@@ -3,7 +3,7 @@ import { env } from '../../env';
 
 /**
  * Resetea la base a un estado limpio: dropea el schema `public` (todas las tablas)
- * y el schema interno `drizzle`. Pensado para el flujo `db:fresh` (reset → push → seed).
+ * y el schema interno `drizzle`. Pensado para el flujo `db:fresh` (reset → migrate → seed).
  * NO usar en producción.
  */
 async function reset() {
