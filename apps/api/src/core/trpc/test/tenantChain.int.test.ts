@@ -1,11 +1,11 @@
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../../../db';
-import { platformAccessLog } from '../../../db/schema';
+import { member, platformAccessLog } from '../../../db/schema';
 import { addMember, createTestTenant, createTestUser, resetDb } from '../../../test/db';
-import { resetPlatformAccessSessions } from '../platformAccess';
 import type { Context } from '../context';
 import {
+  authedProcedure,
   guardedProcedure,
   protectedProcedure,
   publicProcedure,
@@ -15,6 +15,7 @@ import {
 import { ACTIONS, RESOURCES } from '@repo/guards';
 
 const testRouter = router({
+  authedOnly: authedProcedure.query(({ ctx }) => ctx.session.user.id),
   tenantOnly: tenantProcedure.query(({ ctx }) => ctx.tenant.id),
   protectedQuery: protectedProcedure.query(({ ctx }) => ({
     tenantId: ctx.tenantId,
@@ -29,6 +30,9 @@ const caller = (ctx: Context) => testRouter.createCaller(ctx);
 type Tenant = { id: string; slug: string; name: string };
 type UserOverrides = { role?: string; mustChangePassword?: boolean; isPlatformAdmin?: boolean };
 
+// `tenant` is what createContext would resolve from the session's active organization, so tests
+// pass it explicitly; `activeOrganizationId` defaults to it and can be overridden to model a
+// session pointing at an organization that no longer exists.
 function ctxFor(
   tenant: Tenant | null,
   user: { id: string } | null,
@@ -40,7 +44,9 @@ function ctxFor(
           id: opts.sessionId ?? `sess-${user.id}`,
           userId: user.id,
           activeOrganizationId:
-            opts.activeOrganizationId === undefined ? tenant?.id : opts.activeOrganizationId,
+            opts.activeOrganizationId === undefined
+              ? (tenant?.id ?? null)
+              : opts.activeOrganizationId,
         },
         user: {
           id: user.id,
@@ -62,48 +68,79 @@ async function setup() {
 describe('tenant-aware procedure chain', () => {
   beforeEach(async () => {
     await resetDb();
-    resetPlatformAccessSessions();
   });
 
-  it('tenantProcedure: no tenant -> NOT_FOUND with TENANT_NOT_FOUND', async () => {
-    const err = await caller(ctxFor(null, null))
+  it('authedProcedure: no session -> UNAUTHORIZED', async () => {
+    await expect(caller(ctxFor(null, null)).authedOnly()).rejects.toMatchObject({
+      code: 'UNAUTHORIZED',
+    });
+  });
+
+  it('authedProcedure: passes with a session even without an active organization', async () => {
+    const u = await createTestUser();
+    await expect(caller(ctxFor(null, u)).authedOnly()).resolves.toBe(u.id);
+  });
+
+  it('tenantProcedure: no session -> UNAUTHORIZED', async () => {
+    const { a } = await setup();
+    await expect(caller(ctxFor(a, null)).tenantOnly()).rejects.toMatchObject({
+      code: 'UNAUTHORIZED',
+    });
+  });
+
+  it('tenantProcedure: session without an active organization -> FORBIDDEN TENANT_NOT_SELECTED', async () => {
+    const u = await createTestUser();
+    const err = await caller(ctxFor(null, u))
+      .tenantOnly()
+      .catch((e) => e);
+    expect(err.code).toBe('FORBIDDEN');
+    expect(err.cause?.code).toBe('TENANT_NOT_SELECTED');
+  });
+
+  it('tenantProcedure: active organization that no longer exists -> NOT_FOUND TENANT_NOT_FOUND', async () => {
+    const u = await createTestUser();
+    const err = await caller(ctxFor(null, u, { activeOrganizationId: 'gone' }))
       .tenantOnly()
       .catch((e) => e);
     expect(err.code).toBe('NOT_FOUND');
     expect(err.cause?.code).toBe('TENANT_NOT_FOUND');
   });
 
-  it('tenantProcedure: works without a session', async () => {
+  it('tenantProcedure: exposes the tenant of the session', async () => {
     const { a } = await setup();
-    await expect(caller(ctxFor(a, null)).tenantOnly()).resolves.toBe(a.id);
+    const u = await createTestUser();
+    await expect(caller(ctxFor(a, u)).tenantOnly()).resolves.toBe(a.id);
   });
 
-  it('protected: no tenant -> NOT_FOUND (tenant is checked before session)', async () => {
+  it('protected: no session -> UNAUTHORIZED (session is checked before tenant)', async () => {
     await expect(caller(ctxFor(null, null)).protectedQuery()).rejects.toMatchObject({
-      code: 'NOT_FOUND',
-    });
-  });
-
-  it('protected: tenant but no session -> UNAUTHORIZED', async () => {
-    const { a } = await setup();
-    await expect(caller(ctxFor(a, null)).protectedQuery()).rejects.toMatchObject({
       code: 'UNAUTHORIZED',
     });
   });
 
-  it('protected: activeOrganizationId different from the tenant -> UNAUTHORIZED', async () => {
-    const { a, b } = await setup();
+  it('protected: no active organization -> TENANT_NOT_SELECTED before any membership check', async () => {
     const u = await createTestUser();
-    await addMember(u.id, b.id);
-    await expect(
-      caller(ctxFor(b, u, { activeOrganizationId: a.id })).protectedQuery(),
-    ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
-    await expect(
-      caller(ctxFor(b, u, { activeOrganizationId: null })).protectedQuery(),
-    ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+    const err = await caller(ctxFor(null, u))
+      .protectedQuery()
+      .catch((e) => e);
+    expect(err.code).toBe('FORBIDDEN');
+    expect(err.cause?.code).toBe('TENANT_NOT_SELECTED');
   });
 
-  it("protected: member of A using B's host (session active in B) -> FORBIDDEN", async () => {
+  it('protected: a member removed from the active organization -> FORBIDDEN on the next call', async () => {
+    const { a } = await setup();
+    const u = await createTestUser();
+    await addMember(u.id, a.id);
+    await expect(caller(ctxFor(a, u)).protectedQuery()).resolves.toMatchObject({ tenantId: a.id });
+    await db.delete(member).where(eq(member.userId, u.id));
+    const err = await caller(ctxFor(a, u))
+      .protectedQuery()
+      .catch((e) => e);
+    expect(err.code).toBe('FORBIDDEN');
+    expect(err.cause).toBeUndefined();
+  });
+
+  it('protected: a member of A whose session is active in B -> FORBIDDEN', async () => {
     const { a, b } = await setup();
     const u = await createTestUser();
     await addMember(u.id, a.id);
@@ -244,16 +281,6 @@ describe('tenant-aware procedure chain', () => {
       expect(
         await db.select().from(platformAccessLog).where(eq(platformAccessLog.userId, p.id)),
       ).toHaveLength(0);
-    });
-
-    it('still needs activeOrganizationId to match the tenant', async () => {
-      const { a, b } = await setup();
-      const p = await createTestUser({ isPlatformAdmin: true });
-      await expect(
-        caller(
-          ctxFor(a, p, { isPlatformAdmin: true, activeOrganizationId: b.id }),
-        ).protectedQuery(),
-      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     });
 
     it('mustChangePassword still blocks and writes no row', async () => {

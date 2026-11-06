@@ -5,16 +5,18 @@ const schema = z.object({
   DATABASE_URL: z.url(),
   BETTER_AUTH_SECRET: z.string().min(16),
   BETTER_AUTH_URL: z.url(),
-  // Canonical web origin used to build password setup/reset links
-  WEB_APP_URL: z.url(),
-  // Root domain tenants hang off as subdomains; may include a port (e.g. localhost:3000).
-  APP_BASE_DOMAIN: z
+  // Comma-separated list so the same API can trust multiple web origins
+  // (e.g. localhost for the browser + a LAN IP for testing on mobile).
+  WEB_ORIGIN: z
     .string()
     .min(1)
-    .regex(/^[a-z0-9.-]+(?::\d+)?$/i, 'Must be a bare host[:port] without scheme or path'),
-  APP_PROTOCOL: z.enum(['http', 'https']).default('https'),
-  // Shared secret the web proxy sends so the API can trust the forwarded tenant host.
-  INTERNAL_PROXY_KEY: z.string().min(16),
+    .transform((value) => value.split(',').map((origin) => origin.trim()))
+    .pipe(z.array(z.url()).min(1))
+    // Browsers send Origin without a trailing slash or path, so an entry like
+    // `http://localhost:3000/` would otherwise never match.
+    .transform((origins) => origins.map((origin) => new URL(origin).origin)),
+  // Canonical web origin used to build password setup/reset links
+  WEB_APP_URL: z.url(),
   PORT: z.coerce.number().default(8080),
   STORAGE_PROVIDER: z.enum(['r2']).default('r2'),
   R2_ACCOUNT_ID: z.string().min(1),

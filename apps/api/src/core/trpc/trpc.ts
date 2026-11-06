@@ -3,17 +3,20 @@ import { ZodError } from 'zod';
 import { hasPermission, ROLES, type PermissionCheck } from '@repo/guards';
 import type { Context } from './context';
 import { AppError, ErrorCodes } from '../../lib/errors';
-import { isMemberOf } from '../../lib/tenant/membership';
+import { evaluateTenantAccess } from '../../lib/tenancy/access';
 import { recordPlatformAccess } from './platformAccess';
 
 const t = initTRPC.context<Context>().create({
   errorFormatter({ shape, error }) {
     const zodError = error.cause instanceof ZodError ? error.cause : null;
+    // An unexpected error's message (and stack) can carry raw SQL, bound params and ids, in dev
+    // too; the full error is only logged server-side by the adapter's onError.
+    const unexpected = error.code === 'INTERNAL_SERVER_ERROR' && !(error.cause instanceof AppError);
     const data = { ...shape.data };
-    if (zodError) delete data.stack;
+    if (zodError || unexpected) delete data.stack;
     return {
       ...shape,
-      message: zodError ? 'Invalid input' : shape.message,
+      message: zodError ? 'Invalid input' : unexpected ? 'Internal server error' : shape.message,
       data: {
         ...data,
         errorCode: error.cause instanceof AppError ? error.cause.code : null,
@@ -28,7 +31,19 @@ const t = initTRPC.context<Context>().create({
 export const router = t.router;
 export const publicProcedure = t.procedure;
 
-export const tenantProcedure = t.procedure.use(({ ctx, next }) => {
+export const authedProcedure = t.procedure.use(({ ctx, next }) => {
+  if (!ctx.session) throw new TRPCError({ code: 'UNAUTHORIZED' });
+  return next({ ctx: { ...ctx, session: ctx.session } });
+});
+
+export const tenantProcedure = authedProcedure.use(({ ctx, next }) => {
+  if (!ctx.session.session.activeOrganizationId) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      cause: new AppError(ErrorCodes.tenant.NOT_SELECTED),
+    });
+  }
+  // The active organization exists on the session but could not be loaded: it was deleted.
   if (!ctx.tenant) {
     throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.tenant.NOT_FOUND) });
   }
@@ -36,20 +51,16 @@ export const tenantProcedure = t.procedure.use(({ ctx, next }) => {
 });
 
 export const protectedProcedure = tenantProcedure.use(async ({ ctx, next, path, type }) => {
-  if (!ctx.session) throw new TRPCError({ code: 'UNAUTHORIZED' });
   const { session, user } = ctx.session;
   const tenantId = ctx.tenant.id;
-  // The session must have been scoped to this very tenant (host), so a cookie shared across
-  // subdomains cannot be replayed against another tenant.
-  if (session.activeOrganizationId !== tenantId) throw new TRPCError({ code: 'UNAUTHORIZED' });
 
   const { isPlatformAdmin, mustChangePassword } = user as {
     isPlatformAdmin?: boolean | null;
     mustChangePassword?: boolean | null;
   };
-  const member = await isMemberOf(user.id, tenantId);
-  const platformAccess = !member && Boolean(isPlatformAdmin);
-  if (!member && !platformAccess) throw new TRPCError({ code: 'FORBIDDEN' });
+  const access = await evaluateTenantAccess({ userId: user.id, isPlatformAdmin, tenantId });
+  if (!access.allowed) throw new TRPCError({ code: 'FORBIDDEN' });
+  const { platformAccess } = access;
 
   if (mustChangePassword) {
     throw new TRPCError({

@@ -1,18 +1,18 @@
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 import { fromNodeHeaders } from 'better-auth/node';
-import { env } from '../../env';
 import { auth } from '../../lib/auth';
-import { readTenantHost } from '../../lib/tenant/forwardedHost';
-import { parseTenantSlug } from '../../lib/tenant/host';
-import { resolveTenantBySlug, type Tenant } from '../../lib/tenant/tenantResolver';
+import { resolveTenantById, type Tenant } from '../../lib/tenancy/tenantResolver';
 
 export async function createContext({ req, res }: CreateExpressContextOptions) {
+  // Bypassing the cookie cache makes an organization switch visible on the very next request.
   const session = await auth.api.getSession({
     headers: fromNodeHeaders(req.headers),
     query: { disableCookieCache: true },
   });
-  const slug = parseTenantSlug(readTenantHost(req.headers), env.APP_BASE_DOMAIN);
-  const tenant: Tenant | null = slug ? await resolveTenantBySlug(slug) : null;
+  const activeOrganizationId = session?.session.activeOrganizationId;
+  const tenant: Tenant | null = activeOrganizationId
+    ? await resolveTenantById(activeOrganizationId)
+    : null;
   return { req, res, session, tenant };
 }
 
