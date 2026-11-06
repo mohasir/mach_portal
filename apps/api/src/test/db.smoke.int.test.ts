@@ -27,6 +27,14 @@ describe('integration harness', () => {
 
   it('slug is unique across organizations', async () => {
     await createTestTenant('dup');
-    await expect(createTestTenant('dup')).rejects.toThrow();
+    const error = await createTestTenant('dup').then(
+      () => undefined,
+      (e: unknown) => e,
+    );
+    // Drizzle wraps the driver error, so the Postgres code sits somewhere on the cause chain.
+    const codes: unknown[] = [];
+    for (let e = error as { code?: unknown; cause?: unknown } | undefined; e; e = e.cause as never)
+      codes.push(e.code);
+    expect(codes).toContain('23505');
   });
 });

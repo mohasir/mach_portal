@@ -33,6 +33,13 @@ describe('assertSafeTestDatabaseUrl', () => {
     expect(() => assertSafeTestDatabaseUrl(url)).toThrow();
   });
 
+  it.each(['postgres://u:p@localhost/db\n', 'POSTGRES://u:p@localhost/db', 'http://localhost/db'])(
+    'rejects forms outside the strict allowlist (%j)',
+    (url) => {
+      expect(() => assertSafeTestDatabaseUrl(url)).toThrow(/postgres:\/\//);
+    },
+  );
+
   it('rejects an unparseable URL', () => {
     expect(() => assertSafeTestDatabaseUrl('not a url')).toThrow(/TEST_DATABASE_URL/);
   });
@@ -43,6 +50,7 @@ describe('assertSafeTestDatabaseUrl', () => {
     'postgres://localhost/test',
     'postgres://mach_admin:mach12345678@localhost:5432/mach_db',
     'postgres://u:p@127.0.0.1/test',
+    'postgres://u:p:q@localhost/test',
   ])('accepts a local host (%s)', (url) => {
     expect(() => assertSafeTestDatabaseUrl(url)).not.toThrow();
   });

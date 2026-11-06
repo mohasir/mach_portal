@@ -23,11 +23,15 @@ export function assertSafeTestDatabaseUrl(url: string | undefined): void {
   // The postgres driver and libpq let query params (host, hostaddr, port) override the
   // authority, so any param could redirect the wipe to a remote server.
   if (parsed.search) {
-    throw new Error('Refusing to run integration tests: TEST_DATABASE_URL must not have query parameters');
+    throw new Error(
+      'Refusing to run integration tests: TEST_DATABASE_URL must not have query parameters',
+    );
   }
 
   if (parsed.hash) {
-    throw new Error('Refusing to run integration tests: TEST_DATABASE_URL must not have a fragment');
+    throw new Error(
+      'Refusing to run integration tests: TEST_DATABASE_URL must not have a fragment',
+    );
   }
 
   if (!LOCAL_HOSTS.has(hostname)) {

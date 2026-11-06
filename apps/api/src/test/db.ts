@@ -1,18 +1,33 @@
 import { randomUUID } from 'node:crypto';
 import { sql } from 'drizzle-orm';
+import { resetPlatformAccessSessions } from '../core/trpc/platformAccess';
 import { db, type Database } from '../db';
+import { invalidateTenantCache } from '../lib/tenancy/tenantResolver';
 
 export type TestTenant = { id: string; slug: string; userId: string };
 
 export const testDb: Database = db;
 
-export async function resetDb(): Promise<void> {
+// The schema is pushed once per run (globalSetup), so the table list never changes mid-run.
+let truncateTarget: string | undefined;
+
+async function tablesToTruncate(): Promise<string | undefined> {
+  if (truncateTarget) return truncateTarget;
   const rows = await testDb.execute<{ table_name: string }>(sql`
     SELECT table_name FROM information_schema.tables
     WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
   `);
-  if (rows.length === 0) return;
-  const tables = rows.map((r) => `"public"."${r.table_name}"`).join(', ');
+  if (rows.length === 0) return undefined;
+  truncateTarget = rows.map((r) => `"public"."${r.table_name}"`).join(', ');
+  return truncateTarget;
+}
+
+// Also drops the in-memory caches keyed by rows that the truncate just removed.
+export async function resetDb(): Promise<void> {
+  invalidateTenantCache();
+  resetPlatformAccessSessions();
+  const tables = await tablesToTruncate();
+  if (!tables) return;
   await testDb.execute(sql.raw(`TRUNCATE ${tables} RESTART IDENTITY CASCADE`));
 }
 
