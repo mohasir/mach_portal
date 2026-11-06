@@ -5,7 +5,7 @@ import {
   type EventTypesListQuery,
   type UpdateEventTypeInput,
 } from '@repo/schemas';
-import { AppError, ErrorCodes } from '../../lib/errors';
+import { AppError, ErrorCodes, isPgError, PG_UNIQUE_VIOLATION } from '../../lib/errors';
 import { EventTypesRepository } from './eventTypes.repository';
 import { eventTypeCollectionResource, eventTypeResource } from './eventTypes.resource';
 
@@ -31,7 +31,15 @@ export class EventTypesService {
   }
 
   async update(id: string, input: UpdateEventTypeInput) {
-    const updated = await this.repo.updateById(id, input);
+    const updated = await this.repo.updateById(id, input).catch((error: unknown) => {
+      if (isPgError(error, PG_UNIQUE_VIOLATION)) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          cause: new AppError(ErrorCodes.eventType.ALREADY_EXISTS),
+        });
+      }
+      throw error;
+    });
     if (!updated)
       throw new TRPCError({
         code: 'NOT_FOUND',

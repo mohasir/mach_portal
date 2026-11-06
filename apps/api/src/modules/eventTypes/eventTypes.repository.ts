@@ -1,4 +1,4 @@
-import { asc, count, desc, eq, ilike, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, type SQL } from 'drizzle-orm';
 import type {
   CreateEventTypeInput,
   EventTypesListQuery,
@@ -6,8 +6,10 @@ import type {
 } from '@repo/schemas';
 import type { Database } from '../../db';
 import { eventTypes } from '../../db/schema';
+import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
 import { publicEventTypeColumns } from './eventTypes.resource';
+import { containsPattern } from '../../lib/utils/search';
 
 const sortColumns = {
   name: eventTypes.name,
@@ -16,11 +18,17 @@ const sortColumns = {
 } as const;
 
 export class EventTypesRepository {
-  constructor(private db: Database) {}
+  constructor(
+    private db: Database,
+    private tenantId: string,
+  ) {}
 
   async findPaginated(query: EventTypesListQuery) {
     const { search, sortBy, sortDir } = query;
-    const where = search ? ilike(eventTypes.name, `%${search}%`) : undefined;
+    const where = and(
+      tenantEq(eventTypes, this.tenantId),
+      search ? ilike(eventTypes.name, containsPattern(search)) : undefined,
+    );
     const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
     const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
 
@@ -45,7 +53,7 @@ export class EventTypesRepository {
     return this.db
       .select({ id: eventTypes.id })
       .from(eventTypes)
-      .where(eq(eventTypes.name, name))
+      .where(and(eq(eventTypes.name, name), tenantEq(eventTypes, this.tenantId)))
       .limit(1)
       .then((r) => r[0]);
   }
@@ -53,7 +61,7 @@ export class EventTypesRepository {
   create(data: CreateEventTypeInput) {
     return this.db
       .insert(eventTypes)
-      .values(data)
+      .values({ ...data, tenantId: this.tenantId })
       .returning(publicEventTypeColumns)
       .then((r) => r[0]!);
   }
@@ -62,7 +70,7 @@ export class EventTypesRepository {
     return this.db
       .update(eventTypes)
       .set(data)
-      .where(eq(eventTypes.id, id))
+      .where(and(eq(eventTypes.id, id), tenantEq(eventTypes, this.tenantId)))
       .returning(publicEventTypeColumns)
       .then((r) => r[0]);
   }
@@ -71,7 +79,7 @@ export class EventTypesRepository {
     return this.db
       .update(eventTypes)
       .set({ isActive })
-      .where(eq(eventTypes.id, id))
+      .where(and(eq(eventTypes.id, id), tenantEq(eventTypes, this.tenantId)))
       .returning(publicEventTypeColumns)
       .then((r) => r[0]);
   }

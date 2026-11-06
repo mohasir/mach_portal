@@ -1,6 +1,8 @@
+import { TRPCError } from '@trpc/server';
 import { DEFAULT_ROLE, type RoleType } from '@repo/guards';
 import type { NotificationsListQuery } from '@repo/schemas';
 import { paginationMeta } from '@repo/schemas';
+import { AppError, ErrorCodes } from '../../lib/errors';
 import type { NotificationsRepository } from './notifications.repository';
 import {
   NOTIFICATION_TYPE_ROLES,
@@ -15,6 +17,13 @@ function visibleTypesForRole(role: string | null | undefined): NotificationType[
   return (Object.keys(NOTIFICATION_TYPE_ROLES) as NotificationType[]).filter((type) =>
     NOTIFICATION_TYPE_ROLES[type].some((r) => userRoles.includes(r)),
   );
+}
+
+function notFound() {
+  return new TRPCError({
+    code: 'NOT_FOUND',
+    cause: new AppError(ErrorCodes.notification.NOT_FOUND),
+  });
 }
 
 export class NotificationsService {
@@ -38,12 +47,12 @@ export class NotificationsService {
   }
 
   async markRead(id: string, userId: string) {
-    await this.repo.markRead(id, userId);
+    if (!(await this.repo.markRead(id, userId))) throw notFound();
     return { ok: true };
   }
 
   async dismiss(id: string, userId: string) {
-    await this.repo.dismiss(id, userId);
+    if (!(await this.repo.dismiss(id, userId))) throw notFound();
     return { ok: true };
   }
 

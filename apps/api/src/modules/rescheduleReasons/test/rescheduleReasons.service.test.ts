@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { RescheduleReasonsRepository } from './rescheduleReasons.repository';
-import { RescheduleReasonsService } from './rescheduleReasons.service';
+import type { RescheduleReasonsRepository } from '../rescheduleReasons.repository';
+import { RescheduleReasonsService } from '../rescheduleReasons.service';
 
 const reason = { id: 'id-1', name: 'Clima', requiresNote: false, isActive: true, sortOrder: 0 };
 
