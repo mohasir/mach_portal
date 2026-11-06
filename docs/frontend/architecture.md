@@ -343,7 +343,7 @@ export type { X } from './types';
 Se prueban con **Vitest** (entorno `node`) las funciones puras: helpers de `lib/` (fechas, acceso por
 ruta) y `helpers.ts` de cada feature. Los componentes React no tienen tests.
 
-- Archivos `*.test.ts` junto al código. Correr con `pnpm --filter web test` (o `pnpm test` en la raíz).
+- Archivos `*.test.ts` en una subcarpeta `test/` del directorio del código que prueban (nunca sueltos junto al código). Correr con `pnpm --filter web test` (o `pnpm test` en la raíz).
 - Alias `@/` disponible (configurado en `apps/web/vitest.config.ts`).
 - Para lógica que depende de "ahora", fijar el reloj con `vi.useFakeTimers()` + `vi.setSystemTime(...)`.
 
@@ -600,6 +600,23 @@ export function useCan() {
 > **Regla — nunca strings sueltos en un `PermissionCheck`.** Recursos y acciones de **dominio** usan las constantes tipadas de `@repo/guards` (`RESOURCES`, `ACTIONS`): `{ [RESOURCES.X]: [ACTIONS.READ] }`, nunca `{ x: ['read'] }`. Aplica en `<Can>`, `useCan()(...)` y los `guard` de navegación.
 >
 > **Excepción:** los statements nativos de Better Auth (los que no son recursos de dominio) no tienen constante en `RESOURCES` — se referencian por su literal. Solo los recursos de dominio pasan por `RESOURCES`/`ACTIONS`.
+
+### 9.3 Organización activa (multi-tenant)
+
+El tenant de cada petición es la organización activa **de la sesión** (`session.activeOrganizationId`). La web nunca manda un tenant: el proxy a la API no tiene lógica de tenant. Ver `docs/backend/architecture.md` §11.
+
+- **Fuente de verdad: `tenant.active`**, vía `useActiveTenant()` (`features/tenant`), que siempre se revalida (`staleTime: 0`). **Nunca `useSession()`**: su caché de cookie puede ir hasta 60 s por detrás del cambio de organización. Tampoco se decide en `middleware.ts`: ahí solo se miran la sesión, el rol y `mustChangePassword`, desde la caché de cookie.
+- **`TenantGate`** envuelve el área autenticada. Renderiza solo cuando la API confirma una organización activa, redirige a `/select-organization` si no hay ninguna y muestra el aviso de modo plataforma cuando `isPlatformAccess` es `true`.
+- **`/select-organization`** (`SelectOrganizationPage`):
+  - lista `tenant.memberships` y, para un admin de plataforma, `tenant.listAll`;
+  - selecciona con `useSelectTenant()`;
+  - con una sola membresía y sin organización activa, la elige sola.
+- **Transiciones de sesión y caché de React Query:**
+  - **Login** (`AuthPage`): `qc.clear()` y `broadcastSessionChange('login')`.
+  - **Selección/cambio de organización** (`useSelectTenant`): `qc.resetQueries()`, con el `tenant.active` nuevo cargado a mano, y `broadcastSessionChange('tenant-changed')`.
+  - **Logout**: siempre con `useSignOut()` (`features/tenant`), que hace `signOut()`, luego `broadcastSessionChange('logout')` y luego va a `DEFAULT_REDIRECT_LOGIN`. **No** limpia la caché: lo hace la pantalla de login al montarse, porque limpiarla con la página autenticada montada volvería a pedir cada query activa sin sesión.
+- **Sincronización entre pestañas** (`useTenantSync`, dentro de `TenantGate`): escucha el `BroadcastChannel` y, si otra pestaña cambia de organización, entra o sale, resetea la caché y navega (al inicio o al login). También revalida `tenant.active` al volver el foco a la pestaña.
+- **Nombres:** la UI y los tipos dicen *organization* (`Organization`, `SelectOrganizationPage`); la API y los hooks dicen *tenant* (`tenant.*`, `useActiveTenant`, `useSelectTenant`).
 
 ---
 

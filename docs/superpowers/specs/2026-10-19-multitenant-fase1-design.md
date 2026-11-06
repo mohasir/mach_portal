@@ -1,30 +1,33 @@
 # Multi-tenant — Fase 1: núcleo de tenancy
 
-Fecha: 2026-10-19 · Rama: `multitenant` (desde `main`) · Estado: borrador para revisión
+Fecha: 2026-10-19 · Revisado: dominio único con tenant en la sesión · Rama: `multitenant` (desde `main`) · Estado: borrador para revisión
 
 ## 1. Contexto y objetivo
 
 Mach Portal hoy es single-tenant y está en producción con un cliente. El objetivo del programa
-multi-tenant es ofrecerlo como SaaS a más clientes, cada uno en su propio subdominio, con datos
-completamente aislados.
+multi-tenant es ofrecerlo como SaaS a más clientes, todos bajo **un único dominio**, con datos
+completamente aislados. El producto conserva su propia marca en todas partes; la marca de cada
+cliente solo se usa dentro del sistema, una vez iniciada la sesión.
 
 Esta fase entrega el **núcleo de tenancy**: modelo de organizaciones, `tenant_id` en los datos,
-resolución del tenant por host, autenticación con membresías, aislamiento de datos por filtros
-explícitos y la migración del cliente actual como tenant #1. No sube a producción hasta que todas
-las fases del programa (incluida la 1b, RLS) estén completas y probadas en `staging-mt`.
+resolución del tenant desde la sesión, autenticación con membresías, aislamiento de datos por
+filtros explícitos y la migración del cliente actual como tenant #1. No sube a producción hasta que
+todas las fases del programa (incluida la 1b, RLS) estén completas y probadas en `staging-mt`.
 
 ### Decisiones ya tomadas (programa completo)
 
 | Tema | Decisión |
 |---|---|
-| Modelo | Una sola instalación, `tenant_id` en la base de datos, un subdominio por cliente |
+| Modelo | Una sola instalación y un único dominio; `tenant_id` en la base de datos; el tenant de cada petición es la organización activa de la sesión |
 | Identidad | Plugin `organization` de Better Auth, usuario global con membresías |
-| Mismo email en varios tenants | Sí: es el mismo usuario con varias membresías |
+| Mismo email en varios tenants | Sí: es el mismo usuario con varias membresías (caso raro; ver selección de organización) |
+| Acceso sin organización | No se permite: el login se rechaza si la persona no pertenece a ninguna organización (excepto el admin de plataforma) |
 | Aislamiento | `WHERE tenant_id` explícito en todas las consultas (fase 1) + RLS de Postgres como segunda barrera (fase 1b, obligatoria antes de producción) |
-| Branding | Tabla `tenant_branding` (fase 3) |
+| Branding | Tabla `tenant_branding` (fase 3), usada solo dentro del sistema tras el login; login, PWA y correos de acceso llevan la marca del producto |
 | Roles y permisos | Roles y matriz rol→permisos en BD, globales, editables desde el portal; `organization_id` nullable para soportar roles por tenant después (fase 2). El catálogo de permisos sigue en código |
 | Planes y feature flags | Planes con features, módulos como atajo, overrides por tenant; cobro manual (fase 4) |
-| Admin de plataforma | `user.isPlatformAdmin`; entra a cualquier tenant con permisos totales viendo un tenant a la vez; panel en `admin.<dominio>` (fase 4) |
+| Admin de plataforma | `user.isPlatformAdmin`; puede seleccionar cualquier organización y actúa con permisos totales viendo una a la vez; panel en la ruta `/platform` de la misma app (fase 4) |
+| Slug de la organización | Identificador estable de la organización; ya no es un subdominio |
 | Crons y jobs | Desactivados durante el desarrollo multi-tenant |
 | Offboarding | Post-MVP multi-tenant |
 
@@ -33,7 +36,7 @@ las fases del programa (incluida la 1b, RLS) estén completas y probadas en `sta
 1. **Núcleo de tenancy** (este documento).
 1b. **RLS** como segunda barrera de aislamiento (spec propio; ver sección 6).
 2. RBAC en base de datos.
-3. Branding (`tenant_branding`, PDFs con el otro servicio, PWA dinámico, emails).
+3. Branding (`tenant_branding` dentro del sistema, PDFs con el otro servicio, emails).
 4. Planes, feature flags y panel de plataforma.
 
 Cada fase tiene su propio spec, plan e implementación, y deja el sistema funcionando. Producción
@@ -41,15 +44,15 @@ solo se actualiza cuando todas estén completas y probadas.
 
 ## 2. Alcance de la fase 1
 
-**Incluye:** `organization`/`member`, `tenant_id` en tablas de negocio, resolución por host,
-login con verificación de membresía, aislamiento por `WHERE` explícito, numeración de
-cotizaciones por tenant, función `createTenant`, migración del tenant #1, entorno `staging-mt`
-y suites de regresión y aislamiento.
+**Incluye:** `organization`/`member`, `tenant_id` en tablas de negocio, tenant desde la sesión con
+selección de organización, login con rechazo si no hay organización, aislamiento por `WHERE`
+explícito, numeración de cotizaciones por tenant, función `createTenant`, migración del tenant #1,
+entorno `staging-mt` y suites de regresión y aislamiento.
 
 **No incluye:** RLS, roles de BD adicionales, transacción por request (fase 1b); roles en BD
 (la autorización sigue leyendo `user.role` con el plugin `admin`, fase 2); branding; planes;
-panel de plataforma; impersonación; dominios propios; offboarding; cron jobs; claves foráneas
-compuestas.
+panel de plataforma; impersonación; dominios propios por cliente; offboarding; cron jobs; claves
+foráneas compuestas.
 
 ## 3. Modelo de datos
 
@@ -57,10 +60,12 @@ compuestas.
 
 - Plugin `organization` (sin `teams` ni `dynamicAccessControl`): tablas `organization`, `member`,
   `invitation` (esta última sin uso, el plugin la exige) y `session.activeOrganizationId`.
-- `organization.slug` es el subdominio. Es inmutable una vez creado. Slugs reservados
-  (`admin`, `www`, `api`, `app`, `staging`, …) se rechazan al crear.
-- `organization.customDomain` nullable, sin uso en esta fase. Reservado para dominios propios.
-- `user.isPlatformAdmin` (boolean, default false). Los `superadmin` actuales lo reciben en la migración.
+- `organization.slug` es el identificador estable y único de la organización (formato
+  `^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])$`). Es inmutable una vez creado. Ya no es un subdominio,
+  así que no hay lista de slugs reservados.
+- Se elimina `organization.customDomain` (con un solo dominio no tiene uso).
+- `user.isPlatformAdmin` (boolean, default false). En la migración lo reciben las cuentas de
+  `mt.platform_admin_emails` o, sin esa lista, todos los `superadmin` actuales.
 - En esta fase `member.role` guarda el mismo valor que `user.role` y no se consulta para autorizar.
 
 ### `tenant_id` en tablas de negocio
@@ -73,7 +78,7 @@ compuestas.
   políticas de RLS de la fase 1b.
 - `userPreferences` lleva `tenant_id`: un usuario global tiene preferencias por cliente.
 - Las tablas de auth (`user`, `session`, `account`, `verification`) siguen globales.
-  `organization` y `member` tampoco llevan `tenant_id` (se consultan antes de conocer el tenant).
+  `organization` y `member` tampoco llevan `tenant_id`.
 
 ### Unicidad y claves
 
@@ -90,28 +95,25 @@ carrera actual.
 
 ## 4. Resolución del tenant y autenticación
 
-**Principio:** el host solo *selecciona* el tenant. La autorización real es sesión + membresía.
+**Principio:** el tenant de una petición es la **organización activa de la sesión**
+(`session.activeOrganizationId`); la autorización real es sesión + membresía, **re-verificada en
+cada petición**. Nada que llegue en la URL, en el cuerpo o en cabeceras elige el tenant.
 
 ### Resolución
 
-- Variable `APP_BASE_DOMAIN`. En desarrollo: `cliente.localhost:3000`.
-- El host se parte en `slug.<base>`; slug desconocido o reservado → página 404 de organización
-  no encontrada.
-- La API toma el host reenviado por el proxy de Next (`x-forwarded-host`).
-  **A verificar:** que los `rewrites` de `apps/web/next.config.ts` lo propaguen; si no, el
-  middleware lo inyecta como header.
-- `createContext` busca la organización por slug (caché en memoria ~60 s) y expone `ctx.tenant`.
-  `middleware.ts` solo reenvía el host; no consulta la BD (corre en el edge).
-- Endurecimiento: Next añade un header interno con secreto compartido (`x-internal-key`) y la
-  API solo acepta el host reenviado cuando ese secreto es válido. Si hay red privada entre
-  servicios, se bloquea además el acceso público directo a la API.
+- `createContext` obtiene la sesión (sin caché de cookie, para que un cambio de organización
+  surta efecto al instante). Si trae `activeOrganizationId`, carga la organización por id (caché
+  en memoria ~60 s) y expone `ctx.tenant`; si no, `ctx.tenant` es `null`.
+- No hay `APP_BASE_DOMAIN`, host reenviado ni cabecera interna entre web y API: la web
+  hace proxy a la API como hoy, sin lógica de tenant.
 
 ### Cadena de procedures (tRPC)
 
 ```text
-createContext      → host → organización → ctx.tenant (o 404)
-tenantProcedure    → exige ctx.tenant
-protectedProcedure → exige sesión + membresía (o isPlatformAdmin) + activeOrganizationId == ctx.tenant;
+createContext      → sesión → organización activa → ctx.tenant (o null)
+authedProcedure    → exige sesión (para tenant.memberships y tenant.select)
+tenantProcedure    → exige sesión y ctx.tenant (si no hay organización activa: TENANT_NOT_SELECTED)
+protectedProcedure → además exige membresía (o isPlatformAdmin) y mustChangePassword resuelto;
                      deja ctx.tenantId
 guardedProcedure   → permisos del rol (como hoy)
 ```
@@ -122,30 +124,44 @@ El `tenantId` **nunca** viene del cliente ni del `input`.
 
 `server.ts` expone, además de `/trpc`, la ruta de adjuntos `/api/uploads/event-payments`
 (`events.express.ts`, carga multipart) y `/api/auth/*` (Better Auth). La ruta de adjuntos no pasa
-por los procedures, así que necesita un middleware de Express compartido que aplique la misma
-resolución de tenant, sesión y membresía y deje `tenantId` a disposición del handler. Cualquier
-ruta nueva fuera de tRPC debe usarlo. `/api/auth/*` resuelve el tenant desde el host y aplica el
-hook de membresía descrito abajo.
+por los procedures, así que usa un middleware de Express compartido (`guardTenantSession`) que
+aplica las mismas reglas: tenant de la sesión, membresía o admin de plataforma, auditoría y
+permisos, y deja `tenantId` a disposición del handler. Cualquier ruta nueva fuera de tRPC debe
+usarlo. La decisión de acceso (miembro o admin de plataforma) vive en una sola función
+compartida por tRPC y Express.
 
-### Login y sesión
+### Login y selección de organización
 
-- Hook posterior al login: si el usuario no es miembro del tenant del host (y no es admin de
-  plataforma), responde el mismo error genérico de credenciales inválidas.
-- `session.activeOrganizationId` se fija desde el host.
-- Cookies solo de host (sin `Domain`), `crossSubDomainCookies` apagado: cada tenant tiene sesión
-  aislada; quien use dos clientes inicia sesión en cada uno.
-- `baseURL` y `trustedOrigins` dejan de ser fijos. **A verificar:** si Better Auth 1.6 admite
-  hosts permitidos dinámicos o basta un patrón `https://*.<APP_BASE_DOMAIN>`. El CORS de la API
-  (`WEB_ORIGIN`) pasa a una función que acepta solo subdominios existentes de la base.
-- Los enlaces de restablecer contraseña y de notificaciones se construyen con el host del
-  tenant, no con `WEB_APP_URL`.
+- El login es global (email y contraseña). Un gancho al crear la sesión determina la organización
+  activa a partir de las membresías de la persona:
+  - **Una organización:** se activa automáticamente.
+  - **Ninguna:** se rechaza el login con un error específico (`USER_NO_ORGANIZATION`); la persona ya
+    probó sus credenciales, así que no se filtra información. El admin de plataforma sin
+    membresías sí entra (sin organización activa hasta que elija una).
+  - **Varias (caso raro):** la sesión se crea sin organización activa y la web muestra una pantalla
+    para elegir.
+- Dos procedimientos tRPC propios, sin pasar por los endpoints del plugin (que siguen bloqueados
+  por HTTP):
+  - `tenant.memberships`: lista las organizaciones de quien consulta (`id`, `slug`, `name`).
+  - `tenant.select({ organizationId })`: comprueba la membresía (o `isPlatformAdmin`) y actualiza
+    `session.activeOrganizationId`. Es también la forma de cambiar de organización durante la sesión.
+- `trustedOrigins` y el CORS de la API vuelven a una lista fija de orígenes (`WEB_ORIGIN`).
+- Cookie de sesión de host único (sin `Domain`), `crossSubDomainCookies` apagado.
+- Los enlaces de restablecer contraseña y de notificaciones usan `WEB_APP_URL`.
+- Superficie HTTP de Better Auth: el registro público (`/sign-up/email`) y los endpoints de los
+  plugins `organization` y `admin` están bloqueados por HTTP; las llamadas internas del servidor
+  (`auth.api.*`) siguen funcionando.
 
 ### Admin de plataforma
 
-- Puede entrar a cualquier tenant con permisos totales (equivalente al `superadmin` actual) y
-  ve un tenant a la vez: todas las consultas siguen filtradas por el tenant de la sesión.
-- Todo acceso y escritura queda en un log de auditoría y la UI muestra un aviso de "modo plataforma".
-- `admin.<dominio>` queda reservado; el panel es de la fase 4 (hasta entonces, alta por script).
+- Puede seleccionar cualquier organización (`tenant.select`) y entra con permisos totales
+  (equivalente al `superadmin` actual) si no es miembro; ve una organización a la vez: todas las
+  consultas siguen filtradas por la organización activa de la sesión.
+- El acceso sin membresía queda en un log de auditoría y la UI muestra un aviso de
+  "modo plataforma": cada escritura deja una fila; las lecturas dejan una fila por sesión y
+  organización (las lecturas repetidas dentro de esa ventana se registran una sola vez; la marca
+  vive en memoria del proceso, así que un reinicio o varias instancias pueden sumar alguna fila).
+- El panel es de la fase 4 (ruta `/platform`; hasta entonces, alta por script).
 
 ## 5. Aislamiento de datos
 
@@ -171,7 +187,7 @@ cambio mecánico en 14 módulos.
 ### Salvaguardas
 
 - Constructor que exige `tenantId` (verificado por el compilador).
-- Suite de aislamiento obligatoria en CI (sección 7): con dos tenants cargados, cada método de
+- Suite de aislamiento obligatoria en CI (sección 8): con dos tenants cargados, cada método de
   cada repositorio debe fallar si olvida el filtro.
 - Regla para claves foráneas: Postgres no valida el tenant al comprobar una FK, así que un
   `INSERT` podría apuntar a una fila de otro tenant si se le pasa un id ajeno. Todo id recibido
@@ -205,7 +221,8 @@ tablas, repositorios con tenant explícito). El alcance de la 1b, a detallar en 
   hacia `multitenant`. `main` se fusiona a `multitenant` con frecuencia.
 - Entorno `staging-mt` separado del staging actual: servicios propios, base de datos restaurada
   desde un snapshot de prod con acceso restringido, **bucket y credenciales de R2 propios**,
-  correo desactivado o redirigido a un buzón de prueba, crons desactivados y dominio wildcard propio.
+  correo desactivado o redirigido a un buzón de prueba, crons desactivados y su propio dominio
+  (un único host, sin wildcard).
 - Producción no se toca hasta completar todas las fases.
 
 ### Migración del tenant #1
@@ -213,7 +230,8 @@ tablas, repositorios con tenant explícito). El alcance de la 1b, a detallar en 
 1. **Esquema aditivo:** tablas del plugin, `session.activeOrganizationId`, `user.isPlatformAdmin`
    y `tenant_id` nullable en las tablas de negocio.
 2. **Datos:** crea la organización (slug y nombre por parámetro), un `member` por cada usuario
-   con su rol actual, `isPlatformAdmin` para los `superadmin`, rellena `tenant_id` en todas las
+   con su rol actual, `isPlatformAdmin` para las cuentas de la lista explícita
+   `mt.platform_admin_emails` (o, si no se pasa, para todos los `superadmin`), rellena `tenant_id` en todas las
    filas, convierte `app_settings` singleton en la fila del tenant y rellena
    `activeOrganizationId` en las sesiones abiertas para no desconectar a nadie.
 3. **Endurecimiento:** `NOT NULL`, FK e índices, unicidades compuestas y cambio de claves primarias.
@@ -239,12 +257,17 @@ Los archivos de R2 y las URLs de PDFs guardadas no se tocan.
 - **Aislamiento (Postgres real, no mocks):** con dos tenants, cada método de cada repositorio no
   lee ni modifica datos del otro; por cada relación entre tablas, un test que intenta insertar
   con un id del otro tenant y espera rechazo.
-- **Auth y host:** host de otro tenant con sesión propia → 403; `activeOrganizationId` distinto →
-  rechazo; orígenes parecidos (`<base>.evil.com`, `evil-<base>`) rechazados por CORS y
-  `trustedOrigins`; slug inexistente o reservado → 404; llamada directa a la API sin el header
-  interno → el host reenviado se ignora.
-- **Rutas de Express:** la subida de adjuntos sin sesión, con sesión de otro tenant o con host de
-  otro tenant es rechazada, igual que en tRPC.
+- **Auth y tenant de la sesión:** sesión sin organización activa → `TENANT_NOT_SELECTED`;
+  `activeOrganizationId` de una organización donde ya no es miembro → rechazo (membresía
+  re-verificada en cada petición); login de una persona sin organizaciones → rechazado con
+  `USER_NO_ORGANIZATION`; con una organización → activa automáticamente; con varias → sin
+  organización activa hasta `tenant.select`; `tenant.select` con una organización ajena → rechazo;
+  el admin de plataforma puede seleccionar cualquiera y queda auditado; un cambio de organización
+  surte efecto en la petición siguiente; orígenes no listados rechazados por CORS.
+- **Superficie de Better Auth:** registro público y endpoints de `organization` y `admin` bloqueados
+  por HTTP (también para un administrador); `auth.api.signUpEmail` interno sigue funcionando.
+- **Rutas de Express:** la subida de adjuntos sin sesión, con una organización activa distinta o sin
+  membresía es rechazada, igual que en tRPC.
 - **Numeración de cotizaciones:** prueba de concurrencia.
 - **Migración:** el script de verificación corre en las pruebas automáticas sobre un dataset de ejemplo.
 
@@ -255,8 +278,9 @@ aprobado en `staging-mt`, `pnpm check-types` sin errores.
 
 ## 10. Pendientes abiertos (no bloquean el desarrollo)
 
-- Dominio base de producción y de `staging-mt`. Hoy se dispone de `oravitech.com` en Cloudflare;
-  el wildcard de segundo nivel no lo cubre el certificado gratuito de Cloudflare. Se decide
-  antes del cutover; todo depende de `APP_BASE_DOMAIN`.
-- Subdominio del cliente actual (y mantener el actual como alias).
-- Verificaciones técnicas marcadas como "A verificar" en la sección 4.
+- Dominio único de producción y de `staging-mt` (hoy se dispone de `oravitech.com` en Cloudflare;
+  con un solo host sirve el certificado gratuito, p. ej. `portal.oravitech.com`). Se decide antes
+  del cutover.
+- URL con la que el cliente actual seguirá entrando tras el cutover.
+- Textos i18n (es/en) de los errores `TENANT_NOT_SELECTED`, `USER_NO_ORGANIZATION` y
+  `INVALID_EMAIL_OR_PASSWORD`, y de la pantalla de selección de organización.

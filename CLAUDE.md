@@ -73,6 +73,10 @@ Monorepo Turborepo + pnpm.
   **Leerla antes** de crear o modificar un módulo de la API, y seguir su patrón
   (`resource → repository → service → router`, `guardedProcedure` + `@repo/guards`, errores con
   `AppError`/`ErrorCodes`, listas paginadas `Paginated`). Es genérica (usa placeholders `X`/`<module>`).
+- **Multi-tenant → receta en `docs/backend/architecture.md` §11** (`xModule(ctx)`, repository
+  `(db, tenantId)` con `tenantEq` en cada query, ids de `input` resueltos por lecturas del tenant,
+  tests de aislamiento). **Esquema → migraciones:** cambiar el schema TS → `db:generate` → revisar
+  el SQL → `db:migrate` (no `db:push`; ver §8).
 
 ---
 
