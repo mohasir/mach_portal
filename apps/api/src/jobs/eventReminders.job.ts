@@ -9,11 +9,11 @@ import type { EventSelectionsReminderData } from '../modules/notifications/notif
 // setting, to keep this reminder's scope small.
 const LEAD_DAYS = 3;
 
-const eventsRepo = new EventsRepository(db);
-const configRepo = new ConfigRepository(db);
-const notificationsRepo = new NotificationsRepository(db);
+export async function checkEventSelectionsReminders(tenantId: string) {
+  const eventsRepo = new EventsRepository(db, tenantId);
+  const configRepo = new ConfigRepository(db, tenantId);
+  const notificationsRepo = new NotificationsRepository(db, tenantId);
 
-export async function checkEventSelectionsReminders() {
   const [rawCandidates, appRow] = await Promise.all([
     eventsRepo.findPendingSelectionsCandidates(),
     configRepo.findAppSettings(),

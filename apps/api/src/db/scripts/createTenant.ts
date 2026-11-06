@@ -1,8 +1,8 @@
 import { TRPCError } from '@trpc/server';
 import { queryClient } from '../index';
-import { createTenant } from '../../lib/tenant/createTenant';
+import { createTenant } from '../../lib/tenancy/createTenant';
 import { AppError, ErrorCodes } from '../../lib/errors';
-import type { CreateTenantInput } from '../../lib/tenant/createTenant';
+import type { CreateTenantInput } from '../../lib/tenancy/createTenant';
 
 const HELP = `Usage: pnpm tenant:create --slug=<slug> --name=<name> --admin-email=<email> --admin-name=<name>
 
