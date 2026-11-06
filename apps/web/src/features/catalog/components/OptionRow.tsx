@@ -10,11 +10,11 @@ import { useOptionMutations } from '../hooks/useOptionMutations';
 import { useSortableRow } from '../hooks/useSortableRow';
 import { useCatalogSortable } from '../hooks/useCatalogSortable';
 import { ReorderControl } from './ReorderControl';
-import type { Option } from '../types';
+import type { CatalogOption } from '../types';
 
 interface OptionRowProps {
-  option: Option;
-  onEdit: (option: Option) => void;
+  option: CatalogOption;
+  onEdit: (option: CatalogOption) => void;
 }
 
 export function OptionRow({ option, onEdit }: OptionRowProps) {

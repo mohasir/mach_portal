@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { Button, Empty, Skeleton, Tabs, Tag, Typography } from 'antd';
-import { Layers, Star, Wallet } from 'lucide-react';
+import { Copy, Layers, Star, Wallet } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { TbRestore, TbTrashFilled } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
@@ -27,8 +28,10 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const canEdit = can({ [RESOURCES.PRODUCT]: [ACTIONS.UPDATE] });
   const canDisable = can({ [RESOURCES.PRODUCT]: [ACTIONS.DISABLE] });
   const canEnable = can({ [RESOURCES.PRODUCT]: [ACTIONS.ENABLE] });
+  const canDuplicate = can({ [RESOURCES.PRODUCT]: [ACTIONS.DUPLICATE] });
+  const router = useRouter();
   const { data: product, isLoading } = useProduct(productId);
-  const { disableProduct, enableProduct } = useProductMutations();
+  const { disableProduct, enableProduct, duplicateProduct, isDuplicating } = useProductMutations();
   const [confirm, confirmContextHolder] = useActionConfirm();
   const [isEditOpen, setEditOpen] = useState(false);
 
@@ -39,6 +42,17 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
       content: t('product.disableConfirm.content'),
       danger: true,
       onOk: () => disableProduct(product.id),
+    });
+
+  const handleDuplicate = () =>
+    product &&
+    confirm({
+      title: t('product.duplicateConfirm.title'),
+      content: t('product.duplicateConfirm.content'),
+      onOk: async () => {
+        const copy = await duplicateProduct(product.id);
+        router.push(`/admin/products/${copy.id}`);
+      },
     });
 
   const handleEnable = () =>
@@ -135,6 +149,11 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
               {canEdit && (
                 <Button type="primary" className="mt-2" onClick={() => setEditOpen(true)}>
                   {t('product.edit.title')}
+                </Button>
+              )}
+              {canDuplicate && (
+                <Button icon={<Copy size={16} />} loading={isDuplicating} onClick={handleDuplicate}>
+                  {t('actions.duplicate')}
                 </Button>
               )}
             </div>

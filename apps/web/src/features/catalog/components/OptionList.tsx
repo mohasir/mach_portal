@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { useOptionMutations } from '../hooks/useOptionMutations';
 import { SortableList } from './SortableList';
 import { OptionRow } from './OptionRow';
-import type { Option } from '../types';
+import type { CatalogOption } from '../types';
 
 interface OptionListProps {
-  options: Option[];
-  onEdit: (option: Option) => void;
+  options: CatalogOption[];
+  onEdit: (option: CatalogOption) => void;
 }
 
 export function OptionList({ options, onEdit }: OptionListProps) {
