@@ -1,25 +1,26 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '../index';
 import { options, optionGroups, productPriceTiers, products } from '../schema';
+import type { Executor } from '../index';
 
-interface SeedTier {
+export interface SeedTier {
   numPersons: number;
   price: number;
 }
 
-interface SeedOption {
+export interface SeedOption {
   name: string;
   description?: string;
 }
 
-interface SeedGroup {
+export interface SeedGroup {
   label: string;
   selectionType: 'select' | 'included';
   maxSelect?: number;
   options: SeedOption[];
 }
 
-interface SeedProduct {
+export interface SeedProduct {
   name: string;
   description: string;
   isPremium?: boolean;
@@ -67,7 +68,7 @@ const SWEET_SYRUPS: SeedGroup = {
   ],
 };
 
-const SEED_CATALOG: SeedProduct[] = [
+export const SEED_CATALOG: SeedProduct[] = [
   {
     name: 'Crepes',
     description: 'Crepes preparados en vivo con toppings, frutas y jarabes premium.',
@@ -540,43 +541,49 @@ const SEED_CATALOG: SeedProduct[] = [
   },
 ];
 
-export async function seedCatalog() {
+export async function seedCatalog(
+  tenantId: string,
+  x: Executor = db,
+  catalog: SeedProduct[] = SEED_CATALOG,
+) {
   console.log('🍽️  Seeding catálogo...');
 
-  for (const [productIndex, p] of SEED_CATALOG.entries()) {
-    const [existing] = await db
+  for (const [productIndex, p] of catalog.entries()) {
+    const [existing] = await x
       .select({ id: products.id })
       .from(products)
-      .where(eq(products.name, p.name))
+      .where(and(eq(products.tenantId, tenantId), eq(products.name, p.name)))
       .limit(1);
     if (existing) {
       console.log(`  ⏭️  ${p.name} ya existe, salteando`);
       continue;
     }
 
-    const [product] = await db
+    const [product] = await x
       .insert(products)
       .values({
         name: p.name,
         description: p.description,
         isPremium: p.isPremium ?? false,
         sortOrder: productIndex,
+        tenantId,
       })
       .returning({ id: products.id });
 
     if (p.tiers.length > 0) {
-      await db.insert(productPriceTiers).values(
+      await x.insert(productPriceTiers).values(
         p.tiers.map((tier, tierIndex) => ({
           productId: product!.id,
           numPersons: tier.numPersons,
           price: tier.price,
           sortOrder: tierIndex,
+          tenantId,
         })),
       );
     }
 
     for (const [groupIndex, g] of p.groups.entries()) {
-      const [group] = await db
+      const [group] = await x
         .insert(optionGroups)
         .values({
           productId: product!.id,
@@ -584,15 +591,17 @@ export async function seedCatalog() {
           selectionType: g.selectionType,
           maxSelect: g.maxSelect ?? null,
           sortOrder: groupIndex,
+          tenantId,
         })
         .returning({ id: optionGroups.id });
 
-      await db.insert(options).values(
+      await x.insert(options).values(
         g.options.map((option, optionIndex) => ({
           optionGroupId: group!.id,
           name: option.name,
           description: option.description ?? null,
           sortOrder: optionIndex,
+          tenantId,
         })),
       );
     }

@@ -1,7 +1,8 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { EVENT_TYPE_COLOR_PRESETS } from '@repo/schemas';
 import { db } from '../index';
 import { eventTypes } from '../schema';
+import type { Executor } from '../index';
 
 const SEED_EVENT_TYPES: { name: string; color: (typeof EVENT_TYPE_COLOR_PRESETS)[number] }[] = [
   { name: 'Boda', color: '#722ed1' }, // purple
@@ -13,21 +14,21 @@ const SEED_EVENT_TYPES: { name: string; color: (typeof EVENT_TYPE_COLOR_PRESETS)
   { name: 'Otro', color: '#1677ff' }, // blue (default)
 ];
 
-export async function seedEventTypes() {
+export async function seedEventTypes(tenantId: string, x: Executor = db) {
   console.log('🎉 Seeding tipos de evento...');
 
   for (const [index, { name, color }] of SEED_EVENT_TYPES.entries()) {
-    const [existing] = await db
+    const [existing] = await x
       .select({ id: eventTypes.id })
       .from(eventTypes)
-      .where(eq(eventTypes.name, name))
+      .where(and(eq(eventTypes.tenantId, tenantId), eq(eventTypes.name, name)))
       .limit(1);
     if (existing) {
       console.log(`  ⏭️  ${name} ya existe, salteando`);
       continue;
     }
 
-    await db.insert(eventTypes).values({ name, color, sortOrder: index });
+    await x.insert(eventTypes).values({ name, color, sortOrder: index, tenantId });
     console.log(`  ✅ ${name} (${color})`);
   }
 }

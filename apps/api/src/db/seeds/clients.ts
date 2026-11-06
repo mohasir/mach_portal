@@ -1,9 +1,10 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { StateValue } from '@repo/schemas';
 import { db } from '../index';
 import { clients } from '../schema';
+import type { Executor } from '../index';
 
-interface SeedClient {
+export interface SeedClient {
   name: string;
   email: string;
   phone: string;
@@ -13,7 +14,7 @@ interface SeedClient {
   notes?: string;
 }
 
-const SEED_CLIENTS: SeedClient[] = [
+export const SEED_CLIENTS: SeedClient[] = [
   {
     name: 'Laura Jiménez',
     email: 'laura.jimenez@example.com',
@@ -96,21 +97,25 @@ const SEED_CLIENTS: SeedClient[] = [
   },
 ];
 
-export async function seedClients() {
+export async function seedClients(
+  tenantId: string,
+  list: SeedClient[] = SEED_CLIENTS,
+  x: Executor = db,
+) {
   console.log('🧑‍🤝‍🧑 Seeding clientes...');
 
-  for (const c of SEED_CLIENTS) {
-    const [existing] = await db
+  for (const c of list) {
+    const [existing] = await x
       .select({ id: clients.id })
       .from(clients)
-      .where(eq(clients.email, c.email))
+      .where(and(eq(clients.tenantId, tenantId), eq(clients.email, c.email)))
       .limit(1);
     if (existing) {
       console.log(`  ⏭️  ${c.email} ya existe, salteando`);
       continue;
     }
 
-    await db.insert(clients).values(c);
+    await x.insert(clients).values({ ...c, tenantId });
     console.log(`  ✅ ${c.name} (${c.state})`);
   }
 }

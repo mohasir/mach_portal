@@ -1,9 +1,9 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { QUOTE_STAGE } from '@repo/schemas';
 import { db } from '../index';
 import { quotes, events, eventStaff, staff } from '../schema';
 
-export async function seedEvents() {
+export async function seedEvents(tenantId: string) {
   console.log('📅 Seeding eventos...');
 
   const confirmedQuotes = await db
@@ -19,12 +19,14 @@ export async function seedEvents() {
       total: quotes.total,
     })
     .from(quotes)
-    .where(eq(quotes.stageId, QUOTE_STAGE.CONFIRMED));
+    .where(and(eq(quotes.tenantId, tenantId), eq(quotes.stageId, QUOTE_STAGE.CONFIRMED)))
+    .orderBy(quotes.seq);
 
   const activeStaff = await db
     .select({ id: staff.id, name: staff.name })
     .from(staff)
-    .where(eq(staff.isActive, true));
+    .where(and(eq(staff.tenantId, tenantId), eq(staff.isActive, true)))
+    .orderBy(staff.name);
 
   if (activeStaff.length === 0) {
     console.log('  ⏭️  no hay staff activo, salteando asignaciones');
@@ -34,7 +36,7 @@ export async function seedEvents() {
     const [existing] = await db
       .select({ id: events.id })
       .from(events)
-      .where(eq(events.quoteId, quote.id))
+      .where(and(eq(events.tenantId, tenantId), eq(events.quoteId, quote.id)))
       .limit(1);
     if (existing) {
       console.log(`  ⏭️  evento de ${quote.number} ya existe, salteando`);
@@ -52,6 +54,7 @@ export async function seedEvents() {
         state: quote.state,
         address: quote.address,
         totalAmount: quote.total,
+        tenantId,
       })
       .returning({ id: events.id });
 
@@ -64,7 +67,7 @@ export async function seedEvents() {
       const assigned = [...new Map(picks.map((s) => [s.id, s])).values()];
       await db
         .insert(eventStaff)
-        .values(assigned.map((s) => ({ eventId: event!.id, staffId: s.id })));
+        .values(assigned.map((s) => ({ eventId: event!.id, staffId: s.id, tenantId })));
       console.log(
         `  ✅ evento para ${quote.number} — staff: ${assigned.map((s) => s.name).join(', ')}`,
       );

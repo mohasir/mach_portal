@@ -1,15 +1,16 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '../index';
 import { staff } from '../schema';
+import type { Executor } from '../index';
 
-interface SeedStaff {
+export interface SeedStaff {
   name: string;
   email: string;
   phone: string;
   isActive: boolean;
 }
 
-const SEED_STAFF: SeedStaff[] = [
+export const SEED_STAFF: SeedStaff[] = [
   {
     name: 'Nicolás Herrera',
     email: 'nicolas.herrera@machbar.com',
@@ -54,21 +55,25 @@ const SEED_STAFF: SeedStaff[] = [
   },
 ];
 
-export async function seedStaff() {
+export async function seedStaff(
+  tenantId: string,
+  list: SeedStaff[] = SEED_STAFF,
+  x: Executor = db,
+) {
   console.log('🧑‍🍳 Seeding staff...');
 
-  for (const s of SEED_STAFF) {
-    const [existing] = await db
+  for (const s of list) {
+    const [existing] = await x
       .select({ id: staff.id })
       .from(staff)
-      .where(eq(staff.email, s.email))
+      .where(and(eq(staff.tenantId, tenantId), eq(staff.email, s.email)))
       .limit(1);
     if (existing) {
       console.log(`  ⏭️  ${s.email} ya existe, salteando`);
       continue;
     }
 
-    await db.insert(staff).values(s);
+    await x.insert(staff).values({ ...s, tenantId });
     console.log(`  ✅ ${s.name}${s.isActive ? '' : ' (inactivo)'}`);
   }
 }

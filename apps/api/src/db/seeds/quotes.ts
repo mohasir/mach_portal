@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import {
   computeQuoteTotals,
   QUOTE_STAGE,
@@ -12,6 +12,7 @@ import {
   quoteLines,
   quoteLineOptions,
   quoteStageHistory,
+  quoteAssignmentHistory,
   clients,
   eventTypes,
   products,
@@ -23,20 +24,18 @@ import {
   user,
 } from '../schema';
 
-const SEED_CREATOR_EMAIL = 'samuel@admin.com';
-
-interface SeedSelection {
+export interface SeedSelection {
   groupLabel: string;
   optionNames: string[];
 }
 
-interface SeedLine {
+export interface SeedLine {
   productName: string;
   numPersons: number;
   selections?: SeedSelection[];
 }
 
-interface SeedQuote {
+export interface SeedQuote {
   clientEmail: string;
   eventTypeName?: string;
   eventDate?: string;
@@ -53,7 +52,7 @@ interface SeedQuote {
   createdAt?: string;
 }
 
-const SEED_QUOTES: SeedQuote[] = [
+export const SEED_QUOTES: SeedQuote[] = [
   {
     clientEmail: 'laura.jimenez@example.com',
     eventTypeName: 'Boda',
@@ -595,7 +594,14 @@ const SEED_QUOTES: SeedQuote[] = [
   },
 ];
 
-async function loadContext() {
+export interface SeedQuotesOptions {
+  quotes?: SeedQuote[];
+  creatorEmail: string;
+  // Rotated over the quotes as assignees, each with one assignment history row.
+  assigneeEmails?: string[];
+}
+
+async function loadContext(tenantId: string, creatorEmail: string, assigneeEmails: string[]) {
   const [
     clientRows,
     eventTypeRows,
@@ -606,24 +612,40 @@ async function loadContext() {
     stateRows,
     appRow,
     creator,
+    assignees,
   ] = await Promise.all([
-    db.select({ id: clients.id, email: clients.email, state: clients.state }).from(clients),
-    db.select({ id: eventTypes.id, name: eventTypes.name }).from(eventTypes),
-    db.select({ id: products.id, name: products.name }).from(products),
+    db
+      .select({ id: clients.id, email: clients.email, state: clients.state })
+      .from(clients)
+      .where(eq(clients.tenantId, tenantId)),
+    db
+      .select({ id: eventTypes.id, name: eventTypes.name })
+      .from(eventTypes)
+      .where(eq(eventTypes.tenantId, tenantId)),
+    db
+      .select({ id: products.id, name: products.name })
+      .from(products)
+      .where(eq(products.tenantId, tenantId)),
     db
       .select({
         productId: productPriceTiers.productId,
         numPersons: productPriceTiers.numPersons,
         price: productPriceTiers.price,
       })
-      .from(productPriceTiers),
+      .from(productPriceTiers)
+      .where(eq(productPriceTiers.tenantId, tenantId)),
     db
       .select({ id: optionGroups.id, productId: optionGroups.productId, label: optionGroups.label })
-      .from(optionGroups),
+      .from(optionGroups)
+      .where(eq(optionGroups.tenantId, tenantId)),
     db
       .select({ id: options.id, optionGroupId: options.optionGroupId, name: options.name })
-      .from(options),
-    db.select({ state: stateSettings.state, taxRate: stateSettings.taxRate }).from(stateSettings),
+      .from(options)
+      .where(eq(options.tenantId, tenantId)),
+    db
+      .select({ state: stateSettings.state, taxRate: stateSettings.taxRate })
+      .from(stateSettings)
+      .where(eq(stateSettings.tenantId, tenantId)),
     db
       .select({
         depositRate: appSettings.depositRate,
@@ -633,15 +655,21 @@ async function loadContext() {
         cardSurchargeRate: appSettings.cardSurchargeRate,
       })
       .from(appSettings)
-      .where(eq(appSettings.id, 1))
+      .where(eq(appSettings.tenantId, tenantId))
       .limit(1)
       .then((r) => r[0]),
     db
       .select({ id: user.id })
       .from(user)
-      .where(eq(user.email, SEED_CREATOR_EMAIL))
+      .where(eq(user.email, creatorEmail))
       .limit(1)
       .then((r) => r[0]),
+    assigneeEmails.length > 0
+      ? db
+          .select({ id: user.id, email: user.email })
+          .from(user)
+          .where(inArray(user.email, assigneeEmails))
+      : Promise.resolve([]),
   ]);
 
   return {
@@ -654,6 +682,9 @@ async function loadContext() {
     stateRows,
     appRow,
     creator,
+    assigneeIds: assigneeEmails
+      .map((email) => assignees.find((a) => a.email === email)?.id)
+      .filter((id): id is string => id !== undefined),
   };
 }
 
@@ -689,35 +720,36 @@ function resolveLine(line: SeedLine, ctx: Context) {
   return { productId: product.id, numPersons: line.numPersons, subtotal: tier.price, selections };
 }
 
-export async function seedQuotes() {
+export async function seedQuotes(tenantId: string, opts: SeedQuotesOptions) {
   console.log('🧾 Seeding cotizaciones...');
-  const ctx = await loadContext();
+  const ctx = await loadContext(tenantId, opts.creatorEmail, opts.assigneeEmails ?? []);
   if (!ctx.appRow) {
     console.log('  ⏭️  app_settings no está seedeado, salteando cotizaciones');
     return;
   }
   if (!ctx.creator) {
-    console.log(`  ⏭️  usuario "${SEED_CREATOR_EMAIL}" no existe, salteando cotizaciones`);
+    console.log(`  ⏭️  usuario "${opts.creatorEmail}" no existe, salteando cotizaciones`);
     return;
   }
   const appRow = ctx.appRow;
   const creatorId = ctx.creator.id;
 
-  for (const [index, seed] of SEED_QUOTES.entries()) {
+  for (const [index, seed] of (opts.quotes ?? SEED_QUOTES).entries()) {
     const client = ctx.clientRows.find((c) => c.email === seed.clientEmail);
     if (!client) {
       console.log(`  ⏭️  cliente "${seed.clientEmail}" no existe, salteando`);
       continue;
     }
 
-    const now = new Date();
+    // Seq and number derive from the seed itself (not from "today") so a re-run finds them.
     const seq = appRow.quoteSeqStart + index;
-    const number = `QUO${now.toISOString().slice(0, 10).replace(/-/g, '')}-${String(seq).padStart(6, '0')}`;
+    const issuedAt = seed.createdAt ? new Date(`${seed.createdAt}T09:00:00Z`) : new Date();
+    const number = `QUO${issuedAt.toISOString().slice(0, 10).replace(/-/g, '')}-${String(seq).padStart(6, '0')}`;
 
     const [existing] = await db
       .select({ id: quotes.id })
       .from(quotes)
-      .where(eq(quotes.number, number))
+      .where(and(eq(quotes.tenantId, tenantId), eq(quotes.seq, seq)))
       .limit(1);
     if (existing) {
       console.log(`  ⏭️  ${number} ya existe, salteando`);
@@ -745,8 +777,10 @@ export async function seedQuotes() {
       depositRate,
     });
 
-    const validUntil = new Date(now);
+    const validUntil = new Date(issuedAt);
     validUntil.setMonth(validUntil.getMonth() + appRow.quoteValidityMonths);
+    const assignedToId =
+      ctx.assigneeIds.length > 0 ? ctx.assigneeIds[index % ctx.assigneeIds.length]! : null;
 
     const [quote] = await db
       .insert(quotes)
@@ -766,8 +800,10 @@ export async function seedQuotes() {
         stageId: seed.stageId,
         isDraft: seed.stageId === QUOTE_STAGE.PENDING,
         createdById: creatorId,
-        ...(seed.createdAt ? { createdAt: new Date(`${seed.createdAt}T09:00:00Z`) } : {}),
+        assignedToId,
+        ...(seed.createdAt ? { createdAt: issuedAt } : {}),
         ...totals,
+        tenantId,
       })
       .returning({ id: quotes.id });
 
@@ -779,6 +815,7 @@ export async function seedQuotes() {
         fromStageId: null,
         toStageId: QUOTE_STAGE.PENDING,
         changedById: creatorId,
+        tenantId,
       },
     ];
     if (seed.stageId !== QUOTE_STAGE.PENDING) {
@@ -787,9 +824,20 @@ export async function seedQuotes() {
         fromStageId: QUOTE_STAGE.PENDING,
         toStageId: seed.stageId,
         changedById: creatorId,
+        tenantId,
       });
     }
     await db.insert(quoteStageHistory).values(historyRows);
+
+    if (assignedToId) {
+      await db.insert(quoteAssignmentHistory).values({
+        quoteId: quote!.id,
+        fromUserId: null,
+        toUserId: assignedToId,
+        changedById: creatorId,
+        tenantId,
+      });
+    }
 
     if (lines.length > 0) {
       const lineRows = lines.map((line, i) => ({
@@ -799,6 +847,7 @@ export async function seedQuotes() {
         numPersons: line.numPersons,
         subtotal: line.subtotal,
         sortOrder: i,
+        tenantId,
       }));
       await db.insert(quoteLines).values(lineRows);
 
@@ -808,6 +857,7 @@ export async function seedQuotes() {
             quoteLineId: lineRows[i]!.id,
             optionId,
             optionGroupId: sel.optionGroupId,
+            tenantId,
           })),
         ),
       );

@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { TEMPLATE_TYPES, type QuotePdfTemplateContent } from '@repo/schemas';
 import { db } from '../index';
 import { templates } from '../schema';
+import type { Executor } from '../index';
 
 const LOCALE = 'es';
 
@@ -35,23 +36,30 @@ const CONTENT: QuotePdfTemplateContent = {
     'If you have any dietary restrictions, allergies, religious requirements, or ingredient preferences, please let us know in advance so we can accommodate your needs whenever possible.',
 };
 
-export async function seedQuotePdfTemplate() {
+export async function seedQuotePdfTemplate(tenantId: string, x: Executor = db) {
   console.log('📄 Seeding plantilla de PDF...');
 
-  const [existing] = await db
+  const [existing] = await x
     .select({ id: templates.id })
     .from(templates)
-    .where(and(eq(templates.type, TEMPLATE_TYPES.QUOTE_PDF), eq(templates.locale, LOCALE)))
+    .where(
+      and(
+        eq(templates.tenantId, tenantId),
+        eq(templates.type, TEMPLATE_TYPES.QUOTE_PDF),
+        eq(templates.locale, LOCALE),
+      ),
+    )
     .limit(1);
   if (existing) {
     console.log('  ⏭️  quote_pdf template ya existe, salteando');
     return;
   }
 
-  await db.insert(templates).values({
+  await x.insert(templates).values({
     type: TEMPLATE_TYPES.QUOTE_PDF,
     locale: LOCALE,
     content: CONTENT,
+    tenantId,
   });
   console.log('  ✅ quote_pdf template (servicios, términos, nota de validez, nota dietética)');
 }
