@@ -120,6 +120,7 @@ function buildCocktailBlocks(
   group: ProductWithGroups['optionGroups'][number],
 ): QuotePdfDetailBlock[] {
   return group.options
+    .filter((option) => option.isActive)
     .map((option) => ({
       title: option.name,
       options: splitIngredients(option.description),
@@ -133,17 +134,19 @@ function buildCocktailBlocks(
 // already resolved, but either way the client sees the station's full menu, not just
 // whatever happens to be selected internally.
 function buildItemDetails(product: ProductWithGroups): QuotePdfDetailBlock[] {
-  return product.optionGroups.flatMap((group) => {
-    if (product.name === CRAFT_BAR_PRODUCT && group.label === SIGNATURE_COCKTAILS_GROUP) {
-      return buildCocktailBlocks(group);
-    }
-    const block = {
-      title: formatGroupTitle(group),
-      options: group.options.map((o) => o.name),
-      emoji: pickDetailEmoji(product.name, group.label),
-    };
-    return block.options.length > 0 ? [block] : [];
-  });
+  return product.optionGroups
+    .filter((group) => group.isActive)
+    .flatMap((group) => {
+      if (product.name === CRAFT_BAR_PRODUCT && group.label === SIGNATURE_COCKTAILS_GROUP) {
+        return buildCocktailBlocks(group);
+      }
+      const block = {
+        title: formatGroupTitle(group),
+        options: group.options.filter((o) => o.isActive).map((o) => o.name),
+        emoji: pickDetailEmoji(product.name, group.label),
+      };
+      return block.options.length > 0 ? [block] : [];
+    });
 }
 
 function buildItems(lines: QuoteLineDetail[], catalog: ProductWithGroups[]): QuotePdfItem[] {
