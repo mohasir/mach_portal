@@ -12,7 +12,13 @@ export type SortDir = z.infer<typeof sortDirSchema>;
 export const listQuerySchema = z.object({
   page: z.number().int().min(1).optional(),
   pageSize: z.number().int().min(1).max(100).optional(),
-  search: z.string().trim().max(200).optional(),
+  // Postgres text cannot hold NUL, so a search with one would fail as a 500 instead of a 400.
+  search: z
+    .string()
+    .trim()
+    .max(200)
+    .refine((value) => !value.includes('\u0000'), 'Invalid characters')
+    .optional(),
   sortDir: sortDirSchema.default('desc'),
 });
 export type ListQuery = z.infer<typeof listQuerySchema>;

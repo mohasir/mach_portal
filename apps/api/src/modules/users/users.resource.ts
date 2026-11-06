@@ -1,11 +1,13 @@
-import { user } from '../../db/schema';
+import { member, user } from '../../db/schema';
 
+// `role` is the role inside the tenant (`member.role`); the repository always reads users through
+// their membership, so the column is available in every query.
 export const publicUserColumns = {
   id: user.id,
   name: user.name,
   email: user.email,
   emailVerified: user.emailVerified,
-  role: user.role,
+  role: member.role,
   banned: user.banned,
   mustChangePassword: user.mustChangePassword,
   createdAt: user.createdAt,

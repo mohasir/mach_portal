@@ -2,30 +2,26 @@ import { z } from 'zod';
 import { createClientSchema, updateClientSchema, clientsListQuerySchema } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
-import { db } from '../../db';
-import { ClientsRepository } from './clients.repository';
-import { ClientsService } from './clients.service';
-
-const service = new ClientsService(new ClientsRepository(db));
+import { clientsModule } from './clients.module';
 
 export const clientsRouter = router({
   list: guardedProcedure({ [RESOURCES.CLIENT]: [ACTIONS.READ] })
     .input(clientsListQuerySchema)
-    .query(({ input }) => service.list(input)),
+    .query(({ ctx, input }) => clientsModule(ctx).list(input)),
 
   getById: guardedProcedure({ [RESOURCES.CLIENT]: [ACTIONS.READ] })
     .input(z.object({ id: z.uuid() }))
-    .query(({ input }) => service.getById(input.id)),
+    .query(({ ctx, input }) => clientsModule(ctx).getById(input.id)),
 
   create: guardedProcedure({ [RESOURCES.CLIENT]: [ACTIONS.CREATE] })
     .input(createClientSchema)
-    .mutation(({ input }) => service.create(input)),
+    .mutation(({ ctx, input }) => clientsModule(ctx).create(input)),
 
   update: guardedProcedure({ [RESOURCES.CLIENT]: [ACTIONS.UPDATE] })
     .input(z.object({ id: z.uuid(), data: updateClientSchema }))
-    .mutation(({ input }) => service.update(input.id, input.data)),
+    .mutation(({ ctx, input }) => clientsModule(ctx).update(input.id, input.data)),
 
   delete: guardedProcedure({ [RESOURCES.CLIENT]: [ACTIONS.DELETE] })
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ input }) => service.remove(input.id)),
+    .mutation(({ ctx, input }) => clientsModule(ctx).remove(input.id)),
 });

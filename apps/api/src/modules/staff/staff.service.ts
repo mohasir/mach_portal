@@ -5,7 +5,7 @@ import {
   type StaffListQuery,
   type UpdateStaffInput,
 } from '@repo/schemas';
-import { AppError, ErrorCodes } from '../../lib/errors';
+import { AppError, ErrorCodes, isPgError, PG_FOREIGN_KEY_VIOLATION } from '../../lib/errors';
 import { StaffRepository } from './staff.repository';
 import { staffCollectionResource, staffResource } from './staff.resource';
 
@@ -37,7 +37,12 @@ export class StaffService {
   }
 
   async remove(id: string) {
-    const deleted = await this.repo.deleteById(id);
+    const deleted = await this.repo.deleteById(id).catch((error: unknown) => {
+      if (isPgError(error, PG_FOREIGN_KEY_VIOLATION)) {
+        throw new TRPCError({ code: 'CONFLICT', cause: new AppError(ErrorCodes.staff.IN_USE) });
+      }
+      throw error;
+    });
     if (!deleted)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.staff.NOT_FOUND) });
     return deleted;

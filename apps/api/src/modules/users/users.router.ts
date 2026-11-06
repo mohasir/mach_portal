@@ -2,23 +2,19 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createUserSchema, updateUserSchema, usersListQuerySchema } from '@repo/schemas';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
-import { db } from '../../db';
 import { AppError, ErrorCodes } from '../../lib/errors';
-import { UsersRepository } from './users.repository';
-import { UsersService } from './users.service';
-
-const service = new UsersService(new UsersRepository(db));
+import { usersModule } from './users.module';
 
 const currentRole = (ctx: { user: { role?: string | null } }) => ctx.user.role ?? null;
 
 export const usersRouter = router({
   list: guardedProcedure({ user: ['list'] })
     .input(usersListQuerySchema)
-    .query(({ ctx, input }) => service.list(input, currentRole(ctx))),
+    .query(({ ctx, input }) => usersModule(ctx).list(input, currentRole(ctx))),
 
   create: guardedProcedure({ user: ['create'] })
     .input(createUserSchema)
-    .mutation(({ input }) => service.create(input)),
+    .mutation(({ ctx, input }) => usersModule(ctx).create(input)),
 
   update: guardedProcedure({ user: ['update'] })
     .input(z.object({ id: z.string(), data: updateUserSchema }))
@@ -30,7 +26,7 @@ export const usersRouter = router({
           cause: new AppError(ErrorCodes.user.CANNOT_EDIT_OWN_ROLE),
         });
       }
-      return service.update(input.id, input.data);
+      return usersModule(ctx).update(input.id, input.data);
     }),
 
   delete: guardedProcedure({ user: ['delete'] })
@@ -42,10 +38,10 @@ export const usersRouter = router({
           cause: new AppError(ErrorCodes.user.CANNOT_DELETE_SELF),
         });
       }
-      return service.remove(input.id);
+      return usersModule(ctx).remove(input.id);
     }),
 
   generatePasswordSetupLink: guardedProcedure({ user: ['set-password'] })
     .input(z.object({ id: z.string() }))
-    .mutation(({ input }) => service.regeneratePasswordSetupLink(input.id)),
+    .mutation(({ ctx, input }) => usersModule(ctx).regeneratePasswordSetupLink(input.id)),
 });

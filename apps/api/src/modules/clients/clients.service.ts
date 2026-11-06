@@ -5,7 +5,7 @@ import {
   type CreateClientInput,
   type UpdateClientInput,
 } from '@repo/schemas';
-import { AppError, ErrorCodes } from '../../lib/errors';
+import { AppError, ErrorCodes, isPgError, PG_FOREIGN_KEY_VIOLATION } from '../../lib/errors';
 import { ClientsRepository } from './clients.repository';
 import { clientCollectionResource, clientResource } from './clients.resource';
 
@@ -39,7 +39,12 @@ export class ClientsService {
   }
 
   async remove(id: string) {
-    const deleted = await this.repo.deleteById(id);
+    const deleted = await this.repo.deleteById(id).catch((error: unknown) => {
+      if (isPgError(error, PG_FOREIGN_KEY_VIOLATION)) {
+        throw new TRPCError({ code: 'CONFLICT', cause: new AppError(ErrorCodes.client.IN_USE) });
+      }
+      throw error;
+    });
     if (!deleted)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.client.NOT_FOUND) });
     return deleted;
