@@ -3,15 +3,9 @@ import { eq } from 'drizzle-orm';
 import { addMember, createTestTenant, resetDb, testDb } from '../../test/db';
 import { member, organization, user } from '../../db/schema';
 import { auth } from '../auth';
-import { invalidateTenantCache } from '../tenant/tenantResolver';
 
-// Integration env: APP_BASE_DOMAIN = localhost, APP_PROTOCOL = http.
 const PASSWORD = 'correct-horse-battery';
 const API = 'http://localhost:8080/api/auth';
-const TENANT_HEADERS = {
-  'x-internal-key': 'test-internal-proxy-key',
-  'x-tenant-host': 'acme.localhost',
-};
 
 async function signUpInternal(email: string, role?: string): Promise<string> {
   const { user: created } = await auth.api.signUpEmail({
@@ -22,7 +16,7 @@ async function signUpInternal(email: string, role?: string): Promise<string> {
 }
 
 function http(path: string, init: { method?: string; cookie?: string; body?: unknown } = {}) {
-  const headers = new Headers({ ...TENANT_HEADERS, origin: 'http://acme.localhost' });
+  const headers = new Headers({ origin: 'http://localhost:3000' });
   if (init.cookie) headers.set('cookie', init.cookie);
   if (init.body !== undefined) headers.set('content-type', 'application/json');
   return auth.handler(
@@ -45,7 +39,6 @@ describe('HTTP surface of Better Auth plugins', () => {
 
   beforeEach(async () => {
     await resetDb();
-    invalidateTenantCache();
     const acme = await createTestTenant('acme');
     const memberId = await signUpInternal('member@test.local');
     const adminId = await signUpInternal('admin@test.local', 'superadmin');
@@ -102,9 +95,22 @@ describe('HTTP surface of Better Auth plugins', () => {
   it('refuses paths regardless of trailing slash or case tricks', async () => {
     for (const path of ['/organization/create/', '/Organization/create', '/admin/list-users/']) {
       const res = await http(path, { method: 'POST', cookie: cookies['member'], body: {} });
-      expect(res.status).not.toBe(200);
+      expect(res.status).toBeGreaterThanOrEqual(400);
     }
     await expect(testDb.select().from(organization)).resolves.toHaveLength(1);
+  });
+
+  it('refuses a self-service avatar URL but still lets a user rename themselves', async () => {
+    const cookie = cookies['member'];
+    const bad = await http('/update-user', { cookie, body: { image: 'javascript:alert(1)' } });
+    expect(bad.status).toBe(400);
+    const ok = await http('/update-user', { cookie, body: { name: 'Renamed' } });
+    expect(ok.status).toBe(200);
+    const [row] = await testDb
+      .select({ name: user.name, image: user.image })
+      .from(user)
+      .where(eq(user.email, 'member@test.local'));
+    expect(row).toEqual({ name: 'Renamed', image: null });
   });
 
   it('still creates users through the internal signUpEmail call', async () => {

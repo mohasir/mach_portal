@@ -160,7 +160,7 @@ BEGIN
   IF tenant_name = '' THEN
     RAISE EXCEPTION 'Migration 0001 needs the tenant #1 name: run db:migrate with --set mt.tenant_name="<name>"';
   END IF;
-  -- Same format as isValidSlug in src/lib/tenant/slug.ts.
+  -- Same format as isValidSlug in src/lib/tenancy/slug.ts.
   IF tenant_slug !~ '^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])$' THEN
     RAISE EXCEPTION 'Invalid tenant slug "%": use 3-32 lowercase letters, digits or hyphens, not starting or ending with a hyphen', tenant_slug;
   END IF;

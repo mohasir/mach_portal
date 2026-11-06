@@ -5,6 +5,9 @@ export const ErrorCodes = {
     CANNOT_DELETE_SELF: 'USER_CANNOT_DELETE_SELF',
     CANNOT_EDIT_OWN_ROLE: 'USER_CANNOT_EDIT_OWN_ROLE',
     MUST_CHANGE_PASSWORD: 'USER_MUST_CHANGE_PASSWORD',
+    NO_ORGANIZATION: 'USER_NO_ORGANIZATION',
+    IN_MULTIPLE_ORGANIZATIONS: 'USER_IN_MULTIPLE_ORGANIZATIONS',
+    IS_PLATFORM_ADMIN: 'USER_IS_PLATFORM_ADMIN',
   },
   // Mirrors Better Auth's own error code strings; do not rename.
   auth: {
@@ -12,12 +15,18 @@ export const ErrorCodes = {
   },
   tenant: {
     NOT_FOUND: 'TENANT_NOT_FOUND',
+    NOT_SELECTED: 'TENANT_NOT_SELECTED',
+    INVALID_SLUG: 'TENANT_INVALID_SLUG',
+    INVALID_INPUT: 'TENANT_INVALID_INPUT',
+    SLUG_TAKEN: 'TENANT_SLUG_TAKEN',
   },
   client: {
     NOT_FOUND: 'CLIENT_NOT_FOUND',
+    IN_USE: 'CLIENT_IN_USE',
   },
   staff: {
     NOT_FOUND: 'STAFF_NOT_FOUND',
+    IN_USE: 'STAFF_IN_USE',
   },
   product: {
     NOT_FOUND: 'PRODUCT_NOT_FOUND',
@@ -65,6 +74,9 @@ export const ErrorCodes = {
   eventStaff: {
     ALREADY_ASSIGNED: 'EVENT_STAFF_ALREADY_ASSIGNED',
     NOT_FOUND: 'EVENT_STAFF_NOT_FOUND',
+  },
+  notification: {
+    NOT_FOUND: 'NOTIFICATION_NOT_FOUND',
   },
   eventPayment: {
     EXCEEDS_BALANCE: 'EVENT_PAYMENT_EXCEEDS_BALANCE',

@@ -56,7 +56,7 @@ apps/api/src/
 │
 ├── lib/
 │   ├── auth.ts                       # betterAuth(...) con los plugins admin y organization; ganchos de sesión
-│   ├── tenant/                       # tenantEq, resolver de tenant (caché), access, membership, createTenant, slug
+│   ├── tenancy/                      # infraestructura multi-tenant: tenantEq, resolver (caché), access, TenancyRepository, createTenant, slug
 │   └── errors/                       # AppError + ErrorCodes (catálogo de códigos de dominio)
 │
 ├── db/
@@ -293,7 +293,7 @@ it('rejects a duplicated name', async () => {
 });
 ```
 
-- Los tests viven en una subcarpeta `test/` del directorio del código que prueban (`modules/<module>/test/`, `lib/tenant/test/`…), nunca sueltos junto al código. Correr con `pnpm --filter api test` (o `pnpm test` en la raíz).
+- Los tests viven en una subcarpeta `test/` del directorio del código que prueban (`modules/<module>/test/`, `lib/tenancy/test/`…), nunca sueltos junto al código. Correr con `pnpm --filter api test` (o `pnpm test` en la raíz).
 - `src/test/setup.ts` mockea `src/env.ts` (valida `process.env` al importarse), así los tests no
   necesitan `.env`.
 - Para "hoy", fijar el reloj con `vi.useFakeTimers()` + `vi.setSystemTime(...)`.
@@ -410,7 +410,7 @@ export function paginationMeta(total, page, pageSize): PaginationMeta { /* total
 ### 8.1 Alta de tenants y semillas
 
 - **Alta de un tenant:** `pnpm --filter api tenant:create --slug=<slug> --name=<nombre> --admin-email=<email> --admin-name=<nombre>`
-  (llama a `createTenant` de `lib/tenant/createTenant.ts`). Valida el slug (se pasa a minúsculas),
+  (llama a `createTenant` de `lib/tenancy/createTenant.ts`). Valida el slug (se pasa a minúsculas),
   crea la organización, siembra los defaults del tenant (`seedTenantDefaults`: config, tipos de
   evento, motivos de reprogramación, catálogo base, plantilla de PDF) y agrega al primer admin como
   miembro `admin`. Si el email es nuevo imprime un enlace de contraseña (24 h); si la cuenta ya
@@ -496,7 +496,7 @@ protectedProcedure → exige membresía (o isPlatformAdmin) y mustChangePassword
 guardedProcedure   → permisos del rol (@repo/guards), como siempre
 ```
 
-- La membresía se **re-verifica en cada petición** (`lib/tenant/access.ts`, `evaluateTenantAccess`), así que sacar a alguien de la organización surte efecto en la petición siguiente. Solo la fila de la organización (nombre, existencia) se cachea ~60 s en memoria (`lib/tenant/tenantResolver.ts`).
+- La membresía se **re-verifica en cada petición** (`lib/tenancy/access.ts`, `evaluateTenantAccess`), así que sacar a alguien de la organización surte efecto en la petición siguiente. Solo la fila de la organización (nombre, existencia) se cachea ~60 s en memoria (`lib/tenancy/tenantResolver.ts`).
 - Las rutas de Express fuera de tRPC (hoy `/api/uploads/event-payments`) usan el middleware `guardTenantSession` (`core/express/middleware/`), que aplica las mismas reglas con la misma función de decisión. Una ruta nueva fuera de tRPC **debe** usarlo.
 - La superficie HTTP de Better Auth está recortada: `/sign-up/email` y los endpoints de los plugins `organization` y `admin` se bloquean por HTTP; las llamadas internas (`auth.api.*`) siguen funcionando. El alta de usuarios y organizaciones pasa por `users.create` y `tenant:create`.
 - **Login:** global (email + contraseña). Un gancho de sesión fija la organización activa: con una membresía se activa sola; con varias queda sin activa hasta `tenant.select`; sin ninguna se rechaza con `USER_NO_ORGANIZATION` (el admin de plataforma sin membresías sí entra). La web nunca lee la organización activa de `useSession`: usa `tenant.active`.
@@ -553,7 +553,7 @@ export class XRepository {
 
 Reglas (cada una la verifica una mutación manual en las pruebas de aislamiento):
 
-1. **`tenantEq(tabla, tenantId)`** (`lib/tenant/tenantEq.ts`) en **cada** lectura, actualización y borrado de una tabla con `tenant_id`: `WHERE` principal, subqueries, `EXISTS`, `COUNT`, y también en el **`ON` de cada `JOIN`** a otra tabla de tenant (un `JOIN` por id sin filtro puede traer la fila de otro tenant).
+1. **`tenantEq(tabla, tenantId)`** (`lib/tenancy/tenantEq.ts`) en **cada** lectura, actualización y borrado de una tabla con `tenant_id`: `WHERE` principal, subqueries, `EXISTS`, `COUNT`, y también en el **`ON` de cada `JOIN`** a otra tabla de tenant (un `JOIN` por id sin filtro puede traer la fila de otro tenant).
 2. **Handles de transacción:** dentro de `db.transaction(async (tx) => …)` valen las mismas reglas; si se construye un repository ligado al `tx`, se le pasa el mismo `tenantId`.
 3. **Inserts:** `tenantId` se estampa **al final** (`{ ...data, tenantId }`); las filas hijas también llevan su `tenant_id` (denormalizado). Los schemas Zod descartan claves desconocidas: no usar `.passthrough()` ni spreads más anchos que el input validado.
 4. **Updates:** el `set(...)` nunca incluye `tenantId`.

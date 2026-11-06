@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../index';
 import { user } from '../schema';
-import { findOrganizationBySlug } from '../../lib/tenant/findOrganizationBySlug';
+import { TenancyRepository } from '../../lib/tenancy/tenancy.repository';
 import { seedTenantDefaults } from './defaults';
 import { seedQuoteStages } from './quoteStages';
 
@@ -12,7 +12,7 @@ export const PROD_SUPERADMIN_EMAIL = 'samuel@admin.com';
 // superadmin, when its account exists, is only flagged as platform admin: a membership would
 // exempt it from the platform-access audit and block its automatic active organization.
 export async function seedProdTenant(slug: string) {
-  const org = await findOrganizationBySlug(slug);
+  const org = await new TenancyRepository().findBySlug(slug);
   if (!org) throw new Error(`Tenant "${slug}" does not exist`);
 
   await seedQuoteStages();

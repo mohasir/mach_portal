@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { QUOTE_STAGE, type UserPreferences } from '@repo/schemas';
 import { db } from '../index';
 import { organization } from '../schema';
-import { findOrganizationBySlug } from '../../lib/tenant/findOrganizationBySlug';
+import { TenancyRepository } from '../../lib/tenancy/tenancy.repository';
 import { seedEventActivity, seedQuoteStageSettings, type SeedStageOverride } from './activity';
 import { SEED_CATALOG, type SeedProduct } from './catalog';
 import { SEED_CLIENTS, seedClients, type SeedClient } from './clients';
@@ -215,7 +215,7 @@ export const DEMO_TENANTS: DemoProfile[] = [
 ];
 
 export async function ensureOrganization(slug: string, name: string): Promise<string> {
-  const existing = await findOrganizationBySlug(slug);
+  const existing = await new TenancyRepository().findBySlug(slug);
   if (existing) return existing.id;
   const id = randomUUID();
   await db.insert(organization).values({ id, slug, name, createdAt: new Date() });
@@ -278,7 +278,7 @@ export async function seedDemoLocal() {
 
 // `--demo=local --tenant=<slug>`: the demo of the first profile into an existing tenant.
 export async function seedDemoIntoTenant(slug: string) {
-  const org = await findOrganizationBySlug(slug);
+  const org = await new TenancyRepository().findBySlug(slug);
   if (!org) throw new Error(`Tenant "${slug}" does not exist`);
   await seedQuoteStages();
   const profile = DEMO_TENANTS.find((p) => p.slug === org.slug) ?? DEMO_TENANTS[0]!;

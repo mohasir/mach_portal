@@ -8,18 +8,7 @@ import { db } from '../db';
 import { user } from '../db/schema';
 import { env } from '../env';
 import { ErrorCodes } from './errors/constants';
-import { isAllowedOrigin } from './tenant/allowedOrigin';
-import { readTenantHost } from './tenant/forwardedHost';
-import { parseTenantSlug } from './tenant/host';
-import { isMemberOf } from './tenant/membership';
-import { resolveTenantBySlug } from './tenant/tenantResolver';
-
-// Code and message match Better Auth's built-in wrong-password error, so a non-member's
-// login failure is indistinguishable from a bad password.
-const INVALID_CREDENTIALS = {
-  code: ErrorCodes.auth.INVALID_EMAIL_OR_PASSWORD,
-  message: 'Invalid email or password',
-} as const;
+import { TenancyRepository } from './tenancy/tenancy.repository';
 
 const HTTP_BLOCKED_PREFIXES = ['/organization', '/admin'];
 const HTTP_BLOCKED_PATHS = ['/sign-up/email'];
@@ -30,19 +19,6 @@ function isBlockedOverHttp(path: string | undefined): boolean {
     HTTP_BLOCKED_PATHS.includes(path) ||
     HTTP_BLOCKED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
   );
-}
-
-function requestOrigin(request: Request | undefined): string | undefined {
-  const origin = request?.headers.get('origin');
-  if (origin) return origin;
-  // Mirrors Better Auth's own origin check, which falls back to Referer.
-  const referer = request?.headers.get('referer');
-  if (!referer) return undefined;
-  try {
-    return new URL(referer).origin;
-  } catch {
-    return undefined;
-  }
 }
 
 export const auth = betterAuth({
@@ -56,10 +32,7 @@ export const auth = betterAuth({
   },
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: async (request) => {
-    const origin = requestOrigin(request);
-    return origin && (await isAllowedOrigin(origin)) ? [origin] : [];
-  },
+  trustedOrigins: env.WEB_ORIGIN,
   hooks: {
     // Plugin endpoints act on global tables (users, organizations) and would bypass the
     // tenant-scoped users module, so they are server-side only. `ctx.request` exists
@@ -69,45 +42,52 @@ export const auth = betterAuth({
       if (ctx.request && isBlockedOverHttp(ctx.path)) {
         throw APIError.from('NOT_FOUND', { code: 'NOT_FOUND', message: 'Not found' });
       }
+      // The web never sets an avatar but does render `user.image`, so self-service updates may
+      // not store an arbitrary URL there (e.g. `javascript:`).
+      if (ctx.request && ctx.path === '/update-user' && ctx.body && 'image' in ctx.body) {
+        throw APIError.from('BAD_REQUEST', { code: 'BAD_REQUEST', message: 'Bad request' });
+      }
     }),
   },
   advanced: {
-    // Host-only cookies keep each tenant's session isolated to its own subdomain.
+    // Host-only cookie: the session is never shared across subdomains.
     crossSubDomainCookies: { enabled: false },
   },
   databaseHooks: {
     session: {
       create: {
         before: async (newSession, context) => {
-          // Internal calls (e.g. auth.api.signUpEmail from a service) carry no request:
-          // the session is left without an active tenant, which protectedProcedure rejects.
-          const headers = context?.request?.headers ?? context?.headers;
-          if (!headers) return;
+          // Internal calls (e.g. auth.api.signUpEmail from a service) carry no request context
+          // and keep their session without an active organization.
+          if (!context?.request && !context?.headers) return;
 
-          const slug = parseTenantSlug(
-            readTenantHost(Object.fromEntries(headers.entries())),
-            env.APP_BASE_DOMAIN,
-          );
-          const tenant = slug ? await resolveTenantBySlug(slug) : null;
-          const [account] = tenant
-            ? await db
-                .select({ isPlatformAdmin: user.isPlatformAdmin })
-                .from(user)
-                .where(eq(user.id, newSession.userId))
-                .limit(1)
-            : [];
-          const allowed =
-            tenant &&
-            (account?.isPlatformAdmin || (await isMemberOf(newSession.userId, tenant.id)));
-          if (!tenant || !allowed) throw APIError.from('UNAUTHORIZED', INVALID_CREDENTIALS);
+          const tenancy = new TenancyRepository();
+          const organizationIds = await tenancy.findMemberOrganizationIds(newSession.userId, 2);
 
-          return { data: { ...newSession, activeOrganizationId: tenant.id } };
+          if (organizationIds.length === 1) {
+            return { data: { ...newSession, activeOrganizationId: organizationIds[0]! } };
+          }
+
+          if (organizationIds.length === 0) {
+            // Runs after the password was verified, so naming the problem leaks nothing.
+            if (!(await tenancy.isPlatformAdmin(newSession.userId))) {
+              throw APIError.from('FORBIDDEN', {
+                code: ErrorCodes.user.NO_ORGANIZATION,
+                message: 'User has no organization',
+              });
+            }
+          }
+
+          return { data: { ...newSession, activeOrganizationId: null } };
         },
       },
     },
   },
   session: {
-    cookieCache: { enabled: true, maxAge: 300 },
+    // The web middleware gates routes on the cached cookie (role, mustChangePassword); tRPC and the
+    // upload guard bypass it. A short maxAge bounds how long Better Auth's get-session keeps
+    // answering with a signed-out or changed session.
+    cookieCache: { enabled: true, maxAge: 60 },
   },
   user: {
     additionalFields: {
@@ -125,13 +105,6 @@ export const auth = betterAuth({
     organization({
       teams: { enabled: false },
       allowUserToCreateOrganization: false,
-      schema: {
-        organization: {
-          additionalFields: {
-            customDomain: { type: 'string', required: false },
-          },
-        },
-      },
     }),
   ],
 });

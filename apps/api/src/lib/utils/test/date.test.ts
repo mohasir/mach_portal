@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, subtractDays } from './date';
+import { addDays, subtractDays } from '../date';
 
 describe('date utils', () => {
   it('subtractDays crosses a month boundary', () => {
