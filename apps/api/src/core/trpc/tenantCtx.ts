@@ -1,6 +1,12 @@
+import type { ResolvedAccess } from '../../lib/rbac/access';
 import type { Context } from './context';
 
 export type Session = NonNullable<Context['session']>;
 export type SessionUser = Session['user'];
 
-export type TenantCtx = { tenantId: string; user: SessionUser; session: Session['session'] };
+export type TenantCtx = {
+  tenantId: string;
+  user: SessionUser;
+  session: Session['session'];
+  access: ResolvedAccess;
+};

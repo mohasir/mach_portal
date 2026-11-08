@@ -1,9 +1,16 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../../../db';
-import { member, platformAccessLog } from '../../../db/schema';
-import { addMember, createTestTenant, createTestUser, resetDb } from '../../../test/db';
+import { member, platformAccessLog, role } from '../../../db/schema';
+import {
+  addMember,
+  createTestTenant,
+  createTestUser,
+  pointMemberAtForeignRole,
+  resetDb,
+} from '../../../test/db';
 import type { Context } from '../context';
+import { HEADERS } from '../../express/const/headers';
 import {
   authedProcedure,
   guardedProcedure,
@@ -20,12 +27,27 @@ const testRouter = router({
   protectedQuery: protectedProcedure.query(({ ctx }) => ({
     tenantId: ctx.tenantId,
     role: (ctx.user as { role?: string | null }).role,
+    access: ctx.access,
   })),
   protectedMutation: protectedProcedure.mutation(({ ctx }) => ctx.tenantId),
   guarded: guardedProcedure({ [RESOURCES.TAX_RATES]: [ACTIONS.UPDATE] }).query(() => 'ok'),
   open: publicProcedure.query(() => 'open'),
 });
 const caller = (ctx: Context) => testRouter.createCaller(ctx);
+
+const PERMISSIONS_VERSION_HEADER = HEADERS.PERMISSIONS_VERSION;
+
+function headersOf(ctx: Context): Record<string, string> {
+  return (ctx.res as unknown as { headers: Record<string, string> }).headers;
+}
+
+async function roleIdOf(tenantId: string, name: string): Promise<string> {
+  const [row] = await db
+    .select({ id: role.id })
+    .from(role)
+    .where(and(eq(role.tenantId, tenantId), eq(role.name, name)));
+  return row!.id;
+}
 
 type Tenant = { id: string; slug: string; name: string };
 type UserOverrides = { role?: string; mustChangePassword?: boolean; isPlatformAdmin?: boolean };
@@ -56,7 +78,14 @@ function ctxFor(
         },
       }
     : null;
-  return { req: {}, res: {}, session, tenant } as unknown as Context;
+  const headers: Record<string, string> = {};
+  const res = {
+    headers,
+    setHeader(name: string, value: string) {
+      headers[name.toLowerCase()] = value;
+    },
+  };
+  return { req: {}, res, session, tenant } as unknown as Context;
 }
 
 async function setup() {
@@ -169,6 +198,15 @@ describe('tenant-aware procedure chain', () => {
     expect(err.cause?.code).toBe('USER_MUST_CHANGE_PASSWORD');
   });
 
+  it('protected: no permissions version header when mustChangePassword rejects', async () => {
+    const { a } = await setup();
+    const u = await createTestUser();
+    await addMember(u.id, a.id, 'admin');
+    const ctx = ctxFor(a, u, { mustChangePassword: true });
+    await expect(caller(ctx).protectedQuery()).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    expect(headersOf(ctx)[PERMISSIONS_VERSION_HEADER]).toBeUndefined();
+  });
+
   it('protected: mustChangePassword is checked after membership (non-member gets plain FORBIDDEN)', async () => {
     const { a, b } = await setup();
     const u = await createTestUser();
@@ -181,14 +219,16 @@ describe('tenant-aware procedure chain', () => {
   });
 
   describe('platform admin', () => {
-    it('without membership passes as superadmin and logs the first access of the session', async () => {
+    it('without membership passes as owner (legacy role untouched) and logs the first access of the session', async () => {
       const { a } = await setup();
       const p = await createTestUser({ isPlatformAdmin: true });
       const ctx = ctxFor(a, p, { isPlatformAdmin: true, role: 'user', sessionId: 's1' });
       await expect(caller(ctx).protectedQuery()).resolves.toEqual({
         tenantId: a.id,
-        role: 'superadmin',
+        role: 'user',
+        access: { isOwner: true, grants: {}, roleId: null, roleName: null, roleVersion: null },
       });
+      expect(headersOf(ctx)[PERMISSIONS_VERSION_HEADER]).toBe('owner:0');
       const rows = await db.select().from(platformAccessLog);
       expect(rows).toHaveLength(1);
       expect(rows[0]).toMatchObject({
@@ -274,9 +314,11 @@ describe('tenant-aware procedure chain', () => {
     it('that is also a member keeps its own role and writes no rows', async () => {
       const { a } = await setup();
       const p = await createTestUser({ isPlatformAdmin: true });
-      await addMember(p.id, a.id);
+      await addMember(p.id, a.id, 'operator');
       const ctx = ctxFor(a, p, { isPlatformAdmin: true, role: 'operator' });
-      await expect(caller(ctx).protectedQuery()).resolves.toMatchObject({ role: 'operator' });
+      await expect(caller(ctx).protectedQuery()).resolves.toMatchObject({
+        access: { isOwner: false, roleId: await roleIdOf(a.id, 'Operator') },
+      });
       await caller(ctx).protectedMutation();
       expect(
         await db.select().from(platformAccessLog).where(eq(platformAccessLog.userId, p.id)),
@@ -292,7 +334,7 @@ describe('tenant-aware procedure chain', () => {
       expect(await db.select().from(platformAccessLog)).toHaveLength(0);
     });
 
-    it('guardedProcedure evaluates permissions with the superadmin role', async () => {
+    it('guardedProcedure evaluates permissions with owner access', async () => {
       const { a } = await setup();
       const p = await createTestUser({ isPlatformAdmin: true });
       await expect(
@@ -301,13 +343,52 @@ describe('tenant-aware procedure chain', () => {
     });
   });
 
-  it('guardedProcedure still denies a member whose role lacks the permission', async () => {
+  it('guardedProcedure denies a member whose membership role lacks the permission, whatever user.role says', async () => {
     const { a } = await setup();
     const u = await createTestUser();
-    await addMember(u.id, a.id);
-    await expect(caller(ctxFor(a, u, { role: 'member' })).guarded()).rejects.toMatchObject({
-      code: 'FORBIDDEN',
-    });
+    await addMember(u.id, a.id, 'member');
+    const ctx = ctxFor(a, u, { role: 'superadmin' });
+    await expect(caller(ctx).guarded()).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    expect(headersOf(ctx)[PERMISSIONS_VERSION_HEADER]).toBe(`${await roleIdOf(a.id, 'Member')}:1`);
+  });
+
+  it('guardedProcedure allows a member whose membership role grants the permission, whatever user.role says', async () => {
+    const { a } = await setup();
+    const u = await createTestUser();
+    await addMember(u.id, a.id, 'admin');
+    await expect(caller(ctxFor(a, u, { role: 'member' })).guarded()).resolves.toBe('ok');
+  });
+
+  it('guardedProcedure decides by the role of the active organization', async () => {
+    const { a, b } = await setup();
+    const u = await createTestUser();
+    await addMember(u.id, a.id, 'admin');
+    await addMember(u.id, b.id, 'operator');
+    await expect(caller(ctxFor(a, u)).guarded()).resolves.toBe('ok');
+    await expect(caller(ctxFor(b, u)).guarded()).rejects.toMatchObject({ code: 'FORBIDDEN' });
+  });
+
+  it('protected: a member whose role belongs to another organization is FORBIDDEN (fail closed)', async () => {
+    const { a } = await setup();
+    const u = await createTestUser();
+    await addMember(u.id, a.id, 'admin');
+    await pointMemberAtForeignRole(u.id, a.id);
+    const err = await caller(ctxFor(a, u))
+      .protectedQuery()
+      .catch((e) => e);
+    expect(err.code).toBe('FORBIDDEN');
+    expect(err.cause).toBeUndefined();
+  });
+
+  it('protected: sets the permissions version header for a member', async () => {
+    const { a } = await setup();
+    const u = await createTestUser();
+    await addMember(u.id, a.id, 'operator');
+    const ctx = ctxFor(a, u);
+    await caller(ctx).protectedMutation();
+    expect(headersOf(ctx)[PERMISSIONS_VERSION_HEADER]).toBe(
+      `${await roleIdOf(a.id, 'Operator')}:1`,
+    );
   });
 
   it('publicProcedure is unaffected by the tenant chain', async () => {

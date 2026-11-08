@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { describe, expect, it, vi } from 'vitest';
 import { env } from '../../../env';
+import { HEADERS } from '../const/headers';
 import { corsMiddleware } from '../cors';
 
 function run(origin: string | undefined, method = 'GET') {
@@ -36,6 +37,11 @@ describe('corsMiddleware', () => {
   it('does not answer a preflight from an unlisted origin with allow headers', () => {
     const { headers } = run('http://evil.com', 'OPTIONS');
     expect(headers.get('access-control-allow-origin')).toBeUndefined();
+  });
+
+  it('exposes the permissions version header to the web origin', () => {
+    const { headers } = run(env.WEB_ORIGIN[0]!);
+    expect(headers.get('access-control-expose-headers')).toBe(HEADERS.PERMISSIONS_VERSION);
   });
 
   it('lets requests without an Origin header through untouched', () => {

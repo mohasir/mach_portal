@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { authedProcedure, router } from '../../core/trpc/trpc';
+import { authedProcedure, protectedProcedure, router } from '../../core/trpc/trpc';
 import { db } from '../../db';
 import { TenantRepository } from './tenant.repository';
 import { TenantService } from './tenant.service';
@@ -12,6 +12,10 @@ export const tenantRouter = router({
   active: authedProcedure.query(({ ctx }) =>
     service.active(ctx.session.user as SessionUser, ctx.tenant),
   ),
+
+  permissions: protectedProcedure.query(({ ctx }) => service.permissions(ctx.access)),
+
+  permissionsVersion: protectedProcedure.query(({ ctx }) => service.permissionsVersion(ctx.access)),
 
   memberships: authedProcedure.query(({ ctx }) => service.memberships(ctx.session.user.id)),
 

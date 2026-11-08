@@ -3,7 +3,12 @@ import { recordPlatformAccess } from '../../core/trpc/platformAccess';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import { evaluateTenantAccess } from '../../lib/tenancy/access';
 import type { Tenant } from '../../lib/tenancy/tenantResolver';
-import { organizationCollectionResource, organizationResource } from './tenant.resource';
+import { permissionsVersion, type ResolvedAccess } from '../../lib/rbac/access';
+import {
+  organizationCollectionResource,
+  organizationResource,
+  permissionsResource,
+} from './tenant.resource';
 import type { TenantRepository } from './tenant.repository';
 
 type Caller = { id: string; isPlatformAdmin?: boolean | null };
@@ -20,6 +25,14 @@ export class TenantService {
     });
     if (!access.allowed) return null;
     return { ...organizationResource(tenant), isPlatformAccess: access.platformAccess };
+  }
+
+  permissions(access: ResolvedAccess) {
+    return permissionsResource(access);
+  }
+
+  permissionsVersion(access: ResolvedAccess) {
+    return { version: permissionsVersion(access) };
   }
 
   async memberships(userId: string) {

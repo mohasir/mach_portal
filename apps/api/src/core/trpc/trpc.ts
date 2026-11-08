@@ -1,9 +1,10 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import { ZodError } from 'zod';
-import { hasPermission, ROLES, type PermissionCheck } from '@repo/guards';
+import { can, type PermissionCheck } from '@repo/guards';
 import type { Context } from './context';
 import { AppError, ErrorCodes } from '../../lib/errors';
-import { evaluateTenantAccess } from '../../lib/tenancy/access';
+import { permissionsVersion, resolveRequestAccess } from '../../lib/rbac/access';
+import { HEADERS } from '../express/const/headers';
 import { recordPlatformAccess } from './platformAccess';
 
 const t = initTRPC.context<Context>().create({
@@ -20,6 +21,7 @@ const t = initTRPC.context<Context>().create({
       data: {
         ...data,
         errorCode: error.cause instanceof AppError ? error.cause.code : null,
+        errorDetails: error.cause instanceof AppError ? (error.cause.details ?? null) : null,
         fieldErrors: zodError
           ? zodError.issues.map((issue) => ({ path: issue.path, message: issue.message }))
           : null,
@@ -58,9 +60,9 @@ export const protectedProcedure = tenantProcedure.use(async ({ ctx, next, path, 
     isPlatformAdmin?: boolean | null;
     mustChangePassword?: boolean | null;
   };
-  const access = await evaluateTenantAccess({ userId: user.id, isPlatformAdmin, tenantId });
-  if (!access.allowed) throw new TRPCError({ code: 'FORBIDDEN' });
-  const { platformAccess } = access;
+  const resolved = await resolveRequestAccess({ userId: user.id, isPlatformAdmin, tenantId });
+  if (!resolved) throw new TRPCError({ code: 'FORBIDDEN' });
+  const { platformAccess, access } = resolved;
 
   if (mustChangePassword) {
     throw new TRPCError({
@@ -68,6 +70,8 @@ export const protectedProcedure = tenantProcedure.use(async ({ ctx, next, path, 
       cause: new AppError(ErrorCodes.user.MUST_CHANGE_PASSWORD),
     });
   }
+
+  ctx.res.setHeader(HEADERS.PERMISSIONS_VERSION,permissionsVersion(access));
 
   if (platformAccess) {
     await recordPlatformAccess({
@@ -79,15 +83,20 @@ export const protectedProcedure = tenantProcedure.use(async ({ ctx, next, path, 
     });
   }
 
-  // A platform admin without membership has no role in the tenant, so it acts as superadmin.
-  const effectiveUser = platformAccess ? { ...user, role: ROLES.SUPERADMIN } : user;
-  return next({ ctx: { ...ctx, tenantId, user: effectiveUser, session } });
+  return next({ ctx: { ...ctx, tenantId, user, session, access } });
 });
 
 export function guardedProcedure(permissions: PermissionCheck) {
   return protectedProcedure.use(({ ctx, next }) => {
-    const role = (ctx.user as { role?: string | null }).role;
-    if (!hasPermission(role, permissions)) throw new TRPCError({ code: 'FORBIDDEN' });
+    if (!can(ctx.access, permissions)) throw new TRPCError({ code: 'FORBIDDEN' });
+    return next();
+  });
+}
+
+// Passes when any one of the checks is fully met.
+export function guardedProcedureAnyOf(...checks: [PermissionCheck, ...PermissionCheck[]]) {
+  return protectedProcedure.use(({ ctx, next }) => {
+    if (!checks.some((check) => can(ctx.access, check))) throw new TRPCError({ code: 'FORBIDDEN' });
     return next();
   });
 }

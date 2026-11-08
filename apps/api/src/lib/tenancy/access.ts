@@ -4,7 +4,7 @@ export type TenantAccess = { allowed: false } | { allowed: true; platformAccess:
 
 // Single source of truth for "may this user enter this tenant", shared by the tRPC chain and the
 // Express guard so both transports reach the same verdict. `platformAccess` is true only for a
-// platform admin with no membership, who must be audited and acts as superadmin.
+// platform admin with no membership, who must be audited and gets owner access.
 export async function evaluateTenantAccess(input: {
   userId: string;
   isPlatformAdmin: boolean | null | undefined;

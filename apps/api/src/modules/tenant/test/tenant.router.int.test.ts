@@ -1,12 +1,12 @@
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createContext } from '../../../core/trpc/context';
 import { appRouter } from '../../../core/trpc/router';
 import { db } from '../../../db';
-import { member, platformAccessLog, session } from '../../../db/schema';
+import { member, platformAccessLog, role, rolePermission, session } from '../../../db/schema';
 import { createUserWithPassword, signInCookie } from '../../../test/authHelpers';
-import { addMember, createTestTenant, resetDb } from '../../../test/db';
+import { addMember, createTestTenant, pointMemberAtForeignRole, resetDb } from '../../../test/db';
 
 // Each call rebuilds the context from the cookie, exactly like one HTTP request would.
 function api(cookie?: string) {
@@ -16,7 +16,7 @@ function api(cookie?: string) {
       appRouter.createCaller(
         await createContext({
           req: { headers },
-          res: {},
+          res: { setHeader: () => undefined },
         } as unknown as CreateExpressContextOptions),
       ),
   };
@@ -93,6 +93,80 @@ describe('tenant router', () => {
       await addMember(id, a.id);
       const t = await api(await signInCookie('root@test.local')).call();
       await expect(t.tenant.active()).resolves.toMatchObject({ isPlatformAccess: false });
+    });
+  });
+
+  describe('permissions', () => {
+    async function roleIdOf(tenantId: string, name: string): Promise<string> {
+      const [row] = await db
+        .select({ id: role.id })
+        .from(role)
+        .where(and(eq(role.tenantId, tenantId), eq(role.name, name)));
+      return row!.id;
+    }
+
+    it('is UNAUTHORIZED without a session', async () => {
+      const t = await api().call();
+      await expect(t.tenant.permissions()).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+      await expect(t.tenant.permissionsVersion()).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+    });
+
+    it("returns the matrix and version of the membership's role", async () => {
+      const { a } = await twoOrgs();
+      const id = await createUserWithPassword('m@test.local', { role: 'superadmin' });
+      await addMember(id, a.id, 'operator');
+      const t = await api(await signInCookie('m@test.local')).call();
+      const operator = await roleIdOf(a.id, 'Operator');
+
+      const res = await t.tenant.permissions();
+
+      expect(res.isOwner).toBe(false);
+      expect(res.roleName).toBe('Operator');
+      expect(res.version).toBe(`${operator}:1`);
+      expect(res.grants).toMatchObject({ 'quote.read': 'own', 'client.create': 'all' });
+      expect(res.grants['tax_rates.update']).toBeUndefined();
+      await expect(t.tenant.permissionsVersion()).resolves.toEqual({ version: `${operator}:1` });
+    });
+
+    it('reflects a role edit on the next call', async () => {
+      const { a } = await twoOrgs();
+      const id = await createUserWithPassword('m@test.local');
+      await addMember(id, a.id, 'operator');
+      const cookie = await signInCookie('m@test.local');
+      const operator = await roleIdOf(a.id, 'Operator');
+      await db
+        .delete(rolePermission)
+        .where(and(eq(rolePermission.roleId, operator), eq(rolePermission.resource, 'quote')));
+      await db.update(role).set({ version: 2 }).where(eq(role.id, operator));
+
+      const res = await (await api(cookie).call()).tenant.permissions();
+      expect(res.grants['quote.read']).toBeUndefined();
+      expect(res.version).toBe(`${operator}:2`);
+    });
+
+    it('returns owner access for a platform admin without membership', async () => {
+      const { a } = await twoOrgs();
+      const id = await createUserWithPassword('root@test.local', { isPlatformAdmin: true });
+      await addMember(id, a.id);
+      const cookie = await signInCookie('root@test.local');
+      await db.delete(member);
+      const t = await api(cookie).call();
+      await expect(t.tenant.permissions()).resolves.toEqual({
+        isOwner: true,
+        grants: {},
+        roleName: null,
+        version: 'owner:0',
+      });
+      await expect(t.tenant.permissionsVersion()).resolves.toEqual({ version: 'owner:0' });
+    });
+
+    it('is FORBIDDEN for a member whose role belongs to another organization', async () => {
+      const { a } = await twoOrgs();
+      const id = await createUserWithPassword('m@test.local');
+      await addMember(id, a.id, 'admin');
+      await pointMemberAtForeignRole(id, a.id);
+      const t = await api(await signInCookie('m@test.local')).call();
+      await expect(t.tenant.permissions()).rejects.toMatchObject({ code: 'FORBIDDEN' });
     });
   });
 
