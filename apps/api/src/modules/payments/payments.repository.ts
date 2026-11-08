@@ -9,6 +9,7 @@ import {
   inArray,
   isNull,
   lte,
+  or,
   sql,
   type SQL,
 } from 'drizzle-orm';
@@ -45,6 +46,12 @@ export class PaymentsRepository {
     return and(eq(events.clientId, clients.id), tenantEq(clients, this.tenantId));
   }
 
+  private ownerFilter(ownerId?: string): SQL | undefined {
+    return ownerId
+      ? or(eq(quotes.createdById, ownerId), eq(quotes.assignedToId, ownerId))
+      : undefined;
+  }
+
   private baseSelect() {
     return this.db
       .select({
@@ -70,12 +77,13 @@ export class PaymentsRepository {
       .leftJoin(user, eq(eventPayments.createdById, user.id));
   }
 
-  async findPaginated(query: PaymentsListQuery) {
+  async findPaginated(query: PaymentsListQuery, ownerId?: string) {
     const { search, sortBy, sortDir, dateFrom, dateTo, clientIds, eventTypeIds, methods } = query;
 
     const where = and(
       tenantEq(eventPayments, this.tenantId),
       isNull(quotes.archivedAt),
+      this.ownerFilter(ownerId),
       search ? ilike(clients.name, containsPattern(search)) : undefined,
       dateFrom ? gte(eventPayments.paidAt, dateFrom) : undefined,
       dateTo ? lte(eventPayments.paidAt, dateTo) : undefined,
@@ -102,12 +110,13 @@ export class PaymentsRepository {
     return row?.value ?? 0;
   }
 
-  findIncome(query: PaymentsIncomeQuery) {
+  findIncome(query: PaymentsIncomeQuery, ownerId?: string) {
     const { dateFrom, dateTo, groupBy } = query;
 
     const where = and(
       tenantEq(eventPayments, this.tenantId),
       isNull(quotes.archivedAt),
+      this.ownerFilter(ownerId),
       dateFrom ? gte(eventPayments.paidAt, dateFrom) : undefined,
       dateTo ? lte(eventPayments.paidAt, dateTo) : undefined,
     );

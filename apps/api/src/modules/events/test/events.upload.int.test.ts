@@ -1,15 +1,30 @@
 import type { Request, Response } from 'express';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 import { eq } from 'drizzle-orm';
+import { ACTIONS, RESOURCES } from '@repo/guards';
+import { createContext } from '../../../core/trpc/context';
+import { appRouter } from '../../../core/trpc/router';
 import { db } from '../../../db';
-import { eventPaymentAttachments } from '../../../db/schema';
+import { eventPaymentAttachments, quotes } from '../../../db/schema';
 import {
   createUserWithPassword,
   signInCookie,
   signInWithActiveOrg,
 } from '../../../test/authHelpers';
-import { addMember, createTestTenant, resetDb, type TestTenant } from '../../../test/db';
-import { seedEventsTenant, seedQuoteStages, type EventsSeed } from '../../../test/fixtures/events';
+import {
+  addMember,
+  addMemberWithGrants,
+  createTestTenant,
+  resetDb,
+  type TestTenant,
+} from '../../../test/db';
+import {
+  insertPayment,
+  seedEventsTenant,
+  seedQuoteStages,
+  type EventsSeed,
+} from '../../../test/fixtures/events';
 
 const storage = vi.hoisted(() => ({
   upload: vi.fn(async ({ key }: { key: string }) => ({ url: `http://r2/${key}` })),
@@ -78,8 +93,8 @@ describe('payment attachment upload route', () => {
     const tenantA = await createTestTenant('tenant-a');
     const tenantB = await createTestTenant('tenant-b');
     const owner = await createUserWithPassword('owner@test.local');
-    await addMember(owner, tenantA.id);
-    await addMember(owner, tenantB.id);
+    await addMember(owner, tenantA.id, 'admin');
+    await addMember(owner, tenantB.id, 'admin');
     a = { ...tenantA, userId: owner };
     b = { ...tenantB, userId: owner };
     await seedQuoteStages();
@@ -105,8 +120,8 @@ describe('payment attachment upload route', () => {
   });
 
   it('403 FORBIDDEN when the role lacks the upload permission', async () => {
-    const userId = await createUserWithPassword('op@test.local', { role: 'operator' });
-    await addMember(userId, a.id);
+    const userId = await createUserWithPassword('op@test.local', { role: 'superadmin' });
+    await addMember(userId, a.id, 'operator');
     const cookie = await signInCookie('op@test.local');
     const r = await post(sa.paymentId, cookie);
     expect(r).toEqual({ status: 403, body: { errorCode: 'FORBIDDEN' } });
@@ -153,5 +168,71 @@ describe('payment attachment upload route', () => {
     });
     const key = storage.upload.mock.calls[0]![0].key;
     expect(storage.delete).toHaveBeenCalledWith(key);
+  });
+});
+
+describe('payment attachment upload owner scope (parity with tRPC)', () => {
+  let a: TestTenant;
+  let sa: EventsSeed;
+
+  beforeEach(async () => {
+    await resetDb();
+    storage.upload.mockClear();
+    const tenant = await createTestTenant('tenant-a');
+    const owner = await createUserWithPassword('owner@test.local');
+    await addMember(owner, tenant.id, 'admin');
+    a = { ...tenant, userId: owner };
+    await seedQuoteStages();
+    sa = await seedEventsTenant(a, 'A');
+  });
+
+  async function trpcCaller(cookie: string) {
+    return appRouter.createCaller(
+      await createContext({
+        req: { headers: { cookie } },
+        res: { setHeader: () => undefined },
+      } as unknown as CreateExpressContextOptions),
+    );
+  }
+
+  it("event.read own: 404 on someone else's payment in Express and NOT_FOUND in tRPC; own payment uploads", async () => {
+    const me = await createUserWithPassword('me@test.local');
+    await addMemberWithGrants(me, a.id, [
+      [RESOURCES.EVENT, ACTIONS.READ, 'own'],
+      [RESOURCES.PAYMENT, ACTIONS.UPLOAD_ATTACHMENT, 'all'],
+      [RESOURCES.PAYMENT, ACTIONS.DELETE, 'all'],
+    ]);
+    await db
+      .update(quotes)
+      .set({ createdById: me, assignedToId: me })
+      .where(eq(quotes.id, sa.quote2Id));
+    const ownPaymentId = await insertPayment(a.id, sa.event2Id, 100);
+    const cookie = await signInCookie('me@test.local');
+
+    const r = await post(sa.paymentId, cookie);
+    expect(r).toEqual({ status: 404, body: { errorCode: 'EVENT_PAYMENT_NOT_FOUND' } });
+    expect(storage.upload).not.toHaveBeenCalled();
+    await expect(
+      (await trpcCaller(cookie)).events.removePaymentAttachment({
+        eventId: sa.eventId,
+        attachmentId: sa.attachmentId,
+      }),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(await attachmentsOf(a.id)).toHaveLength(1);
+
+    const own = await post(ownPaymentId, cookie);
+    expect(own.status).toBe(201);
+  });
+
+  it('payment.upload_attachment own restricts even when event.read is all', async () => {
+    const me = await createUserWithPassword('me@test.local');
+    await addMemberWithGrants(me, a.id, [
+      [RESOURCES.EVENT, ACTIONS.READ, 'all'],
+      [RESOURCES.PAYMENT, ACTIONS.UPLOAD_ATTACHMENT, 'own'],
+    ]);
+    const cookie = await signInCookie('me@test.local');
+    const r = await post(sa.paymentId, cookie);
+    expect(r).toEqual({ status: 404, body: { errorCode: 'EVENT_PAYMENT_NOT_FOUND' } });
+    expect(storage.upload).not.toHaveBeenCalled();
   });
 });

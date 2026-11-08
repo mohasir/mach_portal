@@ -78,7 +78,7 @@ export class EventsService {
   ) {}
 
   // Blocks any mutation on an event whose quote is archived, for every role/scope —
-  // and, additionally, 404s scope 'own' (resolveResourceScope) callers instead of
+  // and, additionally, 404s scope 'own' (scopeFor) callers instead of
   // leaking that an event exists for a quote they neither created nor are assigned to.
   private async assertAccessible(eventId: string, ownerId?: string) {
     if (!(await this.repo.isAccessible(eventId, ownerId))) throw notFound();
@@ -264,9 +264,13 @@ export class EventsService {
     paymentId: string,
     file: UploadedPaymentAttachmentFile,
     uploadedById: string | null,
+    ownerId?: string,
   ) {
     const payment = await this.repo.findPaymentById(paymentId);
-    if (!payment) throw new AppError(ErrorCodes.eventPayment.NOT_FOUND, undefined, 404);
+    // Same answer for a payment outside the caller's scope as for a missing one.
+    if (!payment || !(await this.repo.isAccessible(payment.eventId, ownerId))) {
+      throw new AppError(ErrorCodes.eventPayment.NOT_FOUND, undefined, 404);
+    }
 
     const ext = EXTENSION_BY_MIME[file.mimetype] ?? 'bin';
     // Older attachments keep the unprefixed key they were stored with; every read and delete

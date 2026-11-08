@@ -114,7 +114,7 @@ export class EventsRepository {
   }
 
   // Events have no owner of their own — they're 1:1 with the quote that spawned them,
-  // so 'own' scope (resolveResourceScope) means "quote I created OR quote assigned to me".
+  // so 'own' scope (scopeFor) means "quote I created OR quote assigned to me".
   private ownerFilter(ownerId?: string): SQL | undefined {
     return ownerId
       ? or(eq(quotes.createdById, ownerId), eq(quotes.assignedToId, ownerId))
@@ -125,7 +125,7 @@ export class EventsRepository {
   // attachments, selections) — centralizes the "not archived" + "own" gate so each
   // service method just calls this once instead of re-deriving it per query. Runs
   // unconditionally (unlike a plain ownerFilter check) so an 'all'-scope caller
-  // (admin/superadmin) is blocked from acting on an archived event too — ownerFilter
+  // is blocked from acting on an archived event too — ownerFilter
   // itself only adds a restriction when ownerId is set, so this stays a no-op filter
   // for 'all' scope beyond the archived check.
   async isAccessible(eventId: string, ownerId?: string): Promise<boolean> {
