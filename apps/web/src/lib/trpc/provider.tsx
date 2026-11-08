@@ -45,6 +45,8 @@ export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [clients] = useState(() => {
+    // Declared before the handlers that read it; assigned once the query filters exist.
+    // eslint-disable-next-line prefer-const
     let filters: PermissionsFilters | undefined;
     let accessLost = false;
 
