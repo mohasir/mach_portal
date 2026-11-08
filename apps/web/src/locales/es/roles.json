@@ -1,0 +1,203 @@
+{
+  "title": "Roles",
+  "index": {
+    "add": "Nuevo rol"
+  },
+  "columns": {
+    "name": "Nombre",
+    "members": "Miembros",
+    "updatedAt": "Última edición"
+  },
+  "members_one": "{{count}} miembro",
+  "members_other": "{{count}} miembros",
+  "ownerTag": "Rol dueño",
+  "empty": "No hay roles",
+  "create": {
+    "title": "Nuevo rol"
+  },
+  "edit": {
+    "title": "Editar rol"
+  },
+  "view": {
+    "title": "Rol dueño"
+  },
+  "rowActions": {
+    "duplicate": "Duplicar",
+    "view": "Ver permisos"
+  },
+  "duplicate": {
+    "success": "Se creó la copia «{{name}}»"
+  },
+  "form": {
+    "name": "Nombre",
+    "namePlaceholder": "Ej. Ventas, Coordinación de eventos",
+    "permissions": "Permisos",
+    "permissionsCaption": "Marcá lo que puede hacer este rol. Solo podés dar permisos que vos mismo tenés.",
+    "save": "Guardar",
+    "saved": "Rol guardado",
+    "loadError": "No se pudo cargar el rol",
+    "retry": "Reintentar",
+    "lockedNotice": "Es el rol dueño de la organización: tiene todos los permisos y no se puede editar, duplicar ni eliminar.",
+    "exceedsTitle": "No podés modificar este rol",
+    "exceedsNotice": "Tiene permisos que vos no tenés. Pedile a alguien con el rol dueño que lo modifique."
+  },
+  "conflict": {
+    "title": "Alguien más editó este rol",
+    "description": "Tus cambios siguen acá, sin guardar. Cargá la última versión para revisar las diferencias antes de guardar.",
+    "reload": "Cargar última versión",
+    "rebasedTitle": "Se cargó la última versión",
+    "rebasedDescription": "Conservamos lo que escribiste. Si guardás, reemplaza la versión actual con estos cambios:",
+    "rebasedNone": "Tus cambios coinciden con la última versión.",
+    "nameChanged": "Nombre distinto",
+    "added_one": "{{count}} permiso agregado",
+    "added_other": "{{count}} permisos agregados",
+    "removed_one": "{{count}} permiso quitado",
+    "removed_other": "{{count}} permisos quitados",
+    "rescoped_one": "{{count}} permiso con otro alcance",
+    "rescoped_other": "{{count}} permisos con otro alcance",
+    "discard": "Descartar mis cambios"
+  },
+  "delete": {
+    "confirmContent": "¿Eliminar el rol «{{name}}»?",
+    "inUseTitle": "Este rol tiene miembros",
+    "inUseContent_one": "{{count}} miembro tiene este rol. Asignale otro rol desde Usuarios y después eliminalo.",
+    "inUseContent_other": "{{count}} miembros tienen este rol. Asignales otro rol desde Usuarios y después eliminalo.",
+    "success": "Rol eliminado"
+  },
+  "validation": {
+    "nameRequired": "Nombre requerido",
+    "nameTooLong": "Máximo 60 caracteres",
+    "permissionUnknown": "Hay un permiso que ya no existe",
+    "permissionDuplicated": "Hay un permiso repetido",
+    "permissionScopeUnsupported": "Ese permiso no admite «solo los suyos»"
+  },
+  "matrix": {
+    "selectAll": "Todos",
+    "granted": "{{granted}}/{{total}}",
+    "scope": {
+      "label": "Alcance",
+      "own": "Propios",
+      "all": "Todos"
+    },
+    "groups": {
+      "operations": "Operación",
+      "catalog": "Catálogo",
+      "settings": "Configuración",
+      "administration": "Administración",
+      "other": "Otros"
+    },
+    "actions": {
+      "create": "Crear",
+      "read": "Ver",
+      "update": "Editar",
+      "delete": "Eliminar",
+      "disable": "Desactivar",
+      "enable": "Reactivar",
+      "duplicate": "Duplicar",
+      "upload_attachment": "Subir comprobante",
+      "view": "Ver sección",
+      "manage_selections": "Elegir opciones del evento",
+      "manage_line_pricing": "Personalizar cantidad y precio de línea",
+      "manage_staff_assignments": "Asignar o quitar staff del evento",
+      "manage_assignment": "Reasignar a otro usuario",
+      "regenerate_pdf": "Regenerar PDF",
+      "view_archived": "Ver archivadas",
+      "view_summary": "Ver métricas del mes",
+      "view_quotes_chart": "Ver gráfica de cotizaciones",
+      "view_top_products": "Ver estaciones más pedidas",
+      "reschedule": "Reprogramar",
+      "view_reschedules": "Ver reprogramaciones",
+      "list": "Ver listado",
+      "set-password": "Enviar link de contraseña"
+    },
+    "resources": {
+      "dashboard": {
+        "label": "Panel",
+        "caption": "Métricas de la pantalla de inicio."
+      },
+      "event": {
+        "label": "Eventos",
+        "caption": "Eventos, su programación y detalles."
+      },
+      "payment": {
+        "label": "Pagos",
+        "caption": "Pagos de los eventos y sus comprobantes."
+      },
+      "client": {
+        "label": "Clientes",
+        "caption": "Clientes y sus datos de contacto."
+      },
+      "quote": {
+        "label": "Cotizaciones",
+        "caption": "Cotizaciones y el armador de cotizaciones."
+      },
+      "pipeline": {
+        "label": "Pipeline",
+        "caption": "Seguimiento de las cotizaciones por etapa."
+      },
+      "staff": {
+        "label": "Staff",
+        "caption": "Miembros del staff y sus asignaciones."
+      },
+      "product": {
+        "label": "Estaciones",
+        "caption": "Estaciones del catálogo y sus opciones."
+      },
+      "product_option": {
+        "label": "Ítems de estación",
+        "caption": "Ítems y secciones dentro de cada estación."
+      },
+      "price_tiers": {
+        "label": "Tarifas de precio",
+        "caption": "Precios por cantidad de personas de cada estación."
+      },
+      "event_type": {
+        "label": "Tipos de evento",
+        "caption": "Tipos de evento usados en las cotizaciones."
+      },
+      "reschedule_reason": {
+        "label": "Motivos de reprogramación",
+        "caption": "Motivos que se eligen al reprogramar un evento.",
+        "actions": {
+          "read": "Usar al reprogramar"
+        }
+      },
+      "tax_rates": {
+        "label": "Impuestos",
+        "caption": "Tasas de impuesto por estado."
+      },
+      "quote_defaults": {
+        "label": "Valores por defecto",
+        "caption": "Depósito, validez, mínimo de personas y consecutivo de cotizaciones nuevas."
+      },
+      "quote_stages": {
+        "label": "Estados de cotización",
+        "caption": "Nombres y colores de los estados del pipeline."
+      },
+      "catalog_preferences": {
+        "label": "Preferencias de catálogo",
+        "caption": "Orden del catálogo de estaciones."
+      },
+      "quote_pdf_template": {
+        "label": "Plantilla de PDF",
+        "caption": "Textos fijos del PDF de cada cotización."
+      },
+      "quote_builder_preferences": {
+        "label": "Preferencias del armador",
+        "caption": "Cómo se eligen las opciones al cotizar."
+      },
+      "pipeline_preferences": {
+        "label": "Preferencias del pipeline",
+        "caption": "Opciones de la vista de pipeline."
+      },
+      "role": {
+        "label": "Roles",
+        "caption": "Roles de la organización y sus permisos."
+      },
+      "user": {
+        "label": "Usuarios",
+        "caption": "Usuarios de la organización y su acceso."
+      }
+    }
+  }
+}

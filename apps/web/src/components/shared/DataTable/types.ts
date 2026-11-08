@@ -31,6 +31,7 @@ export interface RowAction {
   label?: string;
   icon?: ReactNode;
   danger?: boolean;
+  disabled?: boolean;
   onClick: () => void;
   guard?: PermissionCheck;
   confirm?: RowActionConfirm;

@@ -20,6 +20,7 @@ import esPayments from '@/locales/es/payments.json';
 import esNotifications from '@/locales/es/notifications.json';
 import esSupport from '@/locales/es/support.json';
 import esTenant from '@/locales/es/tenant.json';
+import esRoles from '@/locales/es/roles.json';
 import enCommon from '@/locales/en/common.json';
 import enApi from '@/locales/en/api.json';
 import enAuth from '@/locales/en/auth.json';
@@ -38,6 +39,7 @@ import enPayments from '@/locales/en/payments.json';
 import enNotifications from '@/locales/en/notifications.json';
 import enSupport from '@/locales/en/support.json';
 import enTenant from '@/locales/en/tenant.json';
+import enRoles from '@/locales/en/roles.json';
 
 export const locales = LOCALES;
 export type Locale = AppLocale;
@@ -64,6 +66,7 @@ i18n.use(initReactI18next).init({
       notifications: esNotifications,
       support: esSupport,
       tenant: esTenant,
+      roles: esRoles,
     },
     en: {
       common: enCommon,
@@ -84,6 +87,7 @@ i18n.use(initReactI18next).init({
       notifications: enNotifications,
       support: enSupport,
       tenant: enTenant,
+      roles: enRoles,
     },
   },
   lng: defaultLocale,
@@ -107,6 +111,7 @@ i18n.use(initReactI18next).init({
     'notifications',
     'support',
     'tenant',
+    'roles',
   ],
   defaultNS: 'common',
   interpolation: { escapeValue: false },

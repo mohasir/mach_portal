@@ -1,0 +1,203 @@
+{
+  "title": "Roles",
+  "index": {
+    "add": "New role"
+  },
+  "columns": {
+    "name": "Name",
+    "members": "Members",
+    "updatedAt": "Last edited"
+  },
+  "members_one": "{{count}} member",
+  "members_other": "{{count}} members",
+  "ownerTag": "Owner role",
+  "empty": "No roles yet",
+  "create": {
+    "title": "New role"
+  },
+  "edit": {
+    "title": "Edit role"
+  },
+  "view": {
+    "title": "Owner role"
+  },
+  "rowActions": {
+    "duplicate": "Duplicate",
+    "view": "View permissions"
+  },
+  "duplicate": {
+    "success": "Created the copy “{{name}}”"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "E.g. Sales, Event coordination",
+    "permissions": "Permissions",
+    "permissionsCaption": "Check what this role can do. You can only grant permissions you hold yourself.",
+    "save": "Save",
+    "saved": "Role saved",
+    "loadError": "The role could not be loaded",
+    "retry": "Retry",
+    "lockedNotice": "This is the organization's owner role: it has every permission and cannot be edited, duplicated or deleted.",
+    "exceedsTitle": "You cannot change this role",
+    "exceedsNotice": "It holds permissions you do not have. Ask someone with the owner role to change it."
+  },
+  "conflict": {
+    "title": "Someone else edited this role",
+    "description": "Your changes are still here, unsaved. Load the latest version to review the differences before saving.",
+    "reload": "Load latest version",
+    "rebasedTitle": "Latest version loaded",
+    "rebasedDescription": "We kept what you typed. Saving replaces the current version with these changes:",
+    "rebasedNone": "Your changes match the latest version.",
+    "nameChanged": "Different name",
+    "added_one": "{{count}} permission added",
+    "added_other": "{{count}} permissions added",
+    "removed_one": "{{count}} permission removed",
+    "removed_other": "{{count}} permissions removed",
+    "rescoped_one": "{{count}} permission with a different scope",
+    "rescoped_other": "{{count}} permissions with a different scope",
+    "discard": "Discard my changes"
+  },
+  "delete": {
+    "confirmContent": "Delete the role “{{name}}”?",
+    "inUseTitle": "This role has members",
+    "inUseContent_one": "{{count}} member has this role. Assign them another role from Users, then delete it.",
+    "inUseContent_other": "{{count}} members have this role. Assign them another role from Users, then delete it.",
+    "success": "Role deleted"
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "nameTooLong": "60 characters at most",
+    "permissionUnknown": "A permission no longer exists",
+    "permissionDuplicated": "A permission is repeated",
+    "permissionScopeUnsupported": "That permission does not support \"own only\""
+  },
+  "matrix": {
+    "selectAll": "All",
+    "granted": "{{granted}}/{{total}}",
+    "scope": {
+      "label": "Scope",
+      "own": "Own",
+      "all": "All"
+    },
+    "groups": {
+      "operations": "Operations",
+      "catalog": "Catalog",
+      "settings": "Settings",
+      "administration": "Administration",
+      "other": "Other"
+    },
+    "actions": {
+      "create": "Create",
+      "read": "View",
+      "update": "Edit",
+      "delete": "Delete",
+      "disable": "Deactivate",
+      "enable": "Reactivate",
+      "duplicate": "Duplicate",
+      "upload_attachment": "Upload receipt",
+      "view": "View section",
+      "manage_selections": "Choose event options",
+      "manage_line_pricing": "Customize line quantity and price",
+      "manage_staff_assignments": "Assign or remove event staff",
+      "manage_assignment": "Reassign to another user",
+      "regenerate_pdf": "Regenerate PDF",
+      "view_archived": "View archived",
+      "view_summary": "View monthly metrics",
+      "view_quotes_chart": "View quotes chart",
+      "view_top_products": "View top requested stations",
+      "reschedule": "Reschedule",
+      "view_reschedules": "View reschedules",
+      "list": "View list",
+      "set-password": "Send password link"
+    },
+    "resources": {
+      "dashboard": {
+        "label": "Dashboard",
+        "caption": "Home screen metrics."
+      },
+      "event": {
+        "label": "Events",
+        "caption": "Events, their schedule and details."
+      },
+      "payment": {
+        "label": "Payments",
+        "caption": "Event payments and their receipts."
+      },
+      "client": {
+        "label": "Clients",
+        "caption": "Clients and their contact details."
+      },
+      "quote": {
+        "label": "Quotes",
+        "caption": "Quotes and the quote builder."
+      },
+      "pipeline": {
+        "label": "Pipeline",
+        "caption": "Quote follow-up by stage."
+      },
+      "staff": {
+        "label": "Staff",
+        "caption": "Staff members and their assignments."
+      },
+      "product": {
+        "label": "Stations",
+        "caption": "Catalog stations and their options."
+      },
+      "product_option": {
+        "label": "Station items",
+        "caption": "Items and sections inside each station."
+      },
+      "price_tiers": {
+        "label": "Price tiers",
+        "caption": "Prices by number of guests for each station."
+      },
+      "event_type": {
+        "label": "Event types",
+        "caption": "Event types used in quotes."
+      },
+      "reschedule_reason": {
+        "label": "Reschedule reasons",
+        "caption": "Reasons picked when rescheduling an event.",
+        "actions": {
+          "read": "Use when rescheduling"
+        }
+      },
+      "tax_rates": {
+        "label": "Tax rates",
+        "caption": "Tax rates by state."
+      },
+      "quote_defaults": {
+        "label": "Quote defaults",
+        "caption": "Deposit, validity, minimum guests and numbering for new quotes."
+      },
+      "quote_stages": {
+        "label": "Quote stages",
+        "caption": "Names and colors of the pipeline stages."
+      },
+      "catalog_preferences": {
+        "label": "Catalog preferences",
+        "caption": "Ordering of the station catalog."
+      },
+      "quote_pdf_template": {
+        "label": "Quote PDF template",
+        "caption": "Fixed texts printed on each quote PDF."
+      },
+      "quote_builder_preferences": {
+        "label": "Quote builder preferences",
+        "caption": "How options are picked while quoting."
+      },
+      "pipeline_preferences": {
+        "label": "Pipeline preferences",
+        "caption": "Options of the pipeline view."
+      },
+      "role": {
+        "label": "Roles",
+        "caption": "Organization roles and their permissions."
+      },
+      "user": {
+        "label": "Users",
+        "caption": "Organization users and their access."
+      }
+    }
+  }
+}

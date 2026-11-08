@@ -14,6 +14,7 @@ import {
   Package,
   ReceiptText,
   Settings,
+  ShieldCheck,
   UserCog,
   Users,
   Wallet,
@@ -43,6 +44,7 @@ export const IconMap: Record<string, ReactNode> = {
   settings: <Settings size={iconSize} />,
   more: <LayoutGrid size={iconSize} />,
   users: <UserCog size={iconSize} />,
+  roles: <ShieldCheck size={iconSize} />,
   faq: <CircleHelp size={iconSize} />,
   support: <Headset size={iconSize} />,
   logout: <LogOut size={iconSize} />,
@@ -58,4 +60,5 @@ export const IconCardOptionsMap: Record<string, StaticImageData> = {
   rescheduleReasons: optionGenericIcon,
   settings: optionGenericIcon,
   users: optionGenericIcon,
+  roles: optionGenericIcon,
 };

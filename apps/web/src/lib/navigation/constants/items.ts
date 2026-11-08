@@ -110,6 +110,13 @@ export const USERS_ITEM: NavItem = {
   guard: { user: ['list'] },
 };
 
+export const ROLES_ITEM: NavItem = {
+  label: 'nav.roles',
+  href: '/admin/roles',
+  icon: 'roles',
+  guard: { [RESOURCES.ROLE]: [READ] },
+};
+
 export const FAQ_ITEM: NavItem = {
   label: 'nav.faq',
   href: '/admin/faq',
@@ -138,6 +145,7 @@ export const NAV_ITEMS = {
   SETTINGS: SETTINGS_ITEM,
   OPTIONS: OPTIONS_ITEM,
   USERS: USERS_ITEM,
+  ROLES: ROLES_ITEM,
   FAQ: FAQ_ITEM,
   SUPPORT: SUPPORT_ITEM,
 } as const;
