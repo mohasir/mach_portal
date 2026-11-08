@@ -21,7 +21,7 @@ export class NotificationsRepository {
   ) {}
 
   // Visible to the caller's role (visibleTypes, resolved by the service from
-  // NOTIFICATION_TYPE_ROLES), not the notification's own excluded actor, and not dismissed by
+  // NOTIFICATION_TYPE_PERMISSION), not the notification's own excluded actor, and not dismissed by
   // this user (a per-user soft delete — see notificationReads.dismissedAt). Every call site
   // already joins notificationReads via readJoin(), so this reference is always safe.
   private audienceWhere(userId: string, visibleTypes: NotificationType[]) {

@@ -1,22 +1,22 @@
 import { TRPCError } from '@trpc/server';
-import { DEFAULT_ROLE, type RoleType } from '@repo/guards';
+import { scopeFor, type AccessGrants } from '@repo/guards';
 import type { NotificationsListQuery } from '@repo/schemas';
 import { paginationMeta } from '@repo/schemas';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import type { NotificationsRepository } from './notifications.repository';
 import {
-  NOTIFICATION_TYPE_ROLES,
+  NOTIFICATION_TYPE_PERMISSION,
   notificationCollectionResource,
   type NotificationType,
 } from './notifications.resource';
 
-// Better Auth sessions may carry a comma-separated multi-role string — same split
-// hasPermission() does in @repo/guards — so a user matches a type if any of their roles do.
-function visibleTypesForRole(role: string | null | undefined): NotificationType[] {
-  const userRoles = (role ?? DEFAULT_ROLE).split(',') as RoleType[];
-  return (Object.keys(NOTIFICATION_TYPE_ROLES) as NotificationType[]).filter((type) =>
-    NOTIFICATION_TYPE_ROLES[type].some((r) => userRoles.includes(r)),
-  );
+// The feed is tenant-wide (quote numbers, client names of any record), so an 'own' grant is not
+// enough: it would show records the role cannot otherwise read.
+function visibleTypes(access: AccessGrants): NotificationType[] {
+  return (Object.keys(NOTIFICATION_TYPE_PERMISSION) as NotificationType[]).filter((type) => {
+    const { resource, action } = NOTIFICATION_TYPE_PERMISSION[type];
+    return scopeFor(access, resource, action) === 'all';
+  });
 }
 
 function notFound() {
@@ -29,10 +29,10 @@ function notFound() {
 export class NotificationsService {
   constructor(private repo: NotificationsRepository) {}
 
-  async list(userId: string, role: string | null | undefined, query: NotificationsListQuery) {
+  async list(userId: string, access: AccessGrants, query: NotificationsListQuery) {
     const { items, total, paginate, page, pageSize, offset, limit } = await this.repo.findPaginated(
       userId,
-      visibleTypesForRole(role),
+      visibleTypes(access),
       query,
     );
     const resource = notificationCollectionResource(items);
@@ -42,8 +42,8 @@ export class NotificationsService {
     return { items: resource, pagination: paginationMeta(total, page, pageSize), nextCursor };
   }
 
-  async unreadCount(userId: string, role: string | null | undefined) {
-    return this.repo.countUnreadForUser(userId, visibleTypesForRole(role));
+  async unreadCount(userId: string, access: AccessGrants) {
+    return this.repo.countUnreadForUser(userId, visibleTypes(access));
   }
 
   async markRead(id: string, userId: string) {
@@ -56,8 +56,8 @@ export class NotificationsService {
     return { ok: true };
   }
 
-  async markAllRead(userId: string, role: string | null | undefined) {
-    await this.repo.markAllRead(userId, visibleTypesForRole(role));
+  async markAllRead(userId: string, access: AccessGrants) {
+    await this.repo.markAllRead(userId, visibleTypes(access));
     return { ok: true };
   }
 }

@@ -5,6 +5,7 @@ import { notificationsListQuerySchema } from '@repo/schemas';
 import { notificationReads, notifications } from '../../../db/schema';
 import {
   addMember,
+  addMemberWithGrants,
   createTestUser,
   resetDb,
   seedTwoTenants,
@@ -14,6 +15,7 @@ import {
 import { NotificationsRepository } from '../notifications.repository';
 import type { NotificationType } from '../notifications.resource';
 import { NotificationsService } from '../notifications.service';
+import { callerFor } from '../../../test/trpcCaller';
 
 const TYPES: NotificationType[] = [
   'quote_confirmed',
@@ -178,5 +180,35 @@ describe('notifications tenant isolation', () => {
       cause: { code: 'NOTIFICATION_NOT_FOUND' },
     });
     expect(await service.markRead(na.confirmedId, userId)).toEqual({ ok: true });
+  });
+
+  describe('audience follows the membership role, not user.role', () => {
+    async function unreadFor(role: 'superadmin' | 'admin' | 'operator', globalRole: string) {
+      const u = await createTestUser({ role: globalRole });
+      await addMember(u.id, a.id, role);
+      return callerFor(a, u).notifications.unreadCount();
+    }
+
+    it('admin and owner roles see the admin feed; operator sees nothing', async () => {
+      expect(await unreadFor('admin', 'member')).toBe(3);
+      expect(await unreadFor('superadmin', 'member')).toBe(3);
+      expect(await unreadFor('operator', 'admin')).toBe(0);
+    });
+
+    it('a custom role sees a type only with its permission at scope all', async () => {
+      // event.reschedule is one of the few permissions an 'own' scope can be stored on.
+      const own = await createTestUser({ role: 'admin' });
+      await addMemberWithGrants(own.id, a.id, [['event', 'reschedule', 'own']]);
+      expect(await callerFor(a, own).notifications.unreadCount()).toBe(0);
+      const rescheduler = await createTestUser();
+      await addMemberWithGrants(rescheduler.id, a.id, [['event', 'reschedule', 'all']]);
+      expect(await callerFor(a, rescheduler).notifications.unreadCount()).toBe(1);
+
+      const all = await createTestUser();
+      await addMemberWithGrants(all.id, a.id, [['quote', 'manage_assignment', 'all']]);
+      expect(await callerFor(a, all).notifications.unreadCount()).toBe(2);
+      const list = await callerFor(a, all).notifications.list(page());
+      expect(list.items.map((n) => n.id).sort()).toEqual([na.confirmedId, na.cancelledId].sort());
+    });
   });
 });
