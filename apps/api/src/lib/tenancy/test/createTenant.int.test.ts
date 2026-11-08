@@ -14,6 +14,7 @@ import {
   organization,
   productPriceTiers,
   products,
+  role,
   stateSettings,
   user,
   verification,
@@ -136,6 +137,18 @@ describe('createTenant', () => {
   });
 
   describe('a new tenant', () => {
+    it('has the 4 base roles, with exactly one owner', async () => {
+      const { tenantId } = await createTenant(input('acme'));
+      const roles = await testDb.select().from(role).where(eq(role.tenantId, tenantId));
+      expect(roles.map((r) => r.name).sort()).toEqual([
+        'Admin',
+        'Member',
+        'Operator',
+        'Superadmin',
+      ]);
+      expect(roles.filter((r) => r.isOwner).map((r) => r.name)).toEqual(['Superadmin']);
+    });
+
     it('has app_settings and state_settings, and config.get responds', async () => {
       const { tenantId } = await createTenant(input('acme'));
       expect(await rowsPerTenant('app_settings', tenantId)).toBe(1);
@@ -204,19 +217,26 @@ describe('createTenant', () => {
       expect(quote.number).toMatch(/-000001$/);
     });
 
-    it('makes the admin a member with role admin and returns a setup link on WEB_APP_URL', async () => {
+    it('makes the admin a member holding the owner role and returns a setup link on WEB_APP_URL', async () => {
       const { tenantId, setupUrl } = await createTenant(input('acme', 'Boss@Acme.test'));
       const admin = await accountByEmail('boss@acme.test');
       expect(admin).toMatchObject({
         name: 'Admin acme',
-        role: 'admin',
         mustChangePassword: true,
         isPlatformAdmin: false,
       });
 
+      const [owner] = await testDb
+        .select()
+        .from(role)
+        .where(and(eq(role.tenantId, tenantId), eq(role.isOwner, true)));
       const memberships = await testDb.select().from(member).where(eq(member.userId, admin!.id));
       expect(memberships).toEqual([
-        expect.objectContaining({ organizationId: tenantId, role: 'admin' }),
+        expect.objectContaining({
+          organizationId: tenantId,
+          role: 'superadmin',
+          roleId: owner!.id,
+        }),
       ]);
 
       expect(setupUrl).toMatch(
@@ -251,7 +271,7 @@ describe('createTenant', () => {
       });
     });
 
-    it('attaches it as admin member without touching its credentials; setupUrl is null', async () => {
+    it('attaches it as owner member without touching its credentials; setupUrl is null', async () => {
       const { user: existing } = await auth.api.signUpEmail({
         body: { name: 'Already here', email: 'known@acme.test', password: 'known-password-123' },
       });
@@ -268,10 +288,9 @@ describe('createTenant', () => {
       expect(await countOf(user)).toBe(1);
       const memberships = await testDb.select().from(member).where(eq(member.userId, existing.id));
       expect(memberships).toEqual([
-        expect.objectContaining({ organizationId: tenantId, role: 'admin' }),
+        expect.objectContaining({ organizationId: tenantId, role: 'superadmin' }),
       ]);
-      // Without any other membership the global role (what authorizes) follows.
-      expect(after!.role).toBe('admin');
+      expect(after!.role).toBe('operator');
     });
 
     it('keeps the global role of an account that belongs to another tenant', async () => {
@@ -291,7 +310,7 @@ describe('createTenant', () => {
         .from(member)
         .where(eq(member.userId, existing.id));
       expect(roles).toHaveLength(2);
-      expect(roles).toContainEqual({ org: tenantId, role: 'admin' });
+      expect(roles).toContainEqual({ org: tenantId, role: 'superadmin' });
       expect(roles).toContainEqual({ org: other.id, role: 'operator' });
     });
   });

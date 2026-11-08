@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { member } from '../../../db/schema';
 import { addMember, createTestTenant, createTestUser, resetDb, testDb } from '../../../test/db';
+import { seedTenantRoles } from '../../rbac/seedTenantRoles';
 import { TenancyRepository } from '../tenancy.repository';
 
 describe('TenancyRepository', () => {
@@ -84,20 +85,25 @@ describe('TenancyRepository', () => {
   it('sees uncommitted writes only when bound to the caller transaction', async () => {
     const u = await createTestUser();
     const a = await createTestTenant('a');
-    await testDb
+    const roles = await seedTenantRoles(a.id, testDb);
+    const rollback = new Error('rollback');
+    const outcome = await testDb
       .transaction(async (tx) => {
         await tx.insert(member).values({
           id: randomUUID(),
           userId: u.id,
           organizationId: a.id,
           role: 'member',
+          roleId: roles.member,
           createdAt: new Date(),
         });
         await expect(new TenancyRepository(tx).isMemberOf(u.id, a.id)).resolves.toBe(true);
         await expect(repo.isMemberOf(u.id, a.id)).resolves.toBe(false);
-        throw new Error('rollback');
+        throw rollback;
       })
-      .catch(() => undefined);
+      .catch((e: unknown) => e);
+    // Anything else than the deliberate rollback means an assertion or the insert failed.
+    expect(outcome).toBe(rollback);
     await expect(repo.isMemberOf(u.id, a.id)).resolves.toBe(false);
   });
 });

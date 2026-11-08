@@ -1,0 +1,1 @@
+ALTER TABLE "member" ALTER COLUMN "role_id" SET NOT NULL;

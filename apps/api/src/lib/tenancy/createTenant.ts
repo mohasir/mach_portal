@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import { and, count, eq, like, notExists, sql } from 'drizzle-orm';
+import { and, eq, like, notExists, sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { ROLES } from '@repo/guards';
 import { db } from '../../db';
@@ -8,6 +8,7 @@ import { seedTenantDefaults } from '../../db/seeds/defaults';
 import { lockUserEmail } from '../../db/locks';
 import { env } from '../../env';
 import { auth } from '../auth';
+import { legacyMemberRole, seedTenantRoles } from '../rbac/seedTenantRoles';
 import { AppError, ErrorCodes, isPgError, PG_UNIQUE_VIOLATION } from '../errors';
 import { isValidSlug, normalizeSlug } from './slug';
 
@@ -100,27 +101,16 @@ export async function createTenant(input: CreateTenantInput): Promise<CreateTena
       await tx.insert(organization).values({ id: tenantId, name, slug, createdAt: new Date() });
       await seedTenantDefaults(tenantId, tx);
 
-      const [{ n: otherMemberships }] = (await tx
-        .select({ n: count() })
-        .from(member)
-        .where(eq(member.userId, account.id))) as [{ n: number }];
+      const roleIds = await seedTenantRoles(tenantId, tx);
       await tx.insert(member).values({
         id: randomUUID(),
         userId: account.id,
-        role: ROLES.ADMIN,
+        role: legacyMemberRole(ROLES.SUPERADMIN),
+        roleId: roleIds[ROLES.SUPERADMIN],
         createdAt: new Date(),
         organizationId: tenantId,
       });
 
-      // Authorization reads the global user.role, not member.role; it is only rewritten when
-      // no other tenant depends on it and the account is not a platform admin.
-      const [target] = await tx
-        .select({ isPlatformAdmin: user.isPlatformAdmin })
-        .from(user)
-        .where(eq(user.id, account.id));
-      if (otherMemberships === 0 && !target?.isPlatformAdmin) {
-        await tx.update(user).set({ role: ROLES.ADMIN }).where(eq(user.id, account.id));
-      }
       if (!account.created) return { tenantId, token: null };
 
       await tx.update(user).set({ mustChangePassword: true }).where(eq(user.id, account.id));
