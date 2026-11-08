@@ -64,6 +64,8 @@ Ventana de mantenimiento con **escrituras bloqueadas** (web en modo mantenimient
    ```
    Comprueba que existen las 9 constraints que la migración elimina, que `app_settings` no tiene filas distintas de `id = 1`, duplicados contra las futuras claves por tenant, y avisa de roles tipo `super admin` que no sean exactamente `superadmin` (esos usuarios no serían administradores de plataforma).
 
+   Con las migraciones de roles (0002–0004) también avisa de las organizaciones sin ningún miembro `superadmin`: tras migrar quedarían sin dueño y un administrador de plataforma debe asignar el rol dueño con `users.update`. Las migraciones 0002–0004 se aplican con la app detenida y el código nuevo se despliega en el mismo paso (ver `docs/backend/architecture.md` §8).
+
    **Revisar la lista `superadmins:`** que imprime. Un administrador de plataforma puede seleccionar **cualquier** organización, así que el personal `superadmin` del cliente **no** debe recibir ese flag (siguen siendo `superadmin` dentro de su propio tenant). Elegir solo las cuentas del equipo de plataforma y comprobar la lista (case-insensitive, separada por comas; falla si un email no existe):
    ```bash
    pnpm --filter api mt:verify --pre --platform-admin-emails=<a@x,b@y> >> verify-pre.txt
