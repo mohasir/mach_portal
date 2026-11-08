@@ -8,6 +8,7 @@ import { RoleTag } from '@/components/shared/RoleTag';
 import { useCanSwitchTenant, useSignOut } from '@/features/tenant';
 import { useSession } from '@/lib/auth/client';
 import { SELECT_ORGANIZATION_ROUTE } from '@/lib/auth/navigation';
+import { useCurrentRole } from '@/lib/auth/useCan';
 
 export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation('admin');
@@ -16,7 +17,7 @@ export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   const router = useRouter();
   const { data } = useSession();
   const user = data?.user;
-  const role = (user as { role?: string | null } | undefined)?.role;
+  const role = useCurrentRole();
 
   const onLogout = useSignOut();
 

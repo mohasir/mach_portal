@@ -2,7 +2,6 @@
 import { Button, Flex, Result, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { AvatarUser } from '@/components/shared/AvatarUser';
-import { RoleTag } from '@/components/shared/RoleTag';
 import { useSignOut } from '@/features/tenant';
 import { useSession } from '@/lib/auth/client';
 
@@ -11,7 +10,6 @@ export function AccountLocked() {
   const { t: ta } = useTranslation('admin');
   const { data } = useSession();
   const user = data?.user;
-  const role = (user as { role?: string | null } | undefined)?.role;
 
   const onSignOut = useSignOut();
 
@@ -31,7 +29,6 @@ export function AccountLocked() {
           <Typography.Text className="text-navy block truncate text-base font-medium">
             {ta('topbar.greeting', { name: user?.name ?? user?.email ?? '' })}
           </Typography.Text>
-          <RoleTag role={role} />
         </div>
       </Flex>
 

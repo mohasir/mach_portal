@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { SectionMenuItem } from '@/components/shared/SectionMenu';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
-import { useIsSuperAdmin } from '@/lib/auth/useIsSuperAdmin';
 import { useCan } from '@/lib/auth/useCan';
 import { useLayoutStore } from '@/lib/stores/layout.store';
 import { SettingsPageDesktop } from './SettingsPageDesktop';
@@ -28,7 +27,6 @@ export type MobileSettingsSection = Exclude<SettingsSection, 'profile'> | 'profi
 export function SettingsPage() {
   const { t } = useTranslation('settings');
   const router = useRouter();
-  const isSuperAdmin = useIsSuperAdmin();
   const can = useCan();
   const isDesktop = useIsDesktop();
   const [section, setSection] = useState<SettingsSection>('profile');
@@ -59,9 +57,7 @@ export function SettingsPage() {
     { key: 'profile', label: t('profile.title'), group: t('groups.account') },
     { key: 'userPreferences', label: t('userPreferences.title'), group: t('groups.account') },
     { key: 'security', label: t('security.title'), group: t('groups.account') },
-    ...(isSuperAdmin
-      ? [{ key: 'permissions', label: t('permissions.title'), group: t('groups.access') }]
-      : []),
+    { key: 'permissions', label: t('permissions.title'), group: t('groups.access') },
     ...(canViewGeneral
       ? [{ key: 'general', label: t('general.title'), group: t('groups.system') }]
       : []),
@@ -85,7 +81,6 @@ export function SettingsPage() {
     return (
       <SettingsPageMobile
         menuItems={menuItems}
-        isSuperAdmin={isSuperAdmin}
         section={mobileSection}
         onSelectSection={selectMobileSection}
         onBack={() => setMobileSection(null)}
@@ -94,11 +89,6 @@ export function SettingsPage() {
   }
 
   return (
-    <SettingsPageDesktop
-      menuItems={menuItems}
-      isSuperAdmin={isSuperAdmin}
-      section={section}
-      onSelectSection={selectSection}
-    />
+    <SettingsPageDesktop menuItems={menuItems} section={section} onSelectSection={selectSection} />
   );
 }

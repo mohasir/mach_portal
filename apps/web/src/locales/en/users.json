@@ -21,7 +21,7 @@
     "save": "Save"
   },
   "roles": {
-    "superadmin": "Superadmin",
+    "owner": "Owner",
     "admin": "Admin",
     "operator": "Operator",
     "member": "Member"

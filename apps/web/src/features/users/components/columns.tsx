@@ -66,7 +66,7 @@ export function useUsersColumns({
       title: t('columns.role'),
       dataIndex: 'role',
       key: 'role',
-      render: (role: string | null) => (role ? <RoleTag role={role} /> : '—'),
+      render: (role: User['role']) => <RoleTag role={role} />,
     },
     {
       title: t('columns.sessions'),
