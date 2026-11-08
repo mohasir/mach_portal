@@ -1,15 +1,15 @@
 import { TRPCClientError } from '@trpc/client';
 import { describe, expect, it } from 'vitest';
-import { getApiErrorCode, isTenantAccessError } from '../apiErrorCode';
+import { getApiErrorCode, isPermissionDeniedError, isTenantAccessError } from '../apiErrorCode';
 
 const trpcError = (data: Record<string, unknown>) =>
   Object.assign(new TRPCClientError('boom'), { data });
 
 describe('getApiErrorCode', () => {
   it('prefers the domain errorCode over the tRPC code', () => {
-    expect(getApiErrorCode(trpcError({ errorCode: 'TENANT_NOT_SELECTED', code: 'FORBIDDEN' }))).toBe(
-      'TENANT_NOT_SELECTED',
-    );
+    expect(
+      getApiErrorCode(trpcError({ errorCode: 'TENANT_NOT_SELECTED', code: 'FORBIDDEN' })),
+    ).toBe('TENANT_NOT_SELECTED');
   });
 
   it('falls back to the tRPC code when there is no domain code', () => {
@@ -28,10 +28,29 @@ describe('isTenantAccessError', () => {
   });
 
   it('ignores other errors, including a plain NOT_FOUND', () => {
-    expect(isTenantAccessError(trpcError({ errorCode: 'QUOTE_NOT_FOUND', code: 'NOT_FOUND' }))).toBe(
-      false,
-    );
+    expect(
+      isTenantAccessError(trpcError({ errorCode: 'QUOTE_NOT_FOUND', code: 'NOT_FOUND' })),
+    ).toBe(false);
     expect(isTenantAccessError(trpcError({ errorCode: null, code: 'NOT_FOUND' }))).toBe(false);
     expect(isTenantAccessError(new Error('x'))).toBe(false);
+  });
+});
+
+describe('isPermissionDeniedError', () => {
+  it('detects a FORBIDDEN with no domain code (a permission gate)', () => {
+    expect(isPermissionDeniedError(trpcError({ errorCode: null, code: 'FORBIDDEN' }))).toBe(true);
+  });
+
+  it('ignores FORBIDDEN errors that carry their own domain code, and other errors', () => {
+    expect(
+      isPermissionDeniedError(trpcError({ errorCode: 'TENANT_NOT_SELECTED', code: 'FORBIDDEN' })),
+    ).toBe(false);
+    expect(
+      isPermissionDeniedError(
+        trpcError({ errorCode: 'USER_MUST_CHANGE_PASSWORD', code: 'FORBIDDEN' }),
+      ),
+    ).toBe(false);
+    expect(isPermissionDeniedError(trpcError({ errorCode: null, code: 'NOT_FOUND' }))).toBe(false);
+    expect(isPermissionDeniedError(new Error('x'))).toBe(false);
   });
 });

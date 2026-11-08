@@ -21,10 +21,15 @@
   },
   "gate": {
     "errorTitle": "We couldn't load the organization",
+    "permissionsErrorTitle": "We couldn't load your permissions",
     "errorSubtitle": "Please try again in a moment.",
     "retry": "Retry"
   },
   "menu": {
     "switch": "Switch organization"
+  },
+  "permissions": {
+    "changed": "Your role changed: what you can see and do has been updated.",
+    "lost": "You no longer have access to this organization. Pick another one or ask an administrator for access."
   }
 }

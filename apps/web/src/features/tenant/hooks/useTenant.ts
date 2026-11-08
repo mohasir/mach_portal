@@ -23,6 +23,19 @@ export function useActiveTenant() {
   return useQuery({ ...trpc.tenant.active.queryOptions(), staleTime: 0 });
 }
 
+// Shares the `tenant.active` cache without refetching on every mount: it is read by every
+// permission check, and the gate's own observer already keeps it revalidated.
+export function useActiveOrganizationId() {
+  const trpc = useTRPC();
+  const { data } = useQuery({
+    ...trpc.tenant.active.queryOptions(),
+    staleTime: 0,
+    refetchOnMount: false,
+    select: (tenant) => tenant?.id,
+  });
+  return data;
+}
+
 export function useIsPlatformAdmin() {
   const { data } = useSession();
   return (data?.user as { isPlatformAdmin?: boolean | null } | undefined)?.isPlatformAdmin === true;

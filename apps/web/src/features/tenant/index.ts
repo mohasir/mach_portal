@@ -8,6 +8,13 @@ export {
   useMemberships,
   useSelectTenant,
 } from './hooks/useTenant';
+export { usePermissions, usePermissionsSync } from './hooks/usePermissions';
+export {
+  createPermissionsFetch,
+  handlePermissionDenial,
+  watchPermissionsChanges,
+  type PermissionsFilters,
+} from './permissions';
 export { broadcastSessionChange } from './sync';
 export { useSignOut } from './hooks/useSignOut';
 export { useTenantSync } from './hooks/useTenantSync';
