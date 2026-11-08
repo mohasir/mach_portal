@@ -15,7 +15,7 @@ export type ResourceGrant<Action> = Action[] | { actions: Action[]; scope: Resou
 // core/access-control.ts) so each resource's array type is pinned to exactly the
 // actions declared for THAT resource — not the full cross-resource action union.
 // Without this, granting `upload_attachment` on `event` would widen every other
-// resource's allowed values too, and better-auth's `ac.newRole()` rejects that.
+// resource's allowed values too, so a template could grant an action its resource lacks.
 // `user` is better-auth's own resource (merged in separately via `defaultStatements`,
 // see access-control.ts) — it lives outside `permissionsMatrix`, so it's added here as
 // its own optional grant instead of widening the domain resources' mapped type above.
