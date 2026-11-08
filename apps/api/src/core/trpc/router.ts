@@ -14,9 +14,11 @@ import { paymentsRouter } from '../../modules/payments/payments.router';
 import { templatesRouter } from '../../modules/templates/templates.router';
 import { notificationsRouter } from '../../modules/notifications/notifications.router';
 import { tenantRouter } from '../../modules/tenant/tenant.router';
+import { rolesRouter } from '../../modules/roles/roles.router';
 
 export const appRouter = router({
   tenant: tenantRouter,
+  roles: rolesRouter,
   dashboard: dashboardRouter,
   users: usersRouter,
   userPreferences: userPreferencesRouter,
