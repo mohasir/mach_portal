@@ -32,3 +32,29 @@ export function filterOrganizations<T extends Pick<Organization, 'name' | 'slug'
     (org) => org.name.toLowerCase().includes(needle) || org.slug.toLowerCase().includes(needle),
   );
 }
+
+export type GateState = 'loading' | 'redirect' | 'tenantError' | 'permissionsError' | 'ready';
+
+/**
+ * Loaded permissions win over a failed refetch: a background error must not blank a screen the
+ * user is already working on.
+ */
+export function resolveGateState({
+  tenantPending,
+  tenantError,
+  tenant,
+  hasPermissions,
+  permissionsError,
+}: {
+  tenantPending: boolean;
+  tenantError: boolean;
+  tenant: { id: string } | null | undefined;
+  hasPermissions: boolean;
+  permissionsError: boolean;
+}): GateState {
+  if (tenantError) return 'tenantError';
+  if (tenantPending || tenant === undefined) return 'loading';
+  if (tenant === null) return 'redirect';
+  if (hasPermissions) return 'ready';
+  return permissionsError ? 'permissionsError' : 'loading';
+}

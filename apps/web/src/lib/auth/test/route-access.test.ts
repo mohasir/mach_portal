@@ -20,4 +20,10 @@ describe('resolveRouteAccess', () => {
       [RESOURCES.RESCHEDULE_REASON]: [ACTIONS.VIEW],
     });
   });
+
+  it('requires ROLE:READ on the roles editor', () => {
+    expect(resolveRouteAccess('/admin/roles')).toEqual({
+      [RESOURCES.ROLE]: [ACTIONS.READ],
+    });
+  });
 });

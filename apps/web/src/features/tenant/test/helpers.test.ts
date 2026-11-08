@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { canSwitchTenant, filterOrganizations, shouldAutoSelect } from '../helpers';
+import {
+  canSwitchTenant,
+  filterOrganizations,
+  resolveGateState,
+  shouldAutoSelect,
+} from '../helpers';
 
 describe('canSwitchTenant', () => {
   it('is true with more than one membership or for a platform admin', () => {
@@ -40,5 +45,39 @@ describe('filterOrganizations', () => {
 
   it('returns everything for an empty query', () => {
     expect(filterOrganizations(items, ' ')).toEqual(items);
+  });
+});
+
+describe('resolveGateState', () => {
+  const ready = {
+    tenantPending: false,
+    tenantError: false,
+    tenant: { id: 'a' },
+    hasPermissions: true,
+    permissionsError: false,
+  };
+
+  it('renders only with an organization and its permissions', () => {
+    expect(resolveGateState(ready)).toBe('ready');
+  });
+
+  it('keeps loading while the organization or the permissions are on their way', () => {
+    expect(resolveGateState({ ...ready, tenantPending: true, tenant: undefined })).toBe('loading');
+    expect(resolveGateState({ ...ready, hasPermissions: false })).toBe('loading');
+  });
+
+  it('sends the user to pick an organization when none is active', () => {
+    expect(resolveGateState({ ...ready, tenant: null, hasPermissions: false })).toBe('redirect');
+  });
+
+  it('reports which load failed', () => {
+    expect(resolveGateState({ ...ready, tenantError: true })).toBe('tenantError');
+    expect(resolveGateState({ ...ready, hasPermissions: false, permissionsError: true })).toBe(
+      'permissionsError',
+    );
+  });
+
+  it('keeps rendering with loaded permissions when a later refetch fails', () => {
+    expect(resolveGateState({ ...ready, permissionsError: true })).toBe('ready');
   });
 });

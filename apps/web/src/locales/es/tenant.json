@@ -21,10 +21,15 @@
   },
   "gate": {
     "errorTitle": "No se pudo cargar la organización",
+    "permissionsErrorTitle": "No se pudieron cargar tus permisos",
     "errorSubtitle": "Intentá de nuevo en unos momentos.",
     "retry": "Reintentar"
   },
   "menu": {
     "switch": "Cambiar de organización"
+  },
+  "permissions": {
+    "changed": "Tu rol cambió: actualizamos lo que podés ver y hacer.",
+    "lost": "Ya no tenés acceso a esta organización. Elegí otra o pedile acceso a un administrador."
   }
 }

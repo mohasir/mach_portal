@@ -12,6 +12,11 @@ export function useUsersList(query: UsersListQuery, enabled = true) {
   });
 }
 
+export function useAssignableRoles() {
+  const trpc = useTRPC();
+  return useQuery(trpc.roles.assignable.queryOptions());
+}
+
 export function useCreateUser() {
   const trpc = useTRPC();
   const qc = useQueryClient();

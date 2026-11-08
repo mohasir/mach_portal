@@ -9,7 +9,7 @@ interface CanProps {
   children: ReactNode;
 }
 
-/** Renderiza `children` solo si la sesión tiene los permisos; si no, `fallback`. */
+/** Renders `children` only when the loaded permissions allow it; otherwise `fallback`. */
 export function Can({ allowed, fallback = null, children }: CanProps) {
   const can = useCan();
   return <>{can(allowed) ? children : fallback}</>;

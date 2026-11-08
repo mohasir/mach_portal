@@ -39,7 +39,6 @@ const MOBILE_SECTION_ICONS: Record<MobileSettingsSection, typeof UserPen> = {
 
 interface SettingsPageMobileProps {
   menuItems: SectionMenuItem[];
-  isSuperAdmin: boolean;
   section: MobileSettingsSection | null;
   onSelectSection: (section: MobileSettingsSection) => void;
   onBack: () => void;
@@ -47,7 +46,6 @@ interface SettingsPageMobileProps {
 
 export function SettingsPageMobile({
   menuItems,
-  isSuperAdmin,
   section,
   onSelectSection,
   onBack,
@@ -71,7 +69,7 @@ export function SettingsPageMobile({
         {section === 'general' && <GeneralSettingsForm />}
         {section === 'preferences' && <PreferencesSettingsForm />}
         {section === 'quotePdfTemplate' && <QuotePdfTemplateForm />}
-        {section === 'permissions' && isSuperAdmin && <PermissionsSettingsForm />}
+        {section === 'permissions' && <PermissionsSettingsForm />}
         {section === 'about' && <AboutSettingsForm />}
       </div>
     );

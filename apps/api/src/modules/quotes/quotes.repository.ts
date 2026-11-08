@@ -124,7 +124,7 @@ export class QuotesRepository {
     return and(eq(quotes.id, id), tenantEq(quotes, this.tenantId));
   }
 
-  // 'own' scope (resolveResourceScope) = created it OR it's assigned to me.
+  // 'own' scope (scopeFor) = created it OR it's assigned to me.
   private ownerFilter(ownerId?: string): SQL | undefined {
     return ownerId
       ? or(eq(quotes.createdById, ownerId), eq(quotes.assignedToId, ownerId))

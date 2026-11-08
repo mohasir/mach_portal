@@ -1,10 +1,17 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { ACTIONS, RESOURCES, type PermissionCheck } from '@repo/guards';
+import { ACTIONS, RESOURCES, type PermissionCheck, type RoleType } from '@repo/guards';
 import { db } from '../../../../db';
-import { member, organization, platformAccessLog, user } from '../../../../db/schema';
+import {
+  member,
+  organization,
+  platformAccessLog,
+  role,
+  rolePermission,
+  user,
+} from '../../../../db/schema';
 import { auth } from '../../../../lib/auth';
 import { invalidateTenantCache } from '../../../../lib/tenancy/tenantResolver';
 import {
@@ -12,12 +19,25 @@ import {
   signInCookie,
   signInWithActiveOrg,
 } from '../../../../test/authHelpers';
-import { addMember, createTestTenant, resetDb } from '../../../../test/db';
+import {
+  addMember,
+  createTestTenant,
+  pointMemberAtForeignRole,
+  resetDb,
+} from '../../../../test/db';
 import { guardedProcedure, router } from '../../../trpc/trpc';
 import { createContext } from '../../../trpc/context';
 import { guardTenantSession } from '../guardTenantSession';
 
 const NEEDS: PermissionCheck = { [RESOURCES.TAX_RATES]: [ACTIONS.UPDATE] };
+const UPLOAD: PermissionCheck = { [RESOURCES.PAYMENT]: [ACTIONS.UPLOAD_ATTACHMENT] };
+
+function trpcContext(cookie?: string) {
+  return createContext({
+    req: { headers: cookie ? { cookie } : {} },
+    res: { setHeader: () => undefined },
+  } as unknown as CreateExpressContextOptions);
+}
 
 type Opts = { role?: string; isPlatformAdmin?: boolean; mustChangePassword?: boolean };
 
@@ -98,6 +118,7 @@ describe('guardTenantSession', () => {
     await addMember(id, a.id);
     const cookie = await signInCookie('m@test.local');
     await db.delete(member);
+    await db.delete(role).where(eq(role.tenantId, a.id));
     await db.delete(organization).where(eq(organization.id, a.id));
     invalidateTenantCache();
     const r = await run(guard, { cookie });
@@ -109,7 +130,7 @@ describe('guardTenantSession', () => {
   it('403 FORBIDDEN for a member removed from the active organization (checked on every request)', async () => {
     const { a } = await setup();
     const id = await createUserWithPassword('m@test.local');
-    await addMember(id, a.id);
+    await addMember(id, a.id, 'admin');
     const cookie = await signInCookie('m@test.local');
     const before = await run(guard, { cookie });
     expect(before.next).toHaveBeenCalledTimes(1);
@@ -122,10 +143,10 @@ describe('guardTenantSession', () => {
     expect(r.locals['userId']).toBeUndefined();
   });
 
-  it('403 FORBIDDEN for a member whose role lacks the permission', async () => {
+  it('403 FORBIDDEN for a member whose membership role lacks the permission, whatever user.role says', async () => {
     const { a } = await setup();
-    const id = await createUserWithPassword('m@test.local', { role: 'member' });
-    await addMember(id, a.id);
+    const id = await createUserWithPassword('m@test.local', { role: 'superadmin' });
+    await addMember(id, a.id, 'member');
     const cookie = await signInCookie('m@test.local');
     const r = await run(guard, { cookie });
     expect(r.status).toBe(403);
@@ -133,10 +154,22 @@ describe('guardTenantSession', () => {
     expect(r.next).not.toHaveBeenCalled();
   });
 
-  it('calls next with tenantId and userId for a member with the permission', async () => {
+  it('403 FORBIDDEN for a member whose role belongs to another organization (fail closed)', async () => {
     const { a } = await setup();
     const id = await createUserWithPassword('m@test.local');
-    await addMember(id, a.id);
+    await addMember(id, a.id, 'admin');
+    await pointMemberAtForeignRole(id, a.id);
+    const cookie = await signInCookie('m@test.local');
+    const r = await run(guard, { cookie });
+    expect(r.status).toBe(403);
+    expect(r.body).toEqual({ errorCode: 'FORBIDDEN' });
+    expect(r.next).not.toHaveBeenCalled();
+  });
+
+  it('calls next with tenantId and userId for a member whose membership role has the permission', async () => {
+    const { a } = await setup();
+    const id = await createUserWithPassword('m@test.local', { role: 'member' });
+    await addMember(id, a.id, 'admin');
     const cookie = await signInCookie('m@test.local');
     const r = await run(guard, { cookie, method: 'POST' });
     expect(r.status).toBeNull();
@@ -158,9 +191,9 @@ describe('guardTenantSession', () => {
   });
 
   describe('platform admin without membership', () => {
-    it('passes as superadmin: one row for the first GET, then one per mutation', async () => {
+    it('passes as owner: one row for the first GET, then one per mutation', async () => {
       const { a } = await setup();
-      // A role without the permission proves the superadmin role is the effective one.
+      // A global role without the permission proves owner access is the effective one.
       const id = await createUserWithPassword('root@test.local', {
         role: 'user',
         isPlatformAdmin: true,
@@ -201,7 +234,7 @@ describe('guardTenantSession', () => {
     it('does not write audit rows when the platform admin is also a member', async () => {
       const { a } = await setup();
       const id = await createUserWithPassword('root@test.local', { isPlatformAdmin: true });
-      await addMember(id, a.id);
+      await addMember(id, a.id, 'admin');
       const cookie = await signInCookie('root@test.local');
       const r = await run(guard, { cookie, method: 'POST' });
       expect(r.next).toHaveBeenCalledTimes(1);
@@ -260,10 +293,13 @@ describe('parity with the tRPC chain', () => {
   type Scenario = {
     name: string;
     user: Opts;
+    // Role of the membership in A (and B for 'multi'); defaults to 'admin', which has NEEDS.
+    memberRole?: RoleType;
     // 'member' = member of A with A active; 'removed' = A active but membership gone;
     // 'none' = platform admin without membership; 'multi' = several memberships, none active;
-    // 'ghost' = A active but the organization was deleted; 'foreign' = A active, member of B only.
-    state: 'member' | 'removed' | 'none' | 'multi' | 'ghost' | 'foreign';
+    // 'ghost' = A active but the organization was deleted; 'foreign' = A active, member of B only;
+    // 'norole' = member of A with A active whose role_id points at another organization's role.
+    state: 'member' | 'removed' | 'none' | 'multi' | 'ghost' | 'foreign' | 'norole';
     anonymous?: boolean;
     // Express errorCode both transports must produce, or null when the request is allowed.
     denial: keyof typeof TRPC_EQUIVALENT | null;
@@ -273,10 +309,12 @@ describe('parity with the tRPC chain', () => {
     { name: 'member with permission', user: {}, state: 'member', denial: null },
     {
       name: 'member without permission',
-      user: { role: 'member' },
+      user: { role: 'superadmin' },
+      memberRole: 'member',
       state: 'member',
       denial: 'FORBIDDEN',
     },
+    { name: 'member without a role', user: {}, state: 'norole', denial: 'FORBIDDEN' },
     {
       name: 'member removed from the active organization',
       user: {},
@@ -303,7 +341,8 @@ describe('parity with the tRPC chain', () => {
     },
     {
       name: 'platform admin member keeps own role',
-      user: { isPlatformAdmin: true, role: 'member' },
+      user: { isPlatformAdmin: true, role: 'superadmin' },
+      memberRole: 'member',
       state: 'member',
       denial: 'FORBIDDEN',
     },
@@ -318,16 +357,19 @@ describe('parity with the tRPC chain', () => {
       ...s.user,
       mustChangePassword: false,
     });
-    await addMember(id, a.id);
-    if (s.state === 'multi') await addMember(id, b.id);
+    const memberRole = s.memberRole ?? 'admin';
+    await addMember(id, a.id, memberRole);
+    if (s.state === 'multi') await addMember(id, b.id, memberRole);
     const cookie = await signInWithActiveOrg('u@test.local', id, s.state === 'multi' ? null : a.id);
     if (s.state === 'removed' || s.state === 'none') await db.delete(member);
     if (s.state === 'foreign') {
       await db.delete(member);
-      await addMember(id, b.id);
+      await addMember(id, b.id, memberRole);
     }
+    if (s.state === 'norole') await pointMemberAtForeignRole(id, a.id);
     if (s.state === 'ghost') {
       await db.delete(member);
+      await db.delete(role).where(eq(role.tenantId, a.id));
       await db.delete(organization).where(eq(organization.id, a.id));
       invalidateTenantCache();
     }
@@ -339,10 +381,7 @@ describe('parity with the tRPC chain', () => {
     const sent = s.anonymous ? undefined : cookie;
     const express = await run(guard, { cookie: sent });
 
-    const ctx = await createContext({
-      req: { headers: sent ? { cookie: sent } : {} },
-      res: {},
-    } as unknown as CreateExpressContextOptions);
+    const ctx = await trpcContext(sent);
     const trpcError = await testRouter
       .createCaller(ctx)
       .guarded()
@@ -362,5 +401,64 @@ describe('parity with the tRPC chain', () => {
     expect({ code: trpcError?.code, cause: trpcError?.cause?.code }).toEqual(
       TRPC_EQUIVALENT[s.denial],
     );
+  });
+});
+
+describe('attachment upload parity with the tRPC chain', () => {
+  const testRouter = router({ upload: guardedProcedure(UPLOAD).mutation(() => 'ok') });
+  const guard = guardTenantSession(UPLOAD);
+
+  beforeEach(async () => {
+    await resetDb();
+  });
+
+  async function verdicts(cookie: string) {
+    const express = await run(guard, { cookie, method: 'POST' });
+    const trpc = await testRouter
+      .createCaller(await trpcContext(cookie))
+      .upload()
+      .then(() => 'allowed')
+      .catch((e: { code: string }) => e.code);
+    return { express: express.next.mock.calls.length === 1 ? 'allowed' : express.status, trpc };
+  }
+
+  it('a role without payment.upload_attachment is 403 in Express and FORBIDDEN in tRPC', async () => {
+    const a = await createTestTenant('tenant-a');
+    const id = await createUserWithPassword('op@test.local', { role: 'superadmin' });
+    await addMember(id, a.id, 'operator');
+    const cookie = await signInCookie('op@test.local');
+    await expect(verdicts(cookie)).resolves.toEqual({ express: 403, trpc: 'FORBIDDEN' });
+  });
+
+  it('a role with payment.upload_attachment is allowed by both', async () => {
+    const a = await createTestTenant('tenant-a');
+    const id = await createUserWithPassword('ad@test.local', { role: 'member' });
+    await addMember(id, a.id, 'admin');
+    const cookie = await signInCookie('ad@test.local');
+    await expect(verdicts(cookie)).resolves.toEqual({ express: 'allowed', trpc: 'allowed' });
+  });
+
+  it('revoking the permission from the role denies both on the next request', async () => {
+    const a = await createTestTenant('tenant-a');
+    const id = await createUserWithPassword('ad@test.local');
+    await addMember(id, a.id, 'admin');
+    const cookie = await signInCookie('ad@test.local');
+    await expect(verdicts(cookie)).resolves.toEqual({ express: 'allowed', trpc: 'allowed' });
+
+    const [admin] = await db
+      .select({ id: role.id })
+      .from(role)
+      .where(and(eq(role.tenantId, a.id), eq(role.name, 'Admin')));
+    await db
+      .delete(rolePermission)
+      .where(
+        and(
+          eq(rolePermission.roleId, admin!.id),
+          eq(rolePermission.resource, RESOURCES.PAYMENT),
+          eq(rolePermission.action, ACTIONS.UPLOAD_ATTACHMENT),
+        ),
+      );
+
+    await expect(verdicts(cookie)).resolves.toEqual({ express: 403, trpc: 'FORBIDDEN' });
   });
 });

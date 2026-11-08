@@ -13,3 +13,8 @@ export function isTenantAccessError(error: unknown): boolean {
   const code = getApiErrorCode(error);
   return !!code && TENANT_ACCESS_CODES.includes(code);
 }
+
+/** A permission gate's denial: `FORBIDDEN` with no domain code (tenant and account denials carry one). */
+export function isPermissionDeniedError(error: unknown): boolean {
+  return getApiErrorCode(error) === 'FORBIDDEN';
+}

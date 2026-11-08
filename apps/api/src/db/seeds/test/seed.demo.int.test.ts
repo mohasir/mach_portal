@@ -3,7 +3,16 @@ import { eq, is, sql } from 'drizzle-orm';
 import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
 import { QUOTE_STAGE } from '@repo/schemas';
 import * as schema from '../../schema';
-import { account, clients, member, organization, products, quotes, user } from '../../schema';
+import {
+  account,
+  clients,
+  member,
+  organization,
+  products,
+  quotes,
+  role,
+  user,
+} from '../../schema';
 import { TENANT_EXEMPT_TABLES } from '../../schema/tenantColumn';
 import { createTestTenant, createTestUser, resetDb, testDb } from '../../../test/db';
 import {
@@ -17,7 +26,11 @@ import { PROD_SUPERADMIN_EMAIL, seedProdTenant } from '../prod';
 const allTables = (Object.values(schema).filter((v) => is(v, PgTable)) as unknown as PgTable[]).map(
   (t) => getTableConfig(t).name,
 );
-const tenantTables = allTables.filter((name) => !TENANT_EXEMPT_TABLES.includes(name));
+// The audit log only fills when roles are edited, which the seed never does.
+const UNSEEDED_TABLES = ['role_audit_log'];
+const tenantTables = allTables.filter(
+  (name) => !TENANT_EXEMPT_TABLES.includes(name) && !UNSEEDED_TABLES.includes(name),
+);
 
 async function rowsByTenant(table: string) {
   const rows = await testDb.execute<{ tenant_id: string | null; n: string }>(
@@ -146,6 +159,27 @@ describe('db:seed --demo=local', () => {
     expect(Number(withoutCredential[0]!.n)).toBe(0);
   });
 
+  it('seeds the base roles and their permissions for each demo tenant', async () => {
+    for (const tenantId of [norte, sur]) {
+      const roles = await testDb.select().from(role).where(eq(role.tenantId, tenantId));
+      expect(roles).toHaveLength(4);
+      expect(roles.filter((r) => r.isOwner)).toHaveLength(1);
+      expect((await rowsByTenant('role_permission')).get(tenantId) ?? 0).toBeGreaterThan(0);
+    }
+  });
+
+  it('every member holds the role of its key inside its own tenant', async () => {
+    const rows = await testDb.execute<{ key: string; role_name: string; same: boolean }>(sql`
+      select m.role as key, r.name as role_name, (r.tenant_id = m.organization_id) as same
+      from member m left join role r on r.id = m.role_id
+    `);
+    expect(rows.length).toBeGreaterThan(0);
+    for (const r of rows) {
+      expect(r.same).toBe(true);
+      expect(r.role_name.toLowerCase()).toBe(r.key);
+    }
+  });
+
   it('the platform admin has the flag and no membership', async () => {
     const [platform] = await testDb
       .select()
@@ -166,6 +200,14 @@ describe('db:seed --demo=local', () => {
     expect(rows).toHaveLength(2);
     expect(rows.map((r) => r.org).sort()).toEqual([norte, sur].sort());
     expect(rows[0]!.role).not.toBe(rows[1]!.role);
+    const roleIds = await testDb
+      .select({ org: member.organizationId, roleId: member.roleId })
+      .from(member)
+      .where(eq(member.userId, shared!.id));
+    expect(new Set(roleIds.map((r) => r.roleId)).size).toBe(2);
+    const norteRole = roleIds.find((r) => r.org === norte)!.roleId!;
+    const [r] = await testDb.select().from(role).where(eq(role.id, norteRole));
+    expect(r).toMatchObject({ tenantId: norte, name: 'Operator' });
   });
 
   it('re-running the seed is idempotent', { timeout: 120_000 }, async () => {
@@ -245,6 +287,7 @@ describe('db:seed --demo=local --tenant', () => {
     const [admin] = await testDb.select().from(user).where(eq(user.email, 'admin@acme.demo'));
     const rows = await testDb.select().from(member).where(eq(member.userId, admin!.id));
     expect(rows).toEqual([expect.objectContaining({ organizationId: tenant.id, role: 'admin' })]);
+    expect(rows[0]!.roleId).not.toBeNull();
     expect(await countAll('organization')).toBe(1);
   });
 });

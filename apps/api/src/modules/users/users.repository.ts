@@ -8,29 +8,39 @@ import {
   ilike,
   inArray,
   like,
-  ne,
   notExists,
   or,
   sql,
   type SQL,
 } from 'drizzle-orm';
-import { ROLES } from '@repo/guards';
 import type { UsersListQuery } from '@repo/schemas';
 import type { Database, Tx } from '../../db';
 import { lockUserEmail } from '../../db/locks';
-import { member, platformAccessLog, session, user, verification } from '../../db/schema';
+import {
+  member,
+  platformAccessLog,
+  role,
+  rolePermission,
+  session,
+  user,
+  verification,
+} from '../../db/schema';
+import { legacyMemberRoleOf } from '../../lib/rbac/seedTenantRoles';
+import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
 import { publicUserColumns } from './users.resource';
 import { containsPattern } from '../../lib/utils/search';
 
-type UserUpdate = Partial<Pick<typeof user.$inferInsert, 'name' | 'role' | 'mustChangePassword'>>;
+type UserUpdate = Partial<Pick<typeof user.$inferInsert, 'name' | 'mustChangePassword'>>;
 
 const sortColumns = {
   name: user.name,
   email: user.email,
-  role: member.role,
+  role: role.name,
   createdAt: user.createdAt,
 } as const;
+
+const roleColumns = { id: role.id, name: role.name, isOwner: role.isOwner } as const;
 
 // Users are global; this repository scopes them by MEMBERSHIP: every read joins `member` of this
 // tenant, and every write to the global `user` row is limited to members of this tenant.
@@ -42,6 +52,18 @@ export class UsersRepository {
 
   private membershipJoin() {
     return and(eq(member.userId, user.id), eq(member.organizationId, this.tenantId));
+  }
+
+  private roleJoin() {
+    return and(eq(role.id, member.roleId), tenantEq(role, this.tenantId));
+  }
+
+  private members() {
+    return this.db
+      .select(this.selection())
+      .from(user)
+      .innerJoin(member, this.membershipJoin())
+      .innerJoin(role, this.roleJoin());
   }
 
   private tenantMemberIds() {
@@ -63,27 +85,24 @@ export class UsersRepository {
     };
   }
 
-  // Only a superadmin caller can see superadmin members in a list — everyone else (admin,
-  // operator, member) never gets superadmin rows back, e.g. in the quote reassignment user picker.
-  // The rule reads the tenant role, which is the role the list shows.
-  async findPaginated(query: UsersListQuery, callerRole: string | null) {
+  // Members holding the owner role are listed only when `includeOwners` is set (the caller is an
+  // owner); everyone else never gets them back, e.g. in the quote reassignment user picker.
+  async findPaginated(query: UsersListQuery, includeOwners: boolean) {
     const { search, sortBy, sortDir } = query;
     const conditions = [
       search
         ? or(ilike(user.name, containsPattern(search)), ilike(user.email, containsPattern(search)))
         : undefined,
-      callerRole === ROLES.SUPERADMIN ? undefined : ne(member.role, ROLES.SUPERADMIN),
+      includeOwners ? undefined : eq(role.isOwner, false),
     ].filter((c): c is SQL => c !== undefined);
     const where = conditions.length ? and(...conditions) : undefined;
-    const orderBy = (sortDir === 'asc' ? asc : desc)(sortColumns[sortBy]);
+    const direction = sortDir === 'asc' ? asc : desc;
     const { limit, offset, paginate, page, pageSize } = resolvePagination(query);
 
-    const items = await this.db
-      .select(this.selection())
-      .from(user)
-      .innerJoin(member, this.membershipJoin())
+    // The id tiebreaker keeps pages stable when many members share a sort value (e.g. a role).
+    const items = await this.members()
       .where(where)
-      .orderBy(orderBy)
+      .orderBy(direction(sortColumns[sortBy]), asc(user.id))
       .limit(limit)
       .offset(offset);
 
@@ -96,6 +115,7 @@ export class UsersRepository {
       .select({ value: count() })
       .from(user)
       .innerJoin(member, this.membershipJoin())
+      .innerJoin(role, this.roleJoin())
       .where(where);
     return row?.value ?? 0;
   }
@@ -115,29 +135,73 @@ export class UsersRepository {
     return this.db
       .select({
         id: user.id,
+        name: user.name,
         email: user.email,
         mustChangePassword: user.mustChangePassword,
         isPlatformAdmin: user.isPlatformAdmin,
+        role: roleColumns,
       })
       .from(user)
       .innerJoin(member, this.membershipJoin())
+      .innerJoin(role, this.roleJoin())
       .where(eq(user.id, id))
       .limit(1)
       .then((r) => r[0]);
   }
 
   findPublicById(id: string) {
-    return this.db
-      .select(this.selection())
-      .from(user)
-      .innerJoin(member, this.membershipJoin())
+    return this.members()
       .where(eq(user.id, id))
       .limit(1)
       .then((r) => r[0]);
   }
 
+  // Share lock until the transaction ends: an edit of the role (which locks it FOR UPDATE) cannot
+  // change its permissions between the escalation check and the membership write.
+  findRole(roleId: string) {
+    return this.db
+      .select(roleColumns)
+      .from(role)
+      .where(and(eq(role.id, roleId), tenantEq(role, this.tenantId)))
+      .limit(1)
+      .for('share')
+      .then((r) => r[0]);
+  }
+
+  findRolePermissions(roleId: string) {
+    return this.db
+      .select({
+        resource: rolePermission.resource,
+        action: rolePermission.action,
+        scope: rolePermission.scope,
+      })
+      .from(rolePermission)
+      .where(and(eq(rolePermission.roleId, roleId), tenantEq(rolePermission, this.tenantId)));
+  }
+
+  // Row lock on the tenant's owner role, held until the transaction ends: every change that could
+  // leave the tenant without an owner takes it before counting owners, so two such changes
+  // serialize and the second one counts what the first one committed.
+  lockOwnerRole() {
+    return this.db
+      .select({ id: role.id })
+      .from(role)
+      .where(and(tenantEq(role, this.tenantId), eq(role.isOwner, true)))
+      .for('update')
+      .then((r) => r[0]);
+  }
+
+  async countOwners() {
+    const [row] = await this.db
+      .select({ value: count() })
+      .from(member)
+      .innerJoin(role, this.roleJoin())
+      .where(and(eq(member.organizationId, this.tenantId), eq(role.isOwner, true)));
+    return row?.value ?? 0;
+  }
+
   // Counts memberships in every organization: a user shared with other tenants must not be
-  // modified from here, since `user` (role, name, credentials) is global.
+  // modified from here, since `user` (name, credentials) is global.
   async countMemberships(userId: string) {
     const [row] = await this.db
       .select({ value: count() })
@@ -146,14 +210,22 @@ export class UsersRepository {
     return row?.value ?? 0;
   }
 
-  addMembership(userId: string, role: string) {
-    return this.db.insert(member).values({
-      id: randomUUID(),
-      userId,
-      role,
-      createdAt: new Date(),
-      organizationId: this.tenantId,
-    });
+  // Undefined when the role is not one of this tenant's: a foreign role is never attached.
+  async addMembership(userId: string, roleId: string) {
+    const target = await this.findRole(roleId);
+    if (!target) return undefined;
+    return this.db
+      .insert(member)
+      .values({
+        id: randomUUID(),
+        userId,
+        role: legacyMemberRoleOf(target),
+        roleId: target.id,
+        createdAt: new Date(),
+        organizationId: this.tenantId,
+      })
+      .returning({ id: member.id })
+      .then((r) => r[0]);
   }
 
   updateUser(id: string, data: UserUpdate) {
@@ -165,10 +237,13 @@ export class UsersRepository {
       .then((r) => r[0]);
   }
 
-  updateMemberRole(userId: string, role: string) {
+  // Undefined when the user is not a member here or the role is not one of this tenant's.
+  async updateMemberRole(userId: string, roleId: string) {
+    const target = await this.findRole(roleId);
+    if (!target) return undefined;
     return this.db
       .update(member)
-      .set({ role })
+      .set({ roleId: target.id, role: legacyMemberRoleOf(target) })
       .where(and(eq(member.userId, userId), eq(member.organizationId, this.tenantId)))
       .returning({ id: member.id })
       .then((r) => r[0]);

@@ -10,6 +10,7 @@ import { NotificationMenu } from '@/components/NotificationMenu/NotificationMenu
 import { RoleTag } from '@/components/shared/RoleTag';
 import { UserDrawer } from '@/components/UserProfile';
 import { useSession } from '@/lib/auth/client';
+import { useCurrentRole } from '@/lib/auth/useCan';
 import { usePageHeaderStore } from '@/lib/stores/pageHeader.store';
 
 export function MobileTopbar() {
@@ -17,7 +18,7 @@ export function MobileTopbar() {
   const { t: tc } = useTranslation('common');
   const { data } = useSession();
   const user = data?.user;
-  const role = (user as { role?: string | null } | undefined)?.role;
+  const role = useCurrentRole();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const header = usePageHeaderStore((s) => s.header);
 

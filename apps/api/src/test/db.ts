@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 import { resetPlatformAccessSessions } from '../core/trpc/platformAccess';
+import type { RoleType } from '@repo/guards';
 import { db, type Database } from '../db';
+import { legacyMemberRole, seedTenantRoles } from '../lib/rbac/seedTenantRoles';
 import { invalidateTenantCache } from '../lib/tenancy/tenantResolver';
 
 export type TestTenant = { id: string; slug: string; userId: string };
@@ -29,6 +31,18 @@ export async function resetDb(): Promise<void> {
   const tables = await tablesToTruncate();
   if (!tables) return;
   await testDb.execute(sql.raw(`TRUNCATE ${tables} RESTART IDENTITY CASCADE`));
+}
+
+// A database between the roles backfill and the NOT NULL hardening may hold members without
+// role_id. Suites that exercise that state (the backfill itself, mt:verify) relax the pushed schema
+// for their duration; `requireMemberRole` empties the tables first so the constraint can return.
+export async function allowMembersWithoutRole(): Promise<void> {
+  await testDb.execute(sql`ALTER TABLE "member" ALTER COLUMN "role_id" DROP NOT NULL`);
+}
+
+export async function requireMemberRole(): Promise<void> {
+  await resetDb();
+  await testDb.execute(sql`ALTER TABLE "member" ALTER COLUMN "role_id" SET NOT NULL`);
 }
 
 // Raw SQL keeps fixtures independent of the Drizzle schema objects and of the
@@ -60,11 +74,23 @@ export async function createTestUser(
 export async function addMember(
   userId: string,
   tenantId: string,
-  role: string = 'member',
+  roleKey: RoleType = 'member',
 ): Promise<void> {
+  const roleIds = await seedTenantRoles(tenantId, testDb);
   await testDb.execute(sql`
-    INSERT INTO "member" ("id", "organization_id", "user_id", "role", "created_at")
-    VALUES (${randomUUID()}, ${tenantId}, ${userId}, ${role}, now())
+    INSERT INTO "member" ("id", "organization_id", "user_id", "role", "role_id", "created_at")
+    VALUES (${randomUUID()}, ${tenantId}, ${userId}, ${legacyMemberRole(roleKey)}, ${roleIds[roleKey]}, now())
+  `);
+}
+
+// member.role_id cannot be null, so the broken link left to test is a role of another organization
+// (its owner role, the strongest one to borrow). Access resolution must fail closed on it.
+export async function pointMemberAtForeignRole(userId: string, tenantId: string): Promise<void> {
+  const other = await createTestTenant(`foreign-${randomUUID().slice(0, 8)}`);
+  const roles = await seedTenantRoles(other.id, testDb);
+  await testDb.execute(sql`
+    UPDATE "member" SET "role_id" = ${roles.superadmin}
+    WHERE "user_id" = ${userId} AND "organization_id" = ${tenantId}
   `);
 }
 
@@ -76,4 +102,28 @@ export async function seedTwoTenants(): Promise<{ a: TestTenant; b: TestTenant }
     return { ...tenant, userId: user.id };
   };
   return { a: await seed('tenant-a'), b: await seed('tenant-b') };
+}
+
+// Membership with a one-off role holding exactly `grants`, for scope and permission edge cases
+// that no base role covers.
+export async function addMemberWithGrants(
+  userId: string,
+  tenantId: string,
+  grants: ReadonlyArray<readonly [resource: string, action: string, scope: 'own' | 'all']>,
+): Promise<string> {
+  const roleId = randomUUID();
+  await testDb.execute(sql`
+    INSERT INTO "role" ("id", "tenant_id", "name") VALUES (${roleId}, ${tenantId}, ${`Custom ${roleId}`})
+  `);
+  for (const [resource, action, scope] of grants) {
+    await testDb.execute(sql`
+      INSERT INTO "role_permission" ("role_id", "tenant_id", "resource", "action", "scope")
+      VALUES (${roleId}, ${tenantId}, ${resource}, ${action}, ${scope})
+    `);
+  }
+  await testDb.execute(sql`
+    INSERT INTO "member" ("id", "organization_id", "user_id", "role", "role_id", "created_at")
+    VALUES (${randomUUID()}, ${tenantId}, ${userId}, 'member', ${roleId}, now())
+  `);
+  return roleId;
 }

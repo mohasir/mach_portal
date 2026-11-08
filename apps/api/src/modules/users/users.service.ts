@@ -6,15 +6,17 @@ import {
   type UpdateUserInput,
   type UsersListQuery,
 } from '@repo/schemas';
+import type { AccessGrants } from '@repo/guards';
 import { auth } from '../../lib/auth';
 import { env } from '../../env';
 import { AppError, ErrorCodes } from '../../lib/errors';
+import { assertWithinPower, canAssignRole } from '../roles/roles.service';
 import { UsersRepository } from './users.repository';
-import { userCollectionResource, userResource } from './users.resource';
+import { userCollectionResource, userResource, type MembershipRole } from './users.resource';
 
 const PASSWORD_SETUP_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
-export type UsersActor = { isPlatformAdmin: boolean };
+export type UsersActor = { isPlatformAdmin: boolean; access: AccessGrants };
 
 type TargetUser = NonNullable<Awaited<ReturnType<UsersRepository['findById']>>>;
 
@@ -26,6 +28,15 @@ const notFound = () =>
 const alreadyExists = () =>
   new TRPCError({ code: 'CONFLICT', cause: new AppError(ErrorCodes.user.ALREADY_EXISTS) });
 
+const roleNotFound = () =>
+  new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.role.NOT_FOUND) });
+
+const escalation = () =>
+  new TRPCError({ code: 'FORBIDDEN', cause: new AppError(ErrorCodes.role.PRIVILEGE_ESCALATION) });
+
+const lastOwner = () =>
+  new TRPCError({ code: 'CONFLICT', cause: new AppError(ErrorCodes.role.LAST_OWNER) });
+
 const setupUrl = (token: string, reason: 'create' | 'reset') =>
   `${env.WEB_APP_URL}/set-password?token=${token}&reason=${reason}`;
 
@@ -35,8 +46,8 @@ export class UsersService {
     private actor: UsersActor,
   ) {}
 
-  // Superadmin never learns any user's real password (creation or reset): this issues
-  // a single-use link the user opens to set their own password. Reusing Better Auth's
+  // The person issuing the link never learns any user's real password (creation or reset): this
+  // issues a single-use link the user opens to set their own password. Reusing Better Auth's
   // own `/reset-password` endpoint on the consuming side means no email is ever sent —
   // the link is handed back to the caller to relay manually (WhatsApp, etc).
   private async writePasswordSetupToken(repo: UsersRepository, userId: string) {
@@ -47,8 +58,8 @@ export class UsersService {
     return token;
   }
 
-  // `user` (name, role, credentials) is global while roles per membership do not exist yet, so a
-  // tenant admin must not change an account that other tenants (or the platform) also rely on.
+  // `user` (name, credentials) is global, so a tenant admin must not change an account that other
+  // tenants (or the platform) also rely on. Roles live on the membership and are not covered here.
   private async assertManageable(repo: UsersRepository, target: TargetUser) {
     if (this.actor.isPlatformAdmin) return;
     if (target.isPlatformAdmin)
@@ -78,10 +89,35 @@ export class UsersService {
     });
   }
 
-  async list(query: UsersListQuery, callerRole: string | null) {
+  // Foreign and nonexistent ids look alike.
+  private async resolveAssignableRole(repo: UsersRepository, roleId: string) {
+    const target = await repo.findRole(roleId);
+    if (!target) throw roleNotFound();
+    const { access } = this.actor;
+    const permissions =
+      access.isOwner || target.isOwner ? [] : await repo.findRolePermissions(target.id);
+    if (!canAssignRole(access, target, permissions)) throw escalation();
+    return target;
+  }
+
+  // A non-owner cannot act on a member whose current role is the owner role or is stronger than
+  // their own: changing, renaming, removing or resetting that member would be using power they do
+  // not hold. Owner members are hidden from non-owners in the list, so they answer as nonexistent.
+  private async assertCanActOnMember(repo: UsersRepository, current: MembershipRole) {
+    if (this.actor.access.isOwner) return;
+    if (current.isOwner) throw notFound();
+    assertWithinPower(this.actor.access, await repo.findRolePermissions(current.id));
+  }
+
+  // Must run inside the transaction that writes the change, after lockOwnerRole.
+  private async assertNotLastOwner(repo: UsersRepository, current: MembershipRole) {
+    if (current.isOwner && (await repo.countOwners()) <= 1) throw lastOwner();
+  }
+
+  async list(query: UsersListQuery) {
     const { items, total, paginate, page, pageSize } = await this.repo.findPaginated(
       query,
-      callerRole,
+      this.actor.access.isOwner,
     );
     const resource = userCollectionResource(items);
     if (!paginate) return { items: resource };
@@ -95,13 +131,15 @@ export class UsersService {
   // account path.
   async create(input: CreateUserInput): Promise<CreateUserResult> {
     const email = input.email.toLowerCase();
-    const attached = await this.attachExistingAccount(email, input.role);
+    // Checked before any account exists, so a refused role never leaves a sign-up behind.
+    await this.resolveAssignableRole(this.repo, input.roleId);
+    const attached = await this.attachExistingAccount(email, input.roleId);
     if (attached) return attached;
 
     // Better Auth hashes the password and creates the linked `account` row; a raw
     // insert would not be able to sign in. The password itself is thrown away right
     // after — the user sets their real one via the password setup link below, so the
-    // superadmin creating the account never learns any usable credential.
+    // person creating the account never learns any usable credential.
     let userId: string;
     try {
       const { user } = await auth.api.signUpEmail({
@@ -109,7 +147,7 @@ export class UsersService {
       });
       userId = user.id;
     } catch (error) {
-      const retried = await this.attachExistingAccount(email, input.role);
+      const retried = await this.attachExistingAccount(email, input.roleId);
       if (retried) return retried;
       throw error;
     }
@@ -117,10 +155,12 @@ export class UsersService {
     try {
       const { created, token } = await this.repo.withUserLock(email, async (repo) => {
         // Any membership, in any tenant, means another create attached this account between sign-up
-        // and now; writing its global role or a setup link here would reach into that tenant.
+        // and now; writing a setup link here would reach into that tenant.
         if ((await repo.countMemberships(userId)) > 0) throw alreadyExists();
-        await repo.addMembership(userId, input.role);
-        await repo.updateUser(userId, { role: input.role, mustChangePassword: true });
+        // Re-checked under the role's share lock: the role may have been edited since the pre-check.
+        const role = await this.resolveAssignableRole(repo, input.roleId);
+        if (!(await repo.addMembership(userId, role.id))) throw roleNotFound();
+        await repo.updateUser(userId, { mustChangePassword: true });
         const created = await repo.findPublicById(userId);
         if (!created) throw notFound();
         return { created, token: await this.writePasswordSetupToken(repo, userId) };
@@ -142,18 +182,14 @@ export class UsersService {
   // attached account keeps its password, `mustChangePassword` and name, and no link is issued.
   private attachExistingAccount(
     email: string,
-    role: CreateUserInput['role'],
+    roleId: string,
   ): Promise<CreateUserResult | undefined> {
     return this.repo.withUserLock(email, async (repo) => {
       const existing = await repo.findAccountByEmail(email);
       if (!existing) return undefined;
       if (!this.actor.isPlatformAdmin || (await repo.findById(existing.id))) throw alreadyExists();
-      const otherMemberships = await repo.countMemberships(existing.id);
-      await repo.addMembership(existing.id, role);
-      // Authorization reads the global user.role, not member.role; it is only rewritten when
-      // no other tenant depends on it.
-      if (otherMemberships === 0 && !existing.isPlatformAdmin)
-        await repo.updateUser(existing.id, { role });
+      const role = await this.resolveAssignableRole(repo, roleId);
+      if (!(await repo.addMembership(existing.id, role.id))) throw roleNotFound();
       const added = await repo.findPublicById(existing.id);
       if (!added) throw notFound();
       return { user: userResource(added), setupUrl: null };
@@ -162,6 +198,7 @@ export class UsersService {
 
   async regeneratePasswordSetupLink(id: string) {
     const { token, reason } = await this.withTarget(id, async (repo, target) => {
+      await this.assertCanActOnMember(repo, target.role);
       await this.assertManageable(repo, target);
       const reason = target.mustChangePassword ? ('create' as const) : ('reset' as const);
       return { token: await this.writePasswordSetupToken(repo, id), reason };
@@ -169,11 +206,22 @@ export class UsersService {
     return { setupUrl: setupUrl(token, reason), reason };
   }
 
+  // The name is global (guarded by assertManageable); the role only touches this membership.
   async update(id: string, input: UpdateUserInput) {
     return this.withTarget(id, async (repo, target) => {
-      await this.assertManageable(repo, target);
-      await repo.updateUser(id, { name: input.name, role: input.role });
-      await repo.updateMemberRole(id, input.role);
+      await this.assertCanActOnMember(repo, target.role);
+      const renaming = input.name !== target.name;
+      if (renaming) await this.assertManageable(repo, target);
+      if (input.roleId !== target.role.id) {
+        await repo.lockOwnerRole();
+        const current = (await repo.findById(id))?.role;
+        if (!current) throw notFound();
+        await this.assertCanActOnMember(repo, current);
+        const next = await this.resolveAssignableRole(repo, input.roleId);
+        if (!next.isOwner) await this.assertNotLastOwner(repo, current);
+        if (!(await repo.updateMemberRole(id, next.id))) throw notFound();
+      }
+      if (renaming) await repo.updateUser(id, { name: input.name });
       const updated = await repo.findPublicById(id);
       if (!updated) throw notFound();
       return userResource(updated);
@@ -185,11 +233,11 @@ export class UsersService {
   // account is never deleted from inside a tenant.
   async remove(id: string) {
     return this.withTarget(id, async (repo, target) => {
-      if (!this.actor.isPlatformAdmin && (await repo.countMemberships(id)) > 1)
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          cause: new AppError(ErrorCodes.user.IN_MULTIPLE_ORGANIZATIONS),
-        });
+      await repo.lockOwnerRole();
+      const current = (await repo.findById(id))?.role;
+      if (!current) throw notFound();
+      await this.assertCanActOnMember(repo, current);
+      await this.assertNotLastOwner(repo, current);
       const removed = await repo.removeMembership(id);
       if (!removed) throw notFound();
       await repo.deleteTenantSessions(id);

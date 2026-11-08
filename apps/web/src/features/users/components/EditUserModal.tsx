@@ -1,6 +1,6 @@
 'use client';
 import { useTranslation } from 'react-i18next';
-import type { CreateUserInput, UserRole } from '@repo/schemas';
+import type { CreateUserInput } from '@repo/schemas';
 import { WrapperModal } from '@/components/shared/WrapperModal';
 import { useUpdateUser } from '../hooks/useUsers';
 import { UserForm } from './UserForm';
@@ -19,7 +19,7 @@ export function EditUserModal({ user, open, onClose }: EditUserModalProps) {
   const onSubmit = async (values: CreateUserInput) => {
     if (!user) return;
     try {
-      await updateUser(user.id, { name: values.name, role: values.role });
+      await updateUser(user.id, { name: values.name, roleId: values.roleId });
       onClose();
     } catch {
       // error notificado por useApiError
@@ -34,10 +34,11 @@ export function EditUserModal({ user, open, onClose }: EditUserModalProps) {
           mode="edit"
           initialValues={{
             name: user.name,
-            role: (user.role ?? undefined) as UserRole | undefined,
+            roleId: user.role.id,
           }}
           onSubmit={onSubmit}
           isPending={isPending}
+          currentRole={user.role}
         />
       )}
     </WrapperModal>

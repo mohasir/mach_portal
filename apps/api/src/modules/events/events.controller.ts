@@ -1,14 +1,20 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
+import { ACTIONS, RESOURCES } from '@repo/guards';
 import { ErrorCodes } from '../../lib/errors';
+import type { ResolvedAccess } from '../../lib/rbac/access';
 import { eventsModuleFromTenant } from './events.module';
+import { eventOwnerId } from './events.scope';
 
-// Mounted behind guardTenantSession, which sets res.locals.tenantId and userId only after every
-// tenant, membership and permission check passed.
+// Mounted behind guardTenantSession, which sets res.locals.tenantId, userId and access only after
+// every tenant, membership and permission check passed.
 export async function uploadPaymentAttachment(req: Request, res: Response) {
   const tenantId = res.locals['tenantId'] as string | undefined;
   const userId = res.locals['userId'] as string | undefined;
-  if (!tenantId || !userId) throw new Error('uploadPaymentAttachment requires guardTenantSession');
+  const access = res.locals['access'] as ResolvedAccess | undefined;
+  if (!tenantId || !userId || !access) {
+    throw new Error('uploadPaymentAttachment requires guardTenantSession');
+  }
 
   const parsedId = z.uuid().safeParse(req.params['paymentId']);
   if (!parsedId.success) {
@@ -23,6 +29,7 @@ export async function uploadPaymentAttachment(req: Request, res: Response) {
     parsedId.data,
     req.file,
     userId,
+    eventOwnerId(access, userId, [RESOURCES.PAYMENT, ACTIONS.UPLOAD_ATTACHMENT]),
   );
   res.status(201).json(attachment);
 }

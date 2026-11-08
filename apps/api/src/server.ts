@@ -3,6 +3,7 @@ import { toNodeHandler } from 'better-auth/node';
 import { createExpressMiddleware } from '@trpc/server/adapters/express';
 import { auth } from './lib/auth';
 import { corsMiddleware } from './core/express/cors';
+import { HEADERS, HEADER_VALUES } from './core/express/const/headers';
 import { originGuard } from './core/express/originGuard';
 import { securityHeaders } from './core/express/securityHeaders';
 import { TRPC_MAX_BATCH_SIZE } from './core/trpc/batch';
@@ -20,7 +21,7 @@ app.use(corsMiddleware);
 app.use(['/trpc', '/api/uploads'], originGuard);
 
 app.use(['/api/auth', '/trpc'], (_req, res, next) => {
-  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader(HEADERS.CACHE_CONTROL, HEADER_VALUES.CACHE_NO_STORE);
   next();
 });
 

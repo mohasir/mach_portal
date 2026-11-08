@@ -18,6 +18,7 @@ export const RESOURCES = {
   QUOTE_PDF_TEMPLATE: 'quote_pdf_template',
   QUOTE_BUILDER_PREFERENCES: 'quote_builder_preferences',
   PIPELINE_PREFERENCES: 'pipeline_preferences',
+  ROLE: 'role',
 } as const;
 
 export type ResourceType = (typeof RESOURCES)[keyof typeof RESOURCES];

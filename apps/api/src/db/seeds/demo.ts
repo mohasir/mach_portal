@@ -250,8 +250,8 @@ export async function seedDemoTenant(tenantId: string, profile: DemoProfile) {
 }
 
 // `--demo=local`: the two demo tenants, a platform admin without membership and one account
-// that belongs to both tenants. The shared account's global role is the one of the first tenant,
-// because authorization reads the global `user.role`.
+// that belongs to both tenants. The shared account's legacy global role is the one of the first
+// tenant; authorization reads the membership role of the active tenant.
 export async function seedDemoLocal() {
   await seedQuoteStages();
   for (const profile of DEMO_TENANTS) {

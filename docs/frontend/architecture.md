@@ -64,13 +64,15 @@ apps/web/src/
 │   └── <feature>/
 │       ├── components/         # XPage, XTable, columns.tsx, XCard, Create/EditXModal, XForm
 │       ├── hooks/              # useX.ts (data hooks) + useXRowActions.ts (acciones de fila)
-│       ├── helpers.ts          # Constantes/utilidades UI de la feature (ej. mapa de colores por estado)
+│       ├── helpers.ts          # Constantes UI y funciones puras chicas de la feature (ej. mapa de colores por estado)
+│       ├── lib/                # (opcional) lógica pura más grande, en varios módulos (ej. roles/lib/permissionMatrix.ts)
+│       ├── test/               # tests de las funciones puras (helpers, lib, módulos puros)
 │       ├── types.ts            # Entidad INFERIDA del router (RouterOutputs[...])
 │       └── index.ts            # BARREL: API pública de la feature
 │
 ├── lib/                        # Infraestructura transversal (no dominio)
 │   ├── trpc/                   # client.ts (useTRPC), provider.tsx, types.ts (RouterInputs/Outputs)
-│   ├── auth/                   # client.ts, useCan, <Can>, navigation.ts + route-access.ts (RBAC por ruta)
+│   ├── auth/                   # client.ts, useCan, <Can>, RouteGuard, navigation.ts + route-access.ts (permiso por ruta), roleLabel
 │   ├── navigation/             # Navegación data-driven (items, icons, config, useNavigation)
 │   ├── hooks/                  # useIsDesktop, useDateFormatter, ...
 │   ├── date/                   # helpers dayjs (formatDate/…)
@@ -87,7 +89,7 @@ apps/web/src/
 │
 ├── theme/                      # antd.ts (tokens BRAND + oraviCloudTheme), globals.css
 ├── locales/{es,en}/            # common.json, admin.json, auth.json, <feature>.json, api.json
-├── middleware.ts               # redirect en el borde + RBAC por ruta best-effort (cookieCache)
+├── middleware.ts               # redirect en el borde: sesión y mustChangePassword (cookieCache); sin permisos
 └── env.ts                      # variables de entorno validadas
 ```
 
@@ -111,7 +113,7 @@ Se importa `@/features/...`, `@/lib/...`, `@/components/...`, `@/theme/...`. Paq
 | **Types**                 | `types.ts`                       | Entidad **inferida** del router (`RouterOutputs['<feature>']['list']['items'][number]`).                                    | Declarar formas a mano. |
 | **Data hooks**            | `hooks/useX.ts`                  | `useXList(query)`, `useCreateX/useUpdateX/useDeleteX`. Envuelven tRPC + invalidan cache + `useApiError`.                    | Renderizar UI.          |
 | **Row actions**           | `hooks/useXRowActions.ts`        | Devuelve `(row) => RowActionItem[]` (copyId/edit/delete + guards + confirm). Compartido por columnas y card.                | Llamar `useTRPC()`.     |
-| **Helpers**               | `helpers.ts`                     | Constantes UI de la feature (ej. mapa de colores por estado).                                                               | Lógica de datos.        |
+| **Helpers**               | `helpers.ts` (y `lib/`)          | Constantes UI y lógica **pura** de la feature (sin React ni tRPC), testeable en `test/`. Ver §3.7.                         | Lógica de datos.        |
 | **Components**            | `components/*.tsx`               | `XPage` orquesta; `XTable` (usa `DataTable`); `columns.tsx` (`useXColumns`); `XCard` (móvil); `Create/EditXModal`; `XForm`. | `useTRPC()` directo.    |
 | **Barrel**                | `index.ts`                       | API pública (Page, hooks, tipos).                                                                                           | —                       |
 
@@ -341,7 +343,19 @@ export type { X } from './types';
 ### 3.7 Tests (Vitest)
 
 Se prueban con **Vitest** (entorno `node`) las funciones puras: helpers de `lib/` (fechas, acceso por
-ruta) y `helpers.ts` de cada feature. Los componentes React no tienen tests.
+ruta) y `helpers.ts` de cada feature. Los componentes React no tienen tests (no hay jsdom ni
+testing-library): toda decisión que valga la pena probar se **extrae a una función pura** y el
+componente o hook solo la llama (ej. `resolveGuardOutcome` de `RouteGuard`, `resolveGateState` de
+`TenantGate`, `toRoleOptions` del formulario de usuarios, `decidePermissionDenial` del provider de tRPC).
+
+**Dónde va la lógica pura de una feature:**
+
+- `helpers.ts` en la raíz de la feature: constantes UI y funciones chicas.
+- `lib/<tema>.ts` dentro de la feature cuando la lógica crece a varios módulos con nombre propio
+  (ej. `features/roles/lib/`: `permissionMatrix.ts`, `roleForm.ts`, `roleErrors.ts`).
+- Un módulo puro de un solo tema puede ir en la raíz con nombre descriptivo en vez de `helpers.ts`
+  (ej. `features/tenant/permissions.ts`, `features/settings/permissions.ts`).
+- Nunca en `components/` ni dentro de un hook: ahí no se prueba.
 
 - Archivos `*.test.ts` en una subcarpeta `test/` del directorio del código que prueban (nunca sueltos junto al código). Correr con `pnpm --filter web test` (o `pnpm test` en la raíz).
 - Alias `@/` disponible (configurado en `apps/web/vitest.config.ts`).
@@ -485,13 +499,14 @@ ConfigProvider (AntD theme = oraviCloudTheme)
 
 ### Protección de rutas
 
-Tres capas complementarias; la autorización **real** siempre la hace la API:
+Capas complementarias; la autorización **real** siempre la hace la API:
 
-1. **Middleware** (`middleware.ts`, borde): sin sesión + ruta protegida → redirige a `/login` (con `callbackUrl`); con sesión en ruta de auth → redirige a home. Además hace **RBAC por ruta best-effort**: resuelve el permiso requerido con `resolveRouteAccess` (`lib/auth/route-access.ts`) y, si el rol cacheado (`getCookieCache`) no lo cumple, reescribe a bienvenida/denegado. Con caché fría, cae a la API.
+1. **Middleware** (`middleware.ts`, borde): sin sesión + ruta protegida → redirige a `/login` (con `callbackUrl`); con sesión en ruta de auth → redirige a home; con `mustChangePassword` (caché de cookie) → pantalla de cuenta bloqueada. **No** decide permisos: el rol es de la membresía y solo se conoce al cargar los permisos.
 2. **`AuthProvider`** (`components/providers/`, cliente): en rutas protegidas (`isProtectedRoute`) usa `useSession()`; muestra loader mientras resuelve, un estado de error si el server falla, y redirige a `/login` si no hay sesión.
-3. **API** (backend): `protectedProcedure` / `guardedProcedure` — el único límite de autorización confiable.
+3. **`TenantGate` + `RouteGuard`** (cliente, §9.2–9.3): el gate espera la organización activa y los permisos; `RouteGuard` resuelve el permiso de la ruta con `resolveRouteAccess` (`lib/auth/route-access.ts`) y, si no se cumple, redirige (`router.replace`) a `/admin/welcome` (si era el dashboard) o a `/admin/denied`. Esas dos rutas no se protegen (protegerlas haría un bucle).
+4. **API** (backend): `protectedProcedure` / `guardedProcedure` — el único límite de autorización confiable.
 
-Rutas y permisos viven en `lib/auth/navigation.ts` (`PROTECTED_ROUTES`/`AUTH_ROUTES`/redirects) y `lib/auth/route-access.ts` (`ROUTE_ACCESS`: prefijo → `PermissionCheck`).
+Rutas y permisos viven en `lib/auth/navigation.ts` (`PROTECTED_ROUTES`/`AUTH_ROUTES`/redirects) y `lib/auth/route-access.ts` (`resolveRouteAccess`: el `guard` del ítem de `NAV_ITEMS` con el prefijo más largo; `null` = abierta para logueados).
 
 Una ruta con segmento dinámico que exige más que el ítem de navegación con el que comparte prefijo (ej. `/admin/events/[id]/reschedule` pide `EVENT:RESCHEDULE`, no el `EVENT:READ` de `/admin/events`) se declara en `ROUTE_PATTERNS` de `route-access.ts` (regex → `PermissionCheck`), que se evalúa antes que los ítems.
 
@@ -575,19 +590,17 @@ export const { signIn, signUp, signOut, useSession } = authClient;
 
 - `useSession()` → `{ data, isPending }`. Sesión en cookie httpOnly; sin token en JS.
 - Login: `signIn.email(...)`; logout: `signOut()`.
+- `ac`/`roles` están solo porque el plugin `adminClient` los exige: **nunca** se autoriza con `useSession().user.role` (es global y no refleja el rol de la organización).
 
-### 9.2 Autorización (`useCan` / `<Can>`)
+### 9.2 Autorización (`usePermissions`, `useCan` / `<Can>`, `RouteGuard`)
 
-El catálogo de roles/permisos es único en **`@repo/guards`** y se comparte con el backend (que lo aplica con `guardedProcedure` — ver `docs/backend/architecture.md`). En el front se evalúa **síncrono** (sin ir al server):
+El rol es **de la membresía en la organización activa** y lo resuelve la API (`ctx.access`, ver `docs/backend/architecture.md` §7 y §11.1). La web no lo deduce de la sesión: lo pide y lo evalúa con el mismo `can` de **`@repo/guards`**, **síncrono**.
 
-```ts
-// lib/auth/useCan.ts
-export function useCan() {
-  const { data } = useSession();
-  const role = (data?.user as { role?: string | null })?.role ?? DEFAULT_ROLE;
-  return (permissions: PermissionCheck) => hasPermission(role, permissions);
-}
-```
+- **`usePermissions()`** (`features/tenant`): única fuente de permisos del front. Pide `tenant.permissions` (`{ isOwner, grants, roleName, version }`) con la organización activa en la query key (cambiar de organización nunca sirve los permisos de la anterior), `staleTime: 0` y `refetchOnMount: false`. Devuelve `{ access, role, version, isPending, isError, refetch }` (`toPermissionsState`).
+- **`useCan()`** (`lib/auth/useCan.ts`) → `(check: PermissionCheck) => can(access, check)`. Niega todo mientras los permisos cargan (el `TenantGate` retiene la pantalla hasta entonces). `useCurrentRole()` da `{ name, isOwner }` para mostrar; `useCanReassignQuote`/`useCanRegeneratePdf` espejan gates puntuales de la API.
+- **`<Can allowed={...} fallback={...}>`** (`lib/auth/Can.tsx`) usa `useCan`. Los `guard` de navegación (`NAV_ITEMS`), de row actions y de rutas también.
+- **`RouteGuard`** (`lib/auth/`, montado por `TenantGate`): decide con la función pura `resolveGuardOutcome` (espera → permite → redirige; ver §5).
+- **Nombre del rol:** `roleLabel`/`describeRole` (`lib/auth/roleLabel.ts`) y `RoleTag`. El dueño se muestra como tal; un rol base se traduce solo mientras su nombre guardado sea el sembrado (`Superadmin`, `Admin`, `Operator`, `Member`, los nombres de `ROLE_TEMPLATES`); un rol propio o renombrado se muestra tal cual.
 
 ```tsx
 <Can allowed={{ [RESOURCES.X]: [ACTIONS.CREATE] }} fallback={null}>
@@ -597,16 +610,29 @@ export function useCan() {
 </Can>
 ```
 
+**Sincronización de permisos** (`features/tenant/permissions.ts` + `lib/trpc/provider.tsx`): un cambio de rol o una edición del rol tiene que llegar a las pestañas abiertas.
+
+- **Cabecera `x-permissions-version`:** el `fetch` del cliente tRPC está envuelto por `createPermissionsFetch`; si una respuesta trae una versión distinta de la cargada, se invalidan los permisos (`refreshPermissionsIfStale`; nunca con una recarga ya en vuelo, para no hacer bucle).
+- **Sondeo:** `usePermissionsSync()` (montado **una sola vez**, por `TenantGate`) consulta `tenant.permissionsVersion` cada 45 s, y los permisos se revalidan al volver el foco. El sondeo se detiene si la versión responde denegada (`permissionsPollInterval`).
+- **Denegaciones:** un `FORBIDDEN` sin código de dominio revalida los permisos; el aviso "tu rol cambió" lo da `watchPermissionsChanges` solo cuando una versión cargada se reemplaza por otra distinta. Si lo denegado son los propios permisos, la membresía se perdió: se avisa **una vez** (`decidePermissionDenial`), se revalida `tenant.active` (sin membresía responde `null` y el `TenantGate` manda a `/select-organization`) y las denegaciones siguientes quedan en silencio hasta que los permisos vuelvan a cargar (otra organización, o el foco si se recuperó el acceso).
+
+**Feature `roles`** (`/admin/roles`, gateada por `role.read`): lista, alta, edición, duplicado y borrado de roles con la **matriz de permisos** (`features/roles/lib/permissionMatrix.ts`).
+
+- La matriz se arma con `catalogResources()`/`catalogActions()` de `@repo/guards`, es decir con **`TENANT_PERMISSIONS`** (lo que un rol de organización puede otorgar). El selector "solo los suyos / todos" aparece solo en los pares de `SCOPED_ACTIONS`. Las celdas que exceden el poder del actor quedan deshabilitadas (la API aplica la misma regla de escalada). El rol dueño se muestra todo concedido y no editable.
+- **Permiso nuevo del catálogo:** basta con agregarlo en `@repo/guards` (`permissionsMatrix`) y su etiqueta en `locales/*/roles.json` (`matrix.actions`/`matrix.resources`, y el grupo en `GROUP_BY_RESOURCE`): aparece **solo en el editor**, ningún rol existente lo recibe. Los roles base viven en `ROLE_TEMPLATES` (`@repo/guards`) y solo se siembran al crear una organización.
+- El formulario de usuarios elige el rol con `roles.assignable` (`useAssignableRoles`), no con `roles.list`: quien gestiona usuarios sin `role.read` igual puede asignar los roles que tiene permitido dar.
+- Configuración → **Mis permisos** muestra a cada miembro su propia matriz, solo lectura (`toEffectivePermissions`, `features/settings/permissions.ts`).
+
 > **Regla — nunca strings sueltos en un `PermissionCheck`.** Recursos y acciones de **dominio** usan las constantes tipadas de `@repo/guards` (`RESOURCES`, `ACTIONS`): `{ [RESOURCES.X]: [ACTIONS.READ] }`, nunca `{ x: ['read'] }`. Aplica en `<Can>`, `useCan()(...)` y los `guard` de navegación.
 >
-> **Excepción:** los statements nativos de Better Auth (los que no son recursos de dominio) no tienen constante en `RESOURCES` — se referencian por su literal. Solo los recursos de dominio pasan por `RESOURCES`/`ACTIONS`.
+> **Excepción:** los statements nativos de Better Auth (`user`) no tienen constante en `RESOURCES` — el recurso se referencia por su literal. Solo los recursos de dominio pasan por `RESOURCES`.
 
 ### 9.3 Organización activa (multi-tenant)
 
 El tenant de cada petición es la organización activa **de la sesión** (`session.activeOrganizationId`). La web nunca manda un tenant: el proxy a la API no tiene lógica de tenant. Ver `docs/backend/architecture.md` §11.
 
-- **Fuente de verdad: `tenant.active`**, vía `useActiveTenant()` (`features/tenant`), que siempre se revalida (`staleTime: 0`). **Nunca `useSession()`**: su caché de cookie puede ir hasta 60 s por detrás del cambio de organización. Tampoco se decide en `middleware.ts`: ahí solo se miran la sesión, el rol y `mustChangePassword`, desde la caché de cookie.
-- **`TenantGate`** envuelve el área autenticada. Renderiza solo cuando la API confirma una organización activa, redirige a `/select-organization` si no hay ninguna y muestra el aviso de modo plataforma cuando `isPlatformAccess` es `true`.
+- **Fuente de verdad: `tenant.active`**, vía `useActiveTenant()` (`features/tenant`), que siempre se revalida (`staleTime: 0`). **Nunca `useSession()`**: su caché de cookie puede ir hasta 60 s por detrás del cambio de organización. Tampoco se decide en `middleware.ts`: ahí solo se miran la sesión y `mustChangePassword`, desde la caché de cookie.
+- **`TenantGate`** envuelve el área autenticada. Renderiza solo cuando la API confirma una organización activa **y** los permisos en ella están cargados (decisión pura `resolveGateState`), redirige a `/select-organization` si no hay ninguna, muestra un error con reintento si los permisos no cargan y el aviso de modo plataforma cuando `isPlatformAccess` es `true`. Monta `usePermissionsSync`, `useTenantSync` y el `RouteGuard`.
 - **`/select-organization`** (`SelectOrganizationPage`):
   - lista `tenant.memberships` y, para un admin de plataforma, `tenant.listAll`;
   - selecciona con `useSelectTenant()`;
@@ -682,7 +708,7 @@ El tenant de cada petición es la organización activa **de la sesión** (`sessi
 11. **Página** (`app/admin/<feature>/page.tsx`): `import { XPage } from '@/features/<feature>'`.
 12. **i18n**: `locales/{es,en}/<feature>.json` (title, index.add, columns._, form._, validation._, delete._, empty) + registrar el namespace en `lib/i18n/config.ts`. Nav labels en `admin` (`nav.*`).
 13. **Navegación**: ítem en `lib/navigation/constants/items.ts` (+ `guard` con `RESOURCES`/`ACTIONS`), grupo en `config.ts`, icono lucide en `constants/icons.tsx`.
-14. **Acceso a la ruta**: registrar el permiso en `lib/auth/route-access.ts` (`ROUTE_ACCESS`: `/admin/<feature>` → `{ [RESOURCES.X]: [ACTIONS.READ] }`, o `null` si es pública para logueados). Habilita el RBAC por ruta del middleware.
+14. **Acceso a la ruta**: el `guard` del ítem de navegación es el permiso de la ruta (`resolveRouteAccess` en `lib/auth/route-access.ts`); una subruta que exija más va en `ROUTE_PATTERNS`. Lo aplica el `RouteGuard` (§5).
 15. **Autorización de acciones**: envolver create/edit/delete con `<Can>` / gatear con `useCan` usando `RESOURCES`/`ACTIONS`.
 
 Siguiendo estos pasos, la feature será **consistente con el patrón** y con el resto del panel.
@@ -702,10 +728,11 @@ Siguiendo estos pasos, la feature será **consistente con el patrón** y con el 
 - ❌ Hardcodear texto visible en vez de `t('clave')`, o formatear fechas sin `useDateFormatter`.
 - ❌ Meter lógica pesada (queries/mutations) en la página del App Router; debe ser thin.
 - ❌ Importar desde rutas internas de otra feature en vez de su barrel `index.ts`.
-- ❌ Chequear permisos con condicionales ad-hoc sobre strings de rol en vez de `<Can>`/`useCan` + `@repo/guards` (con `RESOURCES`/`ACTIONS`).
+- ❌ Chequear permisos con condicionales ad-hoc sobre strings o nombres de rol, o con `useSession().user.role`, en vez de `<Can>`/`useCan` + `@repo/guards` (con `RESOURCES`/`ACTIONS`).
+- ❌ Llamar a `usePermissionsSync()` fuera de `TenantGate`: cada copia montada corre su propio sondeo.
 - ❌ Usar `@ant-design/icons` (la librería es `lucide-react`), métodos estáticos de AntD (`message.xxx`), hex hardcodeados, CSS modules o inline styles — ver `styling-guide.md`.
 - ❌ Hidratar o duplicar la sesión/token en estado propio: Better Auth la maneja por cookie (`useSession`). El `AuthProvider` del proyecto solo **guarda rutas** con `useSession`; no hidrata nada.
-- ❌ Volver a poner el guard de sesión en `app/admin/layout.tsx`: el guard es global (`AuthProvider`) y el acceso por ruta lo maneja el middleware + `route-access.ts`.
+- ❌ Volver a poner el guard de sesión en `app/admin/layout.tsx`: el guard es global (`AuthProvider`) y el acceso por ruta lo maneja `RouteGuard` + `route-access.ts`.
 
 ```
 

@@ -11,23 +11,17 @@ import {
   rescheduleEventSchema,
   updateEventSelectionsSchema,
 } from '@repo/schemas';
-import {
-  RESOURCES,
-  ACTIONS,
-  DEFAULT_ROLE,
-  SUPERADMIN_ROLE,
-  hasPermission,
-  resolveResourceScope,
-} from '@repo/guards';
+import { RESOURCES, ACTIONS, can } from '@repo/guards';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
+import type { ResolvedAccess } from '../../lib/rbac/access';
+import type { ScopeCheck } from '../../lib/rbac/ownerScope';
+import { eventOwnerId } from './events.scope';
 import { eventsModule } from './events.module';
 
-// scope 'own' (resolveResourceScope) → solo ve/gestiona eventos cuya cotización creó o
-// tiene asignada (events.repository.ts ownerFilter/belongsToOwner); scope 'all' → todos.
-// Siempre se resuelve contra RESOURCES.EVENT, sea cual sea el permiso que gatea el
-// procedure puntual (PAYMENT, MANAGE_SELECTIONS...) — lo que se está filtrando es el evento.
-function ownerScope(ctx: { user: { id: string; role?: string | null } }) {
-  return resolveResourceScope(ctx.user.role, RESOURCES.EVENT) === 'own' ? ctx.user.id : undefined;
+type AccessCtx = { user: { id: string }; access: ResolvedAccess };
+
+function ownerScope(ctx: AccessCtx, gate?: ScopeCheck) {
+  return eventOwnerId(ctx.access, ctx.user.id, gate);
 }
 
 export const eventsRouter = router({
@@ -43,10 +37,9 @@ export const eventsRouter = router({
     .input(z.object({ id: z.uuid() }))
     .query(async ({ input, ctx }) => {
       const detail = await eventsModule(ctx).getById(input.id, ownerScope(ctx));
-      const role = (ctx.user as { role?: string | null }).role;
-      const canViewPayments = hasPermission(role, { [RESOURCES.PAYMENT]: [ACTIONS.READ] });
-      const isSuperAdmin = (role ?? DEFAULT_ROLE).split(',').includes(SUPERADMIN_ROLE);
-      const canViewReschedules = hasPermission(role, {
+      const canViewPayments = can(ctx.access, { [RESOURCES.PAYMENT]: [ACTIONS.READ] });
+      const isOwner = ctx.access.isOwner;
+      const canViewReschedules = can(ctx.access, {
         [RESOURCES.EVENT]: [ACTIONS.VIEW_RESCHEDULES],
       });
       return {
@@ -54,8 +47,8 @@ export const eventsRouter = router({
         payments: canViewPayments ? detail.payments : null,
         totalPaid: canViewPayments ? detail.totalPaid : null,
         paymentStatus: canViewPayments ? detail.paymentStatus : null,
-        // Activity log (staff/payments/selections/completion) is superadmin-only.
-        history: isSuperAdmin ? detail.history : null,
+        // Activity log (staff/payments/selections/completion) is owner-only.
+        history: isOwner ? detail.history : null,
         reschedules: canViewReschedules ? detail.reschedules : null,
       };
     }),
@@ -63,13 +56,23 @@ export const eventsRouter = router({
   registerPayment: guardedProcedure({ [RESOURCES.PAYMENT]: [ACTIONS.CREATE] })
     .input(z.object({ id: z.uuid(), data: registerEventPaymentSchema }))
     .mutation(({ input, ctx }) =>
-      eventsModule(ctx).registerPayment(input.id, input.data, ctx.user.id, ownerScope(ctx)),
+      eventsModule(ctx).registerPayment(
+        input.id,
+        input.data,
+        ctx.user.id,
+        ownerScope(ctx, [RESOURCES.PAYMENT, ACTIONS.CREATE]),
+      ),
     ),
 
   // Advisory preview: conflicts never block saving, `reschedule` recomputes them itself.
   checkReschedule: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.RESCHEDULE] })
     .input(checkRescheduleSchema)
-    .query(({ input, ctx }) => eventsModule(ctx).checkReschedule(input, ownerScope(ctx))),
+    .query(({ input, ctx }) =>
+      eventsModule(ctx).checkReschedule(
+        input,
+        ownerScope(ctx, [RESOURCES.EVENT, ACTIONS.RESCHEDULE]),
+      ),
+    ),
 
   reschedule: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.RESCHEDULE] })
     .input(rescheduleEventSchema)
@@ -78,43 +81,68 @@ export const eventsRouter = router({
         input,
         ctx.user.id,
         { name: ctx.user.name, image: ctx.user.image ?? null },
-        ownerScope(ctx),
+        ownerScope(ctx, [RESOURCES.EVENT, ACTIONS.RESCHEDULE]),
       ),
     ),
 
   markCompleted: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.UPDATE] })
     .input(z.object({ id: z.uuid() }))
     .mutation(({ input, ctx }) =>
-      eventsModule(ctx).markCompleted(input.id, ctx.user.id, ownerScope(ctx)),
+      eventsModule(ctx).markCompleted(
+        input.id,
+        ctx.user.id,
+        ownerScope(ctx, [RESOURCES.EVENT, ACTIONS.UPDATE]),
+      ),
     ),
 
   assignStaff: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_STAFF_ASSIGNMENTS] })
     .input(assignStaffSchema)
     .mutation(({ input, ctx }) =>
-      eventsModule(ctx).assignStaff(input, ctx.user.id, ownerScope(ctx)),
+      eventsModule(ctx).assignStaff(
+        input,
+        ctx.user.id,
+        ownerScope(ctx, [RESOURCES.EVENT, ACTIONS.MANAGE_STAFF_ASSIGNMENTS]),
+      ),
     ),
 
   removeStaff: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_STAFF_ASSIGNMENTS] })
     .input(removeStaffSchema)
     .mutation(({ input, ctx }) =>
-      eventsModule(ctx).removeStaff(input, ctx.user.id, ownerScope(ctx)),
+      eventsModule(ctx).removeStaff(
+        input,
+        ctx.user.id,
+        ownerScope(ctx, [RESOURCES.EVENT, ACTIONS.MANAGE_STAFF_ASSIGNMENTS]),
+      ),
     ),
 
   removePaymentAttachment: guardedProcedure({ [RESOURCES.PAYMENT]: [ACTIONS.DELETE] })
     .input(removeEventPaymentAttachmentSchema)
     .mutation(({ input, ctx }) =>
-      eventsModule(ctx).removePaymentAttachment(input, ownerScope(ctx)),
+      eventsModule(ctx).removePaymentAttachment(
+        input,
+        ownerScope(ctx, [RESOURCES.PAYMENT, ACTIONS.DELETE]),
+      ),
     ),
 
   removePayment: guardedProcedure({ [RESOURCES.PAYMENT]: [ACTIONS.DELETE] })
     .input(removeEventPaymentSchema)
     .mutation(({ input, ctx }) =>
-      eventsModule(ctx).removePayment(input.eventId, input.paymentId, ctx.user.id, ownerScope(ctx)),
+      eventsModule(ctx).removePayment(
+        input.eventId,
+        input.paymentId,
+        ctx.user.id,
+        ownerScope(ctx, [RESOURCES.PAYMENT, ACTIONS.DELETE]),
+      ),
     ),
 
   updateSelections: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_SELECTIONS] })
     .input(updateEventSelectionsSchema)
     .mutation(({ input, ctx }) =>
-      eventsModule(ctx).updateSelections(input.eventId, input, ctx.user.id, ownerScope(ctx)),
+      eventsModule(ctx).updateSelections(
+        input.eventId,
+        input,
+        ctx.user.id,
+        ownerScope(ctx, [RESOURCES.EVENT, ACTIONS.MANAGE_SELECTIONS]),
+      ),
     ),
 });

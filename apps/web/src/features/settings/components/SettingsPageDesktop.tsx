@@ -16,14 +16,12 @@ import type { SettingsSection } from './SettingsPage';
 
 interface SettingsPageDesktopProps {
   menuItems: SectionMenuItem[];
-  isSuperAdmin: boolean;
   section: SettingsSection;
   onSelectSection: (section: SettingsSection) => void;
 }
 
 export function SettingsPageDesktop({
   menuItems,
-  isSuperAdmin,
   section,
   onSelectSection,
 }: SettingsPageDesktopProps) {
@@ -64,7 +62,7 @@ export function SettingsPageDesktop({
           {section === 'general' && <GeneralSettingsForm />}
           {section === 'preferences' && <PreferencesSettingsForm />}
           {section === 'quotePdfTemplate' && <QuotePdfTemplateForm />}
-          {section === 'permissions' && isSuperAdmin && <PermissionsSettingsForm />}
+          {section === 'permissions' && <PermissionsSettingsForm />}
           {section === 'about' && <AboutSettingsForm />}
         </div>
       </div>

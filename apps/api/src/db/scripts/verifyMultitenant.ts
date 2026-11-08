@@ -9,10 +9,12 @@ and only runs SELECT statements.
 
   --pre   Legacy (pre-migration) mode: prints the row count of every table and the total, the
           user role distribution, the email of every superadmin and the accounts 0001 will make
-          platform admins. Fails when the constraints 0001 replaces are missing, when data would
+          platform admins. Fails when a member (or, before 0001, a user) has a role that is not one
+          of superadmin|admin|operator|member (the roles migration refuses it), when the constraints 0001 replaces are missing, when data would
           collide with the new per-tenant uniques, or when a role looks like a misspelled
           superadmin (e.g. 'SuperAdmin'), which the migration would not promote. Warns when
-          app_settings has no row. Run it right before db:migrate and keep the output.
+          app_settings has no row, and lists organizations with no 'superadmin' member (they
+          get no owner from the roles migration). Run it right before db:migrate and keep the output.
   --platform-admin-emails=<list>
           With --pre: the same comma-separated list that will be passed to db:migrate as
           --set mt.platform_admin_emails=<list>. Only those accounts are promoted (fails when
@@ -23,6 +25,8 @@ and only runs SELECT statements.
           - child rows whose tenant differs from their parent's tenant;
           - duplicates against the per-tenant uniques;
           - organizations without an app_settings row;
+          - members without role_id or whose role belongs to another organization;
+          - organizations without an owner role that has at least one member;
           - users whose is_platform_admin is NULL;
           - sessions without an active organization while organizations exist (platform
             admins excepted). Meant for the moment right after the migration: later on, users
@@ -31,7 +35,7 @@ and only runs SELECT statements.
 
 Exit code: 0 when no problem was found, 1 otherwise.`;
 
-// Every table that carries tenant_id after 0001.
+// Every table that carries tenant_id after 0002.
 export const TENANT_TABLES = [
   'app_settings',
   'clients',
@@ -55,6 +59,9 @@ export const TENANT_TABLES = [
   'quote_stage_settings',
   'quotes',
   'reschedule_reasons',
+  'role',
+  'role_audit_log',
+  'role_permission',
   'staff',
   'state_settings',
   'templates',
@@ -125,6 +132,11 @@ export function parsePlatformAdminEmails(value: string | undefined): string[] {
 
 export type VerifyReport = { counts: Record<string, number>; problems: string[]; notes: string[] };
 
+// The roles migration maps member.role to a base role by these keys and refuses anything else.
+const BASE_ROLE_KEYS = ['superadmin', 'admin', 'operator', 'member'];
+const unknownRoleProblem = (who: string, role: string) =>
+  `${who}: role "${role}" is not one of ${BASE_ROLE_KEYS.join('|')}; the roles migration would refuse it`;
+
 const q = (name: string) => `"${name.replaceAll('"', '""')}"`;
 
 export async function verifyMultitenant(
@@ -189,6 +201,15 @@ export async function verifyMultitenant(
             `user ${u.email}: role "${u.role}" is not exactly "superadmin" and would not become a platform admin`,
           );
         }
+        if (!tables.has('member')) {
+          // 0001 copies user.role verbatim into member.role (empty becomes 'member').
+          const unknownRoles = await sql<{ email: string; role: string }[]>`
+            SELECT email, role FROM "user"
+            WHERE coalesce(role, '') <> '' AND role NOT IN ${sql(BASE_ROLE_KEYS)}
+            ORDER BY email`;
+          for (const u of unknownRoles)
+            problems.push(unknownRoleProblem(`user ${u.email}`, u.role));
+        }
         const superadmins = await sql<{ email: string }[]>`
           SELECT email FROM "user"
           WHERE 'superadmin' = ANY (string_to_array(replace(coalesce(role, ''), ' ', ''), ','))
@@ -212,6 +233,28 @@ export async function verifyMultitenant(
           }
           notes.push(
             `platform admins after 0001 (from the list): ${[...found].sort().join(', ') || 'none'}`,
+          );
+        }
+      }
+      if (tables.has('member')) {
+        const unknownRoles = await sql<{ email: string; role: string }[]>`
+          SELECT u.email, m.role FROM member m JOIN "user" u ON u.id = m.user_id
+          WHERE m.role_id IS NULL AND m.role NOT IN ${sql(BASE_ROLE_KEYS)}
+          ORDER BY u.email`;
+        for (const m of unknownRoles)
+          problems.push(unknownRoleProblem(`member ${m.email}`, m.role));
+      }
+      if (tables.has('member') && tables.has('organization')) {
+        // The roles migration gives the owner role only to legacy 'superadmin' members; tenants
+        // created with their first admin as 'admin' would end up with nobody able to manage roles.
+        const ownerless = await sql<{ slug: string }[]>`
+          SELECT o.slug FROM organization o
+          WHERE NOT EXISTS (
+            SELECT 1 FROM member m WHERE m.organization_id = o.id AND m.role = 'superadmin')
+          ORDER BY o.slug`;
+        if (ownerless.length > 0) {
+          notes.push(
+            `WARNING: ${ownerless.length} organization(s) with no member whose role is "superadmin" will have no owner after the roles migration: ${ownerless.map((o) => o.slug).join(', ')}. After db:migrate, a platform admin selects each one and gives a member its owner role (users.update with the owner roleId).`,
           );
         }
       }
@@ -273,6 +316,26 @@ export async function verifyMultitenant(
     );
     if (duplicatedMembers > 0) {
       problems.push(`member: ${duplicatedMembers} duplicated (organization_id, user_id) pair(s)`);
+    }
+
+    const withoutRole = await count(`SELECT count(*)::int AS n FROM member WHERE role_id IS NULL`);
+    if (withoutRole > 0) problems.push(`member: ${withoutRole} row(s) without role_id`);
+    const foreignRole = await count(
+      `SELECT count(*)::int AS n FROM member m JOIN role r ON r.id = m.role_id
+       WHERE r.tenant_id <> m.organization_id`,
+    );
+    if (foreignRole > 0)
+      problems.push(`member: ${foreignRole} row(s) whose role belongs to another organization`);
+    const withoutOwner = await sql<{ slug: string }[]>`
+      SELECT o.slug FROM organization o
+      WHERE NOT EXISTS (
+        SELECT 1 FROM role r JOIN member m ON m.role_id = r.id
+        WHERE r.tenant_id = o.id AND r.is_owner AND m.organization_id = o.id
+      ) ORDER BY o.slug`;
+    if (withoutOwner.length > 0) {
+      problems.push(
+        `organization: ${withoutOwner.length} without an owner role that has a member (${withoutOwner.map((r) => r.slug).join(', ')})`,
+      );
     }
 
     const withoutSettings = await sql<{ slug: string }[]>`

@@ -1,4 +1,5 @@
 import { organization } from '../../db/schema';
+import { permissionsVersion, type ResolvedAccess } from '../../lib/rbac/access';
 
 export const publicOrganizationColumns = {
   id: organization.id,
@@ -16,3 +17,10 @@ export const organizationResource = (org: PublicOrganization) => ({
 
 export const organizationCollectionResource = (orgs: PublicOrganization[]) =>
   orgs.map(organizationResource);
+
+export const permissionsResource = (access: ResolvedAccess) => ({
+  isOwner: access.isOwner,
+  grants: { ...access.grants },
+  roleName: access.roleName,
+  version: permissionsVersion(access),
+});

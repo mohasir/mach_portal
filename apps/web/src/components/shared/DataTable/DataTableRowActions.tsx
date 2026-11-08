@@ -104,6 +104,7 @@ export function DataTableRowActions({ actions, label }: DataTableRowActionsProps
       label,
       icon: action.icon ?? (Icon ? <Icon size={16} /> : undefined),
       danger,
+      disabled: action.disabled,
       onClick: () => void run(action, preset, label, danger),
     };
   });

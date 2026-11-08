@@ -9,34 +9,44 @@ import {
   updateQuoteSchema,
   updateQuoteStageSchema,
 } from '@repo/schemas';
-import { RESOURCES, ACTIONS, hasPermission, resolveResourceScope } from '@repo/guards';
+import { RESOURCES, ACTIONS, can, type ScopedAction } from '@repo/guards';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
+import type { ResolvedAccess } from '../../lib/rbac/access';
+import { ownerIdFor } from '../../lib/rbac/ownerScope';
 import { quotesModule } from './quotes.module';
 
 const read = guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.READ] });
 const update = guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.UPDATE] });
 
-// scope 'own' (resolveResourceScope) → solo ve/edita las cotizaciones que creó o
-// tiene asignadas (quotes.repository.ts ownerFilter); scope 'all' → sin restricción.
-function ownerScope(ctx: { user: { id: string; role?: string | null } }) {
-  return resolveResourceScope(ctx.user.role, RESOURCES.QUOTE) === 'own' ? ctx.user.id : undefined;
+type AccessCtx = { user: { id: string }; access: ResolvedAccess };
+
+// Each procedure filters by quote.read plus the quote action that gates it, the stricter winning
+// (quotes.repository.ts ownerFilter): a role may read every quote yet update only its own, and an
+// action granted wider than quote.read never reaches quotes the role cannot see.
+function ownerScope(ctx: AccessCtx, action: ScopedAction<typeof RESOURCES.QUOTE>) {
+  return ownerIdFor(
+    ctx.access,
+    ctx.user.id,
+    [RESOURCES.QUOTE, ACTIONS.READ],
+    [RESOURCES.QUOTE, action],
+  );
 }
 
-// Puede fijar un numPersons/subtotal de línea que no venga de una tarifa del catálogo
-// (solo admin/superadmin — ver rolesPermissions.matrix.ts QUOTE_FULL).
-function canManagePricing(ctx: { user: { role?: string | null } }) {
-  return hasPermission(ctx.user.role, { [RESOURCES.QUOTE]: [ACTIONS.MANAGE_LINE_PRICING] });
+// Requires quote.manage_line_pricing to set a line numPersons/subtotal that does not come from a
+// catalog price tier.
+function canManagePricing(ctx: AccessCtx) {
+  return can(ctx.access, { [RESOURCES.QUOTE]: [ACTIONS.MANAGE_LINE_PRICING] });
 }
 
-// Archived quotes are superadmin-only (QUOTE/VIEW_ARCHIVED): without it, asking for them is a
-// no-op instead of an error, since the flag comes from a per-user view preference.
-function canViewArchived(ctx: { user: { role?: string | null } }) {
-  return hasPermission(ctx.user.role, { [RESOURCES.QUOTE]: [ACTIONS.VIEW_ARCHIVED] });
+// Archived quotes require quote.view_archived: without it, asking for them is a no-op instead of
+// an error, since the flag comes from a per-user view preference.
+function canViewArchived(ctx: AccessCtx) {
+  return can(ctx.access, { [RESOURCES.QUOTE]: [ACTIONS.VIEW_ARCHIVED] });
 }
 
 function archivedScope<T extends { includeArchived?: boolean; archived?: boolean }>(
   input: T,
-  ctx: { user: { role?: string | null } },
+  ctx: AccessCtx,
 ): T {
   if (canViewArchived(ctx)) return input;
   return { ...input, includeArchived: false, archived: undefined };
@@ -45,11 +55,13 @@ function archivedScope<T extends { includeArchived?: boolean; archived?: boolean
 export const quotesRouter = router({
   list: read
     .input(quotesListQuerySchema)
-    .query(({ ctx, input }) => quotesModule(ctx).list(archivedScope(input, ctx), ownerScope(ctx))),
+    .query(({ ctx, input }) =>
+      quotesModule(ctx).list(archivedScope(input, ctx), ownerScope(ctx, ACTIONS.READ)),
+    ),
   getById: read
     .input(z.object({ id: z.uuid() }))
     .query(({ ctx, input }) =>
-      quotesModule(ctx).getById(input.id, ownerScope(ctx), canViewArchived(ctx)),
+      quotesModule(ctx).getById(input.id, ownerScope(ctx, ACTIONS.READ), canViewArchived(ctx)),
     ),
   // Deliberately NOT ownerScope'd — advisory heads-up that should surface everyone's
   // bookings for that date/time, not just the caller's own.
@@ -58,15 +70,21 @@ export const quotesRouter = router({
     .query(({ ctx, input }) => quotesModule(ctx).checkAvailability(input)),
   generatePdf: read
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ ctx, input }) => quotesModule(ctx).generatePdf(input.id, ownerScope(ctx))),
-  // Same operation as `generatePdf`, gated to a stricter permission — forces a new PDF
-  // even when the current one isn't stale (superadmin only, see rolesPermissions.matrix.ts).
+    .mutation(({ ctx, input }) =>
+      quotesModule(ctx).generatePdf(input.id, ownerScope(ctx, ACTIONS.READ)),
+    ),
+  // Same operation as `generatePdf`, gated by quote.regenerate_pdf: forces a new PDF even when
+  // the current one isn't stale.
   regeneratePdf: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.REGENERATE_PDF] })
     .input(z.object({ id: z.uuid() }))
-    .mutation(({ ctx, input }) => quotesModule(ctx).generatePdf(input.id, ownerScope(ctx))),
+    .mutation(({ ctx, input }) =>
+      quotesModule(ctx).generatePdf(input.id, ownerScope(ctx, ACTIONS.REGENERATE_PDF)),
+    ),
   board: guardedProcedure({ [RESOURCES.PIPELINE]: [ACTIONS.READ] })
     .input(quotesBoardQuerySchema)
-    .query(({ ctx, input }) => quotesModule(ctx).board(archivedScope(input, ctx), ownerScope(ctx))),
+    .query(({ ctx, input }) =>
+      quotesModule(ctx).board(archivedScope(input, ctx), ownerScope(ctx, ACTIONS.READ)),
+    ),
 
   create: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] })
     .input(createQuoteSchema)
@@ -76,21 +94,33 @@ export const quotesRouter = router({
   update: update
     .input(z.object({ id: z.uuid(), data: updateQuoteSchema }))
     .mutation(({ ctx, input }) =>
-      quotesModule(ctx).update(input.id, input.data, canManagePricing(ctx), ownerScope(ctx)),
+      quotesModule(ctx).update(
+        input.id,
+        input.data,
+        canManagePricing(ctx),
+        ownerScope(ctx, ACTIONS.UPDATE),
+      ),
     ),
   // Gated to QUOTE.UPDATE: only someone who can reprice the quote is asked about new config rates.
   rateDrift: update
     .input(z.object({ id: z.uuid() }))
-    .query(({ ctx, input }) => quotesModule(ctx).rateDrift(input.id, ownerScope(ctx))),
+    .query(({ ctx, input }) =>
+      quotesModule(ctx).rateDrift(input.id, ownerScope(ctx, ACTIONS.UPDATE)),
+    ),
   resolveRateDrift: update
     .input(resolveQuoteRateDriftSchema)
     .mutation(({ ctx, input }) =>
-      quotesModule(ctx).resolveRateDrift(input.id, input.accept, ownerScope(ctx)),
+      quotesModule(ctx).resolveRateDrift(input.id, input.accept, ownerScope(ctx, ACTIONS.UPDATE)),
     ),
   updateStage: update
     .input(updateQuoteStageSchema)
     .mutation(({ ctx, input }) =>
-      quotesModule(ctx).updateStage(input.id, input.stageId, ctx.user.id, ownerScope(ctx)),
+      quotesModule(ctx).updateStage(
+        input.id,
+        input.stageId,
+        ctx.user.id,
+        ownerScope(ctx, ACTIONS.UPDATE),
+      ),
     ),
   approve: update
     .input(z.object({ id: z.uuid() }))
@@ -99,7 +129,7 @@ export const quotesRouter = router({
         input.id,
         ctx.user.id,
         { name: ctx.user.name, image: ctx.user.image ?? null },
-        ownerScope(ctx),
+        ownerScope(ctx, ACTIONS.UPDATE),
       ),
     ),
   cancel: update
@@ -109,18 +139,22 @@ export const quotesRouter = router({
         input.id,
         ctx.user.id,
         { name: ctx.user.name, image: ctx.user.image ?? null },
-        ownerScope(ctx),
+        ownerScope(ctx, ACTIONS.UPDATE),
       ),
     ),
   canArchive: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.DELETE] })
     .input(z.object({ id: z.uuid() }))
-    .query(({ ctx, input }) => quotesModule(ctx).canArchive(input.id, ownerScope(ctx))),
+    .query(({ ctx, input }) =>
+      quotesModule(ctx).canArchive(input.id, ownerScope(ctx, ACTIONS.DELETE)),
+    ),
   archive: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.DELETE] })
     .input(z.object({ id: z.uuid() }))
     .mutation(({ ctx, input }) =>
-      quotesModule(ctx).archive(input.id, ctx.user.id, ownerScope(ctx)),
+      quotesModule(ctx).archive(input.id, ctx.user.id, ownerScope(ctx, ACTIONS.DELETE)),
     ),
 
+  // Not owner-scoped: reassigning hands a quote between users, so it acts on quotes the caller
+  // neither created nor holds. That is why manage_assignment is not in SCOPED_ACTIONS.
   assign: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.MANAGE_ASSIGNMENT] })
     .input(assignQuoteSchema)
     .mutation(({ ctx, input }) =>

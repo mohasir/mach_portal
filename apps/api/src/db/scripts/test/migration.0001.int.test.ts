@@ -4,6 +4,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ROLE_TEMPLATES } from '@repo/guards';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { markBaseline } from '../markBaseline';
@@ -20,6 +21,13 @@ const NAME = "Mach Bar O'Neil  Eventos";
 const TENANT_SETTINGS = { 'mt.tenant_slug': SLUG, 'mt.tenant_name': NAME };
 
 const LEGACY_TABLE_COUNT = 30;
+
+// Every migration shipped in the folder; a full run must record all of them.
+const MIGRATION_COUNT = (
+  JSON.parse(readFileSync(join(MIGRATIONS_FOLDER, 'meta/_journal.json'), 'utf8')) as {
+    entries: unknown[];
+  }
+).entries.length;
 
 const created: string[] = [];
 const tmpDirs: string[] = [];
@@ -40,14 +48,15 @@ async function createDb() {
   return { url, sql: postgres(url, { max: 1, onnotice: () => {} }) };
 }
 
-function baselineOnlyFolder() {
-  const dir = mkdtempSync(join(tmpdir(), 'mt-mig-0000-'));
+function migrationsUpTo(count: number) {
+  const dir = mkdtempSync(join(tmpdir(), 'mt-mig-upto-'));
   tmpDirs.push(dir);
   mkdirSync(join(dir, 'meta'));
   const journal = JSON.parse(readFileSync(join(MIGRATIONS_FOLDER, 'meta/_journal.json'), 'utf8'));
-  journal.entries = journal.entries.slice(0, 1);
+  journal.entries = journal.entries.slice(0, count);
   writeFileSync(join(dir, 'meta/_journal.json'), JSON.stringify(journal));
-  copyFileSync(join(MIGRATIONS_FOLDER, '0000_baseline.sql'), join(dir, '0000_baseline.sql'));
+  for (const { tag } of journal.entries as { tag: string }[])
+    copyFileSync(join(MIGRATIONS_FOLDER, `${tag}.sql`), join(dir, `${tag}.sql`));
   return dir;
 }
 
@@ -147,7 +156,7 @@ async function migrationRows(sql: postgres.Sql) {
 
 beforeAll(() => {
   admin = postgres(serverUrl, { max: 1, onnotice: () => {} });
-  baselineOnly = baselineOnlyFolder();
+  baselineOnly = migrationsUpTo(1);
 });
 
 afterAll(async () => {
@@ -232,7 +241,7 @@ describe('0001 on a legacy database with data', () => {
     expect(orgs).toHaveLength(1);
     expect(orgs[0]).toMatchObject({ slug: SLUG, name: NAME });
     orgId = orgs[0]!.id;
-    expect(await migrationRows(db.sql)).toHaveLength(2);
+    expect(await migrationRows(db.sql)).toHaveLength(MIGRATION_COUNT);
   });
 
   it('keeps every legacy row and adds only the organization and its members', async () => {
@@ -244,6 +253,9 @@ describe('0001 on a legacy database with data', () => {
       invitation: 0,
       platform_access_log: 0,
       quote_stage_settings: legacyCounts['quote_stages'],
+      role: ROLE_TEMPLATES.length,
+      role_permission: ROLE_TEMPLATES.reduce((n, r) => n + r.permissions.length, 0),
+      role_audit_log: 0,
     });
   });
 
@@ -252,7 +264,7 @@ describe('0001 on a legacy database with data', () => {
   });
 
   it('assigns every business row to the new organization', async () => {
-    for (const t of TENANT_TABLES) {
+    for (const t of TENANT_TABLES.filter((x) => !x.startsWith('role'))) {
       const rows = await db.sql.unsafe<{ tenant_id: string | null; n: number }[]>(
         `SELECT tenant_id, count(*)::int AS n FROM "${t}" GROUP BY tenant_id`,
       );
@@ -316,8 +328,9 @@ describe('0001 on a legacy database with data', () => {
       db.sql`INSERT INTO products (tenant_id, name) VALUES (${orgId}, 'Tacos')`,
     ).rejects.toThrow(/products_tenant_name_unique/);
     await expect(
-      db.sql`INSERT INTO member (id, organization_id, user_id, role, created_at)
-             VALUES ('dup', ${orgId}, 'usr_admin', 'admin', now())`,
+      db.sql`INSERT INTO member (id, organization_id, user_id, role, role_id, created_at)
+             SELECT 'dup', organization_id, user_id, role, role_id, now() FROM member
+             WHERE organization_id = ${orgId} AND user_id = 'usr_admin'`,
     ).rejects.toThrow(/member_organizationId_userId_uidx/);
   });
 
@@ -338,7 +351,7 @@ describe('0001 on a legacy database with data', () => {
     expect(await schemaDump(db.sql)).toEqual(before.schema);
     expect(await fingerprints(db.sql, await legacyColumnSets(db.sql))).toEqual(before.prints);
     expect(await publicTables(db.sql)).toEqual(tables);
-    expect(await migrationRows(db.sql)).toHaveLength(2);
+    expect(await migrationRows(db.sql)).toHaveLength(MIGRATION_COUNT);
   });
 
   it('flags a child row whose tenant differs from its parent', async () => {
@@ -397,12 +410,14 @@ describe('0001 backfill edge cases', () => {
     const pre = await verifyMultitenant(db.url, { pre: true });
     expect(pre.problems).toEqual([
       'user typo@x.test: role "SuperAdmin" is not exactly "superadmin" and would not become a platform admin',
+      'user multi@x.test: role "admin,superadmin" is not one of superadmin|admin|operator|member; the roles migration would refuse it',
+      'user typo@x.test: role "SuperAdmin" is not one of superadmin|admin|operator|member; the roles migration would refuse it',
     ]);
     expect(pre.notes).toContain('user roles: =1, SuperAdmin=1, admin,superadmin=1');
     expect(pre.notes.join('\n')).toMatch(/WARNING: app_settings has no row/);
 
     await db.sql`DELETE FROM "user" WHERE id = 'u_typo'`;
-    await runMigrate(db.url, { settings: TENANT_SETTINGS });
+    await runMigrate(db.url, { settings: TENANT_SETTINGS, migrationsFolder: migrationsUpTo(3) });
     const users = await db.sql`
       SELECT u.id, u.is_platform_admin, m.role FROM "user" u JOIN member m ON m.user_id = u.id
       ORDER BY u.id`;
@@ -411,8 +426,16 @@ describe('0001 backfill edge cases', () => {
       { id: 'u_multi', is_platform_admin: true, role: 'admin,superadmin' },
     ]);
     const post = await verifyMultitenant(db.url);
-    expect(post.problems).toEqual([`organization: 1 without app_settings (${SLUG})`]);
+    expect(post.problems).toEqual([
+      'member: 2 row(s) without role_id',
+      `organization: 1 without an owner role that has a member (${SLUG})`,
+      `organization: 1 without app_settings (${SLUG})`,
+    ]);
     expect(post.notes).toContain('platform admins: 1');
+    // A comma-separated legacy role is not a base role: the roles migration refuses it and rolls back.
+    await expectMigrationError(runMigrate(db.url), /unknown member role.*admin,superadmin/);
+    const [roles] = await db.sql<{ n: number }[]>`SELECT count(*)::int AS n FROM role`;
+    expect(roles!.n).toBe(0);
     await db.sql.end();
   });
 });
@@ -513,7 +536,7 @@ describe('0001 on a push-created database registered with db:baseline', () => {
     await markBaseline(db.url);
     await runMigrate(db.url, { settings: TENANT_SETTINGS });
     expect(await db.sql`SELECT slug FROM organization`).toEqual([{ slug: SLUG }]);
-    expect(await migrationRows(db.sql)).toHaveLength(2);
+    expect(await migrationRows(db.sql)).toHaveLength(MIGRATION_COUNT);
     expect((await verifyMultitenant(db.url)).problems).toEqual([]);
     await db.sql.end();
   });
@@ -525,7 +548,7 @@ describe('0001 on an empty legacy database', () => {
     await runMigrate(db.url);
     const [orgs] = await db.sql<{ n: number }[]>`SELECT count(*)::int AS n FROM organization`;
     expect(orgs!.n).toBe(0);
-    expect(await migrationRows(db.sql)).toHaveLength(2);
+    expect(await migrationRows(db.sql)).toHaveLength(MIGRATION_COUNT);
     expect((await verifyMultitenant(db.url)).problems).toEqual([]);
     await db.sql.end();
   });

@@ -1,17 +1,21 @@
-import { ROLES, type RoleType } from '@repo/guards';
+import { ACTIONS, RESOURCES } from '@repo/guards';
 import { notifications } from '../../db/schema';
 
 export type NotificationType =
   'quote_confirmed' | 'quote_cancelled' | 'event_selections_reminder' | 'event_rescheduled';
 
 // Audience per type, resolved in code rather than a DB column — a single source of truth,
-// easy to extend when a new type needs a different audience. Superadmin is deliberately
-// excluded here even though it bypasses every permission check elsewhere in the app.
-export const NOTIFICATION_TYPE_ROLES: Record<NotificationType, RoleType[]> = {
-  quote_confirmed: [ROLES.ADMIN],
-  quote_cancelled: [ROLES.ADMIN],
-  event_selections_reminder: [ROLES.ADMIN],
-  event_rescheduled: [ROLES.ADMIN],
+// easy to extend when a new type needs a different audience. Each type is shown to members whose
+// role holds this permission (owners always do); the permissions are the ones that set the base
+// admin role apart from operator.
+export const NOTIFICATION_TYPE_PERMISSION: Record<
+  NotificationType,
+  { resource: string; action: string }
+> = {
+  quote_confirmed: { resource: RESOURCES.QUOTE, action: ACTIONS.MANAGE_ASSIGNMENT },
+  quote_cancelled: { resource: RESOURCES.QUOTE, action: ACTIONS.MANAGE_ASSIGNMENT },
+  event_selections_reminder: { resource: RESOURCES.EVENT, action: ACTIONS.MANAGE_SELECTIONS },
+  event_rescheduled: { resource: RESOURCES.EVENT, action: ACTIONS.RESCHEDULE },
 };
 
 export type NotificationActor = { name: string; image: string | null };

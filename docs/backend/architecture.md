@@ -16,9 +16,9 @@
 | Runtime / HTTP | **Express 5** |
 | API / RPC | **tRPC v11** (adapter Express) |
 | ORM / DB | **Drizzle** + **Postgres** (`postgres-js`) |
-| Auth | **Better Auth** (plugins `admin` para RBAC y `organization` para tenants/membresías) |
+| Auth | **Better Auth** (plugin `organization` para tenants/membresías; `admin` solo por sus campos de usuario, sin uso para autorizar) |
 | Validación / contrato | **Zod 4** compartido vía **`@repo/schemas`** |
-| Autorización | **`@repo/guards`** (catálogo `ac`/`roles`/`hasPermission`) |
+| Autorización | **`@repo/guards`** (catálogo `TENANT_PERMISSIONS`, `can`/`scopeFor`, `ROLE_TEMPLATES`) sobre roles por organización (§7) |
 | Monorepo | **Turborepo** + **pnpm workspaces** |
 
 ### Principios no negociables
@@ -313,14 +313,16 @@ export const authedProcedure = /* exige sesión */;
 export const tenantProcedure = authedProcedure.use(/* exige ctx.tenant: TENANT_NOT_SELECTED / TENANT_NOT_FOUND */);
 export const protectedProcedure = tenantProcedure.use(/* membresía o admin de plataforma; deja ctx.tenantId */);
 
-// Sesión + permiso. Evalúa el rol contra @repo/guards (sin ir a DB).
+// Permiso sobre el acceso que protectedProcedure ya resolvió (ctx.access, detalle en §11.1).
 export function guardedProcedure(permissions: PermissionCheck) {
   return protectedProcedure.use(({ ctx, next }) => {
-    const role = (ctx.user as { role?: string | null }).role;
-    if (!hasPermission(role, permissions)) throw new TRPCError({ code: 'FORBIDDEN' });
+    if (!can(ctx.access, permissions)) throw new TRPCError({ code: 'FORBIDDEN' });
     return next();
   });
 }
+
+// Pasa si se cumple por completo cualquiera de los checks (ej. roles.assignable: user.create O user.update).
+export function guardedProcedureAnyOf(...checks: [PermissionCheck, ...PermissionCheck[]]) { /* … */ }
 ```
 
 - **`context.ts`** resuelve la sesión con Better Auth (`auth.api.getSession`, sin caché de cookie) y la organización activa (`ctx.tenant`).
@@ -388,11 +390,20 @@ export function paginationMeta(total, page, pageSize): PaginationMeta { /* total
 
 ## 7. Autorización (`@repo/guards` + Better Auth)
 
-- Catálogo único en **`@repo/guards`** (`statements`/`ac`/`roles`/`hasPermission`), consumido por BE y FE.
-- Backend: `lib/auth.ts` registra el plugin `admin({ ac, roles, defaultRole: DEFAULT_ROLE, adminRoles: ADMIN_ROLES })`; los procedures usan `guardedProcedure(permiso)`.
+La autorización es **por membresía**: cada miembro tiene un rol de su organización (`member.role_id` → tabla `role`, con sus filas `role_permission`), y ese rol es lo único que autoriza. Ni `user.role` (global) ni `member.role` (texto heredado) se leen para autorizar (§11.1, §11.6).
+
+- **Catálogo único en `@repo/guards`**, consumido por BE y FE:
+  - `statements`: recursos de dominio (`permissionsMatrix`) + los de Better Auth. Tipa los checks (`PermissionCheck`).
+  - **`TENANT_PERMISSIONS`** (`core/catalog.ts`): lo que un rol de organización **puede otorgar**. Es `statements` sin `session` y con solo las acciones de `user` que algún procedure chequea (`create`, `list`, `update`, `delete`, `set-password`). Lo leen el editor de roles (matriz), la validación de roles (`rolePermissionSchema` de `@repo/schemas` vía `isCatalogPermission`) y `resolveAccess`: un permiso fuera de él no se puede guardar ni autoriza aunque quede una fila vieja.
+  - `can(access, check)` / `scopeFor(access, resource, action)` (`core/evaluate.ts`): evalúan un `AccessGrants` (`{ isOwner, grants: { 'recurso.acción': 'own' | 'all' } }`). El dueño (`isOwner`) pasa todo; un permiso fuera del catálogo nunca autoriza.
+  - `SCOPED_ACTIONS` (`core/scopedActions.ts`): los pares (recurso, acción) que la API filtra por dueño del registro (§11.1). Solo ahí se acepta alcance `own`: la validación de roles rechaza `own` en cualquier otro permiso (`roles.validation.permissionScopeUnsupported`), y `scopeFor` lee como `all` una fila vieja guardada así.
+  - `ROLE_TEMPLATES` (`mappings/roleTemplates.ts`, derivado de `rolesPermissionsMatrix`): los roles base que se siembran en cada organización nueva.
+  - `ac`/`roles`/`DEFAULT_ROLE`/`ADMIN_ROLES`: **solo** para el plugin `admin` de Better Auth (`lib/auth.ts`), que exige un set de roles. Sus endpoints están bloqueados por HTTP y ningún service los llama; los roles globales no otorgan nada salvo el `superadmin` heredado.
+- Los procedures usan `guardedProcedure(permiso)` (o `guardedProcedureAnyOf(...)` cuando alcanza cualquiera de varios permisos), que evalúan `ctx.access` con `can`.
 - **Recursos de dominio** se referencian con las constantes tipadas `RESOURCES`/`ACTIONS`: `guardedProcedure({ [RESOURCES.X]: [ACTIONS.READ] })`. **Nunca** literales sueltos.
-- **Excepción:** los statements nativos de Better Auth (los que no son recursos de dominio) no tienen constante en `RESOURCES` — se referencian por su literal.
-- Detalle del catálogo compartido y `hasPermission`: `docs/frontend/architecture.md` §Autorización (misma fuente de verdad).
+- **Excepción:** los statements nativos de Better Auth (`user`) no tienen constante en `RESOURCES` — el recurso va por su literal y la acción con `ACTIONS` cuando existe (`{ user: [ACTIONS.CREATE] }`).
+- **Permiso nuevo del catálogo:** se agrega la acción en `permissionsMatrix` (y su etiqueta en `locales/*/roles.json` de la web). Con eso aparece **solo en el editor de roles**: ningún rol existente lo recibe (el dueño lo tiene por el bypass). Si un rol base debe traerlo, se agrega en `rolesPermissionsMatrix`, que alimenta `ROLE_TEMPLATES`; eso afecta solo a las organizaciones que se creen después (`seedTenantRoles` nunca reescribe roles existentes). Si la acción admite "solo los suyos", va también en `SCOPED_ACTIONS` y el procedure usa el helper de alcance (§11.1).
+- Detalle del lado web (`usePermissions`, `useCan`, `<Can>`, guard de rutas): `docs/frontend/architecture.md` §9.
 
 ---
 
@@ -402,7 +413,9 @@ export function paginationMeta(total, page, pageSize): PaginationMeta { /* total
 - Schema en `db/schema/` (barrel `index.ts`). `auth.ts` lo genera/gestiona Better Auth; tablas de dominio se agregan aparte y se reexportan en el barrel.
 - **Flujo de esquema (migraciones versionadas en `apps/api/drizzle/`):** cambiar el schema TS → `pnpm --filter api db:generate` → revisar (y si hace falta editar a mano) el SQL generado y commitearlo → `pnpm --filter api db:migrate`. Después de generar, `db:generate` debe responder "No schema changes" y `pnpm --filter api exec drizzle-kit check` "Everything's fine". No hay script `db:push`: solo el harness de integración usa `drizzle-kit push --force`, sobre su base descartable.
   - **Bases creadas con `push`** (sin filas en `drizzle.__drizzle_migrations`): ejecutar **una vez** `pnpm --filter api db:baseline` para registrar la migración `0000` como aplicada; si no, `db:migrate` intentaría recrear las tablas existentes. Se niega a correr si ya está registrada.
-  - `pnpm --filter api mt:verify [--pre]` verifica el estado multi-tenant (conteos por tabla, filas sin `tenant_id`, huérfanas, duplicados, membresías); solo hace `SELECT`. Runbook de cutover: `docs/superpowers/runbooks/multitenant-cutover.md`.
+  - `pnpm --filter api mt:verify [--pre]` verifica el estado multi-tenant (conteos por tabla, filas sin `tenant_id`, huérfanas, duplicados, membresías, roles); solo hace `SELECT`. Runbook de cutover: `docs/superpowers/runbooks/multitenant-cutover.md`.
+  - **Roles por organización (migraciones `0002`–`0004`):** se aplican con la app **detenida** y el código nuevo se despliega **en el mismo paso**. `0003` siembra los roles y enlaza cada membresía por su `member.role` heredado; `0004` deja `member.role_id` en `NOT NULL`, así que el código viejo (que inserta miembros sin `role_id`) falla después, y el código nuevo necesita las tablas `role`/`role_permission`. Orden: `mt:verify --pre` (guardar la salida) → `db:migrate` → `mt:verify` (debe salir sin problemas) → arrancar la app nueva.
+  - `mt:verify --pre` falla con un `member.role` fuera de `superadmin|admin|operator|member` (`0003` lo rechaza) y **avisa** de cada organización sin ningún miembro `superadmin`: `0003` solo da el rol dueño a esos miembros, y las organizaciones creadas con su primer admin como `admin` quedan sin dueño (nadie puede gestionar roles). Después de migrar, un admin de plataforma entra a cada una de esas organizaciones y le asigna el rol dueño a un miembro con `users.update` (`roleId` del rol dueño).
   - Una migración con datos debe ser transaccional y fallar con un mensaje claro si falta un parámetro (`db:migrate --set clave=valor`, que viaja por la conexión directa, no por un pooler).
   - `db:fresh` = reset + migrate + seed local de demostración (`--demo=local`).
 - Borrados: definir `onDelete: 'cascade'` en las FKs cuando corresponda.
@@ -412,8 +425,8 @@ export function paginationMeta(total, page, pageSize): PaginationMeta { /* total
 - **Alta de un tenant:** `pnpm --filter api tenant:create --slug=<slug> --name=<nombre> --admin-email=<email> --admin-name=<nombre>`
   (llama a `createTenant` de `lib/tenancy/createTenant.ts`). Valida el slug (se pasa a minúsculas),
   crea la organización, siembra los defaults del tenant (`seedTenantDefaults`: config, tipos de
-  evento, motivos de reprogramación, catálogo base, plantilla de PDF) y agrega al primer admin como
-  miembro `admin`. Si el email es nuevo imprime un enlace de contraseña (24 h); si la cuenta ya
+  evento, motivos de reprogramación, catálogo base, plantilla de PDF), siembra los roles base
+  (`seedTenantRoles`, desde `ROLE_TEMPLATES`) y agrega al primer admin con el rol dueño. Si el email es nuevo imprime un enlace de contraseña (24 h); si la cuenta ya
   existe la adjunta sin tocar su contraseña. `quote_stages` es global y lo siembra `db:seed`.
 - Toda función `seedX` recibe el `tenantId` y lo estampa en cada fila (hijas incluidas). Son idempotentes.
 - **`pnpm --filter api db:seed`** (`--help` lista flags y usuarios demo):
@@ -433,13 +446,13 @@ export function paginationMeta(total, page, pageSize): PaginationMeta { /* total
   como miembro dejaría de auditarse su acceso.
 - **Usuarios demo** (contraseña: `SEED_PASSWORD` o el default del seed; nunca credenciales reales):
 
-  | Email | Rol |
+  | Email | Rol (en su organización) |
   | --- | --- |
-  | `superadmin@norte.demo` / `superadmin@sur.demo` | `superadmin` |
+  | `superadmin@norte.demo` / `superadmin@sur.demo` | `superadmin` (rol dueño) |
   | `admin@norte.demo` / `admin@sur.demo` | `admin` |
   | `operator@norte.demo` / `operator@sur.demo` | `operator` |
   | `member1@…`, `member2@…` (`norte.demo` / `sur.demo`) | `member` |
-  | `shared@demo.test` | miembro de ambos: `operator` en Norte, `member` en Sur (rol global `operator`, que es el que autoriza en esta fase) |
+  | `shared@demo.test` | miembro de ambos: `operator` en Norte, `member` en Sur (cada membresía autoriza con su propio rol) |
   | `platform@demo.test` | admin de plataforma (`isPlatformAdmin`), sin membresía |
 
 ---
@@ -454,7 +467,7 @@ export function paginationMeta(total, page, pageSize): PaginationMeta { /* total
 6. **Module + Router**: `<module>.module.ts` exporta `xModule(ctx: TenantCtx)` que arma `new XService(new XRepository(db, ctx.tenantId))` (§11.2); el router llama `xModule(ctx).método(input)`; procedures `guardedProcedure({ [RESOURCES.X]: [ACTIONS.Y] }).input(schema).query/mutation`.
 7. **Registrar** el router en `trpc/router.ts` (`appRouter`).
 8. **Errores**: agregar códigos en `lib/errors/constants.ts` (`ErrorCodes.x.*`) y su traducción en `apps/web/src/locales/*/api.json`.
-9. **Guards**: agregar el recurso a los `statements` de `@repo/guards` y a los roles que correspondan.
+9. **Guards**: agregar el recurso y sus acciones a `permissionsMatrix` de `@repo/guards` (aparece en el editor de roles) y, si algún rol base debe traerlo, a `rolesPermissionsMatrix` (`ROLE_TEMPLATES`, solo organizaciones nuevas). Ver §7.
 10. **Aislamiento**: test `modules/<module>/test/<module>.isolation.int.test.ts` con `seedTwoTenants` (§11.5).
 
 Con esto, el front puede inferir `RouterOutputs['<module>']['list']` y construir su feature (ver `docs/frontend/architecture.md`).
@@ -468,7 +481,8 @@ Con esto, el front puede inferir `RouterOutputs['<module>']['list']` y construir
 - ❌ Poner reglas de negocio en el repository (van en el service).
 - ❌ Aceptar un `sortBy` sin whitelist (`sortColumns`) — habilita ordenar por columnas arbitrarias.
 - ❌ Armar un patrón `like`/`ilike` con texto del usuario a mano (`` `%${search}%` ``): usar `containsPattern(search)` (`lib/utils/search.ts`), que escapa `%`, `_` y `\`.
-- ❌ Chequear permisos con `if (role === 'admin')` en vez de `guardedProcedure` + `@repo/guards` (con `RESOURCES`/`ACTIONS`).
+- ❌ Chequear permisos con `if (role === 'admin')`, leyendo `user.role`/`member.role` o el nombre del rol, en vez de `guardedProcedure` + `ctx.access` (con `RESOURCES`/`ACTIONS`).
+- ❌ Filtrar "solo los suyos" sin pasar por `ownerIdFor`/el helper de alcance del módulo, o con un par que no está en `SCOPED_ACTIONS`.
 - ❌ Lanzar strings/errores crudos: usar `TRPCError` con `cause: new AppError(ErrorCodes...)` para errores de dominio.
 - ❌ Escribir DTOs de respuesta a mano: el `resource` es el shape y el front lo infiere del router.
 - ❌ Devolver listas sin `Paginated` / sin `paginationMeta`.
@@ -484,7 +498,7 @@ Con esto, el front puede inferir `RouterOutputs['<module>']['list']` y construir
 
 ## 11. Multi-tenant
 
-Una sola instalación y un solo dominio; los datos de cada cliente (tenant) conviven en las mismas tablas, separados por `tenant_id`. El tenant de una petición es la **organización activa de la sesión** (plugin `organization` de Better Auth); `organization.id` es el `tenantId` y `organization.slug` su identificador estable. El aislamiento de la fase 1 es por filtros explícitos en cada query; el RLS de Postgres como segunda barrera es la fase 1b. Spec: `docs/superpowers/specs/2026-10-19-multitenant-fase1-design.md`.
+Una sola instalación y un solo dominio; los datos de cada cliente (tenant) conviven en las mismas tablas, separados por `tenant_id`. El tenant de una petición es la **organización activa de la sesión** (plugin `organization` de Better Auth); `organization.id` es el `tenantId` y `organization.slug` su identificador estable. El aislamiento de la fase 1 es por filtros explícitos en cada query; el RLS de Postgres como segunda barrera es la fase 1b. Spec: `docs/superpowers/specs/2026-10-19-multitenant-fase1-design.md`. Roles por organización (fase 2): `docs/superpowers/specs/2026-11-06-multitenant-fase2-roles-design.md`.
 
 ### 11.1 Cadena de procedures
 
@@ -492,15 +506,20 @@ Una sola instalación y un solo dominio; los datos de cada cliente (tenant) conv
 createContext      → sesión (sin caché de cookie) → organización activa → ctx.tenant (o null)
 authedProcedure    → exige sesión                                   (solo tenant.memberships / tenant.select)
 tenantProcedure    → exige organización activa: TENANT_NOT_SELECTED / TENANT_NOT_FOUND
-protectedProcedure → exige membresía (o isPlatformAdmin) y mustChangePassword resuelto; deja ctx.tenantId
-guardedProcedure   → permisos del rol (@repo/guards), como siempre
+protectedProcedure → resuelve el acceso (membresía + rol, o admin de plataforma) y exige mustChangePassword resuelto;
+                     deja ctx.tenantId y ctx.access, y la cabecera x-permissions-version
+guardedProcedure   → can(ctx.access, permiso)        guardedProcedureAnyOf → alcanza con uno de varios checks
 ```
 
-- La membresía se **re-verifica en cada petición** (`lib/tenancy/access.ts`, `evaluateTenantAccess`), así que sacar a alguien de la organización surte efecto en la petición siguiente. Solo la fila de la organización (nombre, existencia) se cachea ~60 s en memoria (`lib/tenancy/tenantResolver.ts`).
-- Las rutas de Express fuera de tRPC (hoy `/api/uploads/event-payments`) usan el middleware `guardTenantSession` (`core/express/middleware/`), que aplica las mismas reglas con la misma función de decisión. Una ruta nueva fuera de tRPC **debe** usarlo.
+- **Autorización por membresía.** `protectedProcedure` llama a `resolveRequestAccess` (`lib/rbac/access.ts`): primero `evaluateTenantAccess` (`lib/tenancy/access.ts`) decide si el usuario entra a la organización, y después `resolveAccess` lee **en cada petición, sin caché**, la membresía, su rol y los permisos del rol (con `tenantEq` en cada join). El resultado queda en **`ctx.access`** (`ResolvedAccess`: `isOwner`, `grants`, `roleId`, `roleName`, `roleVersion`). Sacar a alguien de la organización o editar su rol surte efecto en la petición siguiente. Solo la fila de la organización (nombre, existencia) se cachea ~60 s en memoria (`lib/tenancy/tenantResolver.ts`).
+- **Falla cerrado:** sin membresía, con `role_id` nulo o apuntando al rol de otra organización, `resolveAccess` devuelve `null` y la petición recibe `FORBIDDEN`. Las filas de permisos fuera de `TENANT_PERMISSIONS` se descartan.
+- **Admin de plataforma** sin membresía: recibe `OWNER_ACCESS` (acceso de dueño sintético, sin rol: `roleId` nulo, versión `owner:0`) y su acceso se audita (abajo).
+- **Cabecera `x-permissions-version`** (`core/express/const/headers.ts`): toda respuesta de un procedure con tenant lleva `<roleId>:<roleVersion>` (`permissionsVersion(access)`); `cors.ts` la expone (`exposedHeaders`). Cada edición de un rol incrementa su `version`, y un cambio de rol del miembro cambia el `roleId`: la web compara la cabecera con lo que tiene cargado y recarga sus permisos (`docs/frontend/architecture.md` §9.2). `tenant.permissions` (permisos completos + nombre del rol) y `tenant.permissionsVersion` usan `protectedProcedure`: cualquier miembro puede leer los suyos.
+- **Alcance "solo los suyos"** (`own`/`all`): una acción de `SCOPED_ACTIONS` (`@repo/guards`) puede otorgarse con alcance `own`. El procedure gateado por esa acción calcula el dueño a filtrar con `ownerIdFor(ctx.access, ctx.user.id, [recurso, acción])` (`lib/rbac/ownerScope.ts`; en cotizaciones el helper `ownerScope` del router, en eventos `eventOwnerId`, que suma siempre `event.read`) y lo pasa al service; el repository filtra por creador o asignado (eventos y pagos, por la cotización de la que cuelgan). Solo con alcance `all` en todos los checks se levanta el filtro; un permiso ausente también restringe. **Regla:** cada procedure combina el alcance de `read` del recurso con el **de la acción que lo gatea** y gana el más estricto (así `quote.read=own` + `quote.update=all` no modifica cotizaciones que no puede ver), y el tipo `ScopedCheck` rechaza en compilación un par que no esté en `SCOPED_ACTIONS`. El test `lib/rbac/test/scopedActions.test.ts` cubre la otra dirección: falla si un par de `SCOPED_ACTIONS` (que el editor ofrece como own/all) no lo filtra ningún procedure. Una acción entre dueños por naturaleza (ej. `quote.manage_assignment`, reasignar) **no** va en `SCOPED_ACTIONS` ni se filtra.
+- Las rutas de Express fuera de tRPC (hoy `/api/uploads/event-payments`) usan el middleware `guardTenantSession` (`core/express/middleware/`), que aplica las mismas reglas con la misma función de decisión (`resolveRequestAccess` + `can`) y deja el acceso en `res.locals.access`. Una ruta nueva fuera de tRPC **debe** usarlo.
 - La superficie HTTP de Better Auth está recortada: `/sign-up/email` y los endpoints de los plugins `organization` y `admin` se bloquean por HTTP; las llamadas internas (`auth.api.*`) siguen funcionando. El alta de usuarios y organizaciones pasa por `users.create` y `tenant:create`.
 - **Login:** global (email + contraseña). Un gancho de sesión fija la organización activa: con una membresía se activa sola; con varias queda sin activa hasta `tenant.select`; sin ninguna se rechaza con `USER_NO_ORGANIZATION` (el admin de plataforma sin membresías sí entra). La web nunca lee la organización activa de `useSession`: usa `tenant.active`.
-- **Admin de plataforma** (`user.isPlatformAdmin`): puede seleccionar cualquier organización y entra con permisos de `superadmin` si no es miembro. Todo acceso sin membresía queda en `platform_access_log` (la primera query de cada sesión y tenant, y **todas** las mutaciones); la web muestra el aviso "modo plataforma". Un admin de plataforma que además es miembro no se audita, por eso `createTenant` rechaza (`USER_IS_PLATFORM_ADMIN`) un admin inicial que lo sea.
+- **Admin de plataforma** (`user.isPlatformAdmin`, la única marca de plataforma; `user.role` no cuenta): puede seleccionar cualquier organización y, si no es miembro, entra con `OWNER_ACCESS`. Todo acceso sin membresía queda en `platform_access_log` (la primera query de cada sesión y tenant, y **todas** las mutaciones); la web muestra el aviso "modo plataforma". Un admin de plataforma que además es miembro no se audita, por eso `createTenant` rechaza (`USER_IS_PLATFORM_ADMIN`) un admin inicial que lo sea.
 
 ### 11.2 Factory `xModule(ctx)`
 
@@ -580,12 +599,16 @@ Las FK entre tablas de negocio **no** son compuestas con `tenant_id`, así que l
 
 - **Catálogo global `quote_stages`** (estructural, no pertenece a ningún tenant) + **overlay por tenant `quote_stage_settings`** (PK `(tenant_id, stage_id)`; `label`, `color`, `description` opcionales). Las lecturas hacen `LEFT JOIN` al overlay del tenant con `coalesce` a los valores globales; `config.updateQuoteStages` escribe **solo** el overlay. Ningún tenant puede escribir en `quote_stages`.
 - **Tablas de auth globales** (`user`, `session`, `account`, `verification`) y `organization`/`member`: sin `tenant_id`. `platform_access_log` lleva `tenant_id` pero está exenta de la guarda por ser un log de plataforma.
-- **Usuarios compartidos entre organizaciones** (mismo email en varios tenants; `user.role` es global en la fase 1):
-  - La visibilidad de usuarios en un tenant es por **membresía** (`member` con `organization_id = tenantId`); el rol visible es `member.role`.
-  - Un admin de tenant **no** puede cambiar el rol, el nombre ni regenerar el enlace de un usuario con más de una membresía (`USER_IN_MULTIPLE_ORGANIZATIONS`), ni de un admin de plataforma (`USER_IS_PLATFORM_ADMIN`); solo un admin de plataforma.
-  - Eliminar un usuario en un tenant quita su membresía (y revoca sus sesiones activas en esa organización). Si el usuario tiene más de una membresía, solo un admin de plataforma puede eliminarlo (un admin de tenant recibe `USER_IN_MULTIPLE_ORGANIZATIONS`). La fila global `user` solo se borra si no le quedan membresías, no es admin de plataforma y no tiene filas en `platform_access_log` (la FK restringe el borrado para no perder la autoría de la auditoría; la cuenta queda sin organización).
+- **Roles por organización** (`role`, `role_permission`, `role_audit_log`, con `tenant_id`): cada organización tiene sus roles; exactamente uno es el **dueño** (`is_owner`, índice único parcial), que no se edita, duplica ni borra y no guarda permisos (su poder es el bypass de `can`). Los roles base se siembran desde `ROLE_TEMPLATES` con el nombre de la plantilla (`Superadmin` = dueño, `Admin`, `Operator`, `Member`); después son roles comunes que la organización puede editar o renombrar. El módulo `roles` (`roles.*`, gateado por `role.read/create/update/delete`) valida contra `TENANT_PERMISSIONS`, usa `version` para la concurrencia optimista (`ROLE_VERSION_CONFLICT`), no deja borrar un rol en uso (`ROLE_IN_USE` con `memberCount`) y registra cada cambio en `role_audit_log`. **Regla de escalada:** quien no es dueño solo puede crear, editar, duplicar o borrar roles cuyos permisos tenga él mismo con alcance igual o mayor (`isWithinPower`, `ROLE_PRIVILEGE_ESCALATION`).
+- **Usuarios compartidos entre organizaciones** (mismo email en varios tenants; la cuenta `user` es global, el rol es de cada membresía):
+  - La visibilidad de usuarios en un tenant es por **membresía** (`member` con `organization_id = tenantId`); el rol visible es el de `member.role_id` (`{ id, name, isOwner }`). Los miembros con el rol dueño solo se listan a un dueño; para el resto responden como inexistentes (`NOT_FOUND`).
+  - **Asignar rol:** `users.create`/`users.update` reciben `roleId`, que se resuelve dentro del tenant (un rol ajeno es `ROLE_NOT_FOUND`). Solo se puede asignar un rol que pase `canAssignRole` (`roles.service.ts`): el dueño cualquiera; el resto, un rol no dueño cuyos permisos estén dentro de su poder. `roles.assignable` (`guardedProcedureAnyOf({ user: [create] }, { user: [update] })`) devuelve exactamente esos roles, para que quien gestiona usuarios sin `role.read` pueda elegir uno. Nadie cambia su propio rol (`CANNOT_EDIT_OWN_ROLE`) y no se puede quitar el último dueño (`ROLE_LAST_OWNER`).
+  - Quien no es dueño no puede actuar (cambiar rol, renombrar, borrar, regenerar enlace) sobre un miembro cuyo rol actual sea más fuerte que el suyo.
+  - El nombre y las credenciales son globales: un admin de tenant **no** puede renombrar ni regenerar el enlace de un usuario con más de una membresía (`USER_IN_MULTIPLE_ORGANIZATIONS`) ni de un admin de plataforma (`USER_IS_PLATFORM_ADMIN`). El rol sí se puede cambiar: solo toca esta membresía.
+  - Eliminar un usuario en un tenant quita su membresía (y revoca sus sesiones activas en esa organización), también si tiene otras membresías. La fila global `user` solo se borra si no le quedan membresías, no es admin de plataforma y no tiene filas en `platform_access_log` (la FK restringe el borrado para no perder la autoría de la auditoría; la cuenta queda sin organización).
   - `users.create` con un email que ya existe: si ya es miembro de este tenant, `USER_ALREADY_EXISTS`; si existe globalmente sin membresía aquí, solo un admin de plataforma puede adjuntarlo (los admins de tenant reciben `USER_ALREADY_EXISTS`, para no permitir tomar cuentas ajenas pre-registradas); no se toca su contraseña. Un email nuevo crea la cuenta con enlace de contraseña (`WEB_APP_URL`).
   - Las preferencias (`user_preferences`) son por `(tenant_id, user_id)`.
+  - **Columnas heredadas:** `user.role` y `member.role` (texto) no autorizan. `user.role` solo lo escribe el plugin `admin` de Better Auth al registrarse una cuenta (`defaultRole`); `member.role` se sigue escribiendo con la clave del rol base equivalente (`legacyMemberRoleOf`, `member` para roles propios) porque la columna es `NOT NULL` y el plugin `organization` la lee. Se eliminarán en una fase posterior.
 - Subidas a R2 con prefijo por tenant: `t/<tenantId>/event-payments/…`.
 
 ### 11.7 Seeds y alta de tenants
@@ -597,5 +620,5 @@ Ver §8.1 (`tenant:create`, `db:seed --demo=prod|local`, usuarios demo). Toda fu
 - **Cabeceras** (`core/express/securityHeaders.ts`): sin `x-powered-by`. Se envían `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` y `Cross-Origin-Opener-Policy: same-origin`. La API solo sirve JSON, así que la CSP no afecta a la web. HSTS se envía solo con `NODE_ENV=production`.
 - **Origen** (`core/express/originGuard.ts`, montado en `/trpc` y `/api/uploads`): un método que no sea `GET`/`HEAD`/`OPTIONS` se rechaza con 403 `FORBIDDEN_ORIGIN` cuando trae `Origin`, o `Referer` si no hay `Origin`, fuera de `WEB_ORIGIN`. Usa la misma lista que CORS (`isAllowedOrigin` de `cors.ts`). Las llamadas sin `Origin` ni `Referer` (servidor a servidor, scripts) pasan. `/api/auth` tiene su propio chequeo de Better Auth.
 - **Lotes de tRPC:** `maxBatchSize: TRPC_MAX_BATCH_SIZE` (20, `core/trpc/batch.ts`). El `httpBatchLink` de la web usa `maxItems: 20`, y nunca puede ser mayor.
-- **Caché de cookie de sesión:** `maxAge` de 60 s. El `middleware.ts` de la web la usa para redirigir (rol, `mustChangePassword`). tRPC y `guardTenantSession` la saltean (`disableCookieCache`).
+- **Caché de cookie de sesión:** `maxAge` de 60 s. El `middleware.ts` de la web la usa para redirigir (`mustChangePassword`); el rol no viaja en la cookie. tRPC y `guardTenantSession` la saltean (`disableCookieCache`).
 - **`/update-user` por HTTP:** rechaza `image` (la web solo cambia `name`).

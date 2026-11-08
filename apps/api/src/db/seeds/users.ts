@@ -4,6 +4,7 @@ import type { Role } from '@repo/guards';
 import { db } from '../index';
 import { member, user } from '../schema';
 import { auth } from '../../lib/auth';
+import { legacyMemberRole, seedTenantRoles } from '../../lib/rbac/seedTenantRoles';
 
 const SEED_PASSWORD = process.env['SEED_PASSWORD'] ?? 'admin123*';
 
@@ -35,33 +36,44 @@ export async function ensureAccount(
   const { user: created } = await auth.api.signUpEmail({
     body: { name: u.name, email, password: SEED_PASSWORD },
   });
-  // Sign-up assigns the default role; the global role is what authorizes.
   await db
     .update(user)
-    .set({ role: u.role, isPlatformAdmin: extra.isPlatformAdmin ?? false })
+    .set({ isPlatformAdmin: extra.isPlatformAdmin ?? false })
     .where(eq(user.id, created.id));
   return { id: created.id, created: true };
 }
 
-export async function ensureMembership(userId: string, tenantId: string, role: Role) {
+// `roleIds` are the tenant's role ids by key; they are resolved from the tenant itself when omitted.
+export async function ensureMembership(
+  userId: string,
+  tenantId: string,
+  roleKey: Role,
+  roleIds?: Record<Role, string>,
+) {
   const [existing] = await db
     .select({ id: member.id })
     .from(member)
     .where(and(eq(member.userId, userId), eq(member.organizationId, tenantId)))
     .limit(1);
   if (existing) return false;
-  await db
-    .insert(member)
-    .values({ id: randomUUID(), userId, role, createdAt: new Date(), organizationId: tenantId });
+  const ids = roleIds ?? (await seedTenantRoles(tenantId));
+  await db.insert(member).values({
+    id: randomUUID(),
+    userId,
+    role: legacyMemberRole(roleKey),
+    roleId: ids[roleKey],
+    createdAt: new Date(),
+    organizationId: tenantId,
+  });
   return true;
 }
 
-// An account that already exists keeps its global role: another tenant may depend on it.
 export async function seedUsers(tenantId: string, users: SeedUser[]) {
   console.log('👤 Seeding usuarios...');
+  const roleIds = await seedTenantRoles(tenantId);
   for (const u of users) {
     const account = await ensureAccount(u);
-    const added = await ensureMembership(account.id, tenantId, u.role);
+    const added = await ensureMembership(account.id, tenantId, u.role, roleIds);
     console.log(
       `  ${account.created || added ? '✅' : '⏭️ '} ${u.email} (${u.role})${account.created ? '' : ' — cuenta existente'}`,
     );

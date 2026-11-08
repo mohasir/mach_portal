@@ -1,9 +1,9 @@
 import type { Request, RequestHandler } from 'express';
 import { fromNodeHeaders } from 'better-auth/node';
-import { hasPermission, ROLES, type PermissionCheck } from '@repo/guards';
+import { can, type PermissionCheck } from '@repo/guards';
 import { auth } from '../../../lib/auth';
 import { ErrorCodes } from '../../../lib/errors';
-import { evaluateTenantAccess } from '../../../lib/tenancy/access';
+import { resolveRequestAccess } from '../../../lib/rbac/access';
 import { resolveTenantById } from '../../../lib/tenancy/tenantResolver';
 import { recordPlatformAccess } from '../../trpc/platformAccess';
 
@@ -35,18 +35,17 @@ export function guardTenantSession(permissions: PermissionCheck): RequestHandler
       }
 
       const { user, session } = current;
-      const { isPlatformAdmin, mustChangePassword, role } = user as {
+      const { isPlatformAdmin, mustChangePassword } = user as {
         isPlatformAdmin?: boolean | null;
         mustChangePassword?: boolean | null;
-        role?: string | null;
       };
 
-      const access = await evaluateTenantAccess({
+      const resolved = await resolveRequestAccess({
         userId: user.id,
         isPlatformAdmin,
         tenantId: tenant.id,
       });
-      if (!access.allowed) {
+      if (!resolved) {
         res.status(403).json({ errorCode: 'FORBIDDEN' });
         return;
       }
@@ -56,7 +55,7 @@ export function guardTenantSession(permissions: PermissionCheck): RequestHandler
         return;
       }
 
-      if (access.platformAccess) {
+      if (resolved.platformAccess) {
         await recordPlatformAccess({
           userId: user.id,
           tenantId: tenant.id,
@@ -66,14 +65,14 @@ export function guardTenantSession(permissions: PermissionCheck): RequestHandler
         });
       }
 
-      const effectiveRole = access.platformAccess ? ROLES.SUPERADMIN : role;
-      if (!hasPermission(effectiveRole, permissions)) {
+      if (!can(resolved.access, permissions)) {
         res.status(403).json({ errorCode: 'FORBIDDEN' });
         return;
       }
 
       res.locals['tenantId'] = tenant.id;
       res.locals['userId'] = user.id;
+      res.locals['access'] = resolved.access;
       next();
     } catch (err) {
       console.error('guardTenantSession failed', err);

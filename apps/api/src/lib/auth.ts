@@ -84,7 +84,7 @@ export const auth = betterAuth({
     },
   },
   session: {
-    // The web middleware gates routes on the cached cookie (role, mustChangePassword); tRPC and the
+    // The web middleware gates routes on the cached cookie (mustChangePassword); tRPC and the
     // upload guard bypass it. A short maxAge bounds how long Better Auth's get-session keeps
     // answering with a signed-out or changed session.
     cookieCache: { enabled: true, maxAge: 60 },
