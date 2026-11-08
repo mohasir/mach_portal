@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type * as ReactQuery from '@tanstack/react-query';
 import { QueryClient, QueryObserver, type QueryObserverOptions } from '@tanstack/react-query';
 import { createTRPCClient, TRPCClientError } from '@trpc/client';
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
@@ -27,7 +28,7 @@ const trpc = createTRPCOptionsProxy<AppRouter>({
 });
 
 vi.mock('@tanstack/react-query', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@tanstack/react-query')>()),
+  ...(await importOriginal<typeof ReactQuery>()),
   useQuery: (options: unknown) => {
     env.captured.push(options);
     return { data: undefined, isPending: true, isError: false, refetch: vi.fn() };
