@@ -4,7 +4,7 @@ import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, organization } from 'better-auth/plugins';
 import { ac, roles, DEFAULT_ROLE, ADMIN_ROLES } from '@repo/guards';
-import { db } from '../db';
+import { authDb } from '../db';
 import { user } from '../db/schema';
 import { env } from '../env';
 import { ErrorCodes } from './errors/constants';
@@ -22,12 +22,12 @@ function isBlockedOverHttp(path: string | undefined): boolean {
 }
 
 export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: 'pg' }),
+  database: drizzleAdapter(authDb, { provider: 'pg' }),
   emailAndPassword: {
     enabled: true,
     revokeSessionsOnPasswordReset: true,
     onPasswordReset: async ({ user: resetUser }) => {
-      await db.update(user).set({ mustChangePassword: false }).where(eq(user.id, resetUser.id));
+      await authDb.update(user).set({ mustChangePassword: false }).where(eq(user.id, resetUser.id));
     },
   },
   baseURL: env.BETTER_AUTH_URL,
@@ -61,7 +61,7 @@ export const auth = betterAuth({
           // and keep their session without an active organization.
           if (!context?.request && !context?.headers) return;
 
-          const tenancy = new TenancyRepository();
+          const tenancy = new TenancyRepository(authDb);
           const organizationIds = await tenancy.findMemberOrganizationIds(newSession.userId, 2);
 
           if (organizationIds.length === 1) {
