@@ -1,11 +1,16 @@
 import 'dotenv/config';
 import { pathToFileURL } from 'node:url';
 import postgres from 'postgres';
+import { requireDatabaseUrl } from '../databaseUrls';
+import { rlsBypassReasons } from '../rls/roleGuard';
+import { tenantPolicyName } from '../rls/policy';
 
 const HELP = `Usage: pnpm --filter api mt:verify [--pre [--platform-admin-emails=<a@x,b@y>]] [--help]
 
-Checks a database before and after the multi-tenant migration (0001). It reads DATABASE_URL
-and only runs SELECT statements.
+Checks a database before and after the multi-tenant migration (0001). It connects with
+DATABASE_PLATFORM_URL (the "platform" role, which bypasses Row Level Security so it sees every
+organization) and only runs SELECT statements. When DATABASE_APP_URL is set, it also checks the
+role the API connects with.
 
   --pre   Legacy (pre-migration) mode: prints the row count of every table and the total, the
           user role distribution, the email of every superadmin and the accounts 0001 will make
@@ -30,7 +35,13 @@ and only runs SELECT statements.
           - users whose is_platform_admin is NULL;
           - sessions without an active organization while organizations exist (platform
             admins excepted). Meant for the moment right after the migration: later on, users
-            with several memberships legitimately have sessions without one.
+            with several memberships legitimately have sessions without one;
+          - its own connection does not bypass Row Level Security (it would miss rows);
+          - a table with tenant_id whose RLS is not enabled or not forced, that lacks its
+            <table>_tenant_isolation policy (FOR ALL, USING and WITH CHECK comparing tenant_id
+            with app.tenant_id) or that has another permissive policy;
+          - the DATABASE_APP_URL role is a superuser, has BYPASSRLS or CREATEROLE, or is a member
+            of a role that bypasses RLS.
   --help  Shows this message.
 
 Exit code: 0 when no problem was found, 1 otherwise.`;
@@ -139,9 +150,77 @@ const unknownRoleProblem = (who: string, role: string) =>
 
 const q = (name: string) => `"${name.replaceAll('"', '""')}"`;
 
+// pg_policies prints expressions with casts and parentheses that the schema source does not have.
+const normalizeExpression = (expr: string | null) =>
+  (expr ?? '').replaceAll('::text', '').replace(/[\s()]/g, '');
+const SAME_TENANT = normalizeExpression(`tenant_id = current_setting('app.tenant_id', true)`);
+
+type PolicyRow = {
+  tablename: string;
+  policyname: string;
+  permissive: string;
+  cmd: string;
+  qual: string | null;
+  with_check: string | null;
+};
+
+async function checkRowLevelSecurity(sql: postgres.Sql, tables: string[], problems: string[]) {
+  const classes = await sql<{ relname: string; enabled: boolean; forced: boolean }[]>`
+    SELECT relname, relrowsecurity AS enabled, relforcerowsecurity AS forced FROM pg_class
+    WHERE relnamespace = 'public'::regnamespace AND relname IN ${sql(tables)}`;
+  const policies = await sql<PolicyRow[]>`
+    SELECT tablename, policyname, permissive, cmd, qual, with_check FROM pg_policies
+    WHERE schemaname = 'public' AND tablename IN ${sql(tables)}`;
+
+  for (const table of tables) {
+    const cls = classes.find((c) => c.relname === table);
+    if (!cls) continue;
+    if (!cls.enabled) problems.push(`${table}: row level security is not enabled`);
+    if (!cls.forced) problems.push(`${table}: row level security is not forced`);
+
+    const name = tenantPolicyName(table);
+    const own = policies.filter((p) => p.tablename === table);
+    const isolation = own.find((p) => p.policyname === name);
+    if (!isolation) {
+      problems.push(`${table}: missing policy ${name}`);
+    } else if (
+      isolation.permissive !== 'PERMISSIVE' ||
+      isolation.cmd !== 'ALL' ||
+      normalizeExpression(isolation.qual) !== SAME_TENANT ||
+      normalizeExpression(isolation.with_check) !== SAME_TENANT
+    ) {
+      problems.push(
+        `${table}: policy ${name} does not restrict rows to app.tenant_id (USING and WITH CHECK)`,
+      );
+    }
+    // Permissive policies are OR-ed together, so any other one can open rows of other tenants.
+    for (const other of own) {
+      if (other.policyname !== name && other.permissive === 'PERMISSIVE') {
+        problems.push(
+          `${table}: permissive policy ${other.policyname} widens the tenant isolation`,
+        );
+      }
+    }
+  }
+}
+
+async function checkApiRole(appUrl: string, problems: string[]) {
+  const sql = postgres(appUrl, { max: 1, onnotice: () => {} });
+  try {
+    const { rolname, reasons } = await rlsBypassReasons(sql);
+    if (reasons.length > 0) {
+      problems.push(
+        `API role "${rolname}" ${reasons.join(' and ')}: Row Level Security would not isolate organizations`,
+      );
+    }
+  } finally {
+    await sql.end();
+  }
+}
+
 export async function verifyMultitenant(
   url: string,
-  options: { pre?: boolean; platformAdminEmails?: string } = {},
+  options: { pre?: boolean; platformAdminEmails?: string; appUrl?: string } = {},
 ): Promise<VerifyReport> {
   const sql = postgres(url, { max: 1, onnotice: () => {} });
   const problems: string[] = [];
@@ -283,6 +362,30 @@ export async function verifyMultitenant(
       return { counts, problems, notes };
     }
 
+    const [self] = await sql<{ rolname: string; bypasses: boolean }[]>`
+      SELECT rolname, rolsuper OR rolbypassrls AS bypasses FROM pg_roles
+      WHERE rolname = current_user`;
+    if (!self?.bypasses) {
+      problems.push(
+        `connection role "${self?.rolname}" does not bypass RLS, so every count and check below ` +
+          'misses the rows of other organizations; run mt:verify with DATABASE_PLATFORM_URL ' +
+          '(the "platform" role)',
+      );
+    }
+    if (options.appUrl) await checkApiRole(options.appUrl, problems);
+    else notes.push('API role not checked: DATABASE_APP_URL is not set');
+
+    const rlsTables = [
+      ...new Set([
+        ...TENANT_TABLES,
+        'platform_access_log',
+        ...columnRows.filter((r) => r.column_name === 'tenant_id').map((r) => r.table_name),
+      ]),
+    ]
+      .filter((table) => tables.has(table))
+      .sort();
+    await checkRowLevelSecurity(sql, rlsTables, problems);
+
     for (const table of TENANT_TABLES) {
       if (!tables.has(table) || !hasColumn(table, 'tenant_id')) {
         problems.push(`${table}: missing table or tenant_id column`);
@@ -414,13 +517,14 @@ async function main(args: string[]) {
     console.error(`Unknown argument(s): ${unknown.join(' ')}\n\n${HELP}`);
     return 1;
   }
-  const url = process.env['DATABASE_URL'];
-  if (!url) {
-    console.error('DATABASE_URL is required');
-    return 1;
-  }
+  const url = requireDatabaseUrl('DATABASE_PLATFORM_URL');
+  const appUrl = process.env['DATABASE_APP_URL']?.trim() || undefined;
   const platformAdminEmails = args.find((a) => a.startsWith(emailsFlag))?.slice(emailsFlag.length);
-  const report = await verifyMultitenant(url, { pre: args.includes('--pre'), platformAdminEmails });
+  const report = await verifyMultitenant(url, {
+    pre: args.includes('--pre'),
+    platformAdminEmails,
+    appUrl,
+  });
   printReport(report);
   return report.problems.length === 0 ? 0 : 1;
 }

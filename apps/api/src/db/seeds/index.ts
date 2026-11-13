@@ -1,4 +1,5 @@
-import { queryClient } from '../index';
+import { authQueryClient, queryClient } from '../index';
+import { closePlatformDb, platformDb } from '../platform';
 import { DEMO_PLATFORM_ADMIN_EMAIL, DEMO_SHARED_USER_EMAIL, DEMO_TENANTS } from './demo';
 import { PROD_SUPERADMIN_EMAIL } from './prod';
 import { runSeed } from './run';
@@ -30,6 +31,8 @@ Flags:
   --help                        Show this help.
 
 All runs are idempotent. Demo passwords come from SEED_PASSWORD (or the built-in default).
+Writes through DATABASE_PLATFORM_URL (the "platform" role, it seeds several organizations); new
+accounts go through Better Auth, which uses DATABASE_APP_URL.
 
 Demo users (--demo=local):
 ${demoUsersHelp}
@@ -56,25 +59,30 @@ function parseArgs(): { demo: DemoMode; tenant?: string } {
   return { demo, tenant };
 }
 
+async function closeClients() {
+  await Promise.all([closePlatformDb(), queryClient.end(), authQueryClient.end()]);
+}
+
 async function main() {
   if (process.argv.includes('--help')) {
     console.log(HELP);
-    await queryClient.end();
+    await closeClients();
     return;
   }
 
   try {
     const { demo, tenant } = parseArgs();
+    const database = platformDb();
     console.log(`🌱 Iniciando seeding (--demo=${demo}${tenant ? ` --tenant=${tenant}` : ''})...`);
-    await runSeed({ demo, tenant });
+    await runSeed({ demo, tenant }, database);
     console.log('✅ Seeding completado.');
   } catch (error) {
     console.error('❌ Seeding falló:', error);
-    await queryClient.end();
+    await closeClients();
     process.exit(1);
   }
 
-  await queryClient.end();
+  await closeClients();
   process.exit(0);
 }
 

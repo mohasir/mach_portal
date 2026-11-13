@@ -1,4 +1,5 @@
-import { db } from '../db';
+import { db, withTenantTx, type Database, type Tx } from '../db';
+import { TenancyRepository } from '../lib/tenancy/tenancy.repository';
 import { addDays, subtractDays, todayInBusinessTimezone } from '../lib/utils/date';
 import { ConfigRepository } from '../modules/config/config.repository';
 import { EventsRepository } from '../modules/events/events.repository';
@@ -9,10 +10,35 @@ import type { EventSelectionsReminderData } from '../modules/notifications/notif
 // setting, to keep this reminder's scope small.
 const LEAD_DAYS = 3;
 
-export async function checkEventSelectionsReminders(tenantId: string) {
-  const eventsRepo = new EventsRepository(db, tenantId);
-  const configRepo = new ConfigRepository(db, tenantId);
-  const notificationsRepo = new NotificationsRepository(db, tenantId);
+export type RemindersRun = { tenantIds: string[]; failed: { tenantId: string; error: unknown }[] };
+
+// Runs as the `app` role, so the tenant's rows are only visible inside its tenant transaction.
+export async function checkEventSelectionsReminders(tenantId: string, database: Database = db) {
+  await withTenantTx(tenantId, (tx) => createDueReminders(tx, tenantId), database);
+}
+
+// One transaction per organization: a failure rolls back only that organization's reminders and
+// the run goes on with the rest.
+export async function checkEventSelectionsRemindersForAllTenants(
+  database: Database = db,
+): Promise<RemindersRun> {
+  const tenantIds = await new TenancyRepository(database).listOrganizationIds();
+  const failed: RemindersRun['failed'] = [];
+  for (const tenantId of tenantIds) {
+    try {
+      await checkEventSelectionsReminders(tenantId, database);
+    } catch (error) {
+      console.error(`[jobs] event reminders failed for organization ${tenantId}`, error);
+      failed.push({ tenantId, error });
+    }
+  }
+  return { tenantIds, failed };
+}
+
+async function createDueReminders(tx: Tx, tenantId: string) {
+  const eventsRepo = new EventsRepository(tx, tenantId);
+  const configRepo = new ConfigRepository(tx, tenantId);
+  const notificationsRepo = new NotificationsRepository(tx, tenantId);
 
   const [rawCandidates, appRow] = await Promise.all([
     eventsRepo.findPendingSelectionsCandidates(),

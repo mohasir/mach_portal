@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import type { Role } from '@repo/guards';
-import { db } from '../index';
+import { db as defaultDb, type Executor } from '../index';
 import { member, user } from '../schema';
 import { auth } from '../../lib/auth';
 import { legacyMemberRole, seedTenantRoles } from '../../lib/rbac/seedTenantRoles';
@@ -20,6 +20,7 @@ export interface SeedUser {
 export async function ensureAccount(
   u: SeedUser,
   extra: { isPlatformAdmin?: boolean } = {},
+  db: Executor = defaultDb,
 ): Promise<{ id: string; created: boolean }> {
   const email = u.email.toLowerCase();
   const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, email));
@@ -49,6 +50,7 @@ export async function ensureMembership(
   tenantId: string,
   roleKey: Role,
   roleIds?: Record<Role, string>,
+  db: Executor = defaultDb,
 ) {
   const [existing] = await db
     .select({ id: member.id })
@@ -56,7 +58,7 @@ export async function ensureMembership(
     .where(and(eq(member.userId, userId), eq(member.organizationId, tenantId)))
     .limit(1);
   if (existing) return false;
-  const ids = roleIds ?? (await seedTenantRoles(tenantId));
+  const ids = roleIds ?? (await seedTenantRoles(tenantId, db));
   await db.insert(member).values({
     id: randomUUID(),
     userId,
@@ -68,12 +70,12 @@ export async function ensureMembership(
   return true;
 }
 
-export async function seedUsers(tenantId: string, users: SeedUser[]) {
+export async function seedUsers(tenantId: string, users: SeedUser[], db: Executor = defaultDb) {
   console.log('👤 Seeding usuarios...');
-  const roleIds = await seedTenantRoles(tenantId);
+  const roleIds = await seedTenantRoles(tenantId, db);
   for (const u of users) {
-    const account = await ensureAccount(u);
-    const added = await ensureMembership(account.id, tenantId, u.role, roleIds);
+    const account = await ensureAccount(u, {}, db);
+    const added = await ensureMembership(account.id, tenantId, u.role, roleIds, db);
     console.log(
       `  ${account.created || added ? '✅' : '⏭️ '} ${u.email} (${u.role})${account.created ? '' : ' — cuenta existente'}`,
     );

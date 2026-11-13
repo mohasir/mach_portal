@@ -1,5 +1,7 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { eq, sql } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import { QUOTE_STAGE } from '@repo/schemas';
 import {
   appSettings,
@@ -11,10 +13,16 @@ import {
   quoteLines,
   quotes,
 } from '../../db/schema';
+import * as schema from '../../db/schema';
+import type { Database } from '../../db';
 import { addDays, todayInBusinessTimezone } from '../../lib/utils/date';
 import { resetDb, seedTwoTenants, testDb, type TestTenant } from '../../test/db';
 import { seedQuoteStages } from '../../test/fixtures/events';
-import { checkEventSelectionsReminders } from '../eventReminders.job';
+import { TEST_APP_ROLE, testAppDatabaseUrl } from '../../test/roles';
+import {
+  checkEventSelectionsReminders,
+  checkEventSelectionsRemindersForAllTenants,
+} from '../eventReminders.job';
 
 // Inside the 3-day lead window only when the tenant's deadline setting is >= 2 days.
 const EVENT_DATE = () => addDays(todayInBusinessTimezone(), 5);
@@ -151,5 +159,70 @@ describe('checkEventSelectionsReminders', () => {
     // Deadline 0 days: only the event inside the 3-day window is due, not the one 5 days out.
     const rows = await remindersOf(b.id);
     expect(rows.map((r) => r.entityId)).toEqual([soon]);
+  });
+});
+
+describe('event reminders as the app role (subject to RLS)', () => {
+  let appClient: ReturnType<typeof postgres>;
+  let appDb: Database;
+  let a: TestTenant;
+  let b: TestTenant;
+  let eventA: string;
+  let eventB: string;
+
+  beforeAll(async () => {
+    appClient = postgres(testAppDatabaseUrl(), { max: 2 });
+    appDb = drizzle(appClient, { schema }) as unknown as Database;
+    const [row] = await appDb.execute<{ who: string }>(sql`select current_user as who`);
+    expect(row?.who).toBe(TEST_APP_ROLE);
+  });
+
+  afterAll(async () => {
+    await appClient?.end();
+  });
+
+  beforeEach(async () => {
+    await resetDb();
+    await seedQuoteStages();
+    ({ a, b } = await seedTwoTenants());
+    await testDb.insert(appSettings).values([
+      { tenantId: a.id, optionsSelectionDeadlineDays: 2 },
+      { tenantId: b.id, optionsSelectionDeadlineDays: 2 },
+    ]);
+    eventA = await seedPendingEvent(a, 'A');
+    eventB = await seedPendingEvent(b, 'B');
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('creates the reminders of every organization, in one tenant transaction each', async () => {
+    const transaction = vi.spyOn(appDb, 'transaction');
+
+    const result = await checkEventSelectionsRemindersForAllTenants(appDb);
+
+    expect(result.failed).toEqual([]);
+    expect([...result.tenantIds].sort()).toEqual([a.id, b.id].sort());
+    expect(transaction).toHaveBeenCalledTimes(2);
+    expect((await remindersOf(a.id)).map((r) => r.entityId)).toEqual([eventA]);
+    expect((await remindersOf(b.id)).map((r) => r.entityId)).toEqual([eventB]);
+  });
+
+  it('runs a single organization inside its own tenant transaction', async () => {
+    await checkEventSelectionsReminders(b.id, appDb);
+
+    expect(await remindersOf(a.id)).toHaveLength(0);
+    expect((await remindersOf(b.id)).map((r) => r.entityId)).toEqual([eventB]);
+  });
+
+  it('keeps going with the other organizations when one fails', async () => {
+    vi.spyOn(appDb, 'transaction').mockRejectedValueOnce(new Error('boom'));
+
+    const result = await checkEventSelectionsRemindersForAllTenants(appDb);
+
+    expect(result.failed).toHaveLength(1);
+    const failedId = result.failed[0]!.tenantId;
+    const okId = failedId === a.id ? b.id : a.id;
+    expect(await remindersOf(failedId)).toHaveLength(0);
+    expect(await remindersOf(okId)).toHaveLength(1);
   });
 });

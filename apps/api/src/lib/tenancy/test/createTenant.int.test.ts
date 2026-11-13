@@ -1,4 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import { randomUUID } from 'node:crypto';
 import { and, eq, inArray, like, sql } from 'drizzle-orm';
 import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
@@ -24,6 +26,12 @@ import { seedQuoteStages } from '../../../db/seeds/quoteStages';
 import * as defaults from '../../../db/seeds/defaults';
 import { addMember, createTestTenant, resetDb, testDb } from '../../../test/db';
 import type { TenantCtx } from '../../../core/trpc/tenantCtx';
+import type { Database } from '../../../db';
+import {
+  TEST_PLATFORM_ROLE,
+  testAppDatabaseUrl,
+  testPlatformDatabaseUrl,
+} from '../../../test/roles';
 import { configModule } from '../../../modules/config/config.module';
 import { quotesModule } from '../../../modules/quotes/quotes.module';
 import { auth } from '../../auth';
@@ -34,7 +42,7 @@ vi.mock('../../../db/seeds/defaults', async (importOriginal) => {
   return { ...actual, seedTenantDefaults: vi.fn(actual.seedTenantDefaults) };
 });
 
-const ctxFor = (tenantId: string) => ({ tenantId }) as unknown as TenantCtx;
+const ctxFor = (tenantId: string) => ({ tenantId, db: testDb }) as unknown as TenantCtx;
 
 const tenantTables = (Object.values(schema).filter((v) => is(v, PgTable)) as unknown as PgTable[])
   .map((t) => getTableConfig(t).name)
@@ -92,7 +100,7 @@ describe('createTenant', () => {
     it.each(['Bad Slug!', 'a', '-abc', 'abc-', 'a'.repeat(33), 'ñandu'])(
       'rejects the invalid slug %j and writes nothing',
       async (slug) => {
-        await expect(createTenant(input(slug, 'x@invalid.test'))).rejects.toMatchObject({
+        await expect(createTenant(input(slug, 'x@invalid.test'), testDb)).rejects.toMatchObject({
           code: 'BAD_REQUEST',
           cause: { code: 'TENANT_INVALID_SLUG' },
         });
@@ -102,17 +110,17 @@ describe('createTenant', () => {
     );
 
     it('normalizes the slug to lowercase before validating', async () => {
-      const { tenantId } = await createTenant(input('Acme-Co', 'admin@acme.test'));
+      const { tenantId } = await createTenant(input('Acme-Co', 'admin@acme.test'), testDb);
       const [org] = await testDb.select().from(organization).where(eq(organization.id, tenantId));
       expect(org!.slug).toBe('acme-co');
       expect(org!.name).toBe('Tenant Acme-Co');
     });
 
     it('rejects a duplicate slug without creating rows or an account', async () => {
-      await createTenant(input('acme', 'first@acme.test'));
+      await createTenant(input('acme', 'first@acme.test'), testDb);
       const before = await Promise.all(tenantTables.map((t) => countOf(tableByName(t))));
 
-      await expect(createTenant(input('ACME', 'second@acme.test'))).rejects.toMatchObject({
+      await expect(createTenant(input('ACME', 'second@acme.test'), testDb)).rejects.toMatchObject({
         code: 'CONFLICT',
         cause: { code: 'TENANT_SLUG_TAKEN' },
       });
@@ -124,8 +132,8 @@ describe('createTenant', () => {
 
     it('two concurrent creates of one slug: one wins, the loser leaves no account behind', async () => {
       const results = await Promise.allSettled([
-        createTenant(input('race', 'one@race.test')),
-        createTenant(input('race', 'two@race.test')),
+        createTenant(input('race', 'one@race.test'), testDb),
+        createTenant(input('race', 'two@race.test'), testDb),
       ]);
       expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
       const rejected = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
@@ -138,7 +146,7 @@ describe('createTenant', () => {
 
   describe('a new tenant', () => {
     it('has the 4 base roles, with exactly one owner', async () => {
-      const { tenantId } = await createTenant(input('acme'));
+      const { tenantId } = await createTenant(input('acme'), testDb);
       const roles = await testDb.select().from(role).where(eq(role.tenantId, tenantId));
       expect(roles.map((r) => r.name).sort()).toEqual([
         'Admin',
@@ -150,7 +158,7 @@ describe('createTenant', () => {
     });
 
     it('has app_settings and state_settings, and config.get responds', async () => {
-      const { tenantId } = await createTenant(input('acme'));
+      const { tenantId } = await createTenant(input('acme'), testDb);
       expect(await rowsPerTenant('app_settings', tenantId)).toBe(1);
       expect(await rowsPerTenant('state_settings', tenantId)).toBe(3);
 
@@ -161,7 +169,7 @@ describe('createTenant', () => {
     });
 
     it('seeds the per-tenant defaults: event types, reschedule reasons, catalog and PDF template', async () => {
-      const { tenantId } = await createTenant(input('acme'));
+      const { tenantId } = await createTenant(input('acme'), testDb);
       for (const table of [
         'event_types',
         'reschedule_reasons',
@@ -179,7 +187,7 @@ describe('createTenant', () => {
     });
 
     it('can create a quote right away, numbered from 1', async () => {
-      const { tenantId } = await createTenant(input('acme'));
+      const { tenantId } = await createTenant(input('acme'), testDb);
       const admin = await accountByEmail('admin@acme.test');
       const [client] = await testDb
         .insert(clients)
@@ -218,7 +226,7 @@ describe('createTenant', () => {
     });
 
     it('makes the admin a member holding the owner role and returns a setup link on WEB_APP_URL', async () => {
-      const { tenantId, setupUrl } = await createTenant(input('acme', 'Boss@Acme.test'));
+      const { tenantId, setupUrl } = await createTenant(input('acme', 'Boss@Acme.test'), testDb);
       const admin = await accountByEmail('boss@acme.test');
       expect(admin).toMatchObject({
         name: 'Admin acme',
@@ -257,10 +265,12 @@ describe('createTenant', () => {
       });
       await testDb.update(user).set({ isPlatformAdmin: true }).where(eq(user.id, pa.id));
 
-      await expect(createTenant(input('acme', 'PLATFORM@acme.test'))).rejects.toMatchObject({
-        code: 'FORBIDDEN',
-        cause: { code: 'USER_IS_PLATFORM_ADMIN' },
-      });
+      await expect(createTenant(input('acme', 'PLATFORM@acme.test'), testDb)).rejects.toMatchObject(
+        {
+          code: 'FORBIDDEN',
+          cause: { code: 'USER_IS_PLATFORM_ADMIN' },
+        },
+      );
 
       expect(await countOf(organization)).toBe(0);
       expect(await countOf(member)).toBe(0);
@@ -278,7 +288,7 @@ describe('createTenant', () => {
       await testDb.update(user).set({ role: 'operator' }).where(eq(user.id, existing.id));
       const hashBefore = await credentialOf(existing.id);
 
-      const { tenantId, setupUrl } = await createTenant(input('acme', 'KNOWN@acme.test'));
+      const { tenantId, setupUrl } = await createTenant(input('acme', 'KNOWN@acme.test'), testDb);
 
       expect(setupUrl).toBeNull();
       const after = await accountByEmail('known@acme.test');
@@ -301,7 +311,7 @@ describe('createTenant', () => {
       await testDb.update(user).set({ role: 'operator' }).where(eq(user.id, existing.id));
       await addMember(existing.id, other.id, 'operator');
 
-      const { tenantId, setupUrl } = await createTenant(input('acme', 'shared@acme.test'));
+      const { tenantId, setupUrl } = await createTenant(input('acme', 'shared@acme.test'), testDb);
 
       expect(setupUrl).toBeNull();
       expect((await accountByEmail('shared@acme.test'))!.role).toBe('operator');
@@ -316,8 +326,8 @@ describe('createTenant', () => {
   });
 
   it('two consecutive tenants share no rows', async () => {
-    const t1 = await createTenant(input('first'));
-    const t2 = await createTenant(input('second'));
+    const t1 = await createTenant(input('first'), testDb);
+    const t2 = await createTenant(input('second'), testDb);
     expect(t1.tenantId).not.toBe(t2.tenantId);
     expect(t1.setupUrl).not.toBe(t2.setupUrl);
 
@@ -356,7 +366,7 @@ describe('createTenant', () => {
 
     it('leaves no organization and deletes the account this call created', async () => {
       failDefaults();
-      await expect(createTenant(input('acme', 'new@acme.test'))).rejects.toThrow('boom');
+      await expect(createTenant(input('acme', 'new@acme.test'), testDb)).rejects.toThrow('boom');
       expect(await countOf(organization)).toBe(0);
       expect(await countOf(member)).toBe(0);
       expect(await accountByEmail('new@acme.test')).toBeUndefined();
@@ -369,7 +379,7 @@ describe('createTenant', () => {
         body: { name: 'Orphan', email: 'orphan@acme.test', password: 'known-password-123' },
       });
       failDefaults();
-      await expect(createTenant(input('acme', 'orphan@acme.test'))).rejects.toThrow('boom');
+      await expect(createTenant(input('acme', 'orphan@acme.test'), testDb)).rejects.toThrow('boom');
       expect(await countOf(organization)).toBe(0);
       expect(await accountByEmail('orphan@acme.test')).toMatchObject({ id: existing.id });
     });
@@ -386,7 +396,7 @@ describe('createTenant', () => {
       }) as typeof auth.api.signUpEmail);
       failDefaults();
 
-      await expect(createTenant(input('acme', 'raced@acme.test'))).rejects.toThrow('boom');
+      await expect(createTenant(input('acme', 'raced@acme.test'), testDb)).rejects.toThrow('boom');
       const kept = await accountByEmail('raced@acme.test');
       expect(kept).toBeDefined();
       const memberships = await testDb.select().from(member).where(eq(member.userId, kept!.id));
@@ -396,8 +406,8 @@ describe('createTenant', () => {
 
     it('a retry after the failure succeeds and issues a setup link', async () => {
       failDefaults();
-      await expect(createTenant(input('acme', 'retry@acme.test'))).rejects.toThrow('boom');
-      const { setupUrl } = await createTenant(input('acme', 'retry@acme.test'));
+      await expect(createTenant(input('acme', 'retry@acme.test'), testDb)).rejects.toThrow('boom');
+      const { setupUrl } = await createTenant(input('acme', 'retry@acme.test'), testDb);
       expect(setupUrl).toMatch(/reason=create$/);
       expect(await countOf(user)).toBe(1);
       expect(await countOf(member)).toBe(1);
@@ -409,7 +419,7 @@ describe('createTenant', () => {
     { timeout: 60_000 },
     async () => {
       const slugs = Array.from({ length: 16 }, (_, i) => `bulk-${i}-${randomUUID().slice(0, 6)}`);
-      const results = await Promise.all(slugs.map((slug) => createTenant(input(slug))));
+      const results = await Promise.all(slugs.map((slug) => createTenant(input(slug), testDb)));
       expect(new Set(results.map((r) => r.tenantId)).size).toBe(16);
       expect(results.every((r) => r.setupUrl !== null)).toBe(true);
       expect(await countOf(organization)).toBe(16);
@@ -417,6 +427,63 @@ describe('createTenant', () => {
       expect(await countOf(appSettings)).toBe(16);
     },
   );
+});
+
+describe('createTenant with the database roles', () => {
+  const clientsToClose: ReturnType<typeof postgres>[] = [];
+  const connect = (url: string) => {
+    const client = postgres(url, { max: 2 });
+    clientsToClose.push(client);
+    return drizzle(client, { schema }) as unknown as Database;
+  };
+  let platformDb: Database;
+  let appDb: Database;
+
+  beforeAll(async () => {
+    platformDb = connect(testPlatformDatabaseUrl());
+    appDb = connect(testAppDatabaseUrl());
+    const [row] = await platformDb.execute<{ who: string }>(sql`select current_user as who`);
+    expect(row?.who).toBe(TEST_PLATFORM_ROLE);
+  });
+
+  afterAll(async () => {
+    await Promise.all(clientsToClose.map((client) => client.end()));
+  });
+
+  beforeEach(async () => {
+    await resetDb();
+    await seedQuoteStages();
+  });
+
+  it('creates the tenant, its defaults and its first admin through the platform role', async () => {
+    const { tenantId, setupUrl } = await createTenant(input('acme'), platformDb);
+
+    expect(setupUrl).toMatch(/reason=create$/);
+    expect(await rowsPerTenant('app_settings', tenantId)).toBe(1);
+    expect(await rowsPerTenant('role', tenantId)).toBe(4);
+    expect(await rowsPerTenant('products', tenantId)).toBeGreaterThan(0);
+    const admin = await accountByEmail('admin@acme.test');
+    const memberships = await testDb.select().from(member).where(eq(member.userId, admin!.id));
+    expect(memberships).toEqual([expect.objectContaining({ organizationId: tenantId })]);
+  });
+
+  it('cannot write the tenant rows through the app role, and leaves nothing behind', async () => {
+    const error = await createTenant(input('acme'), appDb).then(
+      () => undefined,
+      (e: unknown) => e,
+    );
+    // Drizzle wraps the driver error, so the Postgres message is somewhere down the cause chain.
+    const messages: string[] = [];
+    for (let e = error as Error | undefined; e; e = e.cause as Error | undefined) {
+      messages.push(e.message);
+    }
+    expect(messages).toContainEqual(
+      expect.stringMatching(/new row violates row-level security policy/),
+    );
+
+    expect(await countOf(organization)).toBe(0);
+    expect(await accountByEmail('admin@acme.test')).toBeUndefined();
+  });
 });
 
 function tableByName(name: string): PgTable {

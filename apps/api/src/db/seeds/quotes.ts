@@ -6,7 +6,7 @@ import {
   type DiscountType,
   type QuoteStageId,
 } from '@repo/schemas';
-import { db } from '../index';
+import { db as defaultDb, type Executor } from '../index';
 import {
   quotes,
   quoteLines,
@@ -601,7 +601,12 @@ export interface SeedQuotesOptions {
   assigneeEmails?: string[];
 }
 
-async function loadContext(tenantId: string, creatorEmail: string, assigneeEmails: string[]) {
+async function loadContext(
+  db: Executor,
+  tenantId: string,
+  creatorEmail: string,
+  assigneeEmails: string[],
+) {
   const [
     clientRows,
     eventTypeRows,
@@ -720,9 +725,13 @@ function resolveLine(line: SeedLine, ctx: Context) {
   return { productId: product.id, numPersons: line.numPersons, subtotal: tier.price, selections };
 }
 
-export async function seedQuotes(tenantId: string, opts: SeedQuotesOptions) {
+export async function seedQuotes(
+  tenantId: string,
+  opts: SeedQuotesOptions,
+  db: Executor = defaultDb,
+) {
   console.log('🧾 Seeding cotizaciones...');
-  const ctx = await loadContext(tenantId, opts.creatorEmail, opts.assigneeEmails ?? []);
+  const ctx = await loadContext(db, tenantId, opts.creatorEmail, opts.assigneeEmails ?? []);
   if (!ctx.appRow) {
     console.log('  ⏭️  app_settings no está seedeado, salteando cotizaciones');
     return;

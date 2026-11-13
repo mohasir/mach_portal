@@ -2,7 +2,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { and, eq, like, notExists, sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { ROLES } from '@repo/guards';
-import { db } from '../../db';
+import type { Database } from '../../db';
 import { member, organization, user, verification } from '../../db/schema';
 import { seedTenantDefaults } from '../../db/seeds/defaults';
 import { lockUserEmail } from '../../db/locks';
@@ -33,15 +33,19 @@ const slugTaken = () =>
     cause: new AppError(ErrorCodes.tenant.SLUG_TAKEN),
   });
 
-async function findAccountId(email: string) {
-  const [row] = await db.select({ id: user.id }).from(user).where(eq(user.email, email)).limit(1);
+async function findAccountId(database: Database, email: string) {
+  const [row] = await database
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.email, email))
+    .limit(1);
   return row?.id;
 }
 
 // Better Auth hashes a random password that is thrown away; the admin sets the real one through
 // the setup link. A sign-up that loses a race for the same email reuses the winner's account.
-async function provisionAccount(email: string, name: string) {
-  const existing = await findAccountId(email);
+async function provisionAccount(database: Database, email: string, name: string) {
+  const existing = await findAccountId(database, email);
   if (existing) return { id: existing, created: false };
   try {
     const { user: created } = await auth.api.signUpEmail({
@@ -49,7 +53,7 @@ async function provisionAccount(email: string, name: string) {
     });
     return { id: created.id, created: true };
   } catch (error) {
-    const raced = await findAccountId(email);
+    const raced = await findAccountId(database, email);
     if (raced) return { id: raced, created: false };
     throw error;
   }
@@ -62,7 +66,13 @@ async function provisionAccount(email: string, name: string) {
 // never while one is held: enough concurrent calls would otherwise fill the pool with waiting
 // transactions. Everything tenant-related is then written in one transaction, and an account
 // created by this call is removed again if that transaction fails (unless it has a membership).
-export async function createTenant(input: CreateTenantInput): Promise<CreateTenantResult> {
+//
+// It writes a tenant's rows before any request has that tenant set, so `database` must be a role
+// that bypasses Row Level Security (the platform client); under `app` every tenant insert fails.
+export async function createTenant(
+  input: CreateTenantInput,
+  database: Database,
+): Promise<CreateTenantResult> {
   const slug = normalizeSlug(input.slug);
   if (!isValidSlug(slug)) throw badRequest(ErrorCodes.tenant.INVALID_SLUG);
   const name = input.name.trim();
@@ -72,7 +82,7 @@ export async function createTenant(input: CreateTenantInput): Promise<CreateTena
     throw badRequest(ErrorCodes.tenant.INVALID_INPUT);
   }
 
-  const [taken] = await db
+  const [taken] = await database
     .select({ id: organization.id })
     .from(organization)
     .where(eq(organization.slug, slug))
@@ -80,7 +90,7 @@ export async function createTenant(input: CreateTenantInput): Promise<CreateTena
   if (taken) throw slugTaken();
 
   // A member is not audited when it accesses the tenant, so a platform admin must not become one.
-  const [existingAccount] = await db
+  const [existingAccount] = await database
     .select({ isPlatformAdmin: user.isPlatformAdmin })
     .from(user)
     .where(eq(user.email, email))
@@ -92,10 +102,10 @@ export async function createTenant(input: CreateTenantInput): Promise<CreateTena
     });
   }
 
-  const account = await provisionAccount(email, adminName);
+  const account = await provisionAccount(database, email, adminName);
 
   try {
-    const { tenantId, token } = await db.transaction(async (tx) => {
+    const { tenantId, token } = await database.transaction(async (tx) => {
       await lockUserEmail(tx, email);
       const tenantId = randomUUID();
       await tx.insert(organization).values({ id: tenantId, name, slug, createdAt: new Date() });
@@ -139,7 +149,7 @@ export async function createTenant(input: CreateTenantInput): Promise<CreateTena
     };
   } catch (error) {
     if (account.created) {
-      await db
+      await database
         .transaction(async (tx) => {
           await lockUserEmail(tx, email);
           await tx.delete(user).where(
