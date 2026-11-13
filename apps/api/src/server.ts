@@ -9,6 +9,8 @@ import { securityHeaders } from './core/express/securityHeaders';
 import { TRPC_MAX_BATCH_SIZE } from './core/trpc/batch';
 import { appRouter } from './core/trpc/router';
 import { createContext } from './core/trpc/context';
+import { queryClient } from './db';
+import { assertAppRoleRestricted } from './db/rls/roleGuard';
 import { env } from './env';
 import { eventAttachmentsRouter } from './modules/events/events.express';
 
@@ -46,7 +48,13 @@ app.use(
   }),
 );
 
-// Crons are not scheduled: they do not iterate over tenants yet. Run a job per tenant with its
-// script instead (e.g. `pnpm --filter api jobs:event-reminders -- --tenant=<slug>`).
+// Crons are not scheduled here: jobs run through their scripts, for one organization or for all
+// (`pnpm --filter api jobs:event-reminders -- --tenant=<slug>` or `-- --all`).
 
-app.listen(env.PORT, () => console.log(`API on :${env.PORT}`));
+assertAppRoleRestricted(queryClient).then(
+  () => app.listen(env.PORT, () => console.log(`API on :${env.PORT}`)),
+  (error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  },
+);

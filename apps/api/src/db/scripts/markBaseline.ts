@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import postgres from 'postgres';
+import { requireDatabaseUrl } from '../databaseUrls';
 import { MIGRATIONS_FOLDER } from './migrate';
 
 type Journal = { entries: { tag: string; when: number }[] };
@@ -63,9 +64,13 @@ export async function markBaseline(url: string, migrationsFolder = MIGRATIONS_FO
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const url = process.env['DATABASE_URL'];
-  if (!url) {
-    console.error('DATABASE_URL is required');
+  // The migrations ledger it creates is the one db:migrate (the owner role) reads and extends, and
+  // the platform role has no privilege to create the `drizzle` schema.
+  let url: string;
+  try {
+    url = requireDatabaseUrl('DATABASE_OWNER_URL');
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
     process.exit(1);
   }
   markBaseline(url).then(

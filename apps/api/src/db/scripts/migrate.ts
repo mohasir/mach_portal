@@ -3,6 +3,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
+import { requireDatabaseUrl } from '../databaseUrls';
 
 export const MIGRATIONS_FOLDER = fileURLToPath(new URL('../../../drizzle', import.meta.url));
 
@@ -44,8 +45,9 @@ export async function runMigrate(url: string, options: MigrateOptions = {}) {
 }
 
 async function main() {
-  const url = process.env['DATABASE_URL'];
-  if (!url) throw new Error('DATABASE_URL is required');
+  // The tables must belong to the owner role: the default privileges db:roles sets for `app` and
+  // `platform` only cover objects that role creates.
+  const url = requireDatabaseUrl('DATABASE_OWNER_URL');
   await runMigrate(url, { settings: parseSetArgs(process.argv.slice(2)) });
   console.log('Migrations applied.');
 }
@@ -56,8 +58,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     (error) => {
       // Drizzle wraps the database error in a message that repeats the whole statement, which
       // can be a long DO block; the reason (e.g. a RAISE EXCEPTION text) is in the cause.
-      const cause = error instanceof Error && error.cause instanceof Error ? error.cause : undefined;
-      console.error(`Migration failed: ${cause?.message ?? (error instanceof Error ? error.message : error)}`);
+      const cause =
+        error instanceof Error && error.cause instanceof Error ? error.cause : undefined;
+      console.error(
+        `Migration failed: ${cause?.message ?? (error instanceof Error ? error.message : error)}`,
+      );
       console.error('Nothing was applied: all pending migrations run in one transaction.');
       if (cause && error instanceof Error) console.error(`\n${error.message.slice(0, 400)}…`);
       process.exit(1);

@@ -48,7 +48,7 @@ describe('assertSafeTestDatabaseUrl', () => {
     'postgres://u:p@localhost:5432/test',
     'postgres://u:p@127.0.0.1:5433/test',
     'postgres://localhost/test',
-    'postgres://mach_admin:mach12345678@localhost:5432/mach_db',
+    'postgres://u:p@localhost:5432/mach_db',
     'postgres://u:p@127.0.0.1/test',
     'postgres://u:p:q@localhost/test',
   ])('accepts a local host (%s)', (url) => {
