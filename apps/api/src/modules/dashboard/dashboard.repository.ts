@@ -1,12 +1,12 @@
 import { and, count, desc, eq, isNull, sql } from 'drizzle-orm';
 import { QUOTE_STAGE } from '@repo/schemas';
-import type { Database } from '../../db';
+import type { Executor } from '../../db';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { events, eventPayments, quotes, quoteLines, products } from '../../db/schema';
 
 export class DashboardRepository {
   constructor(
-    private db: Database,
+    private db: Executor,
     private tenantId: string,
   ) {}
 

@@ -1,6 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm';
 import type { UpdateUserPreferencesInput } from '@repo/schemas';
-import type { Database } from '../../db';
+import type { Executor } from '../../db';
 import { userPreferences } from '../../db/schema';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import {
@@ -10,7 +10,7 @@ import {
 
 export class UserPreferencesRepository {
   constructor(
-    private db: Database,
+    private db: Executor,
     private tenantId: string,
   ) {}
 

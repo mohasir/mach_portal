@@ -1,6 +1,6 @@
 import { and, asc, count, desc, eq, inArray, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 import type { NotificationsListQuery } from '@repo/schemas';
-import type { Database } from '../../db';
+import type { Executor } from '../../db';
 import { notifications, notificationReads } from '../../db/schema';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
@@ -16,7 +16,7 @@ export type CreateNotificationInput = {
 
 export class NotificationsRepository {
   constructor(
-    private db: Database,
+    private db: Executor,
     private tenantId: string,
   ) {}
 

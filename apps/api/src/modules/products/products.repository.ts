@@ -8,7 +8,7 @@ import type {
   UpdateOptionInput,
   UpdateProductInput,
 } from '@repo/schemas';
-import type { Database, Tx } from '../../db';
+import type { Executor, Tx } from '../../db';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import {
   options,
@@ -26,7 +26,7 @@ import {
 
 export class ProductsRepository {
   constructor(
-    private db: Database,
+    private db: Executor,
     private tenantId: string,
   ) {}
 

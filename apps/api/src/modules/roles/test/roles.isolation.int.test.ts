@@ -25,6 +25,7 @@ async function ownerCtx(tenant: TestTenant): Promise<TenantCtx> {
     user: { id: owner.id },
     session: {},
     access,
+    db: testDb,
   } as unknown as TenantCtx;
 }
 

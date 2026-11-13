@@ -8,7 +8,7 @@ import type {
   UpdateQuoteDefaultsInput,
   UpdateTaxPreferencesInput,
 } from '@repo/schemas';
-import type { Database } from '../../db';
+import type { Executor } from '../../db';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import {
   appSettings,
@@ -21,7 +21,7 @@ import { publicAppSettingsColumns, publicStateSettingColumns } from './config.re
 
 export class ConfigRepository {
   constructor(
-    private db: Database,
+    private db: Executor,
     private tenantId: string,
   ) {}
 

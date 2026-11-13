@@ -40,10 +40,14 @@ const lastOwner = () =>
 const setupUrl = (token: string, reason: 'create' | 'reset') =>
   `${env.WEB_APP_URL}/set-password?token=${token}&reason=${reason}`;
 
+// Better Auth creates accounts on its own pool, so an account must be removed on that pool too.
+export type AccountCleanup = Pick<UsersRepository, 'deleteAccountWithoutMemberships'>;
+
 export class UsersService {
   constructor(
     private repo: UsersRepository,
     private actor: UsersActor,
+    private accounts: AccountCleanup = repo,
   ) {}
 
   // The person issuing the link never learns any user's real password (creation or reset): this
@@ -124,11 +128,9 @@ export class UsersService {
     return { items: resource, pagination: paginationMeta(total, page, pageSize) };
   }
 
-  // Never holds a transaction (and so a pool connection) while Better Auth's sign-up waits for a
-  // connection of its own: enough concurrent creates would otherwise fill the pool with waiting
-  // transactions and block every request. The email lock is taken before and after sign-up
-  // instead, and a sign-up that loses a race for the same email falls back to the existing
-  // account path.
+  // Better Auth's sign-up commits on its own pool (authDb), so it never waits for a connection
+  // the request is holding. The email lock is taken before and after sign-up, and a sign-up that
+  // loses a race for the same email falls back to the existing account path.
   async create(input: CreateUserInput): Promise<CreateUserResult> {
     const email = input.email.toLowerCase();
     // Checked before any account exists, so a refused role never leaves a sign-up behind.
@@ -152,8 +154,12 @@ export class UsersService {
       throw error;
     }
 
+    let written: {
+      created: NonNullable<Awaited<ReturnType<UsersRepository['findPublicById']>>>;
+      token: string;
+    };
     try {
-      const { created, token } = await this.repo.withUserLock(email, async (repo) => {
+      written = await this.repo.withUserLock(email, async (repo) => {
         // Any membership, in any tenant, means another create attached this account between sign-up
         // and now; writing a setup link here would reach into that tenant.
         if ((await repo.countMemberships(userId)) > 0) throw alreadyExists();
@@ -165,15 +171,19 @@ export class UsersService {
         if (!created) throw notFound();
         return { created, token: await this.writePasswordSetupToken(repo, userId) };
       });
-      return { user: userResource(created), setupUrl: setupUrl(token, 'create') };
     } catch (error) {
-      // Leaves no account behind without membership, so retrying the create starts over. An
-      // account that meanwhile got a membership elsewhere is kept by the repository guard.
-      await this.repo
-        .withUserLock(email, (repo) => repo.deleteAccountWithoutMemberships(userId))
+      // Leaves no account behind without membership, so retrying the create starts over. It runs
+      // outside `repo`'s transaction, which the error is about to roll back while Better Auth's
+      // account stays committed. No email lock here: inside a request transaction the one taken
+      // by attachExistingAccount is held until the request ends, and waiting for it again from
+      // another connection would never return. An account that meanwhile got a membership
+      // elsewhere is kept by the repository guard.
+      await this.accounts
+        .deleteAccountWithoutMemberships(userId)
         .catch((cleanupErr) => console.error('user create cleanup failed', cleanupErr));
       throw error;
     }
+    return { user: userResource(written.created), setupUrl: setupUrl(written.token, 'create') };
   }
 
   // Attaching an account that already exists is reserved to platform admins: a tenant admin could

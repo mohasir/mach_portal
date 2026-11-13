@@ -1,6 +1,6 @@
 import { and, asc, count, desc, eq, ilike, notInArray, or, type SQL } from 'drizzle-orm';
 import type { CreateStaffInput, StaffListQuery, UpdateStaffInput } from '@repo/schemas';
-import type { Database } from '../../db';
+import type { Executor } from '../../db';
 import { events, eventStaff, quotes, staff } from '../../db/schema';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
@@ -16,7 +16,7 @@ const sortColumns = {
 
 export class StaffRepository {
   constructor(
-    private db: Database,
+    private db: Executor,
     private tenantId: string,
   ) {}
 
