@@ -13,6 +13,9 @@ import {
   type RescheduleEventInput,
   type UpdateEventSelectionsInput,
 } from '@repo/schemas';
+import type { AfterCommit } from '../../core/trpc/tenantCtx';
+import type { TenantRunner, Tx } from '../../db';
+import { runInBackground } from '../../lib/background';
 import { AppError, ErrorCodes, type ErrorCode } from '../../lib/errors';
 import { getStorageProvider, type StorageProvider } from '../../lib/storage';
 import { todayInBusinessTimezone } from '../../lib/utils/date';
@@ -74,8 +77,19 @@ export class EventsService {
     private rescheduleReasonsRepo: RescheduleReasonsRepository,
     private notificationsRepo: NotificationsRepository,
     private staffRepo: StaffRepository,
+    private afterCommit: AfterCommit,
     private storage: StorageProvider = getStorageProvider(),
   ) {}
+
+  // The DB delete is the source of truth: the files go only once it has committed, so a rolled
+  // back request never loses them, and a failed delete only leaves a harmless orphan, logged.
+  private deleteFilesAfterCommit(keys: string[]) {
+    this.afterCommit(() => {
+      for (const key of keys) {
+        runInBackground('storage delete failed', () => this.storage.delete(key));
+      }
+    });
+  }
 
   // Blocks any mutation on an event whose quote is archived, for every role/scope —
   // and, additionally, 404s scope 'own' (scopeFor) callers instead of
@@ -258,54 +272,6 @@ export class EventsService {
     return { ok: true };
   }
 
-  // Called only from the raw Express upload route (multipart) — throws a bare
-  // AppError, not TRPCError, since that transport has no tRPC errorFormatter.
-  async addPaymentAttachment(
-    paymentId: string,
-    file: UploadedPaymentAttachmentFile,
-    uploadedById: string | null,
-    ownerId?: string,
-  ) {
-    const payment = await this.repo.findPaymentById(paymentId);
-    // Same answer for a payment outside the caller's scope as for a missing one.
-    if (!payment || !(await this.repo.isAccessible(payment.eventId, ownerId))) {
-      throw new AppError(ErrorCodes.eventPayment.NOT_FOUND, undefined, 404);
-    }
-
-    const ext = EXTENSION_BY_MIME[file.mimetype] ?? 'bin';
-    // Older attachments keep the unprefixed key they were stored with; every read and delete
-    // goes through the stored key, never a rebuilt one.
-    const key = `t/${this.repo.tenantId}/event-payments/${randomUUID()}.${ext}`;
-    const { url } = await this.storage.upload({
-      key,
-      body: file.buffer,
-      contentType: file.mimetype,
-    });
-
-    let row: Awaited<ReturnType<EventsRepository['createAttachment']>>;
-    try {
-      row = await this.repo.createAttachment({
-        paymentId,
-        key,
-        url,
-        fileName: file.originalname,
-        mimeType: file.mimetype,
-        size: file.size,
-        createdById: uploadedById,
-      });
-    } catch (err) {
-      // Best effort: without a row nothing references the object, so it would only leak space.
-      await this.storage
-        .delete(key)
-        .catch((cleanupErr) => console.error('storage delete failed', cleanupErr));
-      throw err;
-    }
-    // The insert's returning row has no join to `user` — the immediate upload response
-    // doesn't need the uploader's display name; the frontend refetches via `getById`
-    // (which does join it) right after, so this only affects this one response's shape.
-    return eventPaymentAttachmentResource({ ...row!, createdByName: null });
-  }
-
   async removePaymentAttachment(input: RemoveEventPaymentAttachmentInput, ownerId?: string) {
     await this.assertAccessible(input.eventId, ownerId);
     const deleted = await this.repo.deleteAttachment(input.eventId, input.attachmentId);
@@ -315,11 +281,7 @@ export class EventsService {
         cause: new AppError(ErrorCodes.eventPayment.ATTACHMENT_NOT_FOUND),
       });
     }
-    // A leftover R2 object is harmless; a DB row pointing at nothing is worse, so
-    // the DB delete above is the source of truth and this failure is only logged.
-    await this.storage
-      .delete(deleted.key)
-      .catch((err) => console.error('storage delete failed', err));
+    this.deleteFilesAfterCommit([deleted.key]);
     return { ok: true };
   }
 
@@ -332,13 +294,7 @@ export class EventsService {
         cause: new AppError(ErrorCodes.eventPayment.NOT_FOUND),
       });
     }
-    // Same reasoning as removePaymentAttachment: the DB delete is the source of truth,
-    // a leftover R2 object is only logged, not surfaced to the caller.
-    await Promise.all(
-      result.attachmentKeys.map((key) =>
-        this.storage.delete(key).catch((err) => console.error('storage delete failed', err)),
-      ),
-    );
+    this.deleteFilesAfterCommit(result.attachmentKeys);
     return { ok: true };
   }
 
@@ -381,5 +337,69 @@ export class EventsService {
       });
     }
     return removed;
+  }
+}
+
+// Holds no connection during the upload: the payment is resolved in one short tenant transaction,
+// the file goes to storage outside any, and the row is saved in another.
+export class PaymentAttachmentUploader {
+  constructor(
+    private runInTenant: TenantRunner,
+    private repositoryFor: (tx: Tx) => EventsRepository,
+    private storage: StorageProvider = getStorageProvider(),
+  ) {}
+
+  // Called only from the raw Express upload route (multipart) — throws a bare
+  // AppError, not TRPCError, since that transport has no tRPC errorFormatter.
+  async add(
+    paymentId: string,
+    file: UploadedPaymentAttachmentFile,
+    uploadedById: string | null,
+    ownerId?: string,
+  ) {
+    const tenantId = await this.runInTenant(async (tx) => {
+      const repo = this.repositoryFor(tx);
+      const payment = await repo.findPaymentById(paymentId);
+      // Same answer for a payment outside the caller's scope as for a missing one.
+      if (!payment || !(await repo.isAccessible(payment.eventId, ownerId))) {
+        throw new AppError(ErrorCodes.eventPayment.NOT_FOUND, undefined, 404);
+      }
+      return repo.tenantId;
+    });
+
+    const ext = EXTENSION_BY_MIME[file.mimetype] ?? 'bin';
+    // Older attachments keep the unprefixed key they were stored with; every read and delete
+    // goes through the stored key, never a rebuilt one.
+    const key = `t/${tenantId}/event-payments/${randomUUID()}.${ext}`;
+    const { url } = await this.storage.upload({
+      key,
+      body: file.buffer,
+      contentType: file.mimetype,
+    });
+
+    let row: Awaited<ReturnType<EventsRepository['createAttachment']>>;
+    try {
+      row = await this.runInTenant((tx) =>
+        this.repositoryFor(tx).createAttachment({
+          paymentId,
+          key,
+          url,
+          fileName: file.originalname,
+          mimeType: file.mimetype,
+          size: file.size,
+          createdById: uploadedById,
+        }),
+      );
+    } catch (err) {
+      // Best effort: without a row nothing references the object, so it would only leak space.
+      await this.storage
+        .delete(key)
+        .catch((cleanupErr) => console.error('storage delete failed', cleanupErr));
+      throw err;
+    }
+    // The insert's returning row has no join to `user` — the immediate upload response
+    // doesn't need the uploader's display name; the frontend refetches via `getById`
+    // (which does join it) right after, so this only affects this one response's shape.
+    return eventPaymentAttachmentResource({ ...row!, createdByName: null });
   }
 }

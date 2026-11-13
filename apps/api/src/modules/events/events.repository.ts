@@ -25,7 +25,7 @@ import {
   type RegisterEventPaymentInput,
   type RemoveStaffInput,
 } from '@repo/schemas';
-import type { Database } from '../../db';
+import type { Executor } from '../../db';
 import {
   clients,
   events,
@@ -87,7 +87,7 @@ type AttachmentInsert = Omit<typeof eventPaymentAttachments.$inferInsert, 'tenan
 
 export class EventsRepository {
   constructor(
-    private db: Database,
+    private db: Executor,
     readonly tenantId: string,
   ) {}
 
@@ -586,7 +586,7 @@ export class EventsRepository {
     return !!row;
   }
 
-  private findStaffName(tx: Pick<Database, 'select'>, staffId: string) {
+  private findStaffName(tx: Pick<Executor, 'select'>, staffId: string) {
     return tx
       .select({ name: staff.name })
       .from(staff)

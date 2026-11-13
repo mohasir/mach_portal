@@ -10,10 +10,10 @@ import {
   updateQuoteStageSchema,
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS, can, type ScopedAction } from '@repo/guards';
-import { router, guardedProcedure } from '../../core/trpc/trpc';
+import { router, guardedProcedure, guardedShortTxProcedure } from '../../core/trpc/trpc';
 import type { ResolvedAccess } from '../../lib/rbac/access';
 import { ownerIdFor } from '../../lib/rbac/ownerScope';
-import { quotesModule } from './quotes.module';
+import { quotesModule, quotesPdfModule } from './quotes.module';
 
 const read = guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.READ] });
 const update = guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.UPDATE] });
@@ -68,17 +68,18 @@ export const quotesRouter = router({
   checkAvailability: read
     .input(checkQuoteAvailabilitySchema)
     .query(({ ctx, input }) => quotesModule(ctx).checkAvailability(input)),
-  generatePdf: read
+  // Short transactions: no connection is held while the external PDF service works.
+  generatePdf: guardedShortTxProcedure({ [RESOURCES.QUOTE]: [ACTIONS.READ] })
     .input(z.object({ id: z.uuid() }))
     .mutation(({ ctx, input }) =>
-      quotesModule(ctx).generatePdf(input.id, ownerScope(ctx, ACTIONS.READ)),
+      quotesPdfModule(ctx).generate(input.id, ownerScope(ctx, ACTIONS.READ)),
     ),
   // Same operation as `generatePdf`, gated by quote.regenerate_pdf: forces a new PDF even when
   // the current one isn't stale.
-  regeneratePdf: guardedProcedure({ [RESOURCES.QUOTE]: [ACTIONS.REGENERATE_PDF] })
+  regeneratePdf: guardedShortTxProcedure({ [RESOURCES.QUOTE]: [ACTIONS.REGENERATE_PDF] })
     .input(z.object({ id: z.uuid() }))
     .mutation(({ ctx, input }) =>
-      quotesModule(ctx).generatePdf(input.id, ownerScope(ctx, ACTIONS.REGENERATE_PDF)),
+      quotesPdfModule(ctx).generate(input.id, ownerScope(ctx, ACTIONS.REGENERATE_PDF)),
     ),
   board: guardedProcedure({ [RESOURCES.PIPELINE]: [ACTIONS.READ] })
     .input(quotesBoardQuerySchema)

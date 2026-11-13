@@ -29,7 +29,7 @@ import type { NotificationsRepository } from '../../notifications/notifications.
 import { ProductsRepository } from '../../products/products.repository';
 import { TemplatesRepository } from '../../templates/templates.repository';
 import { QuotesRepository } from '../quotes.repository';
-import { QuotesService } from '../quotes.service';
+import { QuotePdfGenerator, QuotesService } from '../quotes.service';
 
 const DATE = '2030-06-01';
 const TIME = '18:00';
@@ -669,12 +669,20 @@ describe('quotes tenant isolation', () => {
 
   describe('service boundary', () => {
     function serviceFor(tenant: TestTenant) {
+      const pdf = new QuotePdfGenerator(
+        (fn) => testDb.transaction(fn),
+        (tx) => ({
+          quotes: new QuotesRepository(tx, tenant.id),
+          products: new ProductsRepository(tx, tenant.id),
+          templates: new TemplatesRepository(tx, tenant.id),
+        }),
+      );
       return new QuotesService(
         new QuotesRepository(testDb, tenant.id),
         new ConfigRepository(testDb, tenant.id),
-        new ProductsRepository(testDb, tenant.id),
-        new TemplatesRepository(testDb, tenant.id),
         {} as NotificationsRepository,
+        pdf,
+        () => undefined,
       );
     }
     const draft = { isDraft: true, selectOptionsAtQuote: false };

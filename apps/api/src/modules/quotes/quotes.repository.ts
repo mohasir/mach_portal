@@ -27,7 +27,7 @@ import {
   type QuotesViewOptions,
   type QuotesListQuery,
 } from '@repo/schemas';
-import type { Database, Tx } from '../../db';
+import type { Executor, Tx } from '../../db';
 import { lockQuoteSeq } from '../../db/locks';
 import {
   appSettings,
@@ -102,7 +102,7 @@ const assignmentChangedByUser = alias(user, 'assignment_changed_by_user');
 
 export class QuotesRepository {
   constructor(
-    private db: Database,
+    private db: Executor,
     private tenantId: string,
   ) {}
 
