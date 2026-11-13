@@ -311,7 +311,8 @@ export const publicProcedure = t.procedure;
 // Cadena multi-tenant (detalle en §11.1): sesión → organización activa → membresía → permiso.
 export const authedProcedure = /* exige sesión */;
 export const tenantProcedure = authedProcedure.use(/* exige ctx.tenant: TENANT_NOT_SELECTED / TENANT_NOT_FOUND */);
-export const protectedProcedure = tenantProcedure.use(/* membresía o admin de plataforma; deja ctx.tenantId */);
+export const protectedProcedure = tenantProcedure.use(/* abre la transacción con el tenant fijado (§12); membresía o admin de plataforma; deja ctx.tenantId, ctx.access, ctx.db */);
+export const shortTxProcedure = tenantProcedure.meta({ shortTx: true }).use(/* mismas comprobaciones, sin transacción larga (§12.4) */);
 
 // Permiso sobre el acceso que protectedProcedure ya resolvió (ctx.access, detalle en §11.1).
 export function guardedProcedure(permissions: PermissionCheck) {
@@ -409,15 +410,16 @@ La autorización es **por membresía**: cada miembro tiene un rol de su organiza
 
 ## 8. Base de datos (Drizzle)
 
-- Cliente en `db/index.ts` (`export const db`, `export type Database`); se inyecta al repository por constructor (testeable).
+- Cliente en `db/index.ts` (`export const db`, `export type Database`). Un repository **no** importa el `db` global: recibe por constructor `ctx.db` (la transacción de la petición) o el `tx` de `runInTenant` (§12). El `db` global (pool del rol `app`) solo lo usan: la cadena de tRPC (`core/trpc/trpc.ts`) y su auditoría de plataforma (`core/trpc/platformAccess.ts`), `guardTenantSession`, `withTenantTx` (pool por defecto), `modules/tenant/tenant.router.ts` (`authedProcedure`, solo tablas de identidad sin RLS), el job `jobs/eventReminders.job.ts`, y como valor por defecto de helpers de `lib/` (`resolveAccess`, `seedTenantRoles`, `TenancyRepository`; este último sin argumento en `tenantResolver` y `jobs/scripts/runEventReminders.ts`) y de las funciones `seedX` de `db/seeds/` (los scripts de seeds les pasan `platformDb()`). El arranque (`server.ts`) solo usa `queryClient` para la verificación de rol (§12.1).
 - Schema en `db/schema/` (barrel `index.ts`). `auth.ts` lo genera/gestiona Better Auth; tablas de dominio se agregan aparte y se reexportan en el barrel.
-- **Flujo de esquema (migraciones versionadas en `apps/api/drizzle/`):** cambiar el schema TS → `pnpm --filter api db:generate` → revisar (y si hace falta editar a mano) el SQL generado y commitearlo → `pnpm --filter api db:migrate`. Después de generar, `db:generate` debe responder "No schema changes" y `pnpm --filter api exec drizzle-kit check` "Everything's fine". No hay script `db:push`: solo el harness de integración usa `drizzle-kit push --force`, sobre su base descartable.
+- **Flujo de esquema (migraciones versionadas en `apps/api/drizzle/`):** cambiar el schema TS → `pnpm --filter api db:generate` → revisar (y si hace falta editar a mano) el SQL generado y commitearlo → `pnpm --filter api db:migrate` (con `DATABASE_OWNER_URL`, §12.1). Después de generar, `db:generate` debe responder "No schema changes" y `pnpm --filter api exec drizzle-kit check` "Everything's fine". No hay script `db:push`: solo el harness de integración usa `drizzle-kit push --force`, sobre su base descartable.
   - **Bases creadas con `push`** (sin filas en `drizzle.__drizzle_migrations`): ejecutar **una vez** `pnpm --filter api db:baseline` para registrar la migración `0000` como aplicada; si no, `db:migrate` intentaría recrear las tablas existentes. Se niega a correr si ya está registrada.
   - `pnpm --filter api mt:verify [--pre]` verifica el estado multi-tenant (conteos por tabla, filas sin `tenant_id`, huérfanas, duplicados, membresías, roles); solo hace `SELECT`. Runbook de cutover: `docs/superpowers/runbooks/multitenant-cutover.md`.
   - **Roles por organización (migraciones `0002`–`0004`):** se aplican con la app **detenida** y el código nuevo se despliega **en el mismo paso**. `0003` siembra los roles y enlaza cada membresía por su `member.role` heredado; `0004` deja `member.role_id` en `NOT NULL`, así que el código viejo (que inserta miembros sin `role_id`) falla después, y el código nuevo necesita las tablas `role`/`role_permission`. Orden: `mt:verify --pre` (guardar la salida) → `db:migrate` → `mt:verify` (debe salir sin problemas) → arrancar la app nueva.
   - `mt:verify --pre` falla con un `member.role` fuera de `superadmin|admin|operator|member` (`0003` lo rechaza) y **avisa** de cada organización sin ningún miembro `superadmin`: `0003` solo da el rol dueño a esos miembros, y las organizaciones creadas con su primer admin como `admin` quedan sin dueño (nadie puede gestionar roles). Después de migrar, un admin de plataforma entra a cada una de esas organizaciones y le asigna el rol dueño a un miembro con `users.update` (`roleId` del rol dueño).
   - Una migración con datos debe ser transaccional y fallar con un mensaje claro si falta un parámetro (`db:migrate --set clave=valor`, que viaja por la conexión directa, no por un pooler).
-  - `db:fresh` = reset + migrate + seed local de demostración (`--demo=local`).
+  - `db:fresh` = `db:preflight` (valida URLs y variables de entorno sin tocar la base, antes de borrar nada) + reset + `db:roles` + migrate + seed local de demostración (`--demo=local`). Re-ejecuta `db:roles` porque el reset borra el esquema `public` y con él los permisos del rol `app` (necesita `DATABASE_APP_URL` y `DATABASE_PLATFORM_URL`, de donde `db:roles` toma usuario y contraseña de cada rol).
+  - **Variables de conexión por script (§12.1):** `db:migrate`, `db:reset`, `db:baseline`, `db:roles` y `db:studio` (`drizzle.config.ts`) usan `DATABASE_OWNER_URL`; `db:seed`, `tenant:create` y `mt:verify` usan `DATABASE_PLATFORM_URL`; la API y los jobs usan `DATABASE_APP_URL` (rol `app`). `db:studio` ve las filas de **todas** las organizaciones: no apuntarlo a producción con esa credencial salvo que sea imprescindible. `db:generate` no se conecta a la base. Ninguna lee `DATABASE_URL`: si el proveedor la inyecta, se ignora.
 - Borrados: definir `onDelete: 'cascade'` en las FKs cuando corresponda.
 
 ### 8.1 Alta de tenants y semillas
@@ -491,6 +493,11 @@ Con esto, el front puede inferir `RouterOutputs['<module>']['list']` y construir
 - ❌ Guardar un id recibido por `input` (`clientId`, `eventTypeId`, `assigneeId`…) sin resolverlo antes con una lectura acotada al tenant.
 - ❌ Instanciar un repository o service a nivel de módulo (fuera de `xModule(ctx)`): existiría sin tenant.
 - ❌ Escribir una ruta de Express fuera de tRPC sin `guardTenantSession`, o montarla fuera del `originGuard` de `server.ts` (rechaza métodos que cambian estado con un `Origin`/`Referer` que no está en `WEB_ORIGIN`).
+- ❌ Importar el `db` global (o abrir conexiones propias) en un repository, service o controller de `modules/`: abre una segunda conexión fuera de la transacción de la petición, ve cero filas (RLS) y puede agotar el pool. `modules/test/noGlobalDb.test.ts` lo detecta.
+- ❌ `set_config('app.tenant_id', …, false)` (a nivel de sesión) o `SET app.tenant_id`: la conexión vuelve al pool con el tenant fijado y lo filtra a la petición siguiente. Solo `withTenantTx` (`is_local = true`).
+- ❌ Llamar a `ctx.runInTenant` dentro de un `protectedProcedure`/`guardedProcedure` salvo que se sepa lo que se hace: toma una segunda conexión mientras la de la petición sigue retenida.
+- ❌ Capturar un error de base sobre `ctx.db` y seguir sin un punto de guardado (`this.db.transaction(...)` alrededor de la sentencia que puede fallar): una sentencia fallida aborta la transacción de la petición, el `COMMIT` final se convierte en un `ROLLBACK` silencioso y el cliente recibe éxito sin que se guarde nada. Capturar para relanzar otro error (ej. `TRPCError` de conflicto) sí está bien. Ejemplo: `UsersRepository.deleteAccountWithoutMemberships`.
+- ❌ Retener la transacción de la petición durante una llamada externa lenta (PDF, R2): usar `guardedShortTxProcedure` (§12.4).
 - ❌ Editar una migración ya aplicada, o cambiar el schema sin generar su migración.
 ```
 
@@ -498,7 +505,7 @@ Con esto, el front puede inferir `RouterOutputs['<module>']['list']` y construir
 
 ## 11. Multi-tenant
 
-Una sola instalación y un solo dominio; los datos de cada cliente (tenant) conviven en las mismas tablas, separados por `tenant_id`. El tenant de una petición es la **organización activa de la sesión** (plugin `organization` de Better Auth); `organization.id` es el `tenantId` y `organization.slug` su identificador estable. El aislamiento de la fase 1 es por filtros explícitos en cada query; el RLS de Postgres como segunda barrera es la fase 1b. Spec: `docs/superpowers/specs/2026-10-19-multitenant-fase1-design.md`. Roles por organización (fase 2): `docs/superpowers/specs/2026-11-06-multitenant-fase2-roles-design.md`.
+Una sola instalación y un solo dominio; los datos de cada cliente (tenant) conviven en las mismas tablas, separados por `tenant_id`. El tenant de una petición es la **organización activa de la sesión** (plugin `organization` de Better Auth); `organization.id` es el `tenantId` y `organization.slug` su identificador estable. El aislamiento es por filtros explícitos en cada query (`tenantEq`) y, como segunda barrera, por RLS de Postgres (§12). Spec: `docs/superpowers/specs/2026-10-19-multitenant-fase1-design.md`; RLS: `docs/superpowers/specs/2026-11-08-multitenant-fase1b-rls-design.md`. Roles por organización (fase 2): `docs/superpowers/specs/2026-11-06-multitenant-fase2-roles-design.md`.
 
 ### 11.1 Cadena de procedures
 
@@ -506,17 +513,20 @@ Una sola instalación y un solo dominio; los datos de cada cliente (tenant) conv
 createContext      → sesión (sin caché de cookie) → organización activa → ctx.tenant (o null)
 authedProcedure    → exige sesión                                   (solo tenant.memberships / tenant.select)
 tenantProcedure    → exige organización activa: TENANT_NOT_SELECTED / TENANT_NOT_FOUND
-protectedProcedure → resuelve el acceso (membresía + rol, o admin de plataforma) y exige mustChangePassword resuelto;
-                     deja ctx.tenantId y ctx.access, y la cabecera x-permissions-version
+protectedProcedure → abre la transacción de la petición con el tenant fijado (RLS, §12), resuelve el acceso
+                     (membresía + rol, o admin de plataforma) y exige mustChangePassword resuelto;
+                     deja ctx.tenantId, ctx.access, ctx.db (la transacción), ctx.runInTenant y ctx.afterCommit,
+                     y la cabecera x-permissions-version
 guardedProcedure   → can(ctx.access, permiso)        guardedProcedureAnyOf → alcanza con uno de varios checks
+shortTxProcedure / guardedShortTxProcedure → mismas comprobaciones sin transacción larga (operaciones lentas, §12.4)
 ```
 
-- **Autorización por membresía.** `protectedProcedure` llama a `resolveRequestAccess` (`lib/rbac/access.ts`): primero `evaluateTenantAccess` (`lib/tenancy/access.ts`) decide si el usuario entra a la organización, y después `resolveAccess` lee **en cada petición, sin caché**, la membresía, su rol y los permisos del rol (con `tenantEq` en cada join). El resultado queda en **`ctx.access`** (`ResolvedAccess`: `isOwner`, `grants`, `roleId`, `roleName`, `roleVersion`). Sacar a alguien de la organización o editar su rol surte efecto en la petición siguiente. Solo la fila de la organización (nombre, existencia) se cachea ~60 s en memoria (`lib/tenancy/tenantResolver.ts`).
+- **Autorización por membresía.** `protectedProcedure` (`core/trpc/trpc.ts`) primero decide, fuera de la transacción de la petición, si el usuario entra a la organización (`evaluateTenantAccess`, `lib/tenancy/access.ts`, lee `member`, tabla sin RLS) y, ya **dentro** de la transacción con el tenant fijado (§12), llama a `resolveAccess` (`lib/rbac/access.ts`), que lee **en cada petición, sin caché**, la membresía, su rol y los permisos del rol (con `tenantEq` en cada join; `role` y `role_permission` tienen RLS, así que fuera de esa transacción devolverían cero filas). El resultado queda en **`ctx.access`** (`ResolvedAccess`: `isOwner`, `grants`, `roleId`, `roleName`, `roleVersion`). Sacar a alguien de la organización o editar su rol surte efecto en la petición siguiente. Solo la fila de la organización (nombre, existencia) se cachea ~60 s en memoria (`lib/tenancy/tenantResolver.ts`).
 - **Falla cerrado:** sin membresía, con `role_id` nulo o apuntando al rol de otra organización, `resolveAccess` devuelve `null` y la petición recibe `FORBIDDEN`. Las filas de permisos fuera de `TENANT_PERMISSIONS` se descartan.
 - **Admin de plataforma** sin membresía: recibe `OWNER_ACCESS` (acceso de dueño sintético, sin rol: `roleId` nulo, versión `owner:0`) y su acceso se audita (abajo).
 - **Cabecera `x-permissions-version`** (`core/express/const/headers.ts`): toda respuesta de un procedure con tenant lleva `<roleId>:<roleVersion>` (`permissionsVersion(access)`); `cors.ts` la expone (`exposedHeaders`). Cada edición de un rol incrementa su `version`, y un cambio de rol del miembro cambia el `roleId`: la web compara la cabecera con lo que tiene cargado y recarga sus permisos (`docs/frontend/architecture.md` §9.2). `tenant.permissions` (permisos completos + nombre del rol) y `tenant.permissionsVersion` usan `protectedProcedure`: cualquier miembro puede leer los suyos.
 - **Alcance "solo los suyos"** (`own`/`all`): una acción de `SCOPED_ACTIONS` (`@repo/guards`) puede otorgarse con alcance `own`. El procedure gateado por esa acción calcula el dueño a filtrar con `ownerIdFor(ctx.access, ctx.user.id, [recurso, acción])` (`lib/rbac/ownerScope.ts`; en cotizaciones el helper `ownerScope` del router, en eventos `eventOwnerId`, que suma siempre `event.read`) y lo pasa al service; el repository filtra por creador o asignado (eventos y pagos, por la cotización de la que cuelgan). Solo con alcance `all` en todos los checks se levanta el filtro; un permiso ausente también restringe. **Regla:** cada procedure combina el alcance de `read` del recurso con el **de la acción que lo gatea** y gana el más estricto (así `quote.read=own` + `quote.update=all` no modifica cotizaciones que no puede ver), y el tipo `ScopedCheck` rechaza en compilación un par que no esté en `SCOPED_ACTIONS`. El test `lib/rbac/test/scopedActions.test.ts` cubre la otra dirección: falla si un par de `SCOPED_ACTIONS` (que el editor ofrece como own/all) no lo filtra ningún procedure. Una acción entre dueños por naturaleza (ej. `quote.manage_assignment`, reasignar) **no** va en `SCOPED_ACTIONS` ni se filtra.
-- Las rutas de Express fuera de tRPC (hoy `/api/uploads/event-payments`) usan el middleware `guardTenantSession` (`core/express/middleware/`), que aplica las mismas reglas con la misma función de decisión (`resolveRequestAccess` + `can`) y deja el acceso en `res.locals.access`. Una ruta nueva fuera de tRPC **debe** usarlo.
+- Las rutas de Express fuera de tRPC (hoy `/api/uploads/event-payments`) usan el middleware `guardTenantSession` (`core/express/middleware/`), que replica la cadena `shortTxProcedure` check por check y en el mismo orden (`evaluateTenantAccess` + `resolveAccess` en una transacción corta + `can`) y deja el acceso en `res.locals.access` y el ejecutor de transacciones cortas en `res.locals.runInTenant` (§12.5). Una ruta nueva fuera de tRPC **debe** usarlo.
 - La superficie HTTP de Better Auth está recortada: `/sign-up/email` y los endpoints de los plugins `organization` y `admin` se bloquean por HTTP; las llamadas internas (`auth.api.*`) siguen funcionando. El alta de usuarios y organizaciones pasa por `users.create` y `tenant:create`.
 - **Login:** global (email + contraseña). Un gancho de sesión fija la organización activa: con una membresía se activa sola; con varias queda sin activa hasta `tenant.select`; sin ninguna se rechaza con `USER_NO_ORGANIZATION` (el admin de plataforma sin membresías sí entra). La web nunca lee la organización activa de `useSession`: usa `tenant.active`.
 - **Admin de plataforma** (`user.isPlatformAdmin`, la única marca de plataforma; `user.role` no cuenta): puede seleccionar cualquier organización y, si no es miembro, entra con `OWNER_ACCESS`. Todo acceso sin membresía queda en `platform_access_log` (la primera query de cada sesión y tenant, y **todas** las mutaciones); la web muestra el aviso "modo plataforma". Un admin de plataforma que además es miembro no se audita, por eso `createTenant` rechaza (`USER_IS_PLATFORM_ADMIN`) un admin inicial que lo sea.
@@ -527,13 +537,13 @@ Ningún repository ni service existe sin tenant: se construyen por request desde
 
 ```ts
 // modules/<module>/<module>.module.ts
-import { db } from '../../db';
 import type { TenantCtx } from '../../core/trpc/tenantCtx';
 import { XRepository } from './<module>.repository';
 import { XService } from './<module>.service';
 
 export function xModule(ctx: TenantCtx) {
-  return new XService(new XRepository(db, ctx.tenantId));
+  // ctx.db es la transacción de la petición (RLS, §12): nunca importar el `db` global aquí.
+  return new XService(new XRepository(ctx.db, ctx.tenantId));
 }
 ```
 
@@ -587,6 +597,7 @@ Las FK entre tablas de negocio **no** son compuestas con `tenant_id`, así que l
 - Todo id recibido por `input` que referencie otra entidad (cliente, tipo de evento, producto/opción, staff, usuario asignado, motivo, etc.) se **resuelve antes de guardarlo** con una lectura acotada al tenant (`findById` del repository de esa entidad, con `tenantEq`). Si no existe en el tenant: `NOT_FOUND` con el código de dominio de esa entidad — exactamente el mismo error que un id inexistente, para no revelar que existe en otro tenant.
 - Vale también para listas de ids (staff de un evento, líneas y opciones de una cotización) y para las tablas que no tienen `tenant_id` en la relación (`event_staff`: se resuelve el staff por el repository acotado).
 - Los usuarios se resuelven por **membresía** en el tenant, no por la tabla `user` global.
+- Con RLS (§12) esas lecturas acotadas devuelven cero filas para un id ajeno. Aun así la base no impide el cruce en las FK (§12.7): sigue siendo obligatorio resolver cada id.
 
 ### 11.5 Pruebas de aislamiento
 
@@ -613,7 +624,7 @@ Las FK entre tablas de negocio **no** son compuestas con `tenant_id`, así que l
 
 ### 11.7 Seeds y alta de tenants
 
-Ver §8.1 (`tenant:create`, `db:seed --demo=prod|local`, usuarios demo). Toda función `seedX` recibe `tenantId`, y los flags de `db:seed` ya documentados se mantienen. Los crons (`registerCrons(tenantId)`) no están conectados a `server.ts` en esta fase: los jobs son por tenant (`pnpm --filter api jobs:event-reminders --tenant=<slug>`) y nada itera sobre tenants todavía.
+Ver §8.1 (`tenant:create`, `db:seed --demo=prod|local`, usuarios demo). Toda función `seedX` recibe `tenantId`, y los flags de `db:seed` ya documentados se mantienen. Los crons (`registerCrons(tenantId)`) no están conectados a `server.ts` en esta fase: los jobs se corren a mano, para una organización (`pnpm --filter api jobs:event-reminders -- --tenant=<slug>`) o para todas (`-- --all`, una transacción por organización; si una falla, las demás siguen).
 
 ### 11.8 Endurecimiento HTTP (`server.ts`)
 
@@ -622,3 +633,84 @@ Ver §8.1 (`tenant:create`, `db:seed --demo=prod|local`, usuarios demo). Toda fu
 - **Lotes de tRPC:** `maxBatchSize: TRPC_MAX_BATCH_SIZE` (20, `core/trpc/batch.ts`). El `httpBatchLink` de la web usa `maxItems: 20`, y nunca puede ser mayor.
 - **Caché de cookie de sesión:** `maxAge` de 60 s. El `middleware.ts` de la web la usa para redirigir (`mustChangePassword`); el rol no viaja en la cookie. tRPC y `guardTenantSession` la saltean (`disableCookieCache`).
 - **`/update-user` por HTTP:** rechaza `image` (la web solo cambia `name`).
+
+---
+
+## 12. Row Level Security (segunda barrera)
+
+Spec: `docs/superpowers/specs/2026-11-08-multitenant-fase1b-rls-design.md`. Runbook de despliegue: `docs/superpowers/runbooks/multitenant-cutover.md`. `tenantEq` sigue siendo obligatorio (§11.3): el RLS es la red de seguridad si una consulta lo olvida, no su reemplazo. Se recomienda **Postgres >= 15** (en versiones anteriores `public` concede `CREATE` a `PUBLIC` por defecto y `db:roles` no lo revoca); ningún código lo exige.
+
+### 12.1 Roles y variables de conexión
+
+| Rol | Atributos | Lo usa | Variable |
+| --- | --- | --- | --- |
+| `owner` | dueño de las tablas; debe tener `BYPASSRLS` o ser superusuario (requisito del administrador: ni `db:roles` ni `mt:verify` lo comprueban; las migraciones de datos cruzan organizaciones) | migraciones, `db:reset`, `db:baseline`, `db:roles`, `db:studio` | `DATABASE_OWNER_URL` |
+| `app` | sin `SUPERUSER`, `BYPASSRLS` ni `CREATEROLE`; solo `SELECT/INSERT/UPDATE/DELETE` y secuencias | la API en cada petición, jobs | `DATABASE_APP_URL` |
+| `platform` | `BYPASSRLS`; nunca atiende peticiones de usuarios | `db:seed`, `tenant:create`, `mt:verify` | `DATABASE_PLATFORM_URL` |
+
+- `pnpm --filter api db:roles` (idempotente) crea `app` y `platform`, concede permisos y fija `ALTER DEFAULT PRIVILEGES` para las tablas que cree el dueño. Se conecta con `DATABASE_OWNER_URL` y toma el nombre y la contraseña de cada rol del usuario y la contraseña de `DATABASE_APP_URL` y `DATABASE_PLATFORM_URL` (decodificados como los decodifica el driver, así que la contraseña va codificada con `encodeURIComponent` si tiene `@ : / % ? #`…). Falla nombrando la variable si falta alguna de las dos URLs o si no trae usuario y contraseña, y si los usuarios coinciden entre sí o con el dueño. No imprime URLs ni contraseñas.
+- `requireDatabaseUrl` (`db/databaseUrls.ts`) nunca cae a otra variable: un script sin su URL falla con un mensaje claro.
+- **Verificación al arrancar** (`db/roleGuard.ts`): la API no arranca si el rol de `DATABASE_APP_URL` es superusuario, tiene `BYPASSRLS` o `CREATEROLE` (podría concederse un rol que salta el RLS) o es **miembro** (transitivo) de un rol que salta el RLS; `mt:verify` hace la misma comprobación. Los roles creados desde la consola de Neon pertenecen a `neon_superuser`: el rol `app` debe crearse con `db:roles`.
+- Un administrador de plataforma (`user.isPlatformAdmin`) es una persona, no un rol de base: la API sigue usando `app` con una organización fijada, una a la vez.
+
+### 12.2 Políticas
+
+Para cada tabla con `tenant_id` (lista `TENANT_TABLES`, más `platform_access_log`), declaradas con `pgPolicy` en el schema Drizzle:
+
+- `ENABLE` y `FORCE ROW LEVEL SECURITY` (el dueño tampoco las salta por serlo).
+- Una sola política `FOR ALL` con `USING` y `WITH CHECK`: `tenant_id = current_setting('app.tenant_id', true)`.
+- **Falla cerrado:** sin organización fijada `current_setting` es nulo, la comparación no es verdadera y no se ven filas ni se puede insertar.
+- La migración `0005_tenant_rls.sql` se genera con `db:generate`; el `FORCE` se agrega a mano (Drizzle no lo genera). Al añadir una tabla de negocio nueva, su migración debe incluir `ENABLE`, `FORCE` y la política; la guarda `tenantTables.test.ts` y `mt:verify` lo comprueban.
+- Las tablas de autenticación (`user`, `session`, `account`, `verification`, `invitation`, `organization`, `member`) **no** tienen RLS: Better Auth las lee durante el login, antes de que exista organización activa, y un usuario puede pertenecer a varias. Siguen protegidas por el código.
+
+### 12.3 Transacción por petición
+
+`protectedProcedure` (y `guardedProcedure*`) hace, en este orden:
+
+1. `evaluateTenantAccess`: membresía, sobre tablas sin RLS y fuera de la transacción.
+2. Si es un administrador de plataforma sin membresía, escribe la fila de auditoría en su **propia** transacción corta, antes de la de la petición (un fallo de la petición no la revierte y la petición no retiene una conexión mientras espera otra).
+3. `withTenantTx(tenantId, …)`: abre la transacción y ejecuta `set_config('app.tenant_id', tenantId, true)`. Dentro resuelve el acceso (`resolveAccess`, porque `role`/`role_permission` tienen RLS) y ejecuta el procedure.
+4. Éxito: `COMMIT`. Error: `ROLLBACK`.
+
+El contexto que recibe el procedure añade:
+
+- **`ctx.db`**: la transacción de la petición. `xModule(ctx)` construye los repositories con ella; las transacciones que abre un repository (`this.db.transaction`) son puntos de guardado dentro de la de la petición.
+- **`ctx.runInTenant(fn)`**: abre una transacción corta independiente con el tenant fijado (`fn` recibe un `tx`).
+- **`ctx.afterCommit(task)`**: encola una tarea que corre cuando la petición ya hizo `COMMIT` (se descarta si hay `ROLLBACK`; un fallo de la tarea se registra y no afecta la respuesta). Para trabajo en segundo plano que debe ver datos ya confirmados (ej. generar el PDF de una cotización recién creada).
+
+**`withTenantTx(tenantId, fn, database?)`** (`db/tenantTx.ts`) es la única forma de fijar el tenant. Reglas:
+
+- El `set_config` es **siempre transaction-local** (`is_local = true`). Prohibido a nivel de sesión (`false`): la conexión vuelve al pool con el tenant y lo filtraría a otra petición.
+- Rechaza un `tenantId` vacío. El tenant sale de la sesión (`ctx.tenant.id`), nunca del `input`.
+- Procedures sin organización (públicos, `authedProcedure`, `tenant.memberships`/`tenant.select`) no abren esta transacción y no tocan tablas con RLS.
+
+### 12.4 Operaciones lentas: `shortTxProcedure` y patrón de tres fases
+
+Cada petición con tenant retiene una conexión de principio a fin, así que una llamada externa lenta (servicio de PDF, subida a R2) no puede ocurrir dentro de esa transacción. Hoy: `quotes.generatePdf`, `quotes.regeneratePdf` y la subida de adjuntos de pago.
+
+- Usar **`guardedShortTxProcedure(permiso)`** (o `shortTxProcedure`): hace las mismas comprobaciones, pero no abre la transacción larga; `ctx.db` **no existe** y el service recibe `ctx.runInTenant`. `protectedProcedure` lanza un error si el procedure declara `shortTx`.
+- Patrón de tres fases: (1) transacción corta que lee y valida (`runInTenant`); (2) llamada externa **sin** transacción abierta; (3) otra transacción corta que guarda el resultado. Si el guardado de la fase 3 falla tras haber subido un archivo, se borra el archivo (mejor esfuerzo) y se relanza el error original.
+- Los repositories de esas rutas se construyen dentro de cada fase con el `tx` recibido (`(tx) => new XRepository(tx, tenantId)`); nunca capturar el `tx` de una fase en otra.
+- Ver `modules/quotes/quotes.module.ts` (`quotesPdfModule`) y `PaymentAttachmentUploader` en `modules/events/`.
+
+### 12.5 Rutas de Express
+
+`guardTenantSession` replica la cadena de `shortTxProcedure`: sesión sin caché, organización, acceso en una transacción corta, auditoría de plataforma. No mantiene transacción durante el handler: expone `res.locals.runInTenant` y el controller abre transacciones cortas con él (mismo patrón de tres fases para la subida a R2).
+
+### 12.6 Código que corre fuera de la cadena
+
+- **Better Auth** usa su propio pool, `authDb` (`db/index.ts`, `DB_AUTH_POOL_MAX`, por defecto 3). Corre dentro de peticiones que ya retienen una conexión de `DB_POOL_MAX`; con el mismo pool podría quedarse esperando una conexión que nunca se libera. Solo toca tablas sin RLS. Código que corra dentro de una petición pero fuera de `ctx.db` (ej. `auth.api.signUpEmail` en `users.create`) debe usar `authDb`, no el pool principal.
+- **Scripts que cruzan organizaciones** (`createTenant`, seeds, `mt:verify`) usan `platformDb()` (`db/platform.ts`, `DATABASE_PLATFORM_URL`); la API nunca lo importa.
+- **Jobs** (`jobs:event-reminders -- --tenant=<slug>` o `-- --all`) usan `app` y abren una transacción por organización.
+- **Pool:** `DB_POOL_MAX` (por defecto 10) dimensiona las transacciones de petición. Conexiones por instancia = `DB_POOL_MAX + DB_AUTH_POOL_MAX`; multiplicado por las instancias debe quedar por debajo del límite del plan de Postgres (dimensionado y prueba de carga en el runbook).
+
+### 12.7 Brecha conocida: las FK se verifican sin RLS
+
+Postgres comprueba las claves foráneas saltándose el RLS. Con el tenant A fijado, el rol `app` podría insertar una fila cuya FK de una sola columna apunte a una fila del tenant B (ej. `quotes.client_id` -> `clients.id`) y sondear su existencia. Hoy lo evita la resolución de ids por lecturas acotadas (§11.4), que con RLS devuelven cero filas para ids ajenos (ids uuid, difíciles de adivinar). La defensa estructural serían FK compuestas `(x_id, tenant_id) -> padre(id, tenant_id)` en ~29 tablas: **decisión aparcada** (migración aparte). Hasta entonces, no saltarse §11.4.
+
+### 12.8 Pruebas
+
+- Las pruebas de integración existentes conectan con un rol que se salta el RLS (prueban la lógica); el aislamiento lo prueban las suites con el rol `app`: `db/schema/test/rls.int.test.ts` (consulta sin filtro, sin tenant fijado, `INSERT`/`UPDATE`/`DELETE` ajenos, por cada tabla), la cadena completa por tRPC y la ruta de subida de Express, con roles de prueba propios (`src/test/roles.ts`, nombres distintos de los reales para no resetear sus contraseñas).
+- `drizzle-kit push` (usado solo por el harness de integración sobre su base descartable) crea las políticas **sin** `USING`/`WITH CHECK` y nunca agrega `FORCE`; por eso `src/test/rlsPolicies.ts` las reescribe en el global setup. Producción y desarrollo usan migraciones, no `push`.
+- `modules/test/noGlobalDb.test.ts` falla si un archivo de `modules/` importa el `db` global (cualquier forma de import, re-export o `require`).
+- `mt:verify` (con `DATABASE_PLATFORM_URL`) comprueba que cada tabla con `tenant_id` tiene RLS habilitado, forzado y con su política, y, si `DATABASE_APP_URL` está definida, que el rol de la API no se salta el RLS.
