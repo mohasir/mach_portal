@@ -1,5 +1,6 @@
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 import { fromNodeHeaders } from 'better-auth/node';
+import type { Database } from '../../db';
 import { auth } from '../../lib/auth';
 import { resolveTenantById, type Tenant } from '../../lib/tenancy/tenantResolver';
 
@@ -16,4 +17,7 @@ export async function createContext({ req, res }: CreateExpressContextOptions) {
   return { req, res, session, tenant };
 }
 
-export type Context = Awaited<ReturnType<typeof createContext>>;
+export type Context = Awaited<ReturnType<typeof createContext>> & {
+  // Client the tenant chain opens its transactions on; the app pool when absent.
+  database?: Database;
+};

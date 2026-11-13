@@ -1,5 +1,6 @@
-import { db } from '../../db';
+import { db, type Database } from '../../db';
 import { platformAccessLog } from '../../db/schema';
+import { withTenantTx } from '../../db/rls/tenantTx';
 
 // First-access query rows already written (or being written) per session and tenant. Holding the
 // in-flight promise means a concurrent request waits for the same insert instead of skipping it,
@@ -13,20 +14,31 @@ export function resetPlatformAccessSessions(): void {
   firstAccess.clear();
 }
 
-export async function recordPlatformAccess(input: {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  path: string;
-  type: 'query' | 'mutation';
-}): Promise<void> {
+// Always commits in a transaction of its own, never inside the caller's: a request that fails
+// after access was granted rolls its own work back, but the audit row of that access must stay.
+export async function recordPlatformAccess(
+  input: {
+    userId: string;
+    tenantId: string;
+    sessionId: string;
+    path: string;
+    type: 'query' | 'mutation';
+  },
+  database: Database = db,
+): Promise<void> {
   const insert = async () => {
-    await db.insert(platformAccessLog).values({
-      userId: input.userId,
-      tenantId: input.tenantId,
-      path: input.path,
-      type: input.type,
-    });
+    await withTenantTx(
+      input.tenantId,
+      async (tx) => {
+        await tx.insert(platformAccessLog).values({
+          userId: input.userId,
+          tenantId: input.tenantId,
+          path: input.path,
+          type: input.type,
+        });
+      },
+      database,
+    );
   };
 
   if (input.type === 'mutation') return insert();

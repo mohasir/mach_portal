@@ -1,10 +1,24 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 import { and, eq } from 'drizzle-orm';
-import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { ACTIONS, RESOURCES, type PermissionCheck, type RoleType } from '@repo/guards';
-import { db } from '../../../../db';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from 'vitest';
+import { ACTIONS, RESOURCES, type PermissionCheck, type RoleType } from '@repo/guards';
+import { db, type Database, type TenantRunner } from '../../../../db';
+import * as schema from '../../../../db/schema';
+import {
+  clients,
   member,
   organization,
   platformAccessLog,
@@ -25,6 +39,7 @@ import {
   pointMemberAtForeignRole,
   resetDb,
 } from '../../../../test/db';
+import { testAppDatabaseUrl } from '../../../../test/roles';
 import { guardedProcedure, router } from '../../../trpc/trpc';
 import { createContext } from '../../../trpc/context';
 import { guardTenantSession } from '../guardTenantSession';
@@ -221,9 +236,8 @@ describe('guardTenantSession', () => {
       const { a } = await setup();
       const id = await createUserWithPassword('root@test.local', { isPlatformAdmin: true });
       const cookie = await signInWithActiveOrg('root@test.local', id, a.id);
-      vi.spyOn(db, 'insert').mockImplementation((() => {
-        throw new Error('audit insert failed secret-detail');
-      }) as typeof db.insert);
+      // The audit row is written in a transaction of its own.
+      vi.spyOn(db, 'transaction').mockRejectedValueOnce(new Error('audit insert failed secret-detail'));
       const r = await run(guard, { cookie, method: 'POST' });
       expect(r.status).toBe(500);
       expect(r.body).toEqual({ errorCode: 'INTERNAL_ERROR' });
@@ -460,5 +474,69 @@ describe('attachment upload parity with the tRPC chain', () => {
       );
 
     await expect(verdicts(cookie)).resolves.toEqual({ express: 403, trpc: 'FORBIDDEN' });
+  });
+});
+
+describe('guardTenantSession with the app role', () => {
+  let appClient: ReturnType<typeof postgres>;
+  let appDb: Database;
+
+  beforeAll(() => {
+    appClient = postgres(testAppDatabaseUrl(), { max: 2 });
+    appDb = drizzle(appClient, { schema }) as unknown as Database;
+  });
+  afterAll(async () => {
+    await appClient?.end();
+  });
+  beforeEach(async () => {
+    await resetDb();
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  async function seedClients() {
+    const { a, b } = await setup();
+    await db.insert(clients).values([
+      { tenantId: a.id, name: 'Client A' },
+      { tenantId: b.id, name: 'Client B' },
+    ]);
+    return { a, b };
+  }
+
+  it('resolves a member through RLS and hands the route a runner scoped to the session tenant', async () => {
+    const { a } = await seedClients();
+    const id = await createUserWithPassword('m@test.local', { role: 'member' });
+    await addMember(id, a.id, 'admin');
+    const cookie = await signInCookie('m@test.local');
+
+    const r = await run(guardTenantSession(NEEDS, appDb), { cookie, method: 'POST' });
+    expect(r.next).toHaveBeenCalledTimes(1);
+    expect(r.locals).toMatchObject({ tenantId: a.id, userId: id });
+
+    const runInTenant = r.locals['runInTenant'] as TenantRunner;
+    const seen = await runInTenant((tx) => tx.select({ name: clients.name }).from(clients));
+    expect(seen).toEqual([{ name: 'Client A' }]);
+    // Outside the runner no tenant is set, so the app role sees nothing.
+    expect(await appDb.select().from(clients)).toEqual([]);
+  });
+
+  it('still refuses a member whose role lacks the permission', async () => {
+    const { a } = await seedClients();
+    const id = await createUserWithPassword('m@test.local');
+    await addMember(id, a.id, 'member');
+    const cookie = await signInCookie('m@test.local');
+    const r = await run(guardTenantSession(NEEDS, appDb), { cookie });
+    expect(r.status).toBe(403);
+    expect(r.next).not.toHaveBeenCalled();
+  });
+
+  it('admits a platform admin as owner and writes the audit row under RLS', async () => {
+    const { a } = await seedClients();
+    const id = await createUserWithPassword('root@test.local', { isPlatformAdmin: true });
+    const cookie = await signInWithActiveOrg('root@test.local', id, a.id);
+    const r = await run(guardTenantSession(NEEDS, appDb), { cookie, method: 'POST' });
+    expect(r.next).toHaveBeenCalledTimes(1);
+    expect(await db.select().from(platformAccessLog)).toMatchObject([
+      { tenantId: a.id, userId: id, type: 'mutation' },
+    ]);
   });
 });

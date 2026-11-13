@@ -3,7 +3,6 @@ import { isCatalogPermission, permissionKey, type AccessGrants } from '@repo/gua
 import { db, type Executor } from '../../db';
 import { member, role, rolePermission } from '../../db/schema';
 import { tenantEq } from '../tenancy/tenantEq';
-import { evaluateTenantAccess } from '../tenancy/access';
 
 export type ResolvedAccess = AccessGrants & {
   roleId: string | null;
@@ -65,19 +64,4 @@ export async function resolveAccess(
     roleName: first.roleName,
     roleVersion: first.version,
   };
-}
-
-export type RequestAccess = { platformAccess: boolean; access: ResolvedAccess };
-
-// Shared by the tRPC chain and the Express guard so both transports authorize identically.
-export async function resolveRequestAccess(input: {
-  userId: string;
-  isPlatformAdmin: boolean | null | undefined;
-  tenantId: string;
-}): Promise<RequestAccess | null> {
-  const entry = await evaluateTenantAccess(input);
-  if (!entry.allowed) return null;
-  if (entry.platformAccess) return { platformAccess: true, access: OWNER_ACCESS };
-  const access = await resolveAccess({ userId: input.userId, tenantId: input.tenantId });
-  return access ? { platformAccess: false, access } : null;
 }
