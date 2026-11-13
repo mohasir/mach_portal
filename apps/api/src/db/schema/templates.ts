@@ -1,5 +1,6 @@
 import { pgTable, uuid, text, jsonb, timestamp, unique } from 'drizzle-orm/pg-core';
 import { tenantId } from './tenantColumn';
+import { tenantIsolationPolicy } from '../rls/policy';
 
 export const templates = pgTable(
   'templates',
@@ -14,5 +15,8 @@ export const templates = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [unique('templates_tenant_type_locale_unique').on(t.tenantId, t.type, t.locale)],
-);
+  (t) => [
+    unique('templates_tenant_type_locale_unique').on(t.tenantId, t.type, t.locale),
+    tenantIsolationPolicy('templates'),
+  ],
+).enableRLS();

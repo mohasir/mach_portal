@@ -1,9 +1,9 @@
 import { and, eq } from 'drizzle-orm';
 import { QUOTE_STAGE } from '@repo/schemas';
-import { db } from '../index';
+import { db as defaultDb, type Executor } from '../index';
 import { quotes, events, eventStaff, staff } from '../schema';
 
-export async function seedEvents(tenantId: string) {
+export async function seedEvents(tenantId: string, db: Executor = defaultDb) {
   console.log('📅 Seeding eventos...');
 
   const confirmedQuotes = await db

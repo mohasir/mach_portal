@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import type { TemplateType } from '@repo/schemas';
-import type { Database } from '../../db';
+import type { Executor } from '../../db';
 import { templates } from '../../db/schema';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { publicTemplateColumns, type PublicTemplate } from './templates.resource';
@@ -9,7 +9,7 @@ const DEFAULT_LOCALE = 'es';
 
 export class TemplatesRepository {
   constructor(
-    private db: Database,
+    private db: Executor,
     private tenantId: string,
   ) {}
 

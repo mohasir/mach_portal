@@ -1,6 +1,7 @@
 import { index, jsonb, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { user } from './auth';
 import { tenantId } from './tenantColumn';
+import { tenantIsolationPolicy } from '../rls/policy';
 
 export const notifications = pgTable(
   'notifications',
@@ -14,8 +15,8 @@ export const notifications = pgTable(
     excludedUserId: text('excluded_user_id').references(() => user.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (t) => [index('notifications_tenant_idx').on(t.tenantId)],
-);
+  (t) => [index('notifications_tenant_idx').on(t.tenantId), tenantIsolationPolicy('notifications')],
+).enableRLS();
 
 export const notificationReads = pgTable(
   'notification_reads',
@@ -34,5 +35,6 @@ export const notificationReads = pgTable(
   (t) => [
     unique('notification_reads_notification_user_unique').on(t.notificationId, t.userId),
     index('notification_reads_tenant_idx').on(t.tenantId),
+    tenantIsolationPolicy('notification_reads'),
   ],
-);
+).enableRLS();

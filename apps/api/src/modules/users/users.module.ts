@@ -1,5 +1,5 @@
-import { db } from '../../db';
 import type { TenantCtx } from '../../core/trpc/tenantCtx';
+import { authDb } from '../../db';
 import { UsersRepository } from './users.repository';
 import { UsersService } from './users.service';
 
@@ -8,8 +8,9 @@ import { UsersService } from './users.service';
 // against the actor's resolved access, never against the input.
 export function usersModule(ctx: TenantCtx) {
   const { isPlatformAdmin } = ctx.user as { isPlatformAdmin?: boolean | null };
-  return new UsersService(new UsersRepository(db, ctx.tenantId), {
-    isPlatformAdmin: isPlatformAdmin === true,
-    access: ctx.access,
-  });
+  return new UsersService(
+    new UsersRepository(ctx.db, ctx.tenantId),
+    { isPlatformAdmin: isPlatformAdmin === true, access: ctx.access },
+    new UsersRepository(authDb, ctx.tenantId),
+  );
 }

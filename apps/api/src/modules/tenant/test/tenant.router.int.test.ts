@@ -359,9 +359,8 @@ describe('tenant router', () => {
       const id = await createUserWithPassword('root@test.local', { isPlatformAdmin: true });
       const cookie = await signInCookie('root@test.local');
       const caller = await api(cookie).call();
-      vi.spyOn(db, 'insert').mockImplementation((() => {
-        throw new Error('audit insert failed');
-      }) as typeof db.insert);
+      // The audit row is written in a transaction of its own.
+      vi.spyOn(db, 'transaction').mockRejectedValueOnce(new Error('audit insert failed'));
 
       await expect(caller.tenant.select({ organizationId: a.id })).rejects.toThrow();
 

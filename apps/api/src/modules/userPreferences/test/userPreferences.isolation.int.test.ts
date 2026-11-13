@@ -10,6 +10,7 @@ function moduleFor(tenant: TestTenant, userId: string) {
   return userPreferencesModule({
     tenantId: tenant.id,
     user: { id: userId },
+    db: testDb,
   } as unknown as TenantCtx);
 }
 

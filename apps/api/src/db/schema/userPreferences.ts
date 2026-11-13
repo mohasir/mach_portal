@@ -1,6 +1,7 @@
 import { jsonb, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';
 import { user } from './auth';
 import { tenantId } from './tenantColumn';
+import { tenantIsolationPolicy } from '../rls/policy';
 
 // One row per user and tenant, created on first save. Shape is owned by `userPreferencesSchema` in
 // @repo/schemas — kept as jsonb so adding a preference needs no schema change.
@@ -17,5 +18,8 @@ export const userPreferences = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [primaryKey({ columns: [t.tenantId, t.userId] })],
-);
+  (t) => [
+    primaryKey({ columns: [t.tenantId, t.userId] }),
+    tenantIsolationPolicy('user_preferences'),
+  ],
+).enableRLS();

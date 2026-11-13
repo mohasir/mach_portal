@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import { paymentMethodSchema } from '@repo/schemas';
-import { db } from '../index';
+import { db as defaultDb, type Executor } from '../index';
 import { events, eventPaymentAttachments, eventPayments, quotes, user } from '../schema';
 
 const METHODS = paymentMethodSchema.options;
@@ -15,7 +15,11 @@ function addDays(isoDate: string, days: number) {
 // deposit well ahead of the date). Balance only gets seeded for events whose date has already
 // passed "today", the same way a real client would only have paid the balance by then.
 // Every deposit gets one attachment row with metadata only: the referenced object does not exist.
-export async function seedEventPayments(tenantId: string, creatorEmail: string) {
+export async function seedEventPayments(
+  tenantId: string,
+  creatorEmail: string,
+  db: Executor = defaultDb,
+) {
   console.log('💵 Seeding pagos de eventos...');
 
   const [creator] = await db

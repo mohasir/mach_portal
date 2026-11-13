@@ -14,7 +14,7 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import type { UsersListQuery } from '@repo/schemas';
-import type { Database, Tx } from '../../db';
+import type { Executor } from '../../db';
 import { lockUserEmail } from '../../db/locks';
 import {
   member,
@@ -25,6 +25,7 @@ import {
   user,
   verification,
 } from '../../db/schema';
+import { isPgError, PG_FOREIGN_KEY_VIOLATION } from '../../lib/errors';
 import { legacyMemberRoleOf } from '../../lib/rbac/seedTenantRoles';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
@@ -46,7 +47,7 @@ const roleColumns = { id: role.id, name: role.name, isOwner: role.isOwner } as c
 // tenant, and every write to the global `user` row is limited to members of this tenant.
 export class UsersRepository {
   constructor(
-    private db: Database | Tx,
+    private db: Executor,
     private tenantId: string,
   ) {}
 
@@ -266,21 +267,32 @@ export class UsersRepository {
 
   // session/account rows cascade on delete (FK onDelete: cascade). The NOT EXISTS clauses keep an
   // account that still belongs to any organization, and one referenced by platform audit rows
-  // (their FK restricts deletes so the audit never loses who acted).
-  deleteAccountWithoutMemberships(userId: string) {
-    return this.db
+  // (their FK restricts deletes so the audit never loses who acted). Under RLS the audit check only
+  // sees this tenant's rows, so audit rows of another tenant surface as an FK violation instead:
+  // the savepoint confines that failure, which then means the same "account kept".
+  async deleteAccountWithoutMemberships(userId: string) {
+    try {
+      return await this.db.transaction((tx) => this.deleteUnreferencedAccount(tx, userId));
+    } catch (error) {
+      if (isPgError(error, PG_FOREIGN_KEY_VIOLATION)) return undefined;
+      throw error;
+    }
+  }
+
+  private deleteUnreferencedAccount(tx: Executor, userId: string) {
+    return tx
       .delete(user)
       .where(
         and(
           eq(user.id, userId),
           notExists(
-            this.db
+            tx
               .select({ one: sql`1` })
               .from(member)
               .where(eq(member.userId, user.id)),
           ),
           notExists(
-            this.db
+            tx
               .select({ one: sql`1` })
               .from(platformAccessLog)
               .where(eq(platformAccessLog.userId, user.id)),

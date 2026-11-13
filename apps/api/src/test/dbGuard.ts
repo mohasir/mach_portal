@@ -6,7 +6,7 @@ const SAFE_URL =
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
 
 // Integration setup wipes the target database, so it must never be able to reach
-// anything but a local instance, and must never fall back to the app's DATABASE_URL.
+// anything but a local instance, and must never fall back to the app's DATABASE_APP_URL.
 export function assertSafeTestDatabaseUrl(url: string | undefined): void {
   if (!url) {
     throw new Error('TEST_DATABASE_URL must be set explicitly for integration tests');

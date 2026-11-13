@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ATTACHMENT_ALLOWED_MIME_TYPES, ATTACHMENT_MAX_SIZE_BYTES } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
+import type { Database } from '../../db';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import { guardTenantSession } from '../../core/express/middleware/guardTenantSession';
 import { createUploadMiddleware } from '../../core/express/middleware/upload';
@@ -13,18 +14,25 @@ const upload = createUploadMiddleware({
   invalidTypeError: new AppError(ErrorCodes.eventPayment.ATTACHMENT_INVALID_TYPE),
 });
 
-export const eventAttachmentsRouter = Router();
+// `database` is the client the guard opens tenant transactions on; the app pool when absent.
+export function createEventAttachmentsRouter(database?: Database) {
+  const router = Router();
 
-eventAttachmentsRouter.post(
-  '/:paymentId/attachments',
-  guardTenantSession({ [RESOURCES.PAYMENT]: [ACTIONS.UPLOAD_ATTACHMENT] }),
-  upload.single('file'),
-  uploadPaymentAttachment,
-);
+  router.post(
+    '/:paymentId/attachments',
+    guardTenantSession({ [RESOURCES.PAYMENT]: [ACTIONS.UPLOAD_ATTACHMENT] }, database),
+    upload.single('file'),
+    uploadPaymentAttachment,
+  );
 
-eventAttachmentsRouter.use(
-  createUploadErrorHandler({
-    tooLargeErrorCode: ErrorCodes.eventPayment.ATTACHMENT_TOO_LARGE,
-    uploadFailedErrorCode: ErrorCodes.eventPayment.ATTACHMENT_UPLOAD_FAILED,
-  }),
-);
+  router.use(
+    createUploadErrorHandler({
+      tooLargeErrorCode: ErrorCodes.eventPayment.ATTACHMENT_TOO_LARGE,
+      uploadFailedErrorCode: ErrorCodes.eventPayment.ATTACHMENT_UPLOAD_FAILED,
+    }),
+  );
+
+  return router;
+}
+
+export const eventAttachmentsRouter = createEventAttachmentsRouter();

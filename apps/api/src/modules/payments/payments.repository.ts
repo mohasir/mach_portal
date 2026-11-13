@@ -14,7 +14,7 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import type { PaymentsIncomeQuery, PaymentsListQuery } from '@repo/schemas';
-import type { Database } from '../../db';
+import type { Executor } from '../../db';
 import { clients, events, eventPayments, eventTypes, quotes, user } from '../../db/schema';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
@@ -28,7 +28,7 @@ const sortColumns = {
 
 export class PaymentsRepository {
   constructor(
-    private db: Database,
+    private db: Executor,
     private tenantId: string,
   ) {}
 

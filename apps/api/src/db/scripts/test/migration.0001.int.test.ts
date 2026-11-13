@@ -426,11 +426,14 @@ describe('0001 backfill edge cases', () => {
       { id: 'u_multi', is_platform_admin: true, role: 'admin,superadmin' },
     ]);
     const post = await verifyMultitenant(db.url);
-    expect(post.problems).toEqual([
+    // Migrated only up to 0003, so the RLS checks (0005) legitimately fail here.
+    const rlsProblem = /row level security|policy/;
+    expect(post.problems.filter((p) => !rlsProblem.test(p))).toEqual([
       'member: 2 row(s) without role_id',
       `organization: 1 without an owner role that has a member (${SLUG})`,
       `organization: 1 without app_settings (${SLUG})`,
     ]);
+    expect(post.problems).toContain('clients: missing policy clients_tenant_isolation');
     expect(post.notes).toContain('platform admins: 1');
     // A comma-separated legacy role is not a base role: the roles migration refuses it and rolls back.
     await expectMigrationError(runMigrate(db.url), /unknown member role.*admin,superadmin/);
@@ -559,7 +562,7 @@ describe('0001 on an empty legacy database', () => {
     const pushed = await createDb();
     const result = spawnSync('pnpm', ['exec', 'drizzle-kit', 'push', '--force'], {
       cwd: API_ROOT,
-      env: { ...process.env, DATABASE_URL: pushed.url },
+      env: { ...process.env, DATABASE_OWNER_URL: pushed.url },
       encoding: 'utf8',
     });
     expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);

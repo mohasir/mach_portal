@@ -1,15 +1,15 @@
 # Runbook — Cutover multi-tenant (fase 1)
 
-Convierte la base actual (un solo cliente, creada con `drizzle-kit push`) en el tenant #1 de la instalación multi-tenant. Spec: `docs/superpowers/specs/2026-10-19-multitenant-fase1-design.md` (§7). Todos los comandos se ejecutan desde la raíz del repo con `DATABASE_URL` apuntando a la base objetivo.
+Convierte la base actual (un solo cliente, creada con `drizzle-kit push`) en el tenant #1 de la instalación multi-tenant. Spec: `docs/superpowers/specs/2026-10-19-multitenant-fase1-design.md` (§7). Todos los comandos se ejecutan desde la raíz del repo con las variables de conexión de la base objetivo (sección 7: cada script usa `DATABASE_OWNER_URL`, `DATABASE_PLATFORM_URL` o `DATABASE_APP_URL`; `pg_dump`, `pg_restore`, `db:baseline` y `db:migrate` usan `DATABASE_OWNER_URL`, `mt:verify` usa `DATABASE_PLATFORM_URL`). **Antes del paso 2 hay que crear los roles (`db:roles`, sección 7), porque `mt:verify` usa el rol `platform`.**
 
-> **No subir a producción hasta completar todas las fases** (incluida la 1b, RLS). Este runbook se usa primero en los ensayos sobre `staging-mt` y solo después en producción.
+> **No subir a producción hasta completar todas las fases** (incluida la 1b, RLS: sección 7). Este runbook se usa primero en los ensayos sobre `staging-mt` y solo después en producción.
 
 ## 0. Decisiones y acciones previas (antes de la ventana)
 
 - [ ] **Rotar la contraseña de `samuel@admin.com`** si todavía es la del seed por defecto: la migración la convierte en administrador de plataforma.
 - [ ] **Decisión pendiente: restablecer o no las filas globales de `quote_stages` a los valores por defecto del seed.** La migración copia las personalizaciones actuales (label, color, description) de cada etapa al overlay `quote_stage_settings` del tenant #1 y **no toca** las filas globales. Si se quiere que los tenants nuevos partan de los valores por defecto del producto y no de las personalizaciones del cliente actual, hay que restablecer esas filas globales **después** del cutover y de `mt:verify`. Ojo: `db:seed` (`seeds/quoteStages.ts`) solo inserta etapas que faltan y **no sobrescribe** las existentes, así que el restablecimiento requiere un `UPDATE` manual revisado con los valores de `quoteStages.ts`. Nunca antes de que la migración copie el overlay.
 - [ ] Definir el **host único** de cada entorno (hoy `oravitech.com` en Cloudflare; p. ej. `portal.oravitech.com`) y la URL con la que el cliente actual seguirá entrando.
-- [ ] Verificar que `DATABASE_URL` del cutover es una **conexión directa** a Postgres (no pooler), ver paso 5.
+- [ ] Verificar que `DATABASE_OWNER_URL` del cutover (la que usan `db:baseline` y `db:migrate`) es una **conexión directa** a Postgres (no pooler), ver paso 5.
 - [ ] Verificar el límite de intentos de login (sección 5).
 - [ ] Avisar la ventana de mantenimiento al cliente.
 
@@ -19,7 +19,8 @@ Valores por servicio (no hay comodines ni dominios por cliente: **un único host
 
 | Servicio | Variable | Valor |
 | --- | --- | --- |
-| API | `DATABASE_URL` | Conexión directa a Postgres (no pooler) |
+| API | `DATABASE_APP_URL` | Rol `app` (sección 7); no se usa para migrar ni para respaldar. Railway y Neon inyectan `DATABASE_URL`: la API la ignora, hay que copiar su valor a mano en la variable que corresponda (sección 7.1) |
+| Cutover / scripts | `DATABASE_OWNER_URL`, `DATABASE_PLATFORM_URL` | Conexión directa a Postgres (no pooler); ver sección 7.1 |
 | API | `BETTER_AUTH_URL` | URL pública de la API |
 | API | `WEB_ORIGIN` | Lista fija de orígenes permitidos separada por comas (CORS y `trustedOrigins`); normalmente solo `https://<host-único>`, sin barra final |
 | API | `WEB_APP_URL` | Origen canónico de la web para enlaces de contraseña y notificaciones (`https://<host-único>`) |
@@ -38,7 +39,7 @@ Valores por servicio (no hay comodines ni dominios por cliente: **un único host
 - Base restaurada desde un snapshot de producción, con acceso restringido.
 - **Bucket y credenciales de R2 propios** (nunca compartir con producción: los archivos y URLs guardadas no se migran).
 - **Correo desactivado o redirigido** a un buzón de prueba (los enlaces de contraseña y las notificaciones no deben llegar a clientes reales).
-- **Crons desactivados.** En esta fase `server.ts` no programa crons (los jobs son por tenant y nada itera sobre tenants): no hay recordatorios automáticos. Cuando se necesiten, correr `pnpm --filter api jobs:event-reminders --tenant=<slug>` a mano.
+- **Crons desactivados.** En esta fase `server.ts` no programa crons: no hay recordatorios automáticos. Cuando se necesiten, correrlos a mano: `pnpm --filter api jobs:event-reminders -- --tenant=<slug>` (una organización) o `-- --all` (todas).
 - `WEB_ORIGIN` y `WEB_APP_URL` con el host de staging-mt.
 
 ## 2. Ensayos (mínimo dos, con snapshot de producción)
@@ -55,9 +56,9 @@ Ventana de mantenimiento con **escrituras bloqueadas** (web en modo mantenimient
 
 1. **Backup** y prueba de restauración:
    ```bash
-   pg_dump --format=custom --no-owner "$DATABASE_URL" -f mach_pre_mt_$(date +%Y%m%d%H%M).dump
+   pg_dump --format=custom --no-owner "$DATABASE_OWNER_URL" -f mach_pre_mt_$(date +%Y%m%d%H%M).dump
    ```
-   Restaurar el dump en una base de prueba y comprobar que abre. Sin backup restaurable no se continúa.
+   Se respalda con el dueño (`DATABASE_OWNER_URL`): un dump hecho como `app` queda vacío o incompleto por el RLS. Restaurar el dump en una base de prueba y comprobar que abre. Sin backup restaurable no se continúa.
 2. **Pre-verificación** (solo `SELECT`; conservar la salida). Debe terminar con exit 0:
    ```bash
    pnpm --filter api mt:verify --pre > verify-pre.txt
@@ -75,7 +76,7 @@ Ventana de mantenimiento con **escrituras bloqueadas** (web en modo mantenimient
    ```bash
    pnpm --filter api db:baseline
    ```
-4. **Conexión directa.** `DATABASE_URL` debe apuntar **directo a Postgres**, no a un pooler (PgBouncer en modo transacción, endpoints pooled de Neon/Supabase). Los parámetros `--set` viajan en el parámetro de arranque `options`, que los poolers rechazan o descartan en silencio; si se descarta, la migración falla con "needs the tenant #1 slug" aunque se haya pasado `--set`.
+4. **Conexión directa.** `DATABASE_OWNER_URL` debe apuntar **directo a Postgres**, no a un pooler (PgBouncer en modo transacción, endpoints pooled de Neon/Supabase). Los parámetros `--set` viajan en el parámetro de arranque `options`, que los poolers rechazan o descartan en silencio; si se descarta, la migración falla con "needs the tenant #1 slug" aunque se haya pasado `--set`.
 5. **Migrar** (una sola transacción: si falla, no cambia nada). El slug es el identificador estable e inmutable del tenant (`^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])$`); el nombre admite espacios:
    ```bash
    pnpm --filter api db:migrate --set mt.tenant_slug=<slug> --set mt.tenant_name="<Nombre del cliente>" --set mt.platform_admin_emails=<a@x,b@y>
@@ -113,7 +114,7 @@ No hay migración inversa. La reversión es **restaurar el backup del paso 1 y d
   - Cualquier señal de datos visibles entre organizaciones.
   - Errores 5xx sostenidos en la API.
 - Si falla el paso 5 (migración), la base queda intacta: corregir la causa y repetir, sin restaurar.
-- Restaurar: `pg_restore --clean --if-exists -d "$DATABASE_URL" <dump>`.
+- Restaurar: `pg_restore --clean --if-exists -d "$DATABASE_OWNER_URL" <dump>`.
 
 ## 5. Comportamientos a tener presentes
 
@@ -134,3 +135,68 @@ No hay migración inversa. La reversión es **restaurar el backup del paso 1 y d
 4. Si el cambio de `main` ya está aplicado en producción vía `push` y la migración `0001` aún no se ejecutó, **editar `0001`** (o regenerar antes de producción) en lugar de agregar una migración posterior, y repetir el ensayo; después del cutover, solo migraciones nuevas.
 5. Comprobar `db:generate` ("No schema changes") y `drizzle-kit check`, correr `pnpm --filter api test:int` y repetir el ensayo de la sección 2 si el cambio toca datos.
 6. Después del cutover, `drizzle-kit push` queda prohibido en cualquier base compartida (la rama ya no expone `db:push`).
+
+## 7. Fase 1b: RLS (roles, migración `0005` y variables)
+
+Spec: `docs/superpowers/specs/2026-11-08-multitenant-fase1b-rls-design.md`. Arquitectura: `docs/backend/architecture.md` §12.
+
+### 7.1 Variables nuevas
+
+| Variable | Rol / uso | La leen |
+| --- | --- | --- |
+| `DATABASE_APP_URL` | rol **`app`** (sin `SUPERUSER`, `BYPASSRLS` ni `CREATEROLE`) | API, jobs, `db:roles` (toma usuario y contraseña del rol), `mt:verify` (opcional, comprueba el rol de la API) |
+| `DATABASE_OWNER_URL` | **owner** (dueño de las tablas; debe poder cruzar organizaciones, ver nota abajo) | `db:roles` (se conecta con ella), `db:migrate`, `db:reset`, `db:baseline`, `db:studio` |
+| `DATABASE_PLATFORM_URL` | rol **`platform`** (`BYPASSRLS`) | `db:seed`, `tenant:create`, `mt:verify`, `db:roles` (toma usuario y contraseña del rol) |
+| `DB_POOL_MAX` (por defecto 10) | conexiones de la API para las transacciones de petición | API |
+| `DB_AUTH_POOL_MAX` (por defecto 3) | pool propio de Better Auth | API |
+
+- Las contraseñas y las URL viven solo en variables de entorno o en el gestor de secretos del entorno; nunca en el repo.
+- Ningún script cae a otra variable: si falta la suya, falla con un mensaje claro. **`DATABASE_URL` ya no se lee en ningún lado:** Railway y Neon la inyectan con la URL de su usuario administrador; hay que mapearla a mano (a `DATABASE_OWNER_URL` si es el administrador, y crear `DATABASE_APP_URL` con el rol `app`) y no dejar que la API dependa de ella.
+- **`db:roles` no tiene variables de contraseña propias:** se conecta con `DATABASE_OWNER_URL` y crea (o actualiza) los roles con el **usuario y la contraseña** de `DATABASE_APP_URL` y `DATABASE_PLATFORM_URL`. Ambas son obligatorias; falla nombrando la variable si falta alguna o si no trae usuario o contraseña, y si los dos usuarios coinciden entre sí o con el owner. La contraseña va codificada en la URL (`encodeURIComponent`) si tiene `@ : / % ? #`…; `db:roles` la decodifica igual que el driver, así que la misma URL sirve para conectar. No imprime URLs ni contraseñas.
+- `db:fresh` (`db:preflight` + reset + `db:roles` + migrate + seed) también necesita esas tres URLs: el reset borra `public` y con él los permisos de `app`, así que re-ejecuta `db:roles`.
+- **`db:studio` usa `DATABASE_OWNER_URL`** y por eso ve las filas de **todas** las organizaciones. No apuntarlo a producción con esa credencial sin necesidad (y nunca dejarlo abierto). `db:generate` no se conecta a la base.
+- **El owner debe tener `BYPASSRLS`** (o ser superusuario): es un requisito que debe cumplir el administrador de cada entorno. En local se cumple porque el administrador es superusuario; `db:roles` y `mt:verify` **no lo comprueban ni lo fijan**. Las migraciones posteriores a la `0005` que toquen datos lo necesitan: sin él verían cero filas. Comprobarlo en cada entorno (en especial Neon y Railway) conectando con `DATABASE_OWNER_URL`: `SELECT rolbypassrls, rolsuper FROM pg_roles WHERE rolname = current_user;` (alguna de las dos debe ser `true`). En Neon, si el owner no lo tiene, tampoco puede crear un `platform` con `BYPASSRLS` y `db:roles` falla.
+- `db:baseline` usa **owner** (el rol `platform` no puede crear el esquema `drizzle`).
+
+### 7.2 Dimensionado del pool
+
+- Conexiones por instancia de la API = `DB_POOL_MAX + DB_AUTH_POOL_MAX` (por defecto 13). Total = eso por el número de instancias, más lo que usen scripts y consolas; debe quedar **por debajo del límite de conexiones del plan** de Postgres de cada entorno.
+- Cada petición con tenant retiene una conexión de principio a fin (la web agrupa hasta 20 llamadas por lote). Si el pool no alcanza, las peticiones esperan (no fallan): vigilar la latencia.
+- **Prueba de carga en `staging-mt` (Neon) antes de producción:** lotes de lecturas concurrentes de varias organizaciones, más generación de PDF y subidas de adjuntos en paralelo; comprobar que no hay esperas largas ni conexiones `idle in transaction` durante las llamadas externas (`pg_stat_activity`).
+- **Plan B: pgBouncer en modo transacción.** Es compatible porque el tenant se fija con `set_config(..., true)` (vale solo dentro de la transacción). Hoy **no** se usa `prepare: false`: solo hay que añadirlo si se pasa al plan B, en todos los clientes `postgres-js` (`db/index.ts`, el pool de Better Auth `authQueryClient` y `platformDb`). Las migraciones (`DATABASE_OWNER_URL`) siguen yendo por conexión directa (sección 3, paso 4).
+
+### 7.3 Orden por entorno
+
+La `0005` **solo se aplica junto con el código de la transacción por petición y de los módulos sobre `ctx.db`**: después de ella, cualquier rol sin `BYPASSRLS` no ve nada hasta que la petición fije `app.tenant_id`. Y la API se niega a arrancar si el rol de `DATABASE_APP_URL` es superusuario, tiene `BYPASSRLS` o `CREATEROLE`, o es miembro de un rol que salta el RLS.
+
+**La `0005` nunca debe llegar a un entorno sin ese código.** Ninguna rama ni commit desplegable puede contener la migración sin la transacción por petición, los módulos sobre `ctx.db` y la verificación de rol al arrancar: integrar todo en un único PR o, si se separa en commits, que el de la migración sea el último.
+
+Por eso el orden es:
+
+1. **Crear los roles** con el usuario administrador del entorno:
+   ```bash
+   DATABASE_OWNER_URL=<url-admin> DATABASE_APP_URL=<url-app> DATABASE_PLATFORM_URL=<url-platform> pnpm --filter api db:roles
+   ```
+   Los roles toman nombre y contraseña de `<url-app>` y `<url-platform>` (por ejemplo `postgres://app:<contraseña-codificada>@<host>/<base>`). Es idempotente: re-ejecutarlo con otra contraseña en la URL la rota. En una base antigua hay que hacerlo **antes** de `mt:verify --pre` (usa `platform`).
+2. **Aplicar la `0005`** con owner (`db:migrate`, `DATABASE_OWNER_URL`), con la app detenida o con el código nuevo desplegado en el mismo paso.
+3. **Definir `DATABASE_APP_URL` con el rol `app`** (y `DATABASE_OWNER_URL`, `DATABASE_PLATFORM_URL`, `DB_POOL_MAX`, `DB_AUTH_POOL_MAX`) en la API; quitar o ignorar la `DATABASE_URL` que inyecte el proveedor.
+4. **Desplegar el código** (API y web).
+5. **`mt:verify`** con `DATABASE_PLATFORM_URL` (y `DATABASE_APP_URL` definida, para que también compruebe el rol de la API): debe terminar con exit 0, con las 30 tablas con RLS habilitado, forzado y con su política.
+
+Por entorno:
+
+- **Docker local** (`docker-compose.yaml`: usuario `mach_admin`, base `mach_db`): `DATABASE_OWNER_URL=postgres://mach_admin:<contraseña-del-compose>@localhost:5432/mach_db`; los roles `app` y `platform` los crea `db:roles` en esa misma base, así que `DATABASE_APP_URL=postgres://app:<contraseña-app>@localhost:5432/mach_db` y `DATABASE_PLATFORM_URL=postgres://platform:<contraseña-platform>@localhost:5432/mach_db` (las contraseñas se eligen ahí mismo; `db:roles` las asigna). Actualizar el `.env` y correr `pnpm --filter api db:fresh` (reset + `db:roles` + migrate + seed) y `mt:verify`.
+- **Neon (`staging-mt`):** los roles creados desde la consola de Neon pertenecen a `neon_superuser` (se salta el RLS y la API no arranca): crear `app` y `platform` **con `db:roles`**, no desde la consola. Usar la conexión directa para migrar (sección 3, paso 4). Hacer aquí la prueba de carga (7.2).
+- **Railway (producción, probable):** Postgres estándar con usuario administrador y sin pooler por defecto. Mismo orden; no se toca hasta completar todas las fases.
+
+### 7.4 Reversión de la fase 1b
+
+- Si falla antes de aplicar la `0005`: nada que revertir (los roles creados son inocuos).
+- La `0005` no tiene migración inversa. Para volver atrás: restaurar el backup (sección 4) y desplegar la versión anterior. Mientras se decide, apuntar `DATABASE_APP_URL` a un rol con `BYPASSRLS` **no** sirve con el código nuevo (la API se niega a arrancar).
+
+### 7.5 Pendiente / decisiones aparcadas
+
+- **FK compuestas `(x_id, tenant_id)`:** Postgres verifica las FK sin RLS, así que hoy solo la resolución de ids en los repositories (`architecture.md` §11.4) impide referenciar filas de otro tenant. Decidir en un seguimiento si se migran ~29 tablas.
+- **`server.ts` no maneja el apagado ordenado:** las tareas de PDF en segundo plano (`afterCommit`) que estén pendientes se pierden al reiniciar la API. Reintento: `quotes.regeneratePdf`.
+- **2 filas `own` heredadas en `role_permission`** (de la migración de roles) a revisar.
+- **Eliminar `user.role` y `member.role`** (columnas heredadas que ya no autorizan) en una fase posterior.

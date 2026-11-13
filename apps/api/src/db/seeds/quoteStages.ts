@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { QUOTE_STAGE, type QuoteStageColor } from '@repo/schemas';
-import { db } from '../index';
+import { db as defaultDb, type Executor } from '../index';
 import { quoteStages } from '../schema';
 
 const SEED_QUOTE_STAGES: {
@@ -44,7 +44,7 @@ const SEED_QUOTE_STAGES: {
   },
 ];
 
-export async function seedQuoteStages() {
+export async function seedQuoteStages(db: Executor = defaultDb) {
   console.log('🏷️  Seeding estados de cotización...');
 
   for (const s of SEED_QUOTE_STAGES) {

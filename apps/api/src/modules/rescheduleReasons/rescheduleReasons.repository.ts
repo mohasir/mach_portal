@@ -4,7 +4,7 @@ import type {
   RescheduleReasonsListQuery,
   UpdateRescheduleReasonInput,
 } from '@repo/schemas';
-import type { Database } from '../../db';
+import type { Executor } from '../../db';
 import { rescheduleReasons } from '../../db/schema';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
@@ -19,7 +19,7 @@ const sortColumns = {
 
 export class RescheduleReasonsRepository {
   constructor(
-    private db: Database,
+    private db: Executor,
     private tenantId: string,
   ) {}
 

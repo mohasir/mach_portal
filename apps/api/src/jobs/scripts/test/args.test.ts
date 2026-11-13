@@ -6,6 +6,14 @@ describe('parseArgs', () => {
     expect(parseArgs(['--tenant=acme'])).toEqual({ kind: 'run', tenantSlug: 'acme' });
   });
 
+  it('reads --all as a run over every organization', () => {
+    expect(parseArgs(['--all'])).toEqual({ kind: 'all' });
+  });
+
+  it('refuses --all together with --tenant', () => {
+    expect(() => parseArgs(['--all', '--tenant=acme'])).toThrow(/either --tenant=<slug> or --all/);
+  });
+
   it('returns help for --help', () => {
     expect(parseArgs(['--help'])).toEqual({ kind: 'help' });
   });

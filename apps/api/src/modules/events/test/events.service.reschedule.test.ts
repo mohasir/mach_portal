@@ -54,6 +54,7 @@ function makeFakes() {
     reasonsRepo as unknown as RescheduleReasonsRepository,
     notificationsRepo as unknown as NotificationsRepository,
     {} as StaffRepository,
+    () => undefined,
     {} as StorageProvider,
   );
   return { service, eventsRepo, quotesRepo, reasonsRepo, notificationsRepo };

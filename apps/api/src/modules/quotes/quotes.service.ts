@@ -18,14 +18,17 @@ import {
   type QuotesViewOptions,
   type UpdateQuoteInput,
 } from '@repo/schemas';
+import type { AfterCommit } from '../../core/trpc/tenantCtx';
+import type { TenantRunner, Tx } from '../../db';
+import { runInBackground } from '../../lib/background';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import { generateQuotePdf } from '../../lib/pdfService/client';
 import { ConfigRepository } from '../config/config.repository';
 import { NotificationsRepository } from '../notifications/notifications.repository';
 import type { NotificationActor } from '../notifications/notifications.resource';
-import { ProductsRepository } from '../products/products.repository';
+import type { ProductsRepository } from '../products/products.repository';
 import { buildProductTree } from '../products/products.resource';
-import { TemplatesRepository } from '../templates/templates.repository';
+import type { TemplatesRepository } from '../templates/templates.repository';
 import { quotePdfTemplateResource } from '../templates/templates.resource';
 import { QuotesRepository, type MissingRef } from './quotes.repository';
 import { buildQuotePdfPayload } from './quotes.pdf';
@@ -78,14 +81,75 @@ function pricingNotAllowed() {
   });
 }
 
+export type QuotePdfRepositories = {
+  quotes: QuotesRepository;
+  products: ProductsRepository;
+  templates: TemplatesRepository;
+};
+
+// Holds no connection while the PDF service works: the reads and the final write each run in a
+// short tenant transaction of their own, with repositories built on that transaction.
+export class QuotePdfGenerator {
+  constructor(
+    private runInTenant: TenantRunner,
+    private repositoriesFor: (tx: Tx) => QuotePdfRepositories,
+  ) {}
+
+  async generate(id: string, ownerId?: string) {
+    const payload = await this.runInTenant(async (tx) => {
+      const repos = this.repositoriesFor(tx);
+      const result = await repos.quotes.findById(id, ownerId);
+      if (!result) throw notFound();
+      if (!canGeneratePdf(result.quoteRow)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          cause: new AppError(ErrorCodes.quote.PDF_NOT_ALLOWED),
+        });
+      }
+
+      const lines = buildQuoteLineDetails(result.lineRows, result.optionRows);
+      // Inactive stations stay in the tree so older quotes keep their line; the PDF itself
+      // skips inactive groups and options (see quotes.pdf.ts).
+      const { productRows, tierRows, groupRows, optionRows } = await repos.products.findTree(true);
+      const catalog = buildProductTree(productRows, tierRows, groupRows, optionRows);
+      const templateRow = await repos.templates.findByType(TEMPLATE_TYPES.QUOTE_PDF);
+      const { content: template } = quotePdfTemplateResource(templateRow);
+      return buildQuotePdfPayload(result.quoteRow, lines, catalog, template);
+    });
+
+    let pdf: { url: string; key: string };
+    try {
+      pdf = await generateQuotePdf(payload);
+    } catch (err) {
+      console.error('pdf generation failed', err);
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        cause: new AppError(ErrorCodes.quote.PDF_GENERATION_FAILED),
+      });
+    }
+
+    const updated = await this.runInTenant((tx) =>
+      this.repositoriesFor(tx).quotes.setPdfInfo(id, pdf),
+    );
+    if (!updated) throw notFound();
+    return quoteResource(updated);
+  }
+}
+
 export class QuotesService {
   constructor(
     private repo: QuotesRepository,
     private configRepo: ConfigRepository,
-    private productsRepo: ProductsRepository,
-    private templatesRepo: TemplatesRepository,
     private notificationsRepo: NotificationsRepository,
+    private pdf: QuotePdfGenerator,
+    private afterCommit: AfterCommit,
   ) {}
+
+  // The PDF is generated from the committed quote, on its own short transactions, so the request
+  // neither waits on the PDF service nor fails with it.
+  private generatePdfInBackground(id: string, label: string) {
+    this.afterCommit(() => runInBackground(label, () => this.pdf.generate(id)));
+  }
 
   // `hideStale` is a per-user view option, but it only applies while the app allows hiding stale
   // quotes: a client with an old config cache must not keep hiding them once an admin turns it off.
@@ -115,42 +179,6 @@ export class QuotesService {
       result.historyRows,
       result.assignmentHistoryRows,
     );
-  }
-
-  async generatePdf(id: string, ownerId?: string) {
-    const result = await this.repo.findById(id, ownerId);
-    if (!result) throw notFound();
-    if (!canGeneratePdf(result.quoteRow)) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        cause: new AppError(ErrorCodes.quote.PDF_NOT_ALLOWED),
-      });
-    }
-
-    const lines = buildQuoteLineDetails(result.lineRows, result.optionRows);
-    // Inactive stations stay in the tree so older quotes keep their line; the PDF itself
-    // skips inactive groups and options (see quotes.pdf.ts).
-    const { productRows, tierRows, groupRows, optionRows } = await this.productsRepo.findTree(true);
-    const catalog = buildProductTree(productRows, tierRows, groupRows, optionRows);
-    const templateRow = await this.templatesRepo.findByType(TEMPLATE_TYPES.QUOTE_PDF);
-    const { content: template } = quotePdfTemplateResource(templateRow);
-
-    const payload = buildQuotePdfPayload(result.quoteRow, lines, catalog, template);
-
-    let pdf: { url: string; key: string };
-    try {
-      pdf = await generateQuotePdf(payload);
-    } catch (err) {
-      console.error('pdf generation failed', err);
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        cause: new AppError(ErrorCodes.quote.PDF_GENERATION_FAILED),
-      });
-    }
-
-    const updated = await this.repo.setPdfInfo(id, pdf);
-    if (!updated) throw notFound();
-    return quoteResource(updated);
   }
 
   async board(query: QuotesBoardQuery, ownerId?: string) {
@@ -234,9 +262,7 @@ export class QuotesService {
     if ('missingRef' in created) throw refNotFound(created);
 
     if (canGeneratePdf(created)) {
-      void this.generatePdf(created.id).catch((err) => {
-        console.error('background pdf generation failed', err);
-      });
+      this.generatePdfInBackground(created.id, 'background pdf generation failed');
     }
 
     return quoteResource(created);
@@ -284,9 +310,7 @@ export class QuotesService {
     // on the external PDF service; a failure here shouldn't fail the edit the caller is
     // actually waiting on.
     if (canGeneratePdf(updated)) {
-      void this.generatePdf(id).catch((err) => {
-        console.error('background pdf regeneration failed', err);
-      });
+      this.generatePdfInBackground(id, 'background pdf regeneration failed');
     }
 
     return quoteResource(updated);
@@ -363,9 +387,7 @@ export class QuotesService {
 
     // Repricing changes the client-facing amounts, so the PDF has to follow (same as update()).
     if (accept && canGeneratePdf(updated)) {
-      void this.generatePdf(id).catch((err) => {
-        console.error('background pdf regeneration failed', err);
-      });
+      this.generatePdfInBackground(id, 'background pdf regeneration failed');
     }
     return quoteResource(updated);
   }

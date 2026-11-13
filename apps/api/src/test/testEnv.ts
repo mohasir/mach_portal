@@ -5,6 +5,8 @@ export const TEST_ENV = {
   WEB_ORIGIN: ['http://localhost:3000', 'http://192.168.1.10:3000'],
   WEB_APP_URL: 'http://localhost:3000',
   PORT: 8080,
+  DB_POOL_MAX: 10,
+  DB_AUTH_POOL_MAX: 3,
   STORAGE_PROVIDER: 'r2',
   R2_ACCOUNT_ID: 'test',
   R2_ACCESS_KEY_ID: 'test',

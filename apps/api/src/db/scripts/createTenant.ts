@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server';
-import { queryClient } from '../index';
+import { authQueryClient, queryClient } from '../index';
+import { closePlatformDb, platformDb } from '../platform';
 import { createTenant } from '../../lib/tenancy/createTenant';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import type { CreateTenantInput } from '../../lib/tenancy/createTenant';
@@ -19,7 +20,9 @@ Flags:
   --admin-name=<name>    Name for a new admin account.
   --help                 Show this help.
 
-The global quote stages must already exist (pnpm db:seed seeds them).`;
+The global quote stages must already exist (pnpm db:seed seeds them).
+Connects with DATABASE_PLATFORM_URL (the "platform" role); the admin account goes through Better
+Auth, which uses DATABASE_APP_URL.`;
 
 function flag(name: string): string | undefined {
   const arg = process.argv.find((a) => a === `--${name}` || a.startsWith(`--${name}=`));
@@ -52,9 +55,10 @@ async function main() {
     return 1;
   }
   const input: CreateTenantInput = { slug, name, adminEmail, adminName };
+  const database = platformDb();
 
   try {
-    const { tenantId, setupUrl } = await createTenant(input);
+    const { tenantId, setupUrl } = await createTenant(input, database);
     console.log(`Tenant created: ${tenantId}`);
     console.log(
       setupUrl
@@ -77,7 +81,12 @@ async function main() {
   }
 }
 
-main().then(async (status) => {
-  await queryClient.end();
-  process.exit(status);
-});
+main()
+  .catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    return 1;
+  })
+  .then(async (status) => {
+    await Promise.all([closePlatformDb(), queryClient.end(), authQueryClient.end()]);
+    process.exit(status);
+  });

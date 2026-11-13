@@ -1,5 +1,6 @@
 import { pgTable, uuid, text, integer, boolean, pgEnum, unique, index } from 'drizzle-orm/pg-core';
 import { tenantId } from './tenantColumn';
+import { tenantIsolationPolicy } from '../rls/policy';
 
 export const optionGroupTypeEnum = pgEnum('option_group_type', ['select', 'included']);
 
@@ -14,8 +15,11 @@ export const products = pgTable(
     isActive: boolean('is_active').default(true).notNull(),
     sortOrder: integer('sort_order').default(0).notNull(),
   },
-  (t) => [unique('products_tenant_name_unique').on(t.tenantId, t.name)],
-);
+  (t) => [
+    unique('products_tenant_name_unique').on(t.tenantId, t.name),
+    tenantIsolationPolicy('products'),
+  ],
+).enableRLS();
 
 export const productPriceTiers = pgTable(
   'product_price_tiers',
@@ -32,8 +36,9 @@ export const productPriceTiers = pgTable(
   (t) => [
     unique('product_price_tiers_product_persons_unique').on(t.productId, t.numPersons),
     index('product_price_tiers_tenant_idx').on(t.tenantId),
+    tenantIsolationPolicy('product_price_tiers'),
   ],
-);
+).enableRLS();
 
 export const optionGroups = pgTable(
   'option_groups',
@@ -49,8 +54,8 @@ export const optionGroups = pgTable(
     isActive: boolean('is_active').default(true).notNull(),
     sortOrder: integer('sort_order').default(0).notNull(),
   },
-  (t) => [index('option_groups_tenant_idx').on(t.tenantId)],
-);
+  (t) => [index('option_groups_tenant_idx').on(t.tenantId), tenantIsolationPolicy('option_groups')],
+).enableRLS();
 
 export const options = pgTable(
   'options',
@@ -65,5 +70,5 @@ export const options = pgTable(
     isActive: boolean('is_active').default(true).notNull(),
     sortOrder: integer('sort_order').default(0).notNull(),
   },
-  (t) => [index('options_tenant_idx').on(t.tenantId)],
-);
+  (t) => [index('options_tenant_idx').on(t.tenantId), tenantIsolationPolicy('options')],
+).enableRLS();

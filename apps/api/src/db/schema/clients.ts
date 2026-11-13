@@ -1,6 +1,7 @@
 import { pgTable, uuid, text, timestamp, index } from 'drizzle-orm/pg-core';
 import { stateEnum } from './enums';
 import { tenantId } from './tenantColumn';
+import { tenantIsolationPolicy } from '../rls/policy';
 
 export const clients = pgTable(
   'clients',
@@ -20,5 +21,5 @@ export const clients = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [index('clients_tenant_idx').on(t.tenantId)],
-);
+  (t) => [index('clients_tenant_idx').on(t.tenantId), tenantIsolationPolicy('clients')],
+).enableRLS();

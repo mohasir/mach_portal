@@ -6,7 +6,7 @@ import {
   type CreateClientInput,
   type UpdateClientInput,
 } from '@repo/schemas';
-import type { Database } from '../../db';
+import type { Executor } from '../../db';
 import { clients, quotes } from '../../db/schema';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
@@ -22,7 +22,7 @@ const sortColumns = {
 
 export class ClientsRepository {
   constructor(
-    private db: Database,
+    private db: Executor,
     private tenantId: string,
   ) {}
 

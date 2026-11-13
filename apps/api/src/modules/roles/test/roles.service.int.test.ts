@@ -21,7 +21,13 @@ type Tenant = { id: string; slug: string };
 async function ctxFor(tenantId: string, userId: string): Promise<TenantCtx> {
   const access = await resolveAccess({ userId, tenantId });
   if (!access) throw new Error('test user has no access in tenant');
-  return { tenantId, user: { id: userId }, session: {}, access } as unknown as TenantCtx;
+  return {
+    tenantId,
+    user: { id: userId },
+    session: {},
+    access,
+    db: testDb,
+  } as unknown as TenantCtx;
 }
 
 async function caught(promise: Promise<unknown>): Promise<unknown> {
@@ -431,6 +437,7 @@ describe('roles service', () => {
         user: { id: randomUUID() },
         session: {},
         access: OWNER_ACCESS,
+        db: testDb,
       } as unknown as TenantCtx;
       const created = await rolesModule(platformCtx).create({
         name: 'Platform made',

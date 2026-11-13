@@ -1,5 +1,6 @@
 import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { organization, user } from './auth';
+import { tenantIsolationPolicy } from '../rls/policy';
 
 // Platform-wide audit trail of platform admins acting inside tenants they do not belong to.
 export const platformAccessLog = pgTable(
@@ -21,5 +22,6 @@ export const platformAccessLog = pgTable(
     index('platform_access_log_tenant_created_idx').on(t.tenantId, t.createdAt),
     // Every user delete checks the restrict FK; without this index that check scans the log.
     index('platform_access_log_user_idx').on(t.userId),
+    tenantIsolationPolicy('platform_access_log'),
   ],
-);
+).enableRLS();

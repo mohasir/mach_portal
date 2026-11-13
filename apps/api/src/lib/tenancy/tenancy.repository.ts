@@ -19,6 +19,14 @@ export class TenancyRepository {
     return row;
   }
 
+  async listOrganizationIds(): Promise<string[]> {
+    const rows = await this.executor
+      .select({ id: organization.id })
+      .from(organization)
+      .orderBy(organization.createdAt, organization.id);
+    return rows.map((row) => row.id);
+  }
+
   async findById(id: string) {
     const [row] = await this.executor
       .select({ id: organization.id, slug: organization.slug, name: organization.name })

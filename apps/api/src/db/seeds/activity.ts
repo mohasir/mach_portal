@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm';
 import { QUOTE_STAGE, type UserPreferences } from '@repo/schemas';
-import { db } from '../index';
+import { db as defaultDb, type Executor } from '../index';
 import {
   clients,
   eventHistory,
@@ -29,7 +29,11 @@ export interface SeedStageOverride {
   description?: string;
 }
 
-export async function seedQuoteStageSettings(tenantId: string, overrides: SeedStageOverride[]) {
+export async function seedQuoteStageSettings(
+  tenantId: string,
+  overrides: SeedStageOverride[],
+  db: Executor = defaultDb,
+) {
   console.log('🏷️  Seeding personalización de estados...');
   if (overrides.length === 0) return;
   await db
@@ -49,7 +53,11 @@ export interface SeedActivityOptions {
 // Reschedules (with their history row and notification), payment history, quote notifications,
 // read receipts and user preferences. Rescheduled events keep their seeded date as the new date
 // and get a "from" date a week earlier.
-export async function seedEventActivity(tenantId: string, opts: SeedActivityOptions) {
+export async function seedEventActivity(
+  tenantId: string,
+  opts: SeedActivityOptions,
+  db: Executor = defaultDb,
+) {
   console.log('🗓️  Seeding actividad (reprogramaciones, historial, notificaciones)...');
 
   const [actor] = await db
@@ -128,7 +136,7 @@ export async function seedEventActivity(tenantId: string, opts: SeedActivityOpti
       changedById: actor.id,
       tenantId,
     });
-    await createNotificationOnce(tenantId, {
+    await createNotificationOnce(db, tenantId, {
       type: 'event_rescheduled',
       entityType: 'event',
       entityId: event.id,
@@ -155,7 +163,7 @@ export async function seedEventActivity(tenantId: string, opts: SeedActivityOpti
     )
     .orderBy(asc(quotes.seq));
   for (const q of closedQuotes) {
-    await createNotificationOnce(tenantId, {
+    await createNotificationOnce(db, tenantId, {
       type: q.stageId === QUOTE_STAGE.CONFIRMED ? 'quote_confirmed' : 'quote_cancelled',
       entityType: 'quote',
       entityId: q.id,
@@ -188,6 +196,7 @@ export async function seedEventActivity(tenantId: string, opts: SeedActivityOpti
 }
 
 async function createNotificationOnce(
+  db: Executor,
   tenantId: string,
   n: { type: string; entityType: string; entityId: string; data: Record<string, unknown> },
 ) {

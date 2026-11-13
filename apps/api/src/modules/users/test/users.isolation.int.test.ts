@@ -56,6 +56,7 @@ function moduleFor(
     tenantId: tenant.id,
     user: { id: o.userId ?? randomUUID(), isPlatformAdmin },
     access: o.access ?? (isPlatformAdmin ? OWNER_ACCESS : OWNER_MEMBER_ACCESS),
+    db: testDb,
   } as unknown as TenantCtx);
 }
 

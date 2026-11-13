@@ -14,6 +14,7 @@ import {
   quoteLines,
   quotes,
 } from '../../../db/schema';
+import { settleBackgroundTasks } from '../../../lib/background';
 import type { StorageProvider } from '../../../lib/storage';
 import { resetDb, seedTwoTenants, testDb, type TestTenant } from '../../../test/db';
 import { ConfigRepository } from '../../config/config.repository';
@@ -22,7 +23,7 @@ import { QuotesRepository } from '../../quotes/quotes.repository';
 import { RescheduleReasonsRepository } from '../../rescheduleReasons/rescheduleReasons.repository';
 import { StaffRepository } from '../../staff/staff.repository';
 import { EventsRepository } from '../events.repository';
-import { EventsService } from '../events.service';
+import { EventsService, PaymentAttachmentUploader } from '../events.service';
 import {
   DATE,
   insertPayment,
@@ -64,6 +65,7 @@ function serviceFor(tenant: TestTenant, storage = fakeStorage()) {
     new RescheduleReasonsRepository(testDb, id),
     new NotificationsRepository(testDb, id),
     new StaffRepository(testDb, id),
+    (task) => task(),
     storage as unknown as StorageProvider,
   );
 }
@@ -972,27 +974,30 @@ describe('events tenant isolation', () => {
       expect(await tenantRows(eventPaymentAttachments, b.id)).toHaveLength(1);
 
       await service.removePaymentAttachment({ eventId: sa.eventId, attachmentId: sa.attachmentId });
+      await settleBackgroundTasks();
       expect(storage.delete).toHaveBeenCalledWith(sa.attachmentKey);
     });
 
     it('addPaymentAttachment rejects another tenant payment before uploading', async () => {
       const storage = fakeStorage();
-      const service = serviceFor(a, storage);
+      const uploader = new PaymentAttachmentUploader(
+        (fn) => testDb.transaction(fn),
+        (tx) => new EventsRepository(tx, a.id),
+        storage as unknown as StorageProvider,
+      );
       const file = {
         buffer: Buffer.from('x'),
         mimetype: 'image/png',
         originalname: 'p.png',
         size: 1,
       };
-      await expect(
-        service.addPaymentAttachment(sb.paymentId, file, a.userId),
-      ).rejects.toMatchObject({
+      await expect(uploader.add(sb.paymentId, file, a.userId)).rejects.toMatchObject({
         code: 'EVENT_PAYMENT_NOT_FOUND',
         status: 404,
       });
       expect(storage.upload).not.toHaveBeenCalled();
 
-      const created = await service.addPaymentAttachment(sa.paymentId, file, a.userId);
+      const created = await uploader.add(sa.paymentId, file, a.userId);
       const key = storage.upload.mock.calls[0]![0].key;
       expect(key).toMatch(new RegExp(`^t/${a.id}/event-payments/[0-9a-f-]{36}\\.png$`));
       const [row] = await testDb

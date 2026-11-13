@@ -1,5 +1,6 @@
 import { pgTable, uuid, text, boolean, timestamp, index } from 'drizzle-orm/pg-core';
 import { tenantId } from './tenantColumn';
+import { tenantIsolationPolicy } from '../rls/policy';
 
 export const staff = pgTable(
   'staff',
@@ -12,5 +13,5 @@ export const staff = pgTable(
     isActive: boolean('is_active').default(true).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (t) => [index('staff_tenant_idx').on(t.tenantId)],
-);
+  (t) => [index('staff_tenant_idx').on(t.tenantId), tenantIsolationPolicy('staff')],
+).enableRLS();

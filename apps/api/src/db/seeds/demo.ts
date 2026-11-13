@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { QUOTE_STAGE, type UserPreferences } from '@repo/schemas';
-import { db } from '../index';
+import { db as defaultDb, type Executor } from '../index';
 import { organization } from '../schema';
 import { TenancyRepository } from '../../lib/tenancy/tenancy.repository';
 import { seedEventActivity, seedQuoteStageSettings, type SeedStageOverride } from './activity';
@@ -214,8 +214,12 @@ export const DEMO_TENANTS: DemoProfile[] = [
   },
 ];
 
-export async function ensureOrganization(slug: string, name: string): Promise<string> {
-  const existing = await new TenancyRepository().findBySlug(slug);
+export async function ensureOrganization(
+  slug: string,
+  name: string,
+  db: Executor = defaultDb,
+): Promise<string> {
+  const existing = await new TenancyRepository(db).findBySlug(slug);
   if (existing) return existing.id;
   const id = randomUUID();
   await db.insert(organization).values({ id, slug, name, createdAt: new Date() });
@@ -223,68 +227,89 @@ export async function ensureOrganization(slug: string, name: string): Promise<st
 }
 
 // Full demo data set for one tenant. Idempotent: every step skips what already exists.
-export async function seedDemoTenant(tenantId: string, profile: DemoProfile) {
+export async function seedDemoTenant(
+  tenantId: string,
+  profile: DemoProfile,
+  db: Executor = defaultDb,
+) {
   console.log(`🏢 Demo para ${profile.slug}...`);
   const admin = profile.users.find((u) => u.role === 'admin')!.email;
   await seedTenantDefaults(tenantId, db, {
     catalog: profile.catalog,
     appSettings: profile.appSettings,
   });
-  await seedQuoteStageSettings(tenantId, profile.stageOverrides);
-  await seedUsers(tenantId, profile.users);
-  await seedClients(tenantId, profile.clients);
-  await seedStaff(tenantId, profile.staff);
-  await seedQuotes(tenantId, {
-    quotes: profile.quotes,
-    creatorEmail: admin,
-    assigneeEmails: profile.users.filter((u) => u.role !== 'superadmin').map((u) => u.email),
-  });
-  await seedEvents(tenantId);
-  await seedEventPayments(tenantId, admin);
-  await seedEventActivity(tenantId, {
-    actorEmail: admin,
-    readerEmails: profile.users.map((u) => u.email),
-    preferences: profile.preferences,
-    reschedules: 2,
-  });
+  await seedQuoteStageSettings(tenantId, profile.stageOverrides, db);
+  await seedUsers(tenantId, profile.users, db);
+  await seedClients(tenantId, profile.clients, db);
+  await seedStaff(tenantId, profile.staff, db);
+  await seedQuotes(
+    tenantId,
+    {
+      quotes: profile.quotes,
+      creatorEmail: admin,
+      assigneeEmails: profile.users.filter((u) => u.role !== 'superadmin').map((u) => u.email),
+    },
+    db,
+  );
+  await seedEvents(tenantId, db);
+  await seedEventPayments(tenantId, admin, db);
+  await seedEventActivity(
+    tenantId,
+    {
+      actorEmail: admin,
+      readerEmails: profile.users.map((u) => u.email),
+      preferences: profile.preferences,
+      reschedules: 2,
+    },
+    db,
+  );
 }
 
 // `--demo=local`: the two demo tenants, a platform admin without membership and one account
 // that belongs to both tenants. The shared account's legacy global role is the one of the first
 // tenant; authorization reads the membership role of the active tenant.
-export async function seedDemoLocal() {
-  await seedQuoteStages();
+export async function seedDemoLocal(db: Executor = defaultDb) {
+  await seedQuoteStages(db);
   for (const profile of DEMO_TENANTS) {
-    const tenantId = await ensureOrganization(profile.slug, profile.name);
-    await seedDemoTenant(tenantId, profile);
+    const tenantId = await ensureOrganization(profile.slug, profile.name, db);
+    await seedDemoTenant(tenantId, profile, db);
   }
 
   await ensureAccount(
     { name: 'Plataforma Demo', email: DEMO_PLATFORM_ADMIN_EMAIL, role: 'superadmin' },
     { isPlatformAdmin: true },
+    db,
   );
 
   const first = DEMO_TENANTS[0]!;
-  const shared = await ensureAccount({
-    name: 'Usuario Compartido',
-    email: DEMO_SHARED_USER_EMAIL,
-    role: first.sharedUserRole,
-  });
+  const shared = await ensureAccount(
+    {
+      name: 'Usuario Compartido',
+      email: DEMO_SHARED_USER_EMAIL,
+      role: first.sharedUserRole,
+    },
+    {},
+    db,
+  );
   for (const profile of DEMO_TENANTS) {
-    const tenantId = await ensureOrganization(profile.slug, profile.name);
-    await ensureMembership(shared.id, tenantId, profile.sharedUserRole);
+    const tenantId = await ensureOrganization(profile.slug, profile.name, db);
+    await ensureMembership(shared.id, tenantId, profile.sharedUserRole, undefined, db);
   }
 }
 
 // `--demo=local --tenant=<slug>`: the demo of the first profile into an existing tenant.
-export async function seedDemoIntoTenant(slug: string) {
-  const org = await new TenancyRepository().findBySlug(slug);
+export async function seedDemoIntoTenant(slug: string, db: Executor = defaultDb) {
+  const org = await new TenancyRepository(db).findBySlug(slug);
   if (!org) throw new Error(`Tenant "${slug}" does not exist`);
-  await seedQuoteStages();
+  await seedQuoteStages(db);
   const profile = DEMO_TENANTS.find((p) => p.slug === org.slug) ?? DEMO_TENANTS[0]!;
   const domain = `${org.slug}.demo`;
-  await seedDemoTenant(org.id, {
-    ...profile,
-    users: profile.users.map((u) => ({ ...u, email: `${u.email.split('@')[0]}@${domain}` })),
-  });
+  await seedDemoTenant(
+    org.id,
+    {
+      ...profile,
+      users: profile.users.map((u) => ({ ...u, email: `${u.email.split('@')[0]}@${domain}` })),
+    },
+    db,
+  );
 }

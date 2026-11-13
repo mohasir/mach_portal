@@ -2,7 +2,10 @@ import 'dotenv/config';
 import { z } from 'zod';
 
 const schema = z.object({
-  DATABASE_URL: z.url(),
+  DATABASE_APP_URL: z.url(),
+  DB_POOL_MAX: z.coerce.number().int().min(1).default(10),
+  // Better Auth's own pool: it runs inside requests that already hold a connection of DB_POOL_MAX.
+  DB_AUTH_POOL_MAX: z.coerce.number().int().min(1).default(3),
   BETTER_AUTH_SECRET: z.string().min(16),
   BETTER_AUTH_URL: z.url(),
   // Comma-separated list so the same API can trust multiple web origins

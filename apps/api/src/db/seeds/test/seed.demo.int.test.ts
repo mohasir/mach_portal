@@ -1,20 +1,15 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import { eq, is, sql } from 'drizzle-orm';
 import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
 import { QUOTE_STAGE } from '@repo/schemas';
 import * as schema from '../../schema';
-import {
-  account,
-  clients,
-  member,
-  organization,
-  products,
-  quotes,
-  role,
-  user,
-} from '../../schema';
+import { account, clients, member, organization, products, quotes, role, user } from '../../schema';
 import { TENANT_EXEMPT_TABLES } from '../../schema/tenantColumn';
 import { createTestTenant, createTestUser, resetDb, testDb } from '../../../test/db';
+import { testPlatformDatabaseUrl } from '../../../test/roles';
+import { db, type Database } from '../../index';
 import {
   DEMO_PLATFORM_ADMIN_EMAIL,
   DEMO_SHARED_USER_EMAIL,
@@ -51,16 +46,30 @@ async function tenantIdOf(slug: string) {
   return org!.id;
 }
 
+// Seeded through the platform role, as `db:seed` does, so every check below also covers RLS.
 describe('db:seed --demo=local', () => {
   let norte: string;
   let sur: string;
+  let platformClient: ReturnType<typeof postgres>;
+  let platformDb: Database;
 
   beforeAll(async () => {
+    platformClient = postgres(testPlatformDatabaseUrl(), { max: 4 });
+    platformDb = drizzle(platformClient, { schema }) as unknown as Database;
     await resetDb();
-    await seedDemoLocal();
+    const globalPool = (
+      ['select', 'insert', 'update', 'delete', 'execute', 'transaction'] as const
+    ).map((method) => vi.spyOn(db, method));
+    await seedDemoLocal(platformDb);
+    for (const spy of globalPool) expect(spy).not.toHaveBeenCalled();
+    vi.restoreAllMocks();
     norte = await tenantIdOf('demo-norte');
     sur = await tenantIdOf('demo-sur');
   }, 120_000);
+
+  afterAll(async () => {
+    await platformClient?.end();
+  });
 
   it('creates the two demo tenants', async () => {
     const orgs = await testDb.select().from(organization).orderBy(organization.slug);
@@ -212,7 +221,7 @@ describe('db:seed --demo=local', () => {
 
   it('re-running the seed is idempotent', { timeout: 120_000 }, async () => {
     const before = await Promise.all(allTables.map(countAll));
-    await seedDemoLocal();
+    await seedDemoLocal(platformDb);
     const after = await Promise.all(allTables.map(countAll));
     expect(Object.fromEntries(allTables.map((t, i) => [t, after[i]]))).toEqual(
       Object.fromEntries(allTables.map((t, i) => [t, before[i]])),

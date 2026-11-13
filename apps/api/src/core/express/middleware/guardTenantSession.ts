@@ -1,17 +1,24 @@
 import type { Request, RequestHandler } from 'express';
 import { fromNodeHeaders } from 'better-auth/node';
 import { can, type PermissionCheck } from '@repo/guards';
+import { db, withTenantTx, type Database, type TenantRunner } from '../../../db';
 import { auth } from '../../../lib/auth';
 import { ErrorCodes } from '../../../lib/errors';
-import { resolveRequestAccess } from '../../../lib/rbac/access';
+import { OWNER_ACCESS, resolveAccess } from '../../../lib/rbac/access';
+import { evaluateTenantAccess } from '../../../lib/tenancy/access';
 import { resolveTenantById } from '../../../lib/tenancy/tenantResolver';
 import { recordPlatformAccess } from '../../trpc/platformAccess';
 
 const READ_METHODS = new Set(['GET', 'HEAD']);
 
-// Mirrors the tRPC chain (tenantProcedure -> protectedProcedure -> guardedProcedure) check for
-// check and in the same order, for routes that cannot go through tRPC (e.g. multipart uploads).
-export function guardTenantSession(permissions: PermissionCheck): RequestHandler {
+// Mirrors the tRPC chain (tenantProcedure -> shortTxProcedure -> guard) check for check and in the
+// same order, for routes that cannot go through tRPC (e.g. multipart uploads). Like
+// shortTxProcedure it holds no transaction across the handler: these routes make slow external
+// calls, so the handler opens short tenant transactions through res.locals.runInTenant.
+export function guardTenantSession(
+  permissions: PermissionCheck,
+  database: Database = db,
+): RequestHandler {
   return async (req: Request, res, next) => {
     try {
       const current = await auth.api.getSession({
@@ -40,12 +47,21 @@ export function guardTenantSession(permissions: PermissionCheck): RequestHandler
         mustChangePassword?: boolean | null;
       };
 
-      const resolved = await resolveRequestAccess({
-        userId: user.id,
-        isPlatformAdmin,
-        tenantId: tenant.id,
-      });
-      if (!resolved) {
+      // Membership lives in identity tables outside RLS; role and role_permission need the tenant set.
+      const entry = await evaluateTenantAccess(
+        { userId: user.id, isPlatformAdmin, tenantId: tenant.id },
+        database,
+      );
+      const access = !entry.allowed
+        ? null
+        : entry.platformAccess
+          ? OWNER_ACCESS
+          : await withTenantTx(
+              tenant.id,
+              (tx) => resolveAccess({ userId: user.id, tenantId: tenant.id }, tx),
+              database,
+            );
+      if (!access) {
         res.status(403).json({ errorCode: 'FORBIDDEN' });
         return;
       }
@@ -55,24 +71,29 @@ export function guardTenantSession(permissions: PermissionCheck): RequestHandler
         return;
       }
 
-      if (resolved.platformAccess) {
-        await recordPlatformAccess({
-          userId: user.id,
-          tenantId: tenant.id,
-          sessionId: session.id,
-          path: req.baseUrl + req.path,
-          type: READ_METHODS.has(req.method) ? 'query' : 'mutation',
-        });
+      if (entry.allowed && entry.platformAccess) {
+        await recordPlatformAccess(
+          {
+            userId: user.id,
+            tenantId: tenant.id,
+            sessionId: session.id,
+            path: req.baseUrl + req.path,
+            type: READ_METHODS.has(req.method) ? 'query' : 'mutation',
+          },
+          database,
+        );
       }
 
-      if (!can(resolved.access, permissions)) {
+      if (!can(access, permissions)) {
         res.status(403).json({ errorCode: 'FORBIDDEN' });
         return;
       }
 
       res.locals['tenantId'] = tenant.id;
       res.locals['userId'] = user.id;
-      res.locals['access'] = resolved.access;
+      res.locals['access'] = access;
+      const runInTenant: TenantRunner = (fn) => withTenantTx(tenant.id, fn, database);
+      res.locals['runInTenant'] = runInTenant;
       next();
     } catch (err) {
       console.error('guardTenantSession failed', err);
