@@ -20,6 +20,7 @@ import { eventTypes } from './eventTypes';
 import { products, optionGroups, options } from './catalog';
 import { user } from './auth';
 import { tenantId } from './tenantColumn';
+import { tenantIsolationPolicy } from '../rls/policy';
 
 export const discountTypeEnum = pgEnum('discount_type', ['fixed', 'percent']);
 
@@ -50,8 +51,11 @@ export const quoteStageSettings = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [primaryKey({ columns: [t.tenantId, t.stageId] })],
-);
+  (t) => [
+    primaryKey({ columns: [t.tenantId, t.stageId] }),
+    tenantIsolationPolicy('quote_stage_settings'),
+  ],
+).enableRLS();
 
 export const quotes = pgTable(
   'quotes',
@@ -114,8 +118,9 @@ export const quotes = pgTable(
   (t) => [
     unique('quotes_tenant_seq_unique').on(t.tenantId, t.seq),
     unique('quotes_tenant_number_unique').on(t.tenantId, t.number),
+    tenantIsolationPolicy('quotes'),
   ],
-);
+).enableRLS();
 
 export const quoteLines = pgTable(
   'quote_lines',
@@ -132,8 +137,8 @@ export const quoteLines = pgTable(
     subtotal: integer('subtotal').notNull(),
     sortOrder: integer('sort_order').default(0).notNull(),
   },
-  (t) => [index('quote_lines_tenant_idx').on(t.tenantId)],
-);
+  (t) => [index('quote_lines_tenant_idx').on(t.tenantId), tenantIsolationPolicy('quote_lines')],
+).enableRLS();
 
 export const quoteLineOptions = pgTable(
   'quote_line_options',
@@ -150,8 +155,11 @@ export const quoteLineOptions = pgTable(
       .notNull()
       .references(() => optionGroups.id),
   },
-  (t) => [index('quote_line_options_tenant_idx').on(t.tenantId)],
-);
+  (t) => [
+    index('quote_line_options_tenant_idx').on(t.tenantId),
+    tenantIsolationPolicy('quote_line_options'),
+  ],
+).enableRLS();
 
 export const quoteStageHistory = pgTable(
   'quote_stage_history',
@@ -168,8 +176,11 @@ export const quoteStageHistory = pgTable(
     changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
     changedAt: timestamp('changed_at').defaultNow().notNull(),
   },
-  (t) => [index('quote_stage_history_tenant_idx').on(t.tenantId)],
-);
+  (t) => [
+    index('quote_stage_history_tenant_idx').on(t.tenantId),
+    tenantIsolationPolicy('quote_stage_history'),
+  ],
+).enableRLS();
 
 export const quoteAssignmentHistory = pgTable(
   'quote_assignment_history',
@@ -184,5 +195,8 @@ export const quoteAssignmentHistory = pgTable(
     changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
     changedAt: timestamp('changed_at').defaultNow().notNull(),
   },
-  (t) => [index('quote_assignment_history_tenant_idx').on(t.tenantId)],
-);
+  (t) => [
+    index('quote_assignment_history_tenant_idx').on(t.tenantId),
+    tenantIsolationPolicy('quote_assignment_history'),
+  ],
+).enableRLS();

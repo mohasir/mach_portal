@@ -18,6 +18,7 @@ import { rescheduleReasons } from './rescheduleReasons';
 import { staff } from './staff';
 import { user } from './auth';
 import { tenantId } from './tenantColumn';
+import { tenantIsolationPolicy } from '../rls/policy';
 
 export const events = pgTable(
   'events',
@@ -53,8 +54,8 @@ export const events = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [index('events_tenant_idx').on(t.tenantId)],
-);
+  (t) => [index('events_tenant_idx').on(t.tenantId), tenantIsolationPolicy('events')],
+).enableRLS();
 
 export const eventStaff = pgTable(
   'event_staff',
@@ -73,8 +74,9 @@ export const eventStaff = pgTable(
   (t) => [
     unique('event_staff_event_staff_unique').on(t.eventId, t.staffId),
     index('event_staff_tenant_idx').on(t.tenantId),
+    tenantIsolationPolicy('event_staff'),
   ],
-);
+).enableRLS();
 
 export const eventPayments = pgTable(
   'event_payments',
@@ -92,8 +94,11 @@ export const eventPayments = pgTable(
     createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (t) => [index('event_payments_tenant_idx').on(t.tenantId)],
-);
+  (t) => [
+    index('event_payments_tenant_idx').on(t.tenantId),
+    tenantIsolationPolicy('event_payments'),
+  ],
+).enableRLS();
 
 // Generic append-only activity log for an event — one row per notable action (staff
 // assigned/removed, station selections updated, payment registered/removed, marked completed). `data` shape varies by `type` (mirrors the `notifications` table's own
@@ -111,8 +116,8 @@ export const eventHistory = pgTable(
     changedById: text('changed_by_id').references(() => user.id, { onDelete: 'set null' }),
     changedAt: timestamp('changed_at').defaultNow().notNull(),
   },
-  (t) => [index('event_history_tenant_idx').on(t.tenantId)],
-);
+  (t) => [index('event_history_tenant_idx').on(t.tenantId), tenantIsolationPolicy('event_history')],
+).enableRLS();
 
 // One row per date/time change. `from*` are nullable because the event's own date/time are.
 export const eventReschedules = pgTable(
@@ -139,8 +144,11 @@ export const eventReschedules = pgTable(
     rescheduledById: text('rescheduled_by_id').references(() => user.id, { onDelete: 'set null' }),
     rescheduledAt: timestamp('rescheduled_at').defaultNow().notNull(),
   },
-  (t) => [index('event_reschedules_tenant_idx').on(t.tenantId)],
-);
+  (t) => [
+    index('event_reschedules_tenant_idx').on(t.tenantId),
+    tenantIsolationPolicy('event_reschedules'),
+  ],
+).enableRLS();
 
 export const eventPaymentAttachments = pgTable(
   'event_payment_attachments',
@@ -158,5 +166,8 @@ export const eventPaymentAttachments = pgTable(
     createdById: text('created_by_id').references(() => user.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (t) => [index('event_payment_attachments_tenant_idx').on(t.tenantId)],
-);
+  (t) => [
+    index('event_payment_attachments_tenant_idx').on(t.tenantId),
+    tenantIsolationPolicy('event_payment_attachments'),
+  ],
+).enableRLS();

@@ -1,5 +1,6 @@
 import { pgTable, uuid, text, integer, boolean, unique } from 'drizzle-orm/pg-core';
 import { tenantId } from './tenantColumn';
+import { tenantIsolationPolicy } from '../rls/policy';
 
 export const eventTypes = pgTable(
   'event_types',
@@ -11,5 +12,8 @@ export const eventTypes = pgTable(
     isActive: boolean('is_active').default(true).notNull(),
     sortOrder: integer('sort_order').default(0).notNull(),
   },
-  (t) => [unique('event_types_tenant_name_unique').on(t.tenantId, t.name)],
-);
+  (t) => [
+    unique('event_types_tenant_name_unique').on(t.tenantId, t.name),
+    tenantIsolationPolicy('event_types'),
+  ],
+).enableRLS();

@@ -13,6 +13,7 @@ import {
   unique,
 } from 'drizzle-orm/pg-core';
 import { tenantId } from './tenantColumn';
+import { tenantIsolationPolicy } from '../rls/policy';
 
 export const permissionScopeEnum = pgEnum('permission_scope', ['own', 'all']);
 
@@ -37,8 +38,9 @@ export const role = pgTable(
     uniqueIndex('role_one_owner_per_tenant_uidx')
       .on(t.tenantId)
       .where(sql`${t.isOwner}`),
+    tenantIsolationPolicy('role'),
   ],
-);
+).enableRLS();
 
 export const rolePermission = pgTable(
   'role_permission',
@@ -54,8 +56,9 @@ export const rolePermission = pgTable(
   (t) => [
     primaryKey({ columns: [t.roleId, t.resource, t.action] }),
     index('role_permission_tenant_idx').on(t.tenantId),
+    tenantIsolationPolicy('role_permission'),
   ],
-);
+).enableRLS();
 
 export const roleAuditLog = pgTable(
   'role_audit_log',
@@ -76,5 +79,6 @@ export const roleAuditLog = pgTable(
   (t) => [
     index('role_audit_log_tenant_created_idx').on(t.tenantId, t.createdAt),
     index('role_audit_log_role_idx').on(t.roleId),
+    tenantIsolationPolicy('role_audit_log'),
   ],
-);
+).enableRLS();
