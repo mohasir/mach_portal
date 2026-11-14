@@ -1,9 +1,10 @@
 import 'dotenv/config';
 import { pathToFileURL } from 'node:url';
 import postgres from 'postgres';
+import { FEATURES, isFeatureKey, resolveFeatures } from '@repo/guards';
 import { requireDatabaseUrl } from '../databaseUrls';
 import { rlsBypassReasons } from '../rls/roleGuard';
-import { tenantPolicyName } from '../rls/policy';
+import { PLATFORM_MANAGED_TABLES, tenantPolicyName, tenantReadPolicyName } from '../rls/policy';
 
 const HELP = `Usage: pnpm --filter api mt:verify [--pre [--platform-admin-emails=<a@x,b@y>]] [--help]
 
@@ -40,13 +41,19 @@ role the API connects with.
           - a table with tenant_id whose RLS is not enabled or not forced, that lacks its
             <table>_tenant_isolation policy (FOR ALL, USING and WITH CHECK comparing tenant_id
             with app.tenant_id) or that has another permissive policy;
+          - tenant_features or tenant_feature_events whose RLS is not enabled or not forced,
+            tenant_features with any policy other than tenant_features_tenant_read (FOR SELECT,
+            USING comparing tenant_id with app.tenant_id), or tenant_feature_events with any policy;
+          - tenant_features rows whose feature_key is a core feature or not in the catalog;
+          - organizations with events active (enabled and not expired) without quotes active;
           - the DATABASE_APP_URL role is a superuser, has BYPASSRLS or CREATEROLE, or is a member
             of a role that bypasses RLS.
   --help  Shows this message.
 
 Exit code: 0 when no problem was found, 1 otherwise.`;
 
-// Every table that carries tenant_id after 0002.
+// Every table that carries tenant_id after 0002 and is isolated by a FOR ALL policy (the
+// platform-managed feature tables have their own check).
 export const TENANT_TABLES = [
   'app_settings',
   'clients',
@@ -201,6 +208,108 @@ async function checkRowLevelSecurity(sql: postgres.Sql, tables: string[], proble
         );
       }
     }
+  }
+}
+
+// The app role must read its own tenant_features rows and write neither table, so any extra
+// policy (even a restrictive one, which still needs a permissive one to grant) is a deviation.
+async function checkPlatformManagedTables(
+  sql: postgres.Sql,
+  tables: readonly string[],
+  problems: string[],
+) {
+  if (tables.length === 0) return;
+  const classes = await sql<{ relname: string; enabled: boolean; forced: boolean }[]>`
+    SELECT relname, relrowsecurity AS enabled, relforcerowsecurity AS forced FROM pg_class
+    WHERE relnamespace = 'public'::regnamespace AND relname IN ${sql([...tables])}`;
+  const policies = await sql<PolicyRow[]>`
+    SELECT tablename, policyname, permissive, cmd, qual, with_check FROM pg_policies
+    WHERE schemaname = 'public' AND tablename IN ${sql([...tables])} ORDER BY policyname`;
+  const describe = (rows: PolicyRow[]) => rows.map((p) => `${p.policyname} (${p.cmd})`).join(', ');
+
+  for (const table of [...tables].sort()) {
+    const cls = classes.find((c) => c.relname === table);
+    if (!cls) continue;
+    if (!cls.enabled) problems.push(`${table}: row level security is not enabled`);
+    if (!cls.forced) problems.push(`${table}: row level security is not forced`);
+
+    const own = policies.filter((p) => p.tablename === table);
+    if (table === 'tenant_features') {
+      const name = tenantReadPolicyName(table);
+      const read = own[0];
+      if (own.length !== 1 || read?.policyname !== name || read.cmd !== 'SELECT') {
+        problems.push(
+          `${table}: expected exactly the SELECT policy ${name}, found ${describe(own) || 'none'}`,
+        );
+      } else if (
+        read.permissive !== 'PERMISSIVE' ||
+        normalizeExpression(read.qual) !== SAME_TENANT
+      ) {
+        problems.push(`${table}: policy ${name} does not restrict rows to app.tenant_id`);
+      }
+    } else if (own.length > 0) {
+      problems.push(`${table}: expected no policy, found ${describe(own)}`);
+    }
+  }
+}
+
+// Rows are only ever written through the admin service, which enforces these rules; this catches
+// manual edits and catalog changes that left stored rows behind.
+async function checkFeatureData(sql: postgres.Sql, problems: string[]) {
+  const rows = await sql<
+    {
+      tenant_id: string;
+      slug: string;
+      feature_key: string;
+      enabled: boolean;
+      expires_at: Date | null;
+    }[]
+  >`
+    SELECT f.tenant_id, o.slug, f.feature_key, f.enabled, f.expires_at
+    FROM tenant_features f JOIN organization o ON o.id = f.tenant_id
+    ORDER BY o.slug, f.feature_key`;
+
+  const invalid = rows.filter(
+    (r) => !isFeatureKey(r.feature_key) || FEATURES[r.feature_key].kind === 'core',
+  );
+  if (invalid.length > 0) {
+    const keys = [...new Set(invalid.map((r) => r.feature_key))].sort();
+    const core = keys.filter((k) => isFeatureKey(k));
+    const detail = [
+      ...(core.length > 0 ? [`core: ${core.join(', ')}`] : []),
+      ...keys.filter((k) => !isFeatureKey(k)),
+    ];
+    problems.push(
+      `tenant_features: ${invalid.length} row(s) with a core or unknown feature_key (${detail.join(', ')})`,
+    );
+  }
+
+  const now = new Date();
+  const byTenant = new Map<string, { slug: string; rows: (typeof rows)[number][] }>();
+  for (const r of rows) {
+    const entry = byTenant.get(r.tenant_id) ?? { slug: r.slug, rows: [] };
+    entry.rows.push(r);
+    byTenant.set(r.tenant_id, entry);
+  }
+  const orphans: string[] = [];
+  for (const { slug, rows: own } of byTenant.values()) {
+    const active = resolveFeatures(
+      own.map((r) => ({ featureKey: r.feature_key, enabled: r.enabled, expiresAt: r.expires_at })),
+      now,
+    );
+    // Resolving drops events when quotes is off, so look at the stored row instead.
+    const eventsLive = own.some(
+      (r) =>
+        r.feature_key === 'events' &&
+        r.enabled &&
+        (r.expires_at === null || r.expires_at.getTime() > now.getTime()),
+    );
+    if (eventsLive && !active.has('quotes')) orphans.push(slug);
+  }
+  if (orphans.length > 0) {
+    problems.push(
+      `tenant_features: ${orphans.length} organization(s) with events active without quotes (${orphans.sort().join(', ')})`,
+    );
   }
 }
 
@@ -382,9 +491,19 @@ export async function verifyMultitenant(
         ...columnRows.filter((r) => r.column_name === 'tenant_id').map((r) => r.table_name),
       ]),
     ]
-      .filter((table) => tables.has(table))
+      .filter((table) => tables.has(table) && !PLATFORM_MANAGED_TABLES.includes(table))
       .sort();
     await checkRowLevelSecurity(sql, rlsTables, problems);
+    for (const table of PLATFORM_MANAGED_TABLES) {
+      if (!tables.has(table)) problems.push(`${table}: missing table`);
+    }
+    await checkPlatformManagedTables(
+      sql,
+      PLATFORM_MANAGED_TABLES.filter((table) => tables.has(table)),
+      problems,
+    );
+
+    if (tables.has('tenant_features')) await checkFeatureData(sql, problems);
 
     for (const table of TENANT_TABLES) {
       if (!tables.has(table) || !hasColumn(table, 'tenant_id')) {
