@@ -4,7 +4,6 @@ import { Button, Flex, Result, Spin } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { SELECT_ORGANIZATION_ROUTE } from '@/lib/auth/navigation';
-import { RouteGuard } from '@/lib/auth/RouteGuard';
 import { resolveGateState } from '../helpers';
 import { usePermissions, usePermissionsSync } from '../hooks/usePermissions';
 import { useTenantSync } from '../hooks/useTenantSync';
@@ -68,9 +67,7 @@ export function TenantGate({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-full flex-col">
       {tenant.isPlatformAccess && <PlatformModeBanner name={tenant.name} />}
-      <div className="min-h-0 flex-1">
-        <RouteGuard>{children}</RouteGuard>
-      </div>
+      <div className="min-h-0 flex-1">{children}</div>
     </div>
   );
 }

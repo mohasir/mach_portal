@@ -4,21 +4,24 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
+import { useFeatures } from '@/features/tenant/hooks/useFeatures';
 import { useCan } from '@/lib/auth/useCan';
-import { IconMap, NAV_BOTTOM_MENU, type NavItem } from '@/lib/navigation';
+import { IconMap, isNavItemAvailable, NAV_BOTTOM_MENU, type NavItem } from '@/lib/navigation';
 
 export function BottomNav() {
   const { t } = useTranslation('admin');
   const can = useCan();
+  const { keys } = useFeatures();
   const pathname = usePathname() ?? '';
   const router = useRouter();
 
-  const canCreateQuote = can({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] });
+  const canCreateQuote = keys.has('quotes') && can({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] });
 
   const isActive = (href: string) =>
     href === '/admin' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 
   const renderTab = (item: NavItem) => {
+    if (!isNavItemAvailable(item, (key) => keys.has(key))) return null;
     if (!item.alwaysVisible && item.guard && !can(item.guard)) return null;
     const active = isActive(item.href!);
     return (

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button, Flex, Typography } from 'antd';
 import { Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Feature } from '@/lib/auth/Feature';
 import { NotificationMenu } from '@/components/NotificationMenu/NotificationMenu';
 import { UserMenu } from '@/components/UserProfile/UserMenu';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
@@ -31,7 +32,9 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
       </Flex>
 
       <Flex align="center" gap={16}>
-        <NotificationMenu />
+        <Feature name="notifications">
+          <NotificationMenu />
+        </Feature>
         <UserMenu />
       </Flex>
     </Flex>

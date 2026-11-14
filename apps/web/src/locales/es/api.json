@@ -65,6 +65,8 @@
     "FORBIDDEN": "No tenés permiso para esta acción",
     "NOT_FOUND": "Recurso no encontrado",
     "BAD_REQUEST": "Datos inválidos",
-    "INTERNAL_SERVER_ERROR": "Error del servidor"
+    "INTERNAL_SERVER_ERROR": "Error del servidor",
+    "FEATURE_NOT_ENABLED": "Este módulo no está habilitado para tu organización",
+    "PRODUCT_NOT_QUOTABLE": "Este producto no se puede cotizar porque no tiene precio fijo ni escalas de precio activas; define un precio en el catálogo"
   }
 }

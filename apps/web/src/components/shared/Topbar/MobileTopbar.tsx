@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { LogoutButton } from '@/components/shared/LogoutButton';
+import { Feature } from '@/lib/auth/Feature';
 import { NotificationMenu } from '@/components/NotificationMenu/NotificationMenu';
 import { RoleTag } from '@/components/shared/RoleTag';
 import { UserDrawer } from '@/components/UserProfile';
@@ -63,7 +64,9 @@ export function MobileTopbar() {
         )}
 
         <Flex align="center" gap={4}>
-          <NotificationMenu />
+          <Feature name="notifications">
+            <NotificationMenu />
+          </Feature>
           {header?.action && (
             <Button
               type="text"

@@ -72,5 +72,12 @@
     },
     "apply": "Aplicar",
     "customRange": "Rango personalizado"
+  },
+  "features": {
+    "quotes": "Cotizaciones",
+    "events": "Eventos",
+    "notifications": "Notificaciones",
+    "priceTiers": "Precios por tramos",
+    "configurableOptions": "Opciones configurables"
   }
 }
