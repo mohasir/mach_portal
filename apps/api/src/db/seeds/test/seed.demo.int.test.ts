@@ -3,9 +3,11 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq, is, sql } from 'drizzle-orm';
 import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
+import { FEATURE_KEYS, isToggleable } from '@repo/guards';
 import { QUOTE_STAGE } from '@repo/schemas';
 import * as schema from '../../schema';
 import { account, clients, member, organization, products, quotes, role, user } from '../../schema';
+import { PLATFORM_MANAGED_TABLES } from '../../rls/policy';
 import { TENANT_EXEMPT_TABLES } from '../../schema/tenantColumn';
 import { createTestTenant, createTestUser, resetDb, testDb } from '../../../test/db';
 import { testPlatformDatabaseUrl } from '../../../test/roles';
@@ -23,8 +25,12 @@ const allTables = (Object.values(schema).filter((v) => is(v, PgTable)) as unknow
 );
 // The audit log only fills when roles are edited, which the seed never does.
 const UNSEEDED_TABLES = ['role_audit_log'];
+// Feature tables hold platform-managed state, not tenant business data, so these checks skip them.
 const tenantTables = allTables.filter(
-  (name) => !TENANT_EXEMPT_TABLES.includes(name) && !UNSEEDED_TABLES.includes(name),
+  (name) =>
+    !TENANT_EXEMPT_TABLES.includes(name) &&
+    !UNSEEDED_TABLES.includes(name) &&
+    !PLATFORM_MANAGED_TABLES.includes(name),
 );
 
 async function rowsByTenant(table: string) {
@@ -189,6 +195,28 @@ describe('db:seed --demo=local', () => {
     }
   });
 
+  it('activates every toggleable feature for each demo tenant, permanent and unpriced', async () => {
+    const expected = FEATURE_KEYS.filter(isToggleable).sort();
+    for (const tenant of [norte, sur]) {
+      const rows = await testDb.execute<{
+        feature_key: string;
+        enabled: boolean;
+        expires_at: Date | null;
+        price_cents: number | null;
+      }>(sql`
+        SELECT feature_key, enabled, expires_at, price_cents FROM tenant_features
+        WHERE tenant_id = ${tenant} ORDER BY feature_key`);
+      expect(rows.map((r) => r.feature_key)).toEqual(expected);
+      expect(rows.every((r) => r.enabled && r.expires_at === null && r.price_cents === null)).toBe(
+        true,
+      );
+      const events = await testDb.execute<{ action: string; actor: string }>(sql`
+        SELECT action, actor FROM tenant_feature_events WHERE tenant_id = ${tenant}`);
+      expect(events).toHaveLength(expected.length);
+      expect(events.every((e) => e.action === 'enabled' && e.actor === 'seed')).toBe(true);
+    }
+  });
+
   it('the platform admin has the flag and no membership', async () => {
     const [platform] = await testDb
       .select()
@@ -298,5 +326,10 @@ describe('db:seed --demo=local --tenant', () => {
     expect(rows).toEqual([expect.objectContaining({ organizationId: tenant.id, role: 'admin' })]);
     expect(rows[0]!.roleId).not.toBeNull();
     expect(await countAll('organization')).toBe(1);
+    const features = await testDb.execute<{ tenant_id: string }>(
+      sql`SELECT tenant_id FROM tenant_features`,
+    );
+    expect(features).toHaveLength(FEATURE_KEYS.filter(isToggleable).length);
+    expect(features.every((f) => f.tenant_id === tenant.id)).toBe(true);
   });
 });
