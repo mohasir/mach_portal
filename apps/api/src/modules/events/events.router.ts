@@ -12,6 +12,7 @@ import {
   updateEventSelectionsSchema,
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS, can } from '@repo/guards';
+import { requireFeature } from '../../core/trpc/requireFeature';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
 import type { ResolvedAccess } from '../../lib/rbac/access';
 import type { ScopeCheck } from '../../lib/rbac/ownerScope';
@@ -42,8 +43,12 @@ export const eventsRouter = router({
       const canViewReschedules = can(ctx.access, {
         [RESOURCES.EVENT]: [ACTIONS.VIEW_RESCHEDULES],
       });
+      // Without the add-on there are no options to choose, whatever the stored settings say.
+      const optionSelections = ctx.features.has('configurableOptions');
       return {
         ...detail,
+        selectionsPending: optionSelections ? detail.selectionsPending : false,
+        selectionsDeadline: optionSelections ? detail.selectionsDeadline : null,
         payments: canViewPayments ? detail.payments : null,
         totalPaid: canViewPayments ? detail.totalPaid : null,
         paymentStatus: canViewPayments ? detail.paymentStatus : null,
@@ -136,6 +141,7 @@ export const eventsRouter = router({
     ),
 
   updateSelections: guardedProcedure({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_SELECTIONS] })
+    .use(requireFeature('configurableOptions'))
     .input(updateEventSelectionsSchema)
     .mutation(({ input, ctx }) =>
       eventsModule(ctx).updateSelections(

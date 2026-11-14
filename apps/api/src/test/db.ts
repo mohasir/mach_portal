@@ -1,8 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 import { resetPlatformAccessSessions } from '../core/trpc/platformAccess';
-import type { RoleType } from '@repo/guards';
+import { FEATURE_KEYS, isToggleable, type FeatureKey, type RoleType } from '@repo/guards';
 import { db, type Database } from '../db';
+import { tenantFeatures } from '../db/schema';
+import { clearFeatureCache } from '../lib/features/cache';
 import { legacyMemberRole, seedTenantRoles } from '../lib/rbac/seedTenantRoles';
 import { invalidateTenantCache } from '../lib/tenancy/tenantResolver';
 
@@ -27,6 +29,7 @@ async function tablesToTruncate(): Promise<string | undefined> {
 // Also drops the in-memory caches keyed by rows that the truncate just removed.
 export async function resetDb(): Promise<void> {
   invalidateTenantCache();
+  clearFeatureCache();
   resetPlatformAccessSessions();
   const tables = await tablesToTruncate();
   if (!tables) return;
@@ -45,17 +48,31 @@ export async function requireMemberRole(): Promise<void> {
   await testDb.execute(sql`ALTER TABLE "member" ALTER COLUMN "role_id" SET NOT NULL`);
 }
 
+export const ALL_TOGGLEABLE_FEATURES: readonly FeatureKey[] = FEATURE_KEYS.filter(isToggleable);
+
+export type TestTenantOptions = {
+  // Toggleable features stored as permanent rows; every one by default, `[]` leaves the core only.
+  features?: readonly FeatureKey[];
+};
+
 // Raw SQL keeps fixtures independent of the Drizzle schema objects and of the
-// Better Auth hooks that would otherwise run on inserts.
+// Better Auth hooks that would otherwise run on inserts. The feature rows go through `testDb`,
+// which bypasses RLS: the app role can only read tenant_features.
 export async function createTestTenant(
   slug: string,
   name: string = slug,
+  { features = ALL_TOGGLEABLE_FEATURES }: TestTenantOptions = {},
 ): Promise<{ id: string; slug: string }> {
   const id = randomUUID();
   await testDb.execute(sql`
     INSERT INTO "organization" ("id", "name", "slug", "created_at")
     VALUES (${id}, ${name}, ${slug}, now())
   `);
+  if (features.length > 0) {
+    await testDb
+      .insert(tenantFeatures)
+      .values(features.map((featureKey) => ({ tenantId: id, featureKey })));
+  }
   return { id, slug };
 }
 
@@ -94,9 +111,11 @@ export async function pointMemberAtForeignRole(userId: string, tenantId: string)
   `);
 }
 
-export async function seedTwoTenants(): Promise<{ a: TestTenant; b: TestTenant }> {
+export async function seedTwoTenants(
+  options: TestTenantOptions = {},
+): Promise<{ a: TestTenant; b: TestTenant }> {
   const seed = async (slug: string): Promise<TestTenant> => {
-    const tenant = await createTestTenant(slug);
+    const tenant = await createTestTenant(slug, slug, options);
     const user = await createTestUser();
     await addMember(user.id, tenant.id);
     return { ...tenant, userId: user.id };

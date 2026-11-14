@@ -103,7 +103,7 @@ describe('modules on the request transaction (app role)', () => {
     await withTenantTx(
       a.tenant.id,
       async (tx) => {
-        const ctx = { tenantId: b.tenant.id, db: tx } as unknown as TenantCtx;
+        const ctx = { tenantId: b.tenant.id, db: tx, features: new Set() } as unknown as TenantCtx;
         expect((await clientsModule(ctx).list(clientsListQuerySchema.parse({}))).items).toEqual([]);
         expect((await quotesModule(ctx).list(quotesListQuerySchema.parse({}))).items).toEqual([]);
       },

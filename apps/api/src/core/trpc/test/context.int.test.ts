@@ -2,7 +2,7 @@ import type { CreateExpressContextOptions } from '@trpc/server/adapters/express'
 import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '../../../db';
-import { member, organization, role, session } from '../../../db/schema';
+import { member, organization, role, session, tenantFeatures } from '../../../db/schema';
 import { invalidateTenantCache } from '../../../lib/tenancy/tenantResolver';
 import { createUserWithPassword, signInCookie } from '../../../test/authHelpers';
 import { addMember, createTestTenant, resetDb } from '../../../test/db';
@@ -50,6 +50,7 @@ describe('createContext', () => {
     const cookie = await signInCookie('m@test.local');
     await db.delete(member);
     await db.delete(role).where(eq(role.tenantId, acme.id));
+    await db.delete(tenantFeatures).where(eq(tenantFeatures.tenantId, acme.id));
     await db.delete(organization).where(eq(organization.id, acme.id));
     invalidateTenantCache();
     const ctx = await contextFor(cookie);
