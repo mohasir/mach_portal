@@ -599,7 +599,7 @@ El rol es **de la membresía en la organización activa** y lo resuelve la API (
 - **`usePermissions()`** (`features/tenant`): única fuente de permisos del front. Pide `tenant.permissions` (`{ isOwner, grants, roleName, version }`) con la organización activa en la query key (cambiar de organización nunca sirve los permisos de la anterior), `staleTime: 0` y `refetchOnMount: false`. Devuelve `{ access, role, version, isPending, isError, refetch }` (`toPermissionsState`).
 - **`useCan()`** (`lib/auth/useCan.ts`) → `(check: PermissionCheck) => can(access, check)`. Niega todo mientras los permisos cargan (el `TenantGate` retiene la pantalla hasta entonces). `useCurrentRole()` da `{ name, isOwner }` para mostrar; `useCanReassignQuote`/`useCanRegeneratePdf` espejan gates puntuales de la API.
 - **`<Can allowed={...} fallback={...}>`** (`lib/auth/Can.tsx`) usa `useCan`. Los `guard` de navegación (`NAV_ITEMS`), de row actions y de rutas también.
-- **`RouteGuard`** (`lib/auth/`, montado por `TenantGate`): decide con la función pura `resolveGuardOutcome` (espera → permite → redirige; ver §5).
+- **`RouteGuard`** (`lib/auth/`, montado en `app/admin/layout.tsx` **dentro** de `AdminLayoutContainer`, alrededor de `children`): decide con la función pura `resolveGuardOutcome` (espera → permite → redirige → 404 por módulo apagado; ver §5). Va dentro del layout para que sus estados (espera, 404) se pinten en el área de contenido, con la navegación visible.
 - **Nombre del rol:** `roleLabel`/`describeRole` (`lib/auth/roleLabel.ts`) y `RoleTag`. El dueño se muestra como tal; un rol base se traduce solo mientras su nombre guardado sea el sembrado (`Superadmin`, `Admin`, `Operator`, `Member`, los nombres de `ROLE_TEMPLATES`); un rol propio o renombrado se muestra tal cual.
 
 ```tsx
@@ -632,7 +632,7 @@ El rol es **de la membresía en la organización activa** y lo resuelve la API (
 El tenant de cada petición es la organización activa **de la sesión** (`session.activeOrganizationId`). La web nunca manda un tenant: el proxy a la API no tiene lógica de tenant. Ver `docs/backend/architecture.md` §11.
 
 - **Fuente de verdad: `tenant.active`**, vía `useActiveTenant()` (`features/tenant`), que siempre se revalida (`staleTime: 0`). **Nunca `useSession()`**: su caché de cookie puede ir hasta 60 s por detrás del cambio de organización. Tampoco se decide en `middleware.ts`: ahí solo se miran la sesión y `mustChangePassword`, desde la caché de cookie.
-- **`TenantGate`** envuelve el área autenticada. Renderiza solo cuando la API confirma una organización activa **y** los permisos en ella están cargados (decisión pura `resolveGateState`), redirige a `/select-organization` si no hay ninguna, muestra un error con reintento si los permisos no cargan y el aviso de modo plataforma cuando `isPlatformAccess` es `true`. Monta `usePermissionsSync`, `useTenantSync` y el `RouteGuard`.
+- **`TenantGate`** envuelve el área autenticada. Renderiza solo cuando la API confirma una organización activa **y** los permisos en ella están cargados (decisión pura `resolveGateState`), redirige a `/select-organization` si no hay ninguna, muestra un error con reintento si los permisos no cargan y el aviso de modo plataforma cuando `isPlatformAccess` es `true`. Monta `usePermissionsSync` y `useTenantSync`; el `RouteGuard` no vive aquí sino dentro del layout (§9.2).
 - **`/select-organization`** (`SelectOrganizationPage`):
   - lista `tenant.memberships` y, para un admin de plataforma, `tenant.listAll`;
   - selecciona con `useSelectTenant()`;
@@ -643,6 +643,20 @@ El tenant de cada petición es la organización activa **de la sesión** (`sessi
   - **Logout**: siempre con `useSignOut()` (`features/tenant`), que hace `signOut()`, luego `broadcastSessionChange('logout')` y luego va a `DEFAULT_REDIRECT_LOGIN`. **No** limpia la caché: lo hace la pantalla de login al montarse, porque limpiarla con la página autenticada montada volvería a pedir cada query activa sin sesión.
 - **Sincronización entre pestañas** (`useTenantSync`, dentro de `TenantGate`): escucha el `BroadcastChannel` y, si otra pestaña cambia de organización, entra o sale, resetea la caché y navega (al inicio o al login). También revalida `tenant.active` al volver el foco a la pestaña.
 - **Nombres:** la UI y los tipos dicen *organization* (`Organization`, `SelectOrganizationPage`); la API y los hooks dicen *tenant* (`tenant.*`, `useActiveTenant`, `useSelectTenant`).
+
+### 9.4 Módulos y add-ons (features)
+
+El catálogo de features (`FEATURES`, `FeatureKey`, `isToggleable`) vive en `@repo/guards` y es el mismo que usa la API; ver `docs/backend/architecture.md` §13. Las features activas **no viajan en la sesión**: se piden a `features.mine`.
+
+- **`useFeatures()`** (`features/tenant/hooks/useFeatures.ts`): `{ keys, isPending }`. La query lleva la organización activa en la key (`organizationScopedKey`), `staleTime` de 30 s y refetch al volver el foco. Mientras carga, y **si la query falla, solo el núcleo queda activo** (falla cerrado).
+- **`useFeature(key)`** (`lib/auth/useFeature.ts`): booleano; las `core` siempre `true`, las demás `false` mientras carga o ante un error.
+- **`<Feature name fallback>`** (`lib/auth/Feature.tsx`): como `<Can>`, renderiza `children` solo con la feature activa.
+- **Navegación:** `NavItem` (`lib/navigation/types.ts`) admite `feature` además de `guard`; con la feature inactiva el ítem no aparece. Ejemplo en `lib/navigation/constants/items.ts`: `feature: 'quotes'`.
+- **Acceso por URL:** `resolveRouteFeature(pathname)` (`lib/auth/route-access.ts`) toma la feature del ítem de navegación o de `ROUTE_PATTERNS` (campo `feature`). Si está inactiva, `resolveGuardOutcome` (`lib/auth/routeGuardOutcome.ts`) devuelve `'notFound'` y el `RouteGuard` muestra `NotFound` (`components/shared/NotFound.tsx`, la misma pantalla "Página no encontrada" de las rutas inexistentes), dentro del layout. No se revela que el módulo existe; sus datos se conservan y vuelven al reactivar.
+- **Controles de add-ons:** `priceTiers` (pestaña de tiers del producto y selector de tier del cotizador) y `configurableOptions` (grupos y opciones, y los ajustes de opciones en Configuración) se ocultan con `<Feature>` o `useFeature` (`features/catalog`, `features/quotes`, `features/settings`, `features/options`). El campo de precio fijo del producto siempre está; un producto sin precio ni tiers activos se marca "no cotizable" (`NotQuotableAlert`).
+- **Áreas gateadas por módulo:** las secciones de Configuración de recursos de cotización (plantilla PDF, valores por defecto, etapas, preferencias del cotizador y del pipeline) se ocultan sin `quotes`; las pestañas del detalle de cliente (`quotes`, `events`) y el botón de nueva cotización, y las tarjetas del dashboard (derivadas de cotizaciones o de eventos), siguen la misma regla. Qué se muestra con cada conjunto activo vive en helpers puros con tests (`features/settings/helpers.ts`, `features/clients/helpers.ts`, `features/dashboard/helpers.ts`).
+- **La web no es la barrera:** ocultar es UX; la API rechaza las mutaciones con `FEATURE_NOT_ENABLED` (regla "ocultar y conservar", backend §13.4).
+- Los nombres de las features salen de `features.<key>` en `locales/{es,en}/common.json`.
 
 ---
 
@@ -710,6 +724,7 @@ El tenant de cada petición es la organización activa **de la sesión** (`sessi
 13. **Navegación**: ítem en `lib/navigation/constants/items.ts` (+ `guard` con `RESOURCES`/`ACTIONS`), grupo en `config.ts`, icono lucide en `constants/icons.tsx`.
 14. **Acceso a la ruta**: el `guard` del ítem de navegación es el permiso de la ruta (`resolveRouteAccess` en `lib/auth/route-access.ts`); una subruta que exija más va en `ROUTE_PATTERNS`. Lo aplica el `RouteGuard` (§5).
 15. **Autorización de acciones**: envolver create/edit/delete con `<Can>` / gatear con `useCan` usando `RESOURCES`/`ACTIONS`.
+16. **Si la feature depende de un módulo o add-on** (§9.4): `feature` en el ítem de navegación (y en `ROUTE_PATTERNS` si una subruta lo necesita), `<Feature>`/`useFeature` en los controles de un add-on, y el nombre en `features.<key>` de `locales/{es,en}/common.json`.
 
 Siguiendo estos pasos, la feature será **consistente con el patrón** y con el resto del panel.
 

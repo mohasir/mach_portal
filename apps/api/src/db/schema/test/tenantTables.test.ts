@@ -3,7 +3,7 @@ import { getTableConfig, index, PgTable, pgTable, text, unique, uuid } from 'dri
 import { describe, expect, it } from 'vitest';
 import { organization } from '../auth';
 import * as schema from '../index';
-import { tenantPolicyName } from '../../rls/policy';
+import { PLATFORM_MANAGED_TABLES, tenantPolicyName, tenantReadPolicyName } from '../../rls/policy';
 import { TENANT_EXEMPT_TABLES } from '../tenantColumn';
 
 const allTables = Object.values(schema).filter((v) => is(v, PgTable)) as unknown as PgTable[];
@@ -88,7 +88,11 @@ describe('tenant scoping of the schema', () => {
   );
 
   // platform_access_log has no tenant-scoping contract (exempt) but its rows still belong to a tenant.
-  const isolated = [...scoped, find('platform_access_log')];
+  // The platform-managed tables are tenant-scoped but carry their own, narrower policies.
+  const isolated = [
+    ...scoped.filter((t) => !PLATFORM_MANAGED_TABLES.includes(tableName(t))),
+    find('platform_access_log'),
+  ];
 
   it.each(isolated.map((t) => [tableName(t), t] as const))(
     '%s enables RLS with the tenant isolation policy',
@@ -99,8 +103,23 @@ describe('tenant scoping of the schema', () => {
     },
   );
 
+  it('gives tenant_features only a read policy and tenant_feature_events none', () => {
+    const features = getTableConfig(find('tenant_features'));
+    expect(features.enableRLS).toBe(true);
+    expect(features.policies.map((p) => [p.name, p.for])).toEqual([
+      [tenantReadPolicyName('tenant_features'), 'select'],
+    ]);
+    const events = getTableConfig(find('tenant_feature_events'));
+    expect(events.enableRLS).toBe(true);
+    expect(events.policies).toEqual([]);
+  });
+
+  it('keeps tenant_features keyed by (tenant_id, feature_key)', () => {
+    expect([...pkColumns(find('tenant_features'))].sort()).toEqual(['feature_key', 'tenant_id']);
+  });
+
   it('declares RLS on no table outside the tenant-owned ones', () => {
-    const names = new Set(isolated.map(tableName));
+    const names = new Set([...isolated, ...PLATFORM_MANAGED_TABLES.map(find)].map(tableName));
     const others = allTables.filter((t) => !names.has(tableName(t)));
     for (const table of others) {
       const cfg = getTableConfig(table);

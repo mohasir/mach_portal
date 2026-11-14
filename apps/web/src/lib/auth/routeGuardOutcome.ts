@@ -1,22 +1,32 @@
-import type { PermissionCheck } from '@repo/guards';
+import type { FeatureKey, PermissionCheck } from '@repo/guards';
 import { DEFAULT_REDIRECT_HOME, DENIED_ROUTE, WELCOME_ROUTE } from './navigation';
-import { resolveRouteAccess } from './route-access';
+import { resolveRouteAccess, resolveRouteFeature } from './route-access';
 
-export type GuardOutcome = 'allow' | 'wait' | { redirect: string };
+export type GuardOutcome = 'allow' | 'wait' | 'notFound' | { redirect: string };
 
 export function resolveGuardOutcome({
   pathname,
   can,
   ready,
+  hasFeature,
+  featuresReady,
 }: {
   pathname: string;
   can: (check: PermissionCheck) => boolean;
   ready: boolean;
+  hasFeature: (key: FeatureKey) => boolean;
+  featuresReady: boolean;
 }): GuardOutcome {
-  // Denying before the grants load would bounce users who do have access.
-  if (!ready) return 'wait';
+  // Denying before the grants or features load would bounce users who do have access.
+  if (!ready || !featuresReady) return 'wait';
   const required = resolveRouteAccess(pathname);
-  if (!required || can(required)) return 'allow';
-  // The dashboard denial is a welcome landing; every other route is a 403.
-  return { redirect: pathname === DEFAULT_REDIRECT_HOME ? WELCOME_ROUTE : DENIED_ROUTE };
+  // Permission denial wins over an inactive module: a user who may not open the route anyway
+  // should not learn which modules the organization has.
+  if (required && !can(required)) {
+    // The dashboard denial is a welcome landing; every other route is a 403.
+    return { redirect: pathname === DEFAULT_REDIRECT_HOME ? WELCOME_ROUTE : DENIED_ROUTE };
+  }
+  const feature = resolveRouteFeature(pathname);
+  if (feature && !hasFeature(feature)) return 'notFound';
+  return 'allow';
 }

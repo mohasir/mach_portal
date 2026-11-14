@@ -27,12 +27,13 @@ import { ConfigRepository } from '../config/config.repository';
 import { NotificationsRepository } from '../notifications/notifications.repository';
 import type { NotificationActor } from '../notifications/notifications.resource';
 import type { ProductsRepository } from '../products/products.repository';
+import { isQuotable } from '../products/products.pricing';
 import { buildProductTree } from '../products/products.resource';
 import type { TemplatesRepository } from '../templates/templates.repository';
 import { quotePdfTemplateResource } from '../templates/templates.resource';
 import { QuotesRepository, type MissingRef } from './quotes.repository';
 import { buildQuotePdfPayload } from './quotes.pdf';
-import { validateLineSelections, type CatalogContext } from './quotes.validation';
+import { changedLines, validateLineSelections, type CatalogContext } from './quotes.validation';
 import {
   buildQuoteDetail,
   buildQuoteLineDetails,
@@ -74,6 +75,12 @@ function invalidLines() {
     cause: new AppError(ErrorCodes.quote.INVALID_LINES),
   });
 }
+function productNotQuotable() {
+  return new TRPCError({
+    code: 'BAD_REQUEST',
+    cause: new AppError(ErrorCodes.product.NOT_QUOTABLE),
+  });
+}
 function pricingNotAllowed() {
   return new TRPCError({
     code: 'FORBIDDEN',
@@ -93,6 +100,7 @@ export class QuotePdfGenerator {
   constructor(
     private runInTenant: TenantRunner,
     private repositoriesFor: (tx: Tx) => QuotePdfRepositories,
+    private priceTiersActive: boolean,
   ) {}
 
   async generate(id: string, ownerId?: string) {
@@ -111,7 +119,13 @@ export class QuotePdfGenerator {
       // Inactive stations stay in the tree so older quotes keep their line; the PDF itself
       // skips inactive groups and options (see quotes.pdf.ts).
       const { productRows, tierRows, groupRows, optionRows } = await repos.products.findTree(true);
-      const catalog = buildProductTree(productRows, tierRows, groupRows, optionRows);
+      const catalog = buildProductTree(
+        productRows,
+        tierRows,
+        groupRows,
+        optionRows,
+        this.priceTiersActive,
+      );
       const templateRow = await repos.templates.findByType(TEMPLATE_TYPES.QUOTE_PDF);
       const { content: template } = quotePdfTemplateResource(templateRow);
       return buildQuotePdfPayload(result.quoteRow, lines, catalog, template);
@@ -143,6 +157,8 @@ export class QuotesService {
     private notificationsRepo: NotificationsRepository,
     private pdf: QuotePdfGenerator,
     private afterCommit: AfterCommit,
+    private priceTiersActive: boolean,
+    private eventsActive: boolean,
   ) {}
 
   // The PDF is generated from the committed quote, on its own short transactions, so the request
@@ -277,7 +293,12 @@ export class QuotesService {
         cause: new AppError(ErrorCodes.quote.NOT_EDITABLE),
       });
     }
-    await this.validateLines(input.lines, canManagePricing);
+    // Lines kept as they are stay frozen; only new or modified ones are checked against the catalog.
+    const stored = await this.repo.findLinesWithOptions(id);
+    await this.validateLines(
+      changedLines(input.lines, storedLinesWithSelections(stored)),
+      canManagePricing,
+    );
 
     const totals = await this.resolveTotals(current, input);
 
@@ -412,18 +433,27 @@ export class QuotesService {
 
     // Flow B (options already chosen at quote time) means the event is born resolved; Flow A
     // (default) leaves it pending until someone completes it from the event screen (§events.updateSelections).
-    const updated = await this.repo.approveWithEvent(id, fromStageId, userId, {
-      clientId: current.clientId,
-      eventTypeId: current.eventTypeId,
-      eventDate: current.eventDate,
-      eventTime: current.eventTime,
-      state: current.state,
-      address: current.address,
-      city: current.city,
-      totalAmount: current.total,
-      selectionsConfirmedAt: current.selectOptionsAtQuote ? new Date() : null,
-      selectionsConfirmedById: current.selectOptionsAtQuote ? userId : null,
-    });
+    // Without the events module no event is derived, and activating the module later does not
+    // create one retroactively.
+    const updated = await this.repo.approve(
+      id,
+      fromStageId,
+      userId,
+      this.eventsActive
+        ? {
+            clientId: current.clientId,
+            eventTypeId: current.eventTypeId,
+            eventDate: current.eventDate,
+            eventTime: current.eventTime,
+            state: current.state,
+            address: current.address,
+            city: current.city,
+            totalAmount: current.total,
+            selectionsConfirmedAt: current.selectOptionsAtQuote ? new Date() : null,
+            selectionsConfirmedById: current.selectOptionsAtQuote ? userId : null,
+          }
+        : null,
+    );
     if (!updated) throw notFound();
     await this.notificationsRepo.create({
       type: 'quote_confirmed',
@@ -507,18 +537,22 @@ export class QuotesService {
     const product = ctx.products.find((p) => p.id === line.productId);
     if (!product?.isActive) throw invalidLines();
 
-    // Only MANAGE_LINE_PRICING (admin/superadmin) may set a numPersons/subtotal pair that
-    // deviates from the catalog's price tiers — everyone else's lines must land exactly on
-    // one (the builder UI's tier picker already only ever produces exact matches; this is
-    // the server-side boundary against a hand-crafted payload).
+    const productTiers = ctx.tiers.filter((tier) => tier.productId === line.productId);
+    if (!isQuotable(product, productTiers, this.priceTiersActive)) throw productNotQuotable();
+
+    // Only MANAGE_LINE_PRICING (admin/superadmin) may set a subtotal that deviates from the
+    // catalog — everyone else's lines must land on an active price tier or on price × persons
+    // (the builder UI only ever produces exact matches; this is the server-side boundary
+    // against a hand-crafted payload).
     if (!canManagePricing) {
-      const matchesTier = ctx.tiers.some(
-        (tier) =>
-          tier.productId === line.productId &&
-          tier.numPersons === line.numPersons &&
-          tier.price === line.subtotal,
-      );
-      if (!matchesTier) throw pricingNotAllowed();
+      const matchesTier =
+        this.priceTiersActive &&
+        productTiers.some(
+          (tier) => tier.numPersons === line.numPersons && tier.price === line.subtotal,
+        );
+      const matchesPrice =
+        product.price != null && line.subtotal === product.price * line.numPersons;
+      if (!matchesTier && !matchesPrice) throw pricingNotAllowed();
     }
 
     if (!validateLineSelections(line.productId, line.selections, ctx)) throw invalidLines();
@@ -534,4 +568,25 @@ function addMonths(date: Date, months: number): string {
   const result = new Date(date);
   result.setMonth(result.getMonth() + months);
   return result.toISOString().slice(0, 10);
+}
+
+function storedLinesWithSelections({
+  lineRows,
+  optionRows,
+}: Awaited<ReturnType<QuotesRepository['findLinesWithOptions']>>) {
+  return lineRows.map((line) => {
+    const byGroup = new Map<string, string[]>();
+    for (const option of optionRows.filter((o) => o.quoteLineId === line.id)) {
+      byGroup.set(option.optionGroupId, [
+        ...(byGroup.get(option.optionGroupId) ?? []),
+        option.optionId,
+      ]);
+    }
+    return {
+      productId: line.productId,
+      numPersons: line.numPersons,
+      subtotal: line.subtotal,
+      selections: [...byGroup].map(([optionGroupId, optionIds]) => ({ optionGroupId, optionIds })),
+    };
+  });
 }

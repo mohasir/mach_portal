@@ -2,8 +2,10 @@
 import { Button, Form, Skeleton, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
+import { Feature } from '@/lib/auth/Feature';
 import { useCan } from '@/lib/auth/useCan';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
+import { withStoredValues } from '../../helpers';
 import { useConfig } from '../../hooks/useConfig';
 import { useUpdateQuoteBuilderPreferences } from '../../hooks/useUpdateQuoteBuilderPreferences';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
@@ -31,7 +33,7 @@ export function QuoteBuilderPreferencesCard() {
 
   const canEdit = can({ [RESOURCES.QUOTE_BUILDER_PREFERENCES]: [ACTIONS.UPDATE] });
   const onFinish = (values: QuoteBuilderPreferencesFormValues) => {
-    void updateQuoteBuilderPreferences(values);
+    void updateQuoteBuilderPreferences(withStoredValues(initialValues!, values));
   };
 
   return (
@@ -44,17 +46,19 @@ export function QuoteBuilderPreferencesCard() {
         onFinish={onFinish}
         disabled={!canEdit}
       >
+        <Feature name="configurableOptions">
+          <SwitchRow
+            className="mb-4"
+            title={t('preferences.quoteBuilder.allowSelectOptionsAtQuote')}
+            caption={t('preferences.quoteBuilder.allowSelectOptionsAtQuoteCaption')}
+            control={
+              <Form.Item name="allowSelectOptionsAtQuote" valuePropName="checked" noStyle>
+                <Switch />
+              </Form.Item>
+            }
+          />
+        </Feature>
         <SwitchRow
-          title={t('preferences.quoteBuilder.allowSelectOptionsAtQuote')}
-          caption={t('preferences.quoteBuilder.allowSelectOptionsAtQuoteCaption')}
-          control={
-            <Form.Item name="allowSelectOptionsAtQuote" valuePropName="checked" noStyle>
-              <Switch />
-            </Form.Item>
-          }
-        />
-        <SwitchRow
-          className="mt-4"
           title={t('preferences.quoteBuilder.promptRateChanges')}
           caption={t('preferences.quoteBuilder.promptRateChangesCaption')}
           control={

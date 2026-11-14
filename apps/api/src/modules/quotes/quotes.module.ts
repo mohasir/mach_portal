@@ -8,12 +8,16 @@ import { QuotePdfGenerator, QuotesService } from './quotes.service';
 
 // The tenant always comes from the session (ctx), so a background run can never be pointed at
 // another organization by its input.
-function quotePdfGenerator(ctx: Pick<ShortTxCtx, 'tenantId' | 'runInTenant'>) {
-  return new QuotePdfGenerator(ctx.runInTenant, (tx) => ({
-    quotes: new QuotesRepository(tx, ctx.tenantId),
-    products: new ProductsRepository(tx, ctx.tenantId),
-    templates: new TemplatesRepository(tx, ctx.tenantId),
-  }));
+function quotePdfGenerator(ctx: Pick<ShortTxCtx, 'tenantId' | 'runInTenant' | 'features'>) {
+  return new QuotePdfGenerator(
+    ctx.runInTenant,
+    (tx) => ({
+      quotes: new QuotesRepository(tx, ctx.tenantId),
+      products: new ProductsRepository(tx, ctx.tenantId),
+      templates: new TemplatesRepository(tx, ctx.tenantId),
+    }),
+    ctx.features.has('priceTiers'),
+  );
 }
 
 // Client, event type, catalog and assignee ids from `input` are resolved inside the tenant by
@@ -25,6 +29,8 @@ export function quotesModule(ctx: TenantCtx) {
     new NotificationsRepository(ctx.db, ctx.tenantId),
     quotePdfGenerator(ctx),
     ctx.afterCommit,
+    ctx.features.has('priceTiers'),
+    ctx.features.has('events'),
   );
 }
 

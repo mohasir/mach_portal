@@ -10,6 +10,8 @@ import { IconButton } from '@/components/shared/IconButton';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { getStationIcon } from '../../../helpers';
+import { useLineConfig } from '../../../hooks/useLineConfig';
+import { isQuantityLocked, lineSubtotalForQuantity, usesTierPicker } from '../../../lineHelpers';
 
 interface QuickLineCardBaseProps {
   line: { numPersons: number; subtotal: number };
@@ -39,6 +41,9 @@ export function QuickLineCard(props: QuickLineCardProps) {
   const { money } = useMoneyFormatter();
   const Icon = getStationIcon(product.name);
   const [editOpen, setEditOpen] = useState(false);
+  const { priceTiersEnabled, minPersons } = useLineConfig();
+  const tierPicker = usesTierPicker(product, priceTiersEnabled);
+  const quantityLocked = isQuantityLocked(product, priceTiersEnabled);
 
   const selectGroups = product.optionGroups.filter((group) => group.selectionType === 'select');
   const completedGroups =
@@ -62,8 +67,21 @@ export function QuickLineCard(props: QuickLineCardProps) {
     props.onChange({ numPersons, subtotal: tier ? tier.price : line.subtotal });
   };
 
+  const handleQuantityChange = (value: number | null) => {
+    if (mode !== 'edit') return;
+    const numPersons = value ?? minPersons;
+    props.onChange({
+      numPersons,
+      subtotal: lineSubtotalForQuantity(product.price, numPersons, line.subtotal),
+    });
+  };
+
   const stepTier = (direction: 1 | -1) => {
     if (mode !== 'edit') return;
+    if (!tierPicker) {
+      handleQuantityChange(Math.max(minPersons, line.numPersons + direction));
+      return;
+    }
     const tier = sortedTiers[tierIndex + direction];
     if (tier) props.onChange({ numPersons: tier.numPersons, subtotal: tier.price });
   };
@@ -122,7 +140,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
         </div>
 
         <div className="flex flex-col gap-2 min-[375px]:flex-row min-[375px]:items-center min-[375px]:justify-between">
-          {mode === 'edit' ? (
+          {mode === 'edit' && tierPicker ? (
             <Select
               className="w-36 py-1"
               size="small"
@@ -132,6 +150,17 @@ export function QuickLineCard(props: QuickLineCardProps) {
                 value: tier.numPersons,
                 label: t('builder.lines.numPersonsCount', { count: tier.numPersons }),
               }))}
+            />
+          ) : mode === 'edit' ? (
+            <InputNumber
+              className="w-36"
+              size="small"
+              disabled={quantityLocked}
+              min={minPersons}
+              precision={0}
+              value={line.numPersons}
+              onChange={handleQuantityChange}
+              aria-label={t('builder.lines.numPersons')}
             />
           ) : (
             <span className="text-base text-gray-500">
@@ -197,27 +226,37 @@ export function QuickLineCard(props: QuickLineCardProps) {
                 <Button
                   type="text"
                   icon={<Minus size={16} />}
-                  disabled={tierIndex <= 0}
+                  disabled={
+                    quantityLocked || (tierPicker ? tierIndex <= 0 : line.numPersons <= minPersons)
+                  }
                   onClick={() => stepTier(-1)}
                   aria-label={t('builder.lines.decrease')}
                 />
                 <InputNumber
                   variant="borderless"
                   controls={false}
-                  min={1}
+                  disabled={quantityLocked}
+                  min={tierPicker ? 1 : minPersons}
                   precision={0}
                   className="flex-1 text-center font-semibold"
                   value={line.numPersons}
-                  onChange={(value) => props.onChange({ numPersons: value ?? 1 })}
+                  onChange={(value) =>
+                    tierPicker
+                      ? props.onChange({ numPersons: value ?? 1 })
+                      : handleQuantityChange(value)
+                  }
                 />
                 <Button
                   type="text"
                   icon={<Plus size={16} />}
-                  disabled={tierIndex >= sortedTiers.length - 1}
+                  disabled={quantityLocked || (tierPicker && tierIndex >= sortedTiers.length - 1)}
                   onClick={() => stepTier(1)}
                   aria-label={t('builder.lines.increase')}
                 />
               </div>
+              {quantityLocked && (
+                <span className="text-muted text-xs">{t('builder.lines.notQuotable')}</span>
+              )}
             </div>
 
             <div className="flex flex-col gap-1">

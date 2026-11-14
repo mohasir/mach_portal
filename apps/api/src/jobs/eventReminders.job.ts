@@ -1,4 +1,6 @@
+import { resolveFeatures } from '@repo/guards';
 import { db, withTenantTx, type Database, type Tx } from '../db';
+import { loadTenantFeatures } from '../lib/features/repository';
 import { TenancyRepository } from '../lib/tenancy/tenancy.repository';
 import { addDays, subtractDays, todayInBusinessTimezone } from '../lib/utils/date';
 import { ConfigRepository } from '../modules/config/config.repository';
@@ -36,6 +38,19 @@ export async function checkEventSelectionsRemindersForAllTenants(
 }
 
 async function createDueReminders(tx: Tx, tenantId: string) {
+  // Selections exist only with configurable options; without the add-on the deadline setting is
+  // ignored. Without `events` or `notifications` nobody can see the reminders, and they would pile
+  // up as a backlog once the module is activated. Read directly, not through the API cache: the job
+  // runs in its own process.
+  const features = resolveFeatures(await loadTenantFeatures(tenantId, tx), new Date());
+  if (
+    !features.has('configurableOptions') ||
+    !features.has('events') ||
+    !features.has('notifications')
+  ) {
+    return;
+  }
+
   const eventsRepo = new EventsRepository(tx, tenantId);
   const configRepo = new ConfigRepository(tx, tenantId);
   const notificationsRepo = new NotificationsRepository(tx, tenantId);

@@ -24,6 +24,7 @@ import {
   platformAccessLog,
   role,
   rolePermission,
+  tenantFeatures,
   user,
 } from '../../../../db/schema';
 import { auth } from '../../../../lib/auth';
@@ -134,6 +135,7 @@ describe('guardTenantSession', () => {
     const cookie = await signInCookie('m@test.local');
     await db.delete(member);
     await db.delete(role).where(eq(role.tenantId, a.id));
+    await db.delete(tenantFeatures).where(eq(tenantFeatures.tenantId, a.id));
     await db.delete(organization).where(eq(organization.id, a.id));
     invalidateTenantCache();
     const r = await run(guard, { cookie });
@@ -384,6 +386,7 @@ describe('parity with the tRPC chain', () => {
     if (s.state === 'ghost') {
       await db.delete(member);
       await db.delete(role).where(eq(role.tenantId, a.id));
+      await db.delete(tenantFeatures).where(eq(tenantFeatures.tenantId, a.id));
       await db.delete(organization).where(eq(organization.id, a.id));
       invalidateTenantCache();
     }

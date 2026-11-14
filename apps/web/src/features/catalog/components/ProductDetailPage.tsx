@@ -11,9 +11,15 @@ import { useActionConfirm } from '@/components/shared/ConfirmDialogs';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { WrapperCard } from '@/components/shared/WrapperCard';
+import { Feature } from '@/lib/auth/Feature';
 import { useCan } from '@/lib/auth/useCan';
+import { useFeature } from '@/lib/auth/useFeature';
+import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
+import { getDetailTabs } from '../helpers';
 import { useProduct } from '../hooks/useCatalog';
 import { useProductMutations } from '../hooks/useProductMutations';
+import { NotQuotableAlert } from './NotQuotableAlert';
+import { NotQuotableTag } from './NotQuotableTag';
 import { OptionGroupList } from './OptionGroupList';
 import { ProductFormModal } from './ProductFormModal';
 import { PriceTiersForm } from './prices/PriceTiersForm';
@@ -30,6 +36,10 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const canEnable = can({ [RESOURCES.PRODUCT]: [ACTIONS.ENABLE] });
   const canDuplicate = can({ [RESOURCES.PRODUCT]: [ACTIONS.DUPLICATE] });
   const router = useRouter();
+  const priceTiers = useFeature('priceTiers');
+  const configurableOptions = useFeature('configurableOptions');
+  const { money } = useMoneyFormatter();
+  const detailTabs = getDetailTabs({ priceTiers, configurableOptions });
   const { data: product, isLoading } = useProduct(productId);
   const { disableProduct, enableProduct, duplicateProduct, isDuplicating } = useProductMutations();
   const [confirm, confirmContextHolder] = useActionConfirm();
@@ -118,7 +128,10 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                   </Tag>
                 )}
                 {!product.isActive && <Tag>{t('status.inactive')}</Tag>}
+                {!product.quotable && <NotQuotableTag />}
               </div>
+
+              {!product.quotable && <NotQuotableAlert />}
 
               {product.description && (
                 <div>
@@ -131,19 +144,34 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                 </div>
               )}
 
+              {product.price != null && (
+                <div>
+                  <Typography.Text strong className="block text-sm">
+                    {t('product.form.price')}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" className="block text-sm">
+                    {money(product.price)}
+                  </Typography.Text>
+                </div>
+              )}
+
               <div className="divide-navy/10 flex items-stretch divide-x">
-                <div className="flex items-center justify-center gap-1.5 px-1.5 py-1.5">
-                  <Layers size={14} className="text-navy shrink-0" />
-                  <span className="text-navy truncate text-sm font-medium">
-                    {t('product.optionGroupsCount', { count: product.optionGroups.length })}
-                  </span>
-                </div>
-                <div className="flex items-center justify-center gap-1.5 px-1.5 py-1.5">
-                  <Wallet size={14} className="text-navy shrink-0" />
-                  <span className="text-navy truncate text-sm font-medium">
-                    {t('product.priceTiersCount', { count: product.priceTiers.length })}
-                  </span>
-                </div>
+                <Feature name="configurableOptions">
+                  <div className="flex items-center justify-center gap-1.5 px-1.5 py-1.5">
+                    <Layers size={14} className="text-navy shrink-0" />
+                    <span className="text-navy truncate text-sm font-medium">
+                      {t('product.optionGroupsCount', { count: product.optionGroups.length })}
+                    </span>
+                  </div>
+                </Feature>
+                <Feature name="priceTiers">
+                  <div className="flex items-center justify-center gap-1.5 px-1.5 py-1.5">
+                    <Wallet size={14} className="text-navy shrink-0" />
+                    <span className="text-navy truncate text-sm font-medium">
+                      {t('product.priceTiersCount', { count: product.priceTiers.length })}
+                    </span>
+                  </div>
+                </Feature>
               </div>
 
               {canEdit && (
@@ -159,24 +187,27 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
             </div>
           </WrapperCard>
 
-          <WrapperCard>
-            <Tabs
-              items={[
-                {
-                  key: 'details',
-                  label: t('detail.tabs.details'),
-                  children: (
-                    <OptionGroupList productId={product.id} groups={product.optionGroups} />
-                  ),
-                },
-                {
-                  key: 'prices',
-                  label: t('detail.tabs.prices'),
-                  children: <PriceTiersForm product={product} />,
-                },
-              ]}
-            />
-          </WrapperCard>
+          {detailTabs.length > 0 && (
+            <WrapperCard>
+              <Tabs
+                items={detailTabs.map((tab) =>
+                  tab === 'details'
+                    ? {
+                        key: tab,
+                        label: t('detail.tabs.details'),
+                        children: (
+                          <OptionGroupList productId={product.id} groups={product.optionGroups} />
+                        ),
+                      }
+                    : {
+                        key: tab,
+                        label: t('detail.tabs.prices'),
+                        children: <PriceTiersForm product={product} />,
+                      },
+                )}
+              />
+            </WrapperCard>
+          )}
         </div>
       )}
 

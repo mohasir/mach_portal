@@ -13,6 +13,7 @@ export const DASHBOARD_ITEM: NavItem = {
 };
 
 export const CALENDAR_ITEM: NavItem = {
+  feature: 'events',
   label: 'nav.calendarTab',
   href: '/admin/calendar',
   icon: 'calendar',
@@ -20,6 +21,7 @@ export const CALENDAR_ITEM: NavItem = {
 };
 
 export const EVENTS_ITEM: NavItem = {
+  feature: 'events',
   label: 'nav.events',
   href: '/admin/events',
   icon: 'events',
@@ -34,6 +36,7 @@ export const CLIENTS_ITEM: NavItem = {
 };
 
 export const PAYMENTS_ITEM: NavItem = {
+  feature: 'events',
   label: 'nav.payments',
   href: '/admin/payments',
   icon: 'payments',
@@ -41,6 +44,7 @@ export const PAYMENTS_ITEM: NavItem = {
 };
 
 export const QUOTES_ITEM: NavItem = {
+  feature: 'quotes',
   label: 'nav.quotes',
   href: '/admin/quotes',
   icon: 'quotes',
@@ -48,12 +52,14 @@ export const QUOTES_ITEM: NavItem = {
 };
 
 export const QUOTE_BUILDER_ITEM: NavItem = {
+  feature: 'quotes',
   label: 'nav.quotes',
   href: '/admin/quotes',
   layout: 'bare',
 };
 
 export const PIPELINE_ITEM: NavItem = {
+  feature: 'quotes',
   label: 'nav.pipeline',
   href: '/admin/pipeline',
   icon: 'pipeline',
@@ -61,6 +67,7 @@ export const PIPELINE_ITEM: NavItem = {
 };
 
 export const STAFF_ITEM: NavItem = {
+  feature: 'events',
   label: 'nav.staff',
   href: '/admin/staff',
   icon: 'staff',
@@ -76,6 +83,7 @@ export const CATALOG_PRODUCTS_ITEM: NavItem = {
 };
 
 export const EVENT_TYPES_ITEM: NavItem = {
+  feature: 'events',
   label: 'nav.eventTypes',
   href: '/admin/event-types',
   icon: 'eventTypes',
@@ -83,6 +91,7 @@ export const EVENT_TYPES_ITEM: NavItem = {
 };
 
 export const RESCHEDULE_REASONS_ITEM: NavItem = {
+  feature: 'events',
   label: 'nav.rescheduleReasons',
   href: '/admin/reschedule-reasons',
   icon: 'rescheduleReasons',

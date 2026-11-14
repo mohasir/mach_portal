@@ -15,10 +15,12 @@ import { templatesRouter } from '../../modules/templates/templates.router';
 import { notificationsRouter } from '../../modules/notifications/notifications.router';
 import { tenantRouter } from '../../modules/tenant/tenant.router';
 import { rolesRouter } from '../../modules/roles/roles.router';
+import { featuresRouter } from '../../modules/features/features.router';
 
 export const appRouter = router({
   tenant: tenantRouter,
   roles: rolesRouter,
+  features: featuresRouter,
   dashboard: dashboardRouter,
   users: usersRouter,
   userPreferences: userPreferencesRouter,

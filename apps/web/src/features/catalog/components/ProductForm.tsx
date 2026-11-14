@@ -1,33 +1,26 @@
 'use client';
 import { Form, Input, Switch, type FormInstance } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { PriceTierInput, UpdateProductInput } from '@repo/schemas';
+import type { PriceTierInput } from '@repo/schemas';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
+import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
-
-export interface ProductFormValues {
-  name: string;
-  description?: string;
-  isPremium: boolean;
-}
+import { useFeature } from '@/lib/auth/useFeature';
+import { buildProductPayload, type ProductFormValues, type ProductPayload } from '../helpers';
 
 interface ProductFormProps {
   form: FormInstance<ProductFormValues>;
   initialValues?: Partial<ProductFormValues>;
   tiers?: PriceTierInput[];
-  onSubmit: (values: UpdateProductInput) => Promise<void> | void;
+  onSubmit: (values: ProductPayload) => Promise<void> | void;
 }
 
 export function ProductForm({ form, initialValues, tiers = [], onSubmit }: ProductFormProps) {
   const { t } = useTranslation('catalog');
+  const priceTiersEnabled = useFeature('priceTiers');
 
   const handleFinish = (values: ProductFormValues) =>
-    onSubmit({
-      name: values.name,
-      description: values.description,
-      isPremium: values.isPremium ?? false,
-      tiers,
-    });
+    onSubmit(buildProductPayload(values, { tiers, priceTiersEnabled }));
 
   return (
     <Form
@@ -54,6 +47,15 @@ export function ProductForm({ form, initialValues, tiers = [], onSubmit }: Produ
           placeholder={t('product.form.descriptionPlaceholder')}
           autoSize={{ minRows: 2, maxRows: 4 }}
         />
+      </Form.Item>
+
+      <Form.Item
+        name="price"
+        label={<FieldLabel title={t('product.form.price')} />}
+        extra={t('product.form.priceCaption')}
+        rules={[{ type: 'number', min: 0, message: t('validation.priceInvalid') }]}
+      >
+        <MoneyInput min={0} step={5} className="w-full" placeholder="0.00" />
       </Form.Item>
 
       <SwitchRow

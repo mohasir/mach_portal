@@ -4,21 +4,31 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { useFeatures } from '@/features/tenant/hooks/useFeatures';
 import { useCan } from '@/lib/auth/useCan';
-import { ADMIN_MENU, IconCardOptionsMap, PRIMARY_HREFS, type NavItem } from '@/lib/navigation';
+import {
+  ADMIN_MENU,
+  filterMenuByFeatures,
+  IconCardOptionsMap,
+  PRIMARY_HREFS,
+  type NavItem,
+} from '@/lib/navigation';
 
 export function OptionsPage() {
   const { t } = useTranslation('admin');
   const can = useCan();
+  const { keys } = useFeatures();
   const router = useRouter();
 
-  const groups = ADMIN_MENU.map((group, i) => ({
-    key: group.group ?? String(i),
-    label: group.group,
-    items: group.items.filter(
-      (item) => item.href && !PRIMARY_HREFS.has(item.href) && (!item.guard || can(item.guard)),
-    ),
-  })).filter((group) => group.items.length > 0);
+  const groups = filterMenuByFeatures(ADMIN_MENU, (key) => keys.has(key))
+    .map((group, i) => ({
+      key: group.group ?? String(i),
+      label: group.group,
+      items: group.items.filter(
+        (item) => item.href && !PRIMARY_HREFS.has(item.href) && (!item.guard || can(item.guard)),
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
 
   const renderCard = (item: NavItem) => (
     <Col key={item.href} xs={12} sm={8}>

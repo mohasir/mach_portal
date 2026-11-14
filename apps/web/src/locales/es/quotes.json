@@ -113,6 +113,7 @@
       "numPersons": "Personas",
       "numPersonsCount_one": "{{count}} persona",
       "numPersonsCount_other": "{{count}} personas",
+      "notQuotable": "No cotizable: falta definir su precio en el catálogo",
       "price": "Precio",
       "included": "Incluido",
       "selectAny": "Elegí las que quieras",

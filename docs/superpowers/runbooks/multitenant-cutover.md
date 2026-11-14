@@ -200,3 +200,59 @@ Por entorno:
 - **`server.ts` no maneja el apagado ordenado:** las tareas de PDF en segundo plano (`afterCommit`) que estén pendientes se pierden al reiniciar la API. Reintento: `quotes.regeneratePdf`.
 - **2 filas `own` heredadas en `role_permission`** (de la migración de roles) a revisar.
 - **Eliminar `user.role` y `member.role`** (columnas heredadas que ya no autorizan) en una fase posterior.
+
+## 8. Fase 4a: módulos y add-ons por organización (migración `0006`)
+
+Spec: `docs/superpowers/specs/2026-11-13-multitenant-fase4a-features-design.md`. Arquitectura: `docs/backend/architecture.md` §13. **Nada de esta sección se ejecuta contra producción sin la aprobación del dueño del proyecto.**
+
+### 8.1 Qué hace la `0006`
+
+`apps/api/drizzle/0006_tenant_features.sql`:
+
+- Crea `tenant_features` (con su política `tenant_features_tenant_read`, solo `SELECT`) y `tenant_feature_events` (RLS sin política); las dos con `ENABLE` y `FORCE ROW LEVEL SECURITY`.
+- Añade la columna `products.price` (centavos por unidad, nullable).
+- **Relleno de las organizaciones existentes:** inserta, para cada `organization`, 5 filas **permanentes** (`expires_at` `NULL`) y sin precio: `quotes`, `events`, `notifications`, `priceTiers` y `configurableOptions`. Así no se quita funcionalidad a nadie. El relleno corre antes del `FORCE`, porque después el propio dueño que migra quedaría sujeto a la política de solo lectura.
+
+### 8.2 Organizaciones nuevas
+
+`tenant:create` **no** activa ninguna feature: una organización nueva nace solo con el núcleo (sin `quotes`, `events`, etc.). Quien la crea debe activar lo contratado justo después, con el rol `platform` (`DATABASE_PLATFORM_URL`). El orden importa: **`quotes` antes que `events`** (`events` la requiere; si no, falla con `FEATURE_MISSING_DEPENDENCY`).
+
+```bash
+pnpm --filter api tenant:create --slug=<slug> --name=<name> --admin-email=<email> --admin-name=<name>
+pnpm --filter api feature:set --tenant <slug> --key quotes
+pnpm --filter api feature:set --tenant <slug> --key events
+pnpm --filter api feature:set --tenant <slug> --key notifications
+pnpm --filter api feature:set --tenant <slug> --key priceTiers --price <centavos> --period monthly --currency USD
+pnpm --filter api feature:list --tenant <slug>
+```
+
+- `--expires YYYY-MM-DD` es el último día activo; sin él, la feature es permanente. El precio es informativo.
+- La caché de la API (30 s por organización) hace que el cambio se aplique en hasta 30 s; no hay que reiniciar la API.
+
+### 8.3 Orden de despliegue
+
+Aplicar la `0006` con `db:migrate` (`DATABASE_OWNER_URL`) y desplegar API y web de la misma versión. El código nuevo necesita las tablas y `products.price`: sin la migración, la lectura de features falla (queda solo el núcleo activo) y las consultas de productos fallan. **La migración va antes que el código.**
+
+### 8.4 Verificación
+
+`mt:verify` (con `DATABASE_PLATFORM_URL`) debe terminar con exit 0. Además de lo de la sección 7.3 comprueba: RLS habilitado y forzado en las dos tablas, `tenant_features` con solo la política `tenant_features_tenant_read`, `tenant_feature_events` sin políticas, ninguna fila con clave `core` o desconocida, y ninguna organización con `events` activo sin `quotes`. Después, `feature:list --tenant <slug>` en una organización existente debe mostrar las 5 features activas.
+
+### 8.5 Reversión
+
+La `0006` solo agrega tablas, una columna y filas; no modifica datos existentes. No hay migración inversa en el repo.
+
+**Reversión recomendada: restaurar el backup previo a la migración (sección 4) y desplegar la versión anterior de API y web.** Es la única vía que deja la base y el registro de migraciones de drizzle consistentes.
+
+Reversión manual (solo si no se puede restaurar), con el dueño (`DATABASE_OWNER_URL`):
+
+```sql
+DROP TABLE tenant_feature_events;
+DROP TABLE tenant_features;
+ALTER TABLE products DROP COLUMN price;
+DELETE FROM drizzle.__drizzle_migrations WHERE created_at = 1794598857324;
+```
+
+- El último `DELETE` es obligatorio: `db:migrate` guarda cada migración aplicada en `drizzle.__drizzle_migrations` (el valor de `created_at` es el `when` de la `0006` en `apps/api/drizzle/meta/_journal.json`). Si esa fila queda, un `db:migrate` posterior da la `0006` por aplicada y no recrea las tablas ni la columna.
+- Se pierden con las tablas todas las filas cargadas en ellas, incluido el backfill de las 5 features a las organizaciones existentes (se vuelve a generar al re-aplicar la `0006`, pero los cambios hechos con `feature:set`/`feature:unset` y el historial de `tenant_feature_events` no).
+- Eliminar `products.price` descarta los precios fijos cargados desde la fase.
+

@@ -9,6 +9,7 @@ const copy = {
   isPremium: false,
   isActive: true,
   sortOrder: 3,
+  price: null,
 };
 
 function makeRepo() {
@@ -20,6 +21,7 @@ function makeRepo() {
     findProductById: vi.fn().mockResolvedValue({ id: 'id-1', name: 'Barra' }),
     findProductByName: vi.fn().mockResolvedValue(undefined),
     duplicateProduct: vi.fn().mockResolvedValue(copy),
+    countTiers: vi.fn().mockResolvedValue(0),
   };
 }
 
@@ -29,7 +31,7 @@ describe('ProductsService.duplicateProduct', () => {
 
   beforeEach(() => {
     repo = makeRepo();
-    service = new ProductsService(repo as unknown as ProductsRepository);
+    service = new ProductsService(repo as unknown as ProductsRepository, true);
   });
 
   it('names the copy after the source with a "copia" suffix', async () => {
@@ -62,7 +64,7 @@ describe('ProductsService permanent delete', () => {
 
   beforeEach(() => {
     repo = makeRepo();
-    service = new ProductsService(repo as unknown as ProductsRepository);
+    service = new ProductsService(repo as unknown as ProductsRepository, true);
   });
 
   it('deletes an option that no quote used', async () => {
@@ -113,5 +115,62 @@ describe('ProductsService permanent delete', () => {
       cause: { code: 'OPTION_GROUP_IN_USE' },
     });
     expect(repo.deleteOptionGroup).not.toHaveBeenCalled();
+  });
+});
+
+describe('ProductsService price and quotable', () => {
+  const row = {
+    id: 'p1',
+    name: 'Barra',
+    description: null,
+    isPremium: false,
+    isActive: true,
+    sortOrder: 0,
+    price: null as number | null,
+  };
+  const tier = { id: 't1', productId: 'p1', numPersons: 30, price: 1000, sortOrder: 0 };
+  const emptyTree = { groupRows: [], optionRows: [] };
+
+  it('exposes price and quotable on the catalog, keeping stored tiers with the add-on off', async () => {
+    const repo = {
+      findTree: vi.fn().mockResolvedValue({
+        productRows: [
+          { ...row, id: 'p1' },
+          { ...row, id: 'p2', price: 5 },
+          { ...row, id: 'p3' },
+        ],
+        tierRows: [tier, { ...tier, id: 't2', productId: 'p3' }],
+        ...emptyTree,
+      }),
+      findUsage: vi.fn().mockResolvedValue({ optionIds: new Set(), groupIds: new Set() }),
+    };
+    const off = await new ProductsService(repo as unknown as ProductsRepository, false).catalog(
+      true,
+    );
+    expect(off.map((p) => [p.price, p.quotable])).toEqual([
+      [null, false],
+      [5, true],
+      [null, false],
+    ]);
+    expect(off[0]!.priceTiers).toHaveLength(1);
+
+    const on = await new ProductsService(repo as unknown as ProductsRepository, true).catalog(true);
+    expect(on.map((p) => p.quotable)).toEqual([true, true, true]);
+  });
+
+  it('computes quotable on a written product from its stored tiers', async () => {
+    const repo = {
+      findProductByName: vi.fn().mockResolvedValue(undefined),
+      createProduct: vi.fn().mockResolvedValue(row),
+      countTiers: vi.fn().mockResolvedValue(2),
+    };
+    const input = { name: 'Barra', isPremium: false, tiers: [] };
+    const withTiers = new ProductsService(repo as unknown as ProductsRepository, true);
+    await expect(withTiers.createProduct(input)).resolves.toMatchObject({
+      price: null,
+      quotable: true,
+    });
+    const without = new ProductsService(repo as unknown as ProductsRepository, false);
+    await expect(without.createProduct(input)).resolves.toMatchObject({ quotable: false });
   });
 });

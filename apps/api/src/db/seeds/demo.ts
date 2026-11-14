@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto';
+import { FEATURE_KEYS, isToggleable } from '@repo/guards';
 import { QUOTE_STAGE, type UserPreferences } from '@repo/schemas';
 import { db as defaultDb, type Executor } from '../index';
 import { organization } from '../schema';
+import { listFeatures, setFeature } from '../../lib/features/admin';
 import { TenancyRepository } from '../../lib/tenancy/tenancy.repository';
 import { seedEventActivity, seedQuoteStageSettings, type SeedStageOverride } from './activity';
 import { SEED_CATALOG, type SeedProduct } from './catalog';
@@ -265,6 +267,17 @@ export async function seedDemoTenant(
   );
 }
 
+// Every toggleable feature, permanent and unpriced. Rows already enabled are left alone so a
+// re-run adds no history. FEATURE_KEYS lists a feature after the ones it requires.
+export async function seedDemoFeatures(slug: string, db: Executor = defaultDb) {
+  const enabled = new Set(
+    (await listFeatures(db, slug)).filter((r) => r.enabled).map((r) => r.featureKey),
+  );
+  for (const key of FEATURE_KEYS.filter(isToggleable)) {
+    if (!enabled.has(key)) await setFeature(db, { tenantSlug: slug, key, actor: 'seed' });
+  }
+}
+
 // `--demo=local`: the two demo tenants, a platform admin without membership and one account
 // that belongs to both tenants. The shared account's legacy global role is the one of the first
 // tenant; authorization reads the membership role of the active tenant.
@@ -273,6 +286,7 @@ export async function seedDemoLocal(db: Executor = defaultDb) {
   for (const profile of DEMO_TENANTS) {
     const tenantId = await ensureOrganization(profile.slug, profile.name, db);
     await seedDemoTenant(tenantId, profile, db);
+    await seedDemoFeatures(profile.slug, db);
   }
 
   await ensureAccount(
@@ -312,4 +326,5 @@ export async function seedDemoIntoTenant(slug: string, db: Executor = defaultDb)
     },
     db,
   );
+  await seedDemoFeatures(org.slug, db);
 }

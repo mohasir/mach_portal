@@ -509,19 +509,14 @@ describe('quotes tenant isolation', () => {
       expect(history.every((h) => h.tenantId === a.id)).toBe(true);
     });
 
-    it('approveWithEvent cannot touch another tenant quote nor create its event', async () => {
+    it('approve cannot touch another tenant quote nor create its event', async () => {
       const eventData = { clientId: sb.clientId, totalAmount: 1 };
-      const res = await repoA.approveWithEvent(
-        sb.quoteId,
-        QUOTE_STAGE.PENDING,
-        a.userId,
-        eventData,
-      );
+      const res = await repoA.approve(sb.quoteId, QUOTE_STAGE.PENDING, a.userId, eventData);
       expect(res).toBeUndefined();
       expect((await quoteRow(sb.quoteId)).stageId).toBe(QUOTE_STAGE.PENDING);
       expect(await testDb.select().from(events).where(eq(events.quoteId, sb.quoteId))).toEqual([]);
 
-      await repoA.approveWithEvent(sa.quoteId, QUOTE_STAGE.PENDING, a.userId, {
+      await repoA.approve(sa.quoteId, QUOTE_STAGE.PENDING, a.userId, {
         clientId: sa.clientId,
         totalAmount: 1,
       });
@@ -676,6 +671,7 @@ describe('quotes tenant isolation', () => {
           products: new ProductsRepository(tx, tenant.id),
           templates: new TemplatesRepository(tx, tenant.id),
         }),
+        true,
       );
       return new QuotesService(
         new QuotesRepository(testDb, tenant.id),
@@ -683,6 +679,8 @@ describe('quotes tenant isolation', () => {
         {} as NotificationsRepository,
         pdf,
         () => undefined,
+        true,
+        true,
       );
     }
     const draft = { isDraft: true, selectOptionsAtQuote: false };

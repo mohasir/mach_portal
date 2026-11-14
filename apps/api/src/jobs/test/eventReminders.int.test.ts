@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { QUOTE_STAGE } from '@repo/schemas';
@@ -12,6 +12,7 @@ import {
   products,
   quoteLines,
   quotes,
+  tenantFeatures,
 } from '../../db/schema';
 import * as schema from '../../db/schema';
 import type { Database } from '../../db';
@@ -149,6 +150,38 @@ describe('checkEventSelectionsReminders', () => {
 
     expect(await remindersOf(b.id)).toHaveLength(1);
   });
+
+  it('creates no reminder for an organization without configurableOptions', async () => {
+    await testDb
+      .delete(tenantFeatures)
+      .where(
+        and(
+          eq(tenantFeatures.tenantId, a.id),
+          eq(tenantFeatures.featureKey, 'configurableOptions'),
+        ),
+      );
+
+    await checkEventSelectionsReminders(a.id);
+    await checkEventSelectionsReminders(b.id);
+
+    expect(await remindersOf(a.id)).toHaveLength(0);
+    expect(await remindersOf(b.id)).toHaveLength(1);
+  });
+
+  it.each(['events', 'notifications'] as const)(
+    'creates no reminder for an organization without %s',
+    async (feature) => {
+      await testDb
+        .delete(tenantFeatures)
+        .where(and(eq(tenantFeatures.tenantId, a.id), eq(tenantFeatures.featureKey, feature)));
+
+      await checkEventSelectionsReminders(a.id);
+      await checkEventSelectionsReminders(b.id);
+
+      expect(await remindersOf(a.id)).toHaveLength(0);
+      expect(await remindersOf(b.id)).toHaveLength(1);
+    },
+  );
 
   it('does not crash for a tenant without app_settings and treats the deadline as 0', async () => {
     await testDb.delete(appSettings).where(eq(appSettings.tenantId, b.id));

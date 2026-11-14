@@ -714,3 +714,90 @@ Postgres comprueba las claves foráneas saltándose el RLS. Con el tenant A fija
 - `drizzle-kit push` (usado solo por el harness de integración sobre su base descartable) crea las políticas **sin** `USING`/`WITH CHECK` y nunca agrega `FORCE`; por eso `src/test/rlsPolicies.ts` las reescribe en el global setup. Producción y desarrollo usan migraciones, no `push`.
 - `modules/test/noGlobalDb.test.ts` falla si un archivo de `modules/` importa el `db` global (cualquier forma de import, re-export o `require`).
 - `mt:verify` (con `DATABASE_PLATFORM_URL`) comprueba que cada tabla con `tenant_id` tiene RLS habilitado, forzado y con su política, y, si `DATABASE_APP_URL` está definida, que el rol de la API no se salta el RLS.
+
+---
+
+## 13. Módulos y add-ons por organización (features)
+
+Spec: `docs/superpowers/specs/2026-11-13-multitenant-fase4a-features-design.md`. Cada organización tiene su propia lista de **módulos** y **add-ons** contratados. Decisiones de diseño: **no hay planes** (el administrador de plataforma activa las features una a una por organización), el **precio es solo informativo** (ninguna lógica cobra) y las funciones experimentales ("labs") quedan fuera de alcance.
+
+### 13.1 Catálogo (`@repo/guards`)
+
+- `packages/guards/src/features/registry.ts`: `FEATURES` (`Record<FeatureKey, { kind, requires }>`), con `kind` `core` | `module` | `add-on` (`'addon'` en el código). `FEATURE_KEYS`, `isFeatureKey(value)` e `isToggleable(key)` (`false` para las `core`).
+- Claves: `core` = `auth`, `users`, `roles`, `settings`, `clients`, `catalog`, `dashboard`, `support`; `module` = `quotes`, `events`, `notifications`; `addon` = `priceTiers`, `configurableOptions`. **`events` requiere `quotes`** (un evento nace de una cotización aceptada: `events.quote_id` es `NOT NULL`).
+- Las `core` están siempre activas, no tienen fila en la base y no se pueden modificar.
+- `resolveFeatures(rows, now)` (`resolve.ts`, pura): una feature está activa si `enabled`, no venció (`expires_at` `NULL` o posterior a `now`) y todas las que requiere están activas. Devuelve el conjunto de `FeatureKey` activas, núcleo incluido.
+- `resourceModules.ts`: `RESOURCE_MODULE` asocia recursos de permisos a un módulo (`quote`, `pipeline` y los de configuración de cotizaciones → `quotes`; `event`, `payment`, `staff`, `event_type`, `reschedule_reason` → `events`) y `moduleOfResource(resource)` lo consulta. Es lo que hace automático el guard de módulos (§13.4).
+- Los schemas Zod de la respuesta de `features.mine` están en `packages/schemas/src/features.ts` (`myFeaturesSchema`).
+
+### 13.2 Modelo de datos y RLS
+
+- `db/schema/features.ts`: **`tenant_features`** (PK `tenant_id` + `feature_key`; `enabled`, `activated_at`, `expires_at` con `NULL` = permanente, `updated_at`; `price_cents`, `billing_period`, `currency` informativos) y **`tenant_feature_events`** (historial: acción `enabled | disabled | updated`, `before`/`after` en JSON, `actor`, `created_at`).
+- **`tenant_features` es de solo lectura para `app`:** `tenantReadPolicy(table)` (`db/rls/policy.ts`) declara una única política `FOR SELECT` (`tenant_features_tenant_read`). Sin política de escritura, con RLS forzado, un `INSERT` del rol `app` falla y un `UPDATE`/`DELETE` afecta 0 filas, aunque `db:roles` le conceda los permisos de tabla. Solo escribe el rol `platform` (`BYPASSRLS`).
+- **`tenant_feature_events`:** RLS habilitado y forzado, **sin política**: `app` no ve ni escribe nada.
+- Ambas tablas están en `PLATFORM_MANAGED_TABLES` (`db/rls/policy.ts`) y **fuera de `TENANT_TABLES`**, que asume la política `FOR ALL` de §12.2. Tienen sus propias comprobaciones en `mt:verify` y en `db/rls/test/features.rls.int.test.ts`.
+- **`products.price`:** entero nullable en centavos, **por unidad**. Un producto es *cotizable* si tiene `price` o si `priceTiers` está activo y tiene al menos un tier.
+- Migración `drizzle/0006_tenant_features.sql`: ver el runbook (sección 8).
+- Una tabla nueva de este tipo (que escribe solo `platform`) se añade a `PLATFORM_MANAGED_TABLES`, **no** a `TENANT_TABLES`, y lleva su comprobación en `mt:verify`.
+
+### 13.3 Contexto y caché
+
+- `ctx.features` (`ReadonlySet<FeatureKey>`, núcleo incluido) se resuelve en la cadena tRPC (`core/trpc/trpc.ts`, tipo en `core/trpc/tenantCtx.ts`) junto a `ctx.db`/`ctx.runInTenant`. Se lee con el rol `app` (`lib/features/repository.ts`, `loadTenantFeatures`), dentro de la transacción de la petición (como punto de guardado) o en una transacción corta en las rutas `shortTx`.
+- **Caché** (`lib/features/cache.ts`, `getTenantFeatures`): en memoria, **por organización**, TTL `FEATURE_CACHE_TTL_MS` = 30 s. Guarda las **filas**, no el conjunto resuelto, para que un vencimiento dentro del TTL se aplique a tiempo.
+- **Falla cerrado:** si la lectura falla, la petición sigue con **solo el núcleo** activo, el error se registra y **no se cachea** (la siguiente petición reintenta).
+- `clearFeatureCache(tenantId?)` vacía una organización o toda la caché (lo usan las pruebas).
+- **Consecuencia operativa:** los scripts (§13.6) son otro proceso y no invalidan la caché de la API. Un cambio hecho con `feature:set`/`feature:unset` se aplica **en hasta 30 s**. Una fase posterior añadirá un endpoint de plataforma que invalide al instante.
+
+### 13.4 Bloqueo: módulos automáticos, add-ons explícitos
+
+- **Módulos, automático (solo mutaciones).** `guardedProcedure`, `guardedShortTxProcedure` y `guardedProcedureAnyOf` (`core/trpc/trpc.ts`) validan el permiso del rol y además que el módulo del recurso (`moduleOfResource`) esté activo. En `guardedProcedureAnyOf` el error nombra el módulo solo si **todos** los checks que el rol cumple caen sobre módulos inactivos. Un procedure nuevo con `guardedProcedure({ [RESOURCES.QUOTE]: [...] })` queda gateado sin código extra.
+- **Add-ons y otros casos, explícito.** `requireFeature(key)` (`core/trpc/requireFeature.ts`) es un middleware que se encadena con `.use(...)`. Hoy gatea `priceTiers` y `configurableOptions` en `modules/products/products.router.ts` y `modules/events/events.router.ts`, y `notifications` en `modules/notifications/notifications.router.ts` (procedures sin recurso de permiso propio).
+- **Regla "ocultar y conservar": solo mutaciones.** Las mutaciones sobre un módulo apagado se rechazan; las consultas pasan, así que los datos ya guardados se conservan y siguen legibles, y vuelven a operar al reactivar. La web impide el acceso a la pantalla (docs/frontend/architecture.md §9.4).
+- **Excepciones conscientes** a la regla (decididas, no omisiones):
+  1. Los servicios insertan notificaciones como efecto secundario aunque `notifications` esté apagado.
+  2. El job de recordatorios (`jobs/eventReminders.job.ts`) omite a las organizaciones con `events` o `notifications` inactivos (además de exigir `configurableOptions`).
+- **Error:** `FEATURE_NOT_ENABLED` (`ErrorCodes.feature.NOT_ENABLED`), `FORBIDDEN` con `AppError` de HTTP 403 y `{ feature }` en los datos (`featureNotEnabled(feature)`).
+- **Rutas de Express:** `guardTenantSession` (`core/express/middleware/guardTenantSession.ts`) aplica la misma regla a la subida de adjuntos: los métodos que no son lectura responden 403 con `{ errorCode: 'FEATURE_NOT_ENABLED' }` si el módulo está inactivo.
+- **Por qué `requireFeature` usa una segunda instancia de `initTRPC`:** el middleware se construye con su propio `initTRPC.context<{ features }>()` porque `trpc.ts` importa `requireFeature.ts` (para `featureNotEnabled` e `inactiveModuleOf`); importar de vuelta la instancia de `trpc.ts` crearía un ciclo de imports. El contexto que declara es solo `{ features }`, que es lo que la cadena tenant ya aporta.
+- **Reglas de dominio ligadas a features:**
+  - Productos: con `priceTiers` apagado, un `create`/`update` con tiers no vacíos responde `FEATURE_NOT_ENABLED`; una lista vacía no falla y deja lo guardado intacto (`products.service.ts`).
+  - Cotizaciones: sin tiers, el subtotal de una línea se valida contra `products.price × numPersons`; un producto sin precio ni tiers activos responde `PRODUCT_NOT_QUOTABLE` (`ErrorCodes.product.NOT_QUOTABLE`, `quotes.service.ts`). Solo se revalidan las líneas nuevas o modificadas (`changedLines`, `quotes.validation.ts`): las cotizaciones existentes conservan su precio congelado.
+  - Con `configurableOptions` apagado, los ajustes de opciones se ignoran en la lógica pero conservan su valor.
+  - Cotizaciones: sin `events` activo, `quotes.approve` confirma la cotización y no crea el evento derivado; activar `events` después no lo crea retroactivamente (`QuotesService.approve`, `QuotesRepository.approve` con `eventData` nulo).
+
+### 13.5 Endpoint `features.mine`
+
+`modules/features/` (`features.router.ts`, `features.service.ts`, `features.module.ts`): `features.mine`, `protectedProcedure` (cualquier miembro de la organización), devuelve las features activas y su vencimiento a partir de `ctx.features`. La web lo usa para decidir qué mostrar (`docs/frontend/architecture.md` §9.4); las features no viajan en la sesión.
+
+### 13.6 Administración: servicio y scripts
+
+`lib/features/admin.ts` (`setFeature`, `unsetFeature`, `listFeatures`) es el servicio compartido; corre sobre el rol `platform` y, en una sola transacción que bloquea la fila de la organización: valida la clave contra el catálogo (`FEATURE_UNKNOWN_KEY`), rechaza las `core` (`FEATURE_NOT_TOGGLEABLE`), valida dependencias, escribe `tenant_features` y registra el cambio en `tenant_feature_events`.
+
+- Activar `events` sin `quotes` activo falla (`FEATURE_MISSING_DEPENDENCY`); desactivar `quotes` con `events` activo también (`FEATURE_HAS_DEPENDENTS`, nombra a las dependientes). **Activar `quotes` antes que `events`.**
+- Desactivar deja la fila con `enabled = false` para conservar precio y fechas. Los campos no indicados al re-activar conservan su valor.
+
+```bash
+pnpm --filter api feature:list  --tenant <slug>
+pnpm --filter api feature:set   --tenant <slug> --key <key> [--expires YYYY-MM-DD] [--price <cents>] [--period monthly|yearly] [--currency USD]
+pnpm --filter api feature:unset --tenant <slug> --key <key>
+```
+
+- `--expires` es el **último día activo**: se guarda el inicio del día siguiente en UTC.
+- Para borrar un valor guardado: `--expires never` deja la feature permanente (`expires_at` en `NULL`) y `--price none`, `--period none`, `--currency none` ponen esa columna en `NULL`; omitir la opción conserva el valor. `never`/`none` no son válidos en otras opciones.
+- `--price` es un entero en centavos; `--period` es `monthly` o `yearly` (`BILLING_PERIODS`); `--currency` es un código ISO de 3 letras.
+- Los scripts (`db/scripts/feature.ts`) usan `DATABASE_PLATFORM_URL`; el actor del historial es el usuario del sistema operativo.
+- El seed de demo (`seedDemoFeatures`, `db/seeds/demo.ts`) activa todas las features activables. `tenant:create` **no** activa ninguna: una organización nueva nace solo con el núcleo (runbook, sección 8).
+
+### 13.7 Verificación y pruebas
+
+- `mt:verify` comprueba que `tenant_features` tiene RLS habilitado y forzado con la única política `tenant_features_tenant_read`, que `tenant_feature_events` tiene RLS y ninguna política, que ambas tablas existen (si falta una, la reporta como problema), que ninguna fila tiene una clave `core` o desconocida y que ninguna organización tiene `events` activo sin `quotes`.
+- Pruebas: catálogo (`packages/guards/src/features/test`), caché (`lib/features/test/cache.test.ts`), servicio (`lib/features/test/admin.int.test.ts`), RLS (`db/rls/test/features.rls.int.test.ts`), guards (`core/trpc/test/featureGuards.int.test.ts`, `core/express/middleware/test/guardTenantSession.features.int.test.ts`) y `modules/features/test`.
+
+### 13.8 Receta — Añadir una feature nueva
+
+1. **Registro:** entrada en `DEFINITIONS` de `packages/guards/src/features/registry.ts` (`kind`, `requires`); un `core` no puede requerir una no-core (lo valida un test del catálogo).
+2. **Bloqueo en la API:** si es un módulo con recursos de permisos propios, mapear cada recurso en `RESOURCE_MODULE` (`resourceModules.ts`) y el guard se aplica solo. Si es un add-on o el endpoint no tiene recurso asociado, `.use(requireFeature('<key>'))` en cada mutación afectada. No bloquear consultas.
+3. **Web:** `feature: '<key>'` en el ítem de `lib/navigation/constants/items.ts` y, si hace falta, en `ROUTE_PATTERNS`; `useFeature`/`<Feature>` en los controles de add-ons (docs/frontend/architecture.md §9.4).
+4. **i18n es/en:** el nombre en `features.<key>` de `locales/{es,en}/common.json`.
+5. **Tests:** catálogo (dependencias), guard o `requireFeature` (mutación bloqueada, consulta no), y web si hay gating de UI. Si la feature añade datos nuevos por organización, aplicar §11 como siempre.
+6. **Organizaciones existentes:** una feature nueva no tiene fila en ninguna, así que nace apagada. Para darla a organizaciones que ya la usaban, activarla con `feature:set` o con una migración de datos.

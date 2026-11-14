@@ -1,3 +1,4 @@
+import type { FeatureKey } from '@repo/guards';
 import type { Executor, TenantRunner } from '../../db';
 import type { ResolvedAccess } from '../../lib/rbac/access';
 import type { Context } from './context';
@@ -14,6 +15,8 @@ export type TenantCtx = {
   user: SessionUser;
   session: Session['session'];
   access: ResolvedAccess;
+  // Active features of the tenant (core included), cached for a few seconds per tenant.
+  features: ReadonlySet<FeatureKey>;
   // The request transaction, with the tenant set for RLS.
   db: Executor;
   // Opens a short transaction of its own, independent of (and not rolled back with) `db`. Inside a

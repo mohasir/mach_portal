@@ -72,5 +72,12 @@
     },
     "apply": "Apply",
     "customRange": "Custom range"
+  },
+  "features": {
+    "quotes": "Quotes",
+    "events": "Events",
+    "notifications": "Notifications",
+    "priceTiers": "Price tiers",
+    "configurableOptions": "Configurable options"
   }
 }

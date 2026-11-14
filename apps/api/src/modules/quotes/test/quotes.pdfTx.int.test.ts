@@ -190,11 +190,15 @@ describe('quote PDF generation outside the request transaction (app role)', () =
     const ctx = {
       tenantId: a.tenant.id,
       db: testDb,
+      features: new Set(),
       runInTenant: (fn) => withTenantTx(a.tenant.id, fn, appDb),
       afterCommit: (task) => {
         scheduled.push(task);
       },
-    } as Pick<TenantCtx, 'tenantId' | 'db' | 'runInTenant' | 'afterCommit'> as TenantCtx;
+    } as Pick<
+      TenantCtx,
+      'tenantId' | 'db' | 'features' | 'runInTenant' | 'afterCommit'
+    > as TenantCtx;
     const service = quotesModule(ctx);
 
     const created = await service.create(

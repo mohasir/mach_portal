@@ -11,6 +11,7 @@ import {
   updateProductTiersSchema,
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
+import { requireFeature } from '../../core/trpc/requireFeature';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
 import { productsModule } from './products.module';
 
@@ -22,49 +23,65 @@ const enable = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.ENABLE] });
 const deleteOption = guardedProcedure({ [RESOURCES.PRODUCT_OPTION]: [ACTIONS.DELETE] });
 const duplicate = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.DUPLICATE] });
 
+const requireOptions = requireFeature('configurableOptions');
+
 const groupsRouter = router({
   create: create
+    .use(requireOptions)
     .input(createOptionGroupSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).createOptionGroup(input)),
   update: update
+    .use(requireOptions)
     .input(z.object({ id: z.uuid(), data: updateOptionGroupSchema }))
     .mutation(({ ctx, input }) => productsModule(ctx).updateOptionGroup(input.id, input.data)),
   delete: deleteOption
+    .use(requireOptions)
     .input(catalogIdSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).deleteOptionGroup(input.id)),
   disable: disable
+    .use(requireOptions)
     .input(catalogIdSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).toggleOptionGroupActive(input.id, false)),
   enable: enable
+    .use(requireOptions)
     .input(catalogIdSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).toggleOptionGroupActive(input.id, true)),
   reorder: update
+    .use(requireOptions)
     .input(catalogReorderSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).reorderOptionGroups(input.ids)),
 });
 
 const optionsRouter = router({
   create: create
+    .use(requireOptions)
     .input(createOptionSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).createOption(input)),
   update: update
+    .use(requireOptions)
     .input(z.object({ id: z.uuid(), data: updateOptionSchema }))
     .mutation(({ ctx, input }) => productsModule(ctx).updateOption(input.id, input.data)),
   delete: deleteOption
+    .use(requireOptions)
     .input(catalogIdSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).deleteOption(input.id)),
   disable: disable
+    .use(requireOptions)
     .input(catalogIdSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).toggleOptionActive(input.id, false)),
   enable: enable
+    .use(requireOptions)
     .input(catalogIdSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).toggleOptionActive(input.id, true)),
   reorder: update
+    .use(requireOptions)
     .input(catalogReorderSchema)
     .mutation(({ ctx, input }) => productsModule(ctx).reorderOptions(input.ids)),
 });
 
-const priceTiersUpdate = guardedProcedure({ [RESOURCES.PRICE_TIERS]: [ACTIONS.UPDATE] });
+const priceTiersUpdate = guardedProcedure({ [RESOURCES.PRICE_TIERS]: [ACTIONS.UPDATE] }).use(
+  requireFeature('priceTiers'),
+);
 
 const pricesRouter = router({
   list: read.query(({ ctx }) => productsModule(ctx).pricesList()),

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { CURRENCY_OPTIONS } from '../../contants';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
+import { Feature } from '@/lib/auth/Feature';
 import { useCan } from '@/lib/auth/useCan';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
 import { useConfig } from '../../hooks/useConfig';
@@ -11,6 +12,7 @@ import { useUpdateQuoteDefaults } from '../../hooks/useUpdateQuoteDefaults';
 import {
   toQuoteDefaultsFormValues,
   toQuoteDefaultsUpdateInput,
+  withStoredValues,
   type QuoteDefaultsFormValues,
 } from '../../helpers';
 import { WrapperCard } from '@/components/shared/WrapperCard';
@@ -30,7 +32,7 @@ export function QuoteDefaultsCard() {
   const canEdit = can({ [RESOURCES.QUOTE_DEFAULTS]: [ACTIONS.UPDATE] });
   const minSeqStart = data.lastUsedSeq + 1;
   const onFinish = (values: QuoteDefaultsFormValues) => {
-    void updateQuoteDefaults(toQuoteDefaultsUpdateInput(values));
+    void updateQuoteDefaults(toQuoteDefaultsUpdateInput(withStoredValues(initialValues!, values)));
   };
 
   return (
@@ -114,21 +116,23 @@ export function QuoteDefaultsCard() {
           </Form.Item>
         </FieldRow>
 
-        <FieldRow
-          title={t('quoteDefaults.optionsSelectionDeadlineDays')}
-          caption={t('quoteDefaults.optionsSelectionDeadlineDaysCaption')}
-          required
-        >
-          <Form.Item
-            name="optionsSelectionDeadlineDays"
-            className="mb-0"
-            rules={[
-              { required: true, message: t('validation.optionsSelectionDeadlineDaysInvalid') },
-            ]}
+        <Feature name="configurableOptions">
+          <FieldRow
+            title={t('quoteDefaults.optionsSelectionDeadlineDays')}
+            caption={t('quoteDefaults.optionsSelectionDeadlineDaysCaption')}
+            required
           >
-            <InputNumber min={0} className="w-full" suffix={t('quoteDefaults.days')} />
-          </Form.Item>
-        </FieldRow>
+            <Form.Item
+              name="optionsSelectionDeadlineDays"
+              className="mb-0"
+              rules={[
+                { required: true, message: t('validation.optionsSelectionDeadlineDaysInvalid') },
+              ]}
+            >
+              <InputNumber min={0} className="w-full" suffix={t('quoteDefaults.days')} />
+            </Form.Item>
+          </FieldRow>
+        </Feature>
         {canEdit && (
           <Button
             type="primary"

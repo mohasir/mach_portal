@@ -6,6 +6,7 @@ import type { Product } from '@/features/catalog';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useCan } from '@/lib/auth/useCan';
+import { useFeature } from '@/lib/auth/useFeature';
 import { useConfig } from '@/features/settings';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { LineBuilder } from './LineBuilder';
@@ -27,7 +28,8 @@ export function LinesBuilderSection({ catalog, readOnly }: LinesBuilderSectionPr
   const { data: config } = useConfig();
   const can = useCan();
   const canEditPricing = can({ [RESOURCES.QUOTE]: [ACTIONS.MANAGE_LINE_PRICING] });
-  const allowToggle = !!config?.appSettings.allowSelectOptionsAtQuote;
+  const configurableOptions = useFeature('configurableOptions');
+  const allowToggle = configurableOptions && !!config?.appSettings.allowSelectOptionsAtQuote;
   const title = `${t('builder.lines.title')}${state.lines.length > 0 ? ` (${state.lines.length})` : ''}`;
 
   return (

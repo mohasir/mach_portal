@@ -65,6 +65,8 @@
     "FORBIDDEN": "You don't have permission for this action",
     "NOT_FOUND": "Resource not found",
     "BAD_REQUEST": "Invalid data",
-    "INTERNAL_SERVER_ERROR": "Server error"
+    "INTERNAL_SERVER_ERROR": "Server error",
+    "FEATURE_NOT_ENABLED": "This module is not enabled for your organization",
+    "PRODUCT_NOT_QUOTABLE": "This product cannot be quoted because it has no fixed price and no active price tiers; set a price for it in the catalog"
   }
 }

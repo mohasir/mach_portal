@@ -42,7 +42,8 @@ vi.mock('../../../db/seeds/defaults', async (importOriginal) => {
   return { ...actual, seedTenantDefaults: vi.fn(actual.seedTenantDefaults) };
 });
 
-const ctxFor = (tenantId: string) => ({ tenantId, db: testDb }) as unknown as TenantCtx;
+const ctxFor = (tenantId: string) =>
+  ({ tenantId, db: testDb, features: new Set(['priceTiers']) }) as unknown as TenantCtx;
 
 const tenantTables = (Object.values(schema).filter((v) => is(v, PgTable)) as unknown as PgTable[])
   .map((t) => getTableConfig(t).name)

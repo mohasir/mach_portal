@@ -14,6 +14,8 @@ export const products = pgTable(
     isPremium: boolean('is_premium').default(false).notNull(),
     isActive: boolean('is_active').default(true).notNull(),
     sortOrder: integer('sort_order').default(0).notNull(),
+    // Per-unit price in cents; NULL leaves the product without a base price.
+    price: integer('price'),
   },
   (t) => [
     unique('products_tenant_name_unique').on(t.tenantId, t.name),

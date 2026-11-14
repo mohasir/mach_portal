@@ -6,6 +6,8 @@ import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { SectionMenuItem } from '@/components/shared/SectionMenu';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useCan } from '@/lib/auth/useCan';
+import { useFeature } from '@/lib/auth/useFeature';
+import { visibleSettingsSections } from '../helpers';
 import { useLayoutStore } from '@/lib/stores/layout.store';
 import { SettingsPageDesktop } from './SettingsPageDesktop';
 import { SettingsPageMobile } from './SettingsPageMobile';
@@ -28,6 +30,7 @@ export function SettingsPage() {
   const { t } = useTranslation('settings');
   const router = useRouter();
   const can = useCan();
+  const quotesActive = useFeature('quotes');
   const isDesktop = useIsDesktop();
   const [section, setSection] = useState<SettingsSection>('profile');
   const [mobileSection, setMobileSection] = useState<MobileSettingsSection | null>(null);
@@ -46,12 +49,18 @@ export function SettingsPage() {
     return () => setFillViewport(false);
   }, [section, mobileSection, setFillViewport]);
 
-  const canViewGeneral =
-    can({ [RESOURCES.TAX_RATES]: [ACTIONS.VIEW] }) ||
-    can({ [RESOURCES.QUOTE_DEFAULTS]: [ACTIONS.VIEW] }) ||
-    can({ [RESOURCES.QUOTE_STAGES]: [ACTIONS.VIEW] });
-  const canViewPreferences = can({ [RESOURCES.CATALOG_PREFERENCES]: [ACTIONS.VIEW] });
-  const canViewQuotePdfTemplate = can({ [RESOURCES.QUOTE_PDF_TEMPLATE]: [ACTIONS.VIEW] });
+  const {
+    general: canViewGeneral,
+    preferences: canViewPreferences,
+    quotePdfTemplate: canViewQuotePdfTemplate,
+  } = visibleSettingsSections({
+    quotesActive,
+    canTaxRates: can({ [RESOURCES.TAX_RATES]: [ACTIONS.VIEW] }),
+    canQuoteDefaults: can({ [RESOURCES.QUOTE_DEFAULTS]: [ACTIONS.VIEW] }),
+    canQuoteStages: can({ [RESOURCES.QUOTE_STAGES]: [ACTIONS.VIEW] }),
+    canCatalogPreferences: can({ [RESOURCES.CATALOG_PREFERENCES]: [ACTIONS.VIEW] }),
+    canQuotePdfTemplate: can({ [RESOURCES.QUOTE_PDF_TEMPLATE]: [ACTIONS.VIEW] }),
+  });
 
   const menuItems: SectionMenuItem[] = [
     { key: 'profile', label: t('profile.title'), group: t('groups.account') },

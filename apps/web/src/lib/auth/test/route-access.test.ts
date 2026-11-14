@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ACTIONS, RESOURCES } from '@repo/guards';
-import { resolveRouteAccess } from '../route-access';
+import { resolveRouteAccess, resolveRouteFeature } from '../route-access';
 
 describe('resolveRouteAccess', () => {
   it('requires EVENT:RESCHEDULE on the reschedule screen', () => {
@@ -25,5 +25,54 @@ describe('resolveRouteAccess', () => {
     expect(resolveRouteAccess('/admin/roles')).toEqual({
       [RESOURCES.ROLE]: [ACTIONS.READ],
     });
+  });
+});
+
+describe('resolveRouteFeature', () => {
+  it('maps quote routes to the quotes feature', () => {
+    expect(resolveRouteFeature('/admin/quotes')).toBe('quotes');
+    expect(resolveRouteFeature('/admin/quotes/new')).toBe('quotes');
+    expect(resolveRouteFeature('/admin/pipeline')).toBe('quotes');
+  });
+
+  it('maps event-related routes to the events feature', () => {
+    for (const path of [
+      '/admin/calendar',
+      '/admin/events',
+      '/admin/events/abc-123',
+      '/admin/payments',
+      '/admin/staff',
+      '/admin/event-types',
+      '/admin/reschedule-reasons',
+    ]) {
+      expect(resolveRouteFeature(path)).toBe('events');
+    }
+  });
+
+  it('inherits the events feature on the reschedule route pattern', () => {
+    expect(resolveRouteFeature('/admin/events/123/reschedule')).toBe('events');
+  });
+
+  it('maps the notifications center to the notifications feature', () => {
+    expect(resolveRouteFeature('/admin/notifications')).toBe('notifications');
+    expect(resolveRouteFeature('/admin/notifications/')).toBe('notifications');
+  });
+
+  it('has no feature on core routes or unknown paths', () => {
+    for (const path of [
+      '/admin',
+      '/admin/clients',
+      '/admin/users',
+      '/admin/settings',
+      '/nowhere',
+    ]) {
+      expect(resolveRouteFeature(path)).toBeUndefined();
+    }
+  });
+});
+
+describe('resolveRouteAccess for feature-only patterns', () => {
+  it('keeps the dashboard guard inherited from the /admin prefix for the notifications center', () => {
+    expect(resolveRouteAccess('/admin/notifications')).toEqual(resolveRouteAccess('/admin'));
   });
 });

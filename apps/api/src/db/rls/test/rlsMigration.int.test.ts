@@ -10,12 +10,14 @@ import {
 import { runMigrate } from '../../scripts/migrate';
 import { ensureRoles } from '../roles';
 import { TENANT_TABLES } from '../../scripts/verifyMultitenant';
-import { tenantPolicyName } from '../policy';
+import { PLATFORM_MANAGED_TABLES, tenantPolicyName, tenantReadPolicyName } from '../policy';
 
 const serverUrl = process.env['TEST_DATABASE_URL'];
 if (!serverUrl) throw new Error('TEST_DATABASE_URL is required for integration tests');
 
-const RLS_TABLES = [...TENANT_TABLES, 'platform_access_log'].sort();
+const ISOLATED_TABLES = [...TENANT_TABLES, 'platform_access_log'].sort();
+const RLS_TABLES = [...ISOLATED_TABLES, ...PLATFORM_MANAGED_TABLES].sort();
+const SAME_TENANT = "(tenant_id = current_setting('app.tenant_id'::text, true))";
 
 const withDatabase = (name: string, user?: { name: string; password: string }) => {
   const url = new URL(serverUrl);
@@ -66,7 +68,7 @@ describe('RLS migration', () => {
   });
 
   it('gives every tenant table its isolation policy and no other', async () => {
-    const policies = await sql<
+    const all = await sql<
       {
         table: string;
         policy: string;
@@ -80,8 +82,8 @@ describe('RLS migration', () => {
       SELECT tablename AS table, policyname AS policy, permissive, roles, cmd,
              qual, with_check AS check
       FROM pg_policies WHERE schemaname = 'public' ORDER BY tablename`;
-    expect(policies.map((p) => p.table)).toEqual(RLS_TABLES);
-    const expr = "(tenant_id = current_setting('app.tenant_id'::text, true))";
+    const policies = all.filter((p) => ISOLATED_TABLES.includes(p.table));
+    expect(policies.map((p) => p.table)).toEqual(ISOLATED_TABLES);
     for (const p of policies) {
       expect(p, p.table).toEqual({
         table: p.table,
@@ -89,10 +91,29 @@ describe('RLS migration', () => {
         permissive: 'PERMISSIVE',
         roles: ['public'],
         cmd: 'ALL',
-        qual: expr,
-        check: expr,
+        qual: SAME_TENANT,
+        check: SAME_TENANT,
       });
     }
+  });
+
+  it('gives tenant_features a single read policy and tenant_feature_events none', async () => {
+    const policies = await sql`
+      SELECT tablename AS table, policyname AS policy, permissive, roles, cmd,
+             qual, with_check AS check
+      FROM pg_policies
+      WHERE schemaname = 'public' AND tablename IN ${sql([...PLATFORM_MANAGED_TABLES])}`;
+    expect(policies).toEqual([
+      {
+        table: 'tenant_features',
+        policy: tenantReadPolicyName('tenant_features'),
+        permissive: 'PERMISSIVE',
+        roles: ['public'],
+        cmd: 'SELECT',
+        qual: SAME_TENANT,
+        check: null,
+      },
+    ]);
   });
 
   it('applies the policies to the app role on the migrated schema', async () => {
@@ -115,6 +136,46 @@ describe('RLS migration', () => {
       expect(scoped.map((r) => r['tenant_id'])).toEqual([tenants[0]]);
     } finally {
       await app.end();
+    }
+  });
+
+  it('lets the app role read its tenant_features but write neither feature table', async () => {
+    const tenant = 'org_rls_features';
+    await sql`INSERT INTO organization (id, name, slug, created_at) VALUES (${tenant}, ${tenant}, ${tenant}, now())`;
+    const platform = postgres(
+      withDatabase(name, { name: TEST_PLATFORM_ROLE, password: TEST_PLATFORM_PASSWORD }),
+      { max: 1, onnotice: () => {} },
+    );
+    const app = postgres(withDatabase(name, { name: TEST_APP_ROLE, password: TEST_APP_PASSWORD }), {
+      max: 1,
+      onnotice: () => {},
+    });
+    try {
+      await platform`INSERT INTO tenant_features (tenant_id, feature_key) VALUES (${tenant}, 'quotes')`;
+      const asTenant = <T>(fn: (tx: postgres.TransactionSql) => Promise<T>) =>
+        app.begin(async (tx) => {
+          await tx`SELECT set_config('app.tenant_id', ${tenant}, true)`;
+          return fn(tx);
+        }) as Promise<T>;
+
+      const seen = await asTenant((tx) => tx`SELECT feature_key FROM tenant_features`);
+      expect(seen.map((r) => r['feature_key'])).toEqual(['quotes']);
+      await expect(
+        asTenant(
+          (tx) =>
+            tx`INSERT INTO tenant_features (tenant_id, feature_key) VALUES (${tenant}, 'events')`,
+        ),
+      ).rejects.toThrow(/row-level security/);
+      await expect(
+        asTenant(
+          (tx) => tx`
+            INSERT INTO tenant_feature_events (tenant_id, feature_key, action, actor)
+            VALUES (${tenant}, 'quotes', 'enabled', 'app')`,
+        ),
+      ).rejects.toThrow(/row-level security/);
+    } finally {
+      await app.end();
+      await platform.end();
     }
   });
 });

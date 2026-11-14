@@ -1,3 +1,4 @@
+import { isQuotable } from './products.pricing';
 import { options, optionGroups, productPriceTiers, products } from '../../db/schema';
 
 export const publicProductColumns = {
@@ -7,6 +8,7 @@ export const publicProductColumns = {
   isPremium: products.isPremium,
   isActive: products.isActive,
   sortOrder: products.sortOrder,
+  price: products.price,
 } as const;
 
 export const publicTierColumns = {
@@ -47,13 +49,15 @@ export type PublicOptionGroup = Pick<
 >;
 export type PublicOption = Pick<typeof options.$inferSelect, keyof typeof publicOptionColumns>;
 
-export const productResource = (row: PublicProduct) => ({
+export const productResource = (row: PublicProduct, quotable: boolean) => ({
   id: row.id,
   name: row.name,
   description: row.description,
   isPremium: row.isPremium,
   isActive: row.isActive,
   sortOrder: row.sortOrder,
+  price: row.price,
+  quotable,
 });
 
 export const tierResource = (row: PublicTier) => ({
@@ -101,8 +105,9 @@ export type ProductWithTiers = ProductResource & { priceTiers: TierResource[] };
 export const productWithTiersResource = (
   product: PublicProduct,
   tierRows: PublicTier[],
+  priceTiersActive: boolean,
 ): ProductWithTiers => ({
-  ...productResource(product),
+  ...productResource(product, isQuotable(product, tierRows, priceTiersActive)),
   priceTiers: tierRows.map(tierResource),
 });
 
@@ -111,28 +116,34 @@ export const buildProductTree = (
   tierRows: PublicTier[],
   groupRows: PublicOptionGroup[],
   optionRows: PublicOption[],
+  priceTiersActive: boolean,
 ): ProductWithGroups[] =>
-  productRows.map((product) => ({
-    ...productResource(product),
-    priceTiers: tierRows.filter((tier) => tier.productId === product.id).map(tierResource),
-    optionGroups: groupRows
-      .filter((group) => group.productId === product.id)
-      .map((group) => ({
-        ...optionGroupResource(group),
-        options: optionRows
-          .filter((option) => option.optionGroupId === group.id)
-          .map(optionResource),
-      })),
-  }));
+  productRows.map((product) => {
+    const productTiers = tierRows.filter((tier) => tier.productId === product.id);
+    return {
+      ...productResource(product, isQuotable(product, productTiers, priceTiersActive)),
+      priceTiers: productTiers.map(tierResource),
+      optionGroups: groupRows
+        .filter((group) => group.productId === product.id)
+        .map((group) => ({
+          ...optionGroupResource(group),
+          options: optionRows
+            .filter((option) => option.optionGroupId === group.id)
+            .map(optionResource),
+        })),
+    };
+  });
 
 export const buildPricesList = (
   productRows: PublicProduct[],
   tierRows: PublicTier[],
+  priceTiersActive: boolean,
 ): ProductWithTiers[] =>
   productRows.map((product) =>
     productWithTiersResource(
       product,
       tierRows.filter((tier) => tier.productId === product.id),
+      priceTiersActive,
     ),
   );
 

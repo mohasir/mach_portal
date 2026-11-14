@@ -1,6 +1,6 @@
 import postgres from 'postgres';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { resetDb } from '../../../test/db';
+import { createTestTenant, resetDb } from '../../../test/db';
 import {
   TEST_PLATFORM_ROLE,
   testAppDatabaseUrl,
@@ -38,6 +38,7 @@ beforeAll(() => {
 
 afterAll(async () => {
   await restoreClientsRls();
+  await restoreFeatureRls();
   await admin.unsafe(`DROP ROLE IF EXISTS ${MEMBER_ROLE}`);
   await admin.unsafe(`DROP ROLE IF EXISTS ${CREATOR_ROLE}`);
   await admin.end();
@@ -83,6 +84,145 @@ describe('verifyMultitenant row level security checks', () => {
       'clients: row level security is not enabled',
       'clients: row level security is not forced',
     ]);
+  });
+});
+
+// Puts the feature tables back the way the migrations leave them, whatever a test did to them.
+async function restoreFeatureRls() {
+  await admin.unsafe(`DROP POLICY IF EXISTS "tenant_features_write" ON "tenant_features"`);
+  await admin.unsafe(
+    `DROP POLICY IF EXISTS "tenant_feature_events_read" ON "tenant_feature_events"`,
+  );
+  await admin.unsafe(`DROP POLICY IF EXISTS "tenant_features_tenant_read" ON "tenant_features"`);
+  await admin.unsafe(
+    `CREATE POLICY "tenant_features_tenant_read" ON "tenant_features" AS PERMISSIVE FOR SELECT
+     TO public USING (${SAME_TENANT})`,
+  );
+  for (const table of ['tenant_features', 'tenant_feature_events']) {
+    await admin.unsafe(`ALTER TABLE "${table}" ENABLE ROW LEVEL SECURITY`);
+    await admin.unsafe(`ALTER TABLE "${table}" FORCE ROW LEVEL SECURITY`);
+  }
+}
+
+describe('verifyMultitenant checks of the platform-managed feature tables', () => {
+  afterEach(restoreFeatureRls);
+
+  it('reports a write policy on tenant_features', async () => {
+    await admin.unsafe(
+      `CREATE POLICY "tenant_features_write" ON "tenant_features" FOR INSERT
+       WITH CHECK (${SAME_TENANT})`,
+    );
+    expect(await problemsOf()).toEqual([
+      'tenant_features: expected exactly the SELECT policy tenant_features_tenant_read, found tenant_features_tenant_read (SELECT), tenant_features_write (INSERT)',
+    ]);
+  });
+
+  it('reports a tenant_features read policy that does not compare tenant_id', async () => {
+    await admin.unsafe(`DROP POLICY "tenant_features_tenant_read" ON "tenant_features"`);
+    await admin.unsafe(
+      `CREATE POLICY "tenant_features_tenant_read" ON "tenant_features" FOR SELECT USING (true)`,
+    );
+    expect(await problemsOf()).toEqual([
+      'tenant_features: policy tenant_features_tenant_read does not restrict rows to app.tenant_id',
+    ]);
+  });
+
+  it('reports any policy on tenant_feature_events', async () => {
+    await admin.unsafe(
+      `CREATE POLICY "tenant_feature_events_read" ON "tenant_feature_events" FOR SELECT
+       USING (${SAME_TENANT})`,
+    );
+    expect(await problemsOf()).toEqual([
+      'tenant_feature_events: expected no policy, found tenant_feature_events_read (SELECT)',
+    ]);
+  });
+
+  it('reports a feature table whose RLS is not forced or not enabled', async () => {
+    await admin.unsafe(`ALTER TABLE "tenant_feature_events" NO FORCE ROW LEVEL SECURITY`);
+    await admin.unsafe(`ALTER TABLE "tenant_features" DISABLE ROW LEVEL SECURITY`);
+    expect(await problemsOf()).toEqual([
+      'tenant_feature_events: row level security is not forced',
+      'tenant_features: row level security is not enabled',
+    ]);
+  });
+});
+
+describe('verifyMultitenant with a feature table missing', () => {
+  // A rename keeps the table's RLS settings, so putting it back restores the migrated state; the
+  // renamed copy shows up as an unexpected tenant table, hence `toContain`.
+  it.each(['tenant_features', 'tenant_feature_events'])(
+    'reports a missing %s table instead of skipping it',
+    async (table) => {
+      await admin.unsafe(`ALTER TABLE "${table}" RENAME TO "${table}_hidden"`);
+      try {
+        expect(await problemsOf()).toContain(`${table}: missing table`);
+      } finally {
+        await admin.unsafe(`ALTER TABLE "${table}_hidden" RENAME TO "${table}"`);
+      }
+    },
+  );
+});
+
+describe('verifyMultitenant feature data checks', () => {
+  // The fixture tenants lack owners and settings, so only the feature problems are compared.
+  const featureProblems = async () =>
+    (await problemsOf()).filter((p) => p.startsWith('tenant_features:'));
+  const insertFeature = (
+    tenantId: string,
+    key: string,
+    { enabled = true, expiresAt = null }: { enabled?: boolean; expiresAt?: Date | null } = {},
+  ) => admin`
+    INSERT INTO tenant_features (tenant_id, feature_key, enabled, expires_at)
+    VALUES (${tenantId}, ${key}, ${enabled}, ${expiresAt})`;
+
+  it('reports nothing for valid feature rows', async () => {
+    const tenant = await createTestTenant('ok', undefined, { features: [] });
+    await insertFeature(tenant.id, 'quotes');
+    await insertFeature(tenant.id, 'events');
+    await insertFeature(tenant.id, 'priceTiers');
+    expect(await featureProblems()).toEqual([]);
+  });
+
+  it('reports a row with a core key', async () => {
+    const tenant = await createTestTenant('core', undefined, { features: [] });
+    await insertFeature(tenant.id, 'clients');
+    expect(await featureProblems()).toEqual([
+      'tenant_features: 1 row(s) with a core or unknown feature_key (core: clients)',
+    ]);
+  });
+
+  it('reports a row with an unknown key', async () => {
+    const tenant = await createTestTenant('unknown', undefined, { features: [] });
+    await insertFeature(tenant.id, 'warp');
+    expect(await featureProblems()).toEqual([
+      'tenant_features: 1 row(s) with a core or unknown feature_key (warp)',
+    ]);
+  });
+
+  it('reports an organization with events active and no quotes', async () => {
+    const tenant = await createTestTenant('orphan-events', undefined, { features: [] });
+    await insertFeature(tenant.id, 'events');
+    expect(await featureProblems()).toEqual([
+      'tenant_features: 1 organization(s) with events active without quotes (orphan-events)',
+    ]);
+  });
+
+  it('counts quotes that is disabled or expired as not active', async () => {
+    const disabled = await createTestTenant('quotes-off', undefined, { features: [] });
+    await insertFeature(disabled.id, 'quotes', { enabled: false });
+    await insertFeature(disabled.id, 'events');
+    const expired = await createTestTenant('quotes-expired', undefined, { features: [] });
+    await insertFeature(expired.id, 'quotes', { expiresAt: new Date('2000-01-01') });
+    await insertFeature(expired.id, 'events');
+    expect(await featureProblems()).toEqual([
+      'tenant_features: 2 organization(s) with events active without quotes (quotes-expired, quotes-off)',
+    ]);
+  });
+
+  it('ignores events that is itself disabled', async () => {
+    const tenant = await createTestTenant('events-off', undefined, { features: [] });
+    await insertFeature(tenant.id, 'events', { enabled: false });
+    expect(await featureProblems()).toEqual([]);
   });
 });
 

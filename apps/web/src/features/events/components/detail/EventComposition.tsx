@@ -4,6 +4,7 @@ import { Empty } from 'antd';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { Product } from '@/features/catalog';
 import { useCan } from '@/lib/auth/useCan';
+import { useFeature } from '@/lib/auth/useFeature';
 import { QuickLineCard } from '@/features/quotes';
 import type { EventDetail } from '../../types';
 import { StationSelectionDetailSheet } from './StationSelectionDetailSheet';
@@ -29,7 +30,9 @@ export function EventComposition({ event, lines, catalog }: EventCompositionProp
   const [viewingOpen, setViewingOpen] = useState(false);
 
   const canManageSelections = can({ [RESOURCES.EVENT]: [ACTIONS.MANAGE_SELECTIONS] });
-  const canEditSelections = canManageSelections && event.status === 'upcoming';
+  const configurableOptions = useFeature('configurableOptions');
+  const canEditSelections =
+    configurableOptions && canManageSelections && event.status === 'upcoming';
 
   const openViewing = (sheetLine: SheetLine) => {
     setViewing(sheetLine);

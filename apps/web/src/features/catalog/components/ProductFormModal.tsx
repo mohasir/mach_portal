@@ -2,10 +2,11 @@
 import { useEffect } from 'react';
 import { Button, Form } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { UpdateProductInput } from '@repo/schemas';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { useProductMutations } from '../hooks/useProductMutations';
-import { ProductForm, type ProductFormValues } from './ProductForm';
+import type { ProductFormValues, ProductPayload } from '../helpers';
+import { NotQuotableAlert } from './NotQuotableAlert';
+import { ProductForm } from './ProductForm';
 import type { Product } from '../types';
 
 interface ProductFormModalProps {
@@ -23,7 +24,7 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
     if (open) form.resetFields();
   }, [open, product, form]);
 
-  const onSubmit = async (values: UpdateProductInput) => {
+  const onSubmit = async (values: ProductPayload) => {
     try {
       if (product) await updateProduct(product.id, values);
       else await createProduct(values);
@@ -49,6 +50,7 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
     >
       {open && (
         <div className="p-4">
+          {product && !product.quotable && <NotQuotableAlert className="mb-4" />}
           <ProductForm
             key={product?.id ?? 'create'}
             form={form}
@@ -58,6 +60,7 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
                     name: product.name,
                     description: product.description ?? undefined,
                     isPremium: product.isPremium,
+                    price: product.price,
                   }
                 : undefined
             }

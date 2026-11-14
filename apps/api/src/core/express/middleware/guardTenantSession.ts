@@ -4,10 +4,13 @@ import { can, type PermissionCheck } from '@repo/guards';
 import { db, withTenantTx, type Database, type TenantRunner } from '../../../db';
 import { auth } from '../../../lib/auth';
 import { ErrorCodes } from '../../../lib/errors';
+import { getTenantFeatures } from '../../../lib/features/cache';
+import { loadTenantFeatures } from '../../../lib/features/repository';
 import { OWNER_ACCESS, resolveAccess } from '../../../lib/rbac/access';
 import { evaluateTenantAccess } from '../../../lib/tenancy/access';
 import { resolveTenantById } from '../../../lib/tenancy/tenantResolver';
 import { recordPlatformAccess } from '../../trpc/platformAccess';
+import { inactiveModuleOf } from '../../trpc/requireFeature';
 
 const READ_METHODS = new Set(['GET', 'HEAD']);
 
@@ -89,10 +92,21 @@ export function guardTenantSession(
         return;
       }
 
+      const runInTenant: TenantRunner = (fn) => withTenantTx(tenant.id, fn, database);
+      // Same module rule as the tRPC guards: writes need the module active, reads pass.
+      if (!READ_METHODS.has(req.method)) {
+        const features = await getTenantFeatures(tenant.id, () =>
+          runInTenant((tx) => loadTenantFeatures(tenant.id, tx)),
+        );
+        if (inactiveModuleOf(features, permissions)) {
+          res.status(403).json({ errorCode: ErrorCodes.feature.NOT_ENABLED });
+          return;
+        }
+      }
+
       res.locals['tenantId'] = tenant.id;
       res.locals['userId'] = user.id;
       res.locals['access'] = access;
-      const runInTenant: TenantRunner = (fn) => withTenantTx(tenant.id, fn, database);
       res.locals['runInTenant'] = runInTenant;
       next();
     } catch (err) {

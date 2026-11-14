@@ -22,6 +22,15 @@ const TENANT_SETTINGS = { 'mt.tenant_slug': SLUG, 'mt.tenant_name': NAME };
 
 const LEGACY_TABLE_COUNT = 30;
 
+// Migration 0006 activates these for every organization that exists when it runs.
+const BACKFILLED_FEATURES = [
+  'quotes',
+  'events',
+  'notifications',
+  'priceTiers',
+  'configurableOptions',
+] as const;
+
 // Every migration shipped in the folder; a full run must record all of them.
 const MIGRATION_COUNT = (
   JSON.parse(readFileSync(join(MIGRATIONS_FOLDER, 'meta/_journal.json'), 'utf8')) as {
@@ -256,7 +265,26 @@ describe('0001 on a legacy database with data', () => {
       role: ROLE_TEMPLATES.length,
       role_permission: ROLE_TEMPLATES.reduce((n, r) => n + r.permissions.length, 0),
       role_audit_log: 0,
+      tenant_features: BACKFILLED_FEATURES.length,
+      tenant_feature_events: 0,
     });
+  });
+
+  it('activates the paid features permanently and without price for the organization', async () => {
+    const rows = await db.sql`
+      SELECT tenant_id, feature_key, enabled, expires_at, price_cents, billing_period, currency
+      FROM tenant_features ORDER BY feature_key`;
+    expect(rows).toEqual(
+      [...BACKFILLED_FEATURES].sort().map((feature_key) => ({
+        tenant_id: orgId,
+        feature_key,
+        enabled: true,
+        expires_at: null,
+        price_cents: null,
+        billing_period: null,
+        currency: null,
+      })),
+    );
   });
 
   it('keeps the content of every legacy column', async () => {
@@ -426,8 +454,9 @@ describe('0001 backfill edge cases', () => {
       { id: 'u_multi', is_platform_admin: true, role: 'admin,superadmin' },
     ]);
     const post = await verifyMultitenant(db.url);
-    // Migrated only up to 0003, so the RLS checks (0005) legitimately fail here.
-    const rlsProblem = /row level security|policy/;
+    // Migrated only up to 0003, so the RLS checks (0005) and the feature tables (0006)
+    // legitimately fail here.
+    const rlsProblem = /row level security|policy|^tenant_features?\w*: missing table$/;
     expect(post.problems.filter((p) => !rlsProblem.test(p))).toEqual([
       'member: 2 row(s) without role_id',
       `organization: 1 without an owner role that has a member (${SLUG})`,

@@ -1,7 +1,11 @@
 import { z } from 'zod';
 import { notificationsListQuerySchema } from '@repo/schemas';
+import { requireFeature } from '../../core/trpc/requireFeature';
 import { router, protectedProcedure } from '../../core/trpc/trpc';
 import { notificationsModule } from './notifications.module';
+
+// Notifications have no permission resource, so the module is checked here.
+const mutation = protectedProcedure.use(requireFeature('notifications'));
 
 export const notificationsRouter = router({
   list: protectedProcedure
@@ -10,13 +14,13 @@ export const notificationsRouter = router({
   unreadCount: protectedProcedure.query(({ ctx }) =>
     notificationsModule(ctx).unreadCount(ctx.user.id, ctx.access),
   ),
-  markRead: protectedProcedure
+  markRead: mutation
     .input(z.object({ id: z.uuid() }))
     .mutation(({ input, ctx }) => notificationsModule(ctx).markRead(input.id, ctx.user.id)),
-  markAllRead: protectedProcedure.mutation(({ ctx }) =>
+  markAllRead: mutation.mutation(({ ctx }) =>
     notificationsModule(ctx).markAllRead(ctx.user.id, ctx.access),
   ),
-  dismiss: protectedProcedure
+  dismiss: mutation
     .input(z.object({ id: z.uuid() }))
     .mutation(({ input, ctx }) => notificationsModule(ctx).dismiss(input.id, ctx.user.id)),
 });

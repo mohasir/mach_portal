@@ -1,10 +1,12 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import { ZodError } from 'zod';
-import { can, type PermissionCheck } from '@repo/guards';
+import { can, type FeatureKey, type PermissionCheck } from '@repo/guards';
 import type { Context } from './context';
 import { db, type Database, type TenantRunner } from '../../db';
 import { withTenantTx } from '../../db/rls/tenantTx';
 import { AppError, ErrorCodes } from '../../lib/errors';
+import { getTenantFeatures } from '../../lib/features/cache';
+import { loadTenantFeatures } from '../../lib/features/repository';
 import {
   OWNER_ACCESS,
   permissionsVersion,
@@ -14,6 +16,7 @@ import {
 import { evaluateTenantAccess } from '../../lib/tenancy/access';
 import { HEADERS } from '../express/const/headers';
 import { recordPlatformAccess } from './platformAccess';
+import { featureNotEnabled, inactiveModuleOf } from './requireFeature';
 import type { AfterCommit } from './tenantCtx';
 
 export type ProcedureMeta = {
@@ -165,8 +168,23 @@ export const protectedProcedure = tenantProcedure.use(async ({ ctx, next, path, 
     async (tx) => {
       const access =
         platformAccess ?? admit(ctx, await resolveAccess({ userId: user.id, tenantId }, tx));
+      // A savepoint: a failed read must not abort the request transaction, since the cache then
+      // falls back to the core features and the procedure goes on.
+      const features = await getTenantFeatures(tenantId, () =>
+        tx.transaction((sp) => loadTenantFeatures(tenantId, sp)),
+      );
       const result = await next({
-        ctx: { ...ctx, tenantId, user, session, access, db: tx, runInTenant, afterCommit },
+        ctx: {
+          ...ctx,
+          tenantId,
+          user,
+          session,
+          access,
+          features,
+          db: tx,
+          runInTenant,
+          afterCommit,
+        },
       });
       // next() reports a failure instead of throwing; rethrowing the same error rolls the
       // transaction back and still reaches the client unchanged.
@@ -193,30 +211,55 @@ export const shortTxProcedure = tenantProcedure
     const access = entry.platformAccess
       ? await admitPlatformAccess(ctx, path, type, database)
       : admit(ctx, await runInTenant((tx) => resolveAccess({ userId: user.id, tenantId }, tx)));
+    const features = await getTenantFeatures(tenantId, () =>
+      runInTenant((tx) => loadTenantFeatures(tenantId, tx)),
+    );
 
     // Each runInTenant commits on its own, so there is nothing left to wait for.
     const afterCommit: AfterCommit = runAfterCommit;
-    return next({ ctx: { ...ctx, tenantId, user, session, access, runInTenant, afterCommit } });
+    return next({
+      ctx: { ...ctx, tenantId, user, session, access, features, runInTenant, afterCommit },
+    });
   });
 
+// Mutations on a resource whose module is inactive are blocked; queries pass, so the data of a
+// module that was switched off stays readable.
+function assertModulesActive(
+  features: ReadonlySet<FeatureKey>,
+  type: string,
+  permissions: PermissionCheck,
+) {
+  if (type !== 'mutation') return;
+  const inactive = inactiveModuleOf(features, permissions);
+  if (inactive) throw featureNotEnabled(inactive);
+}
+
 export function guardedProcedure(permissions: PermissionCheck) {
-  return protectedProcedure.use(({ ctx, next }) => {
+  return protectedProcedure.use(({ ctx, next, type }) => {
     if (!can(ctx.access, permissions)) throw new TRPCError({ code: 'FORBIDDEN' });
+    assertModulesActive(ctx.features, type, permissions);
     return next();
   });
 }
 
 export function guardedShortTxProcedure(permissions: PermissionCheck) {
-  return shortTxProcedure.use(({ ctx, next }) => {
+  return shortTxProcedure.use(({ ctx, next, type }) => {
     if (!can(ctx.access, permissions)) throw new TRPCError({ code: 'FORBIDDEN' });
+    assertModulesActive(ctx.features, type, permissions);
     return next();
   });
 }
 
-// Passes when any one of the checks is fully met.
+// Passes when any one of the checks is fully met, its modules included. When the role meets some
+// checks but all of them sit on inactive modules, the error names the module, not the role.
 export function guardedProcedureAnyOf(...checks: [PermissionCheck, ...PermissionCheck[]]) {
-  return protectedProcedure.use(({ ctx, next }) => {
-    if (!checks.some((check) => can(ctx.access, check))) throw new TRPCError({ code: 'FORBIDDEN' });
+  return protectedProcedure.use(({ ctx, next, type }) => {
+    const allowed = checks.filter((check) => can(ctx.access, check));
+    if (allowed.length === 0) throw new TRPCError({ code: 'FORBIDDEN' });
+    if (type === 'mutation') {
+      const inactive = allowed.map((check) => inactiveModuleOf(ctx.features, check));
+      if (inactive.every(Boolean)) throw featureNotEnabled(inactive[0]!);
+    }
     return next();
   });
 }
