@@ -16,6 +16,11 @@
   },
   "product": {
     "add": "New station",
+    "notQuotable": {
+      "tag": "Not quotable",
+      "hintFixedPrice": "This station cannot be quoted yet. Set a price per person to use it in quotes.",
+      "hintPriceOrTiers": "This station cannot be quoted yet. Set a price per person or add price tiers."
+    },
     "premium": "Premium",
     "optionGroupsCount": "{{count}} services",
     "priceTiersCount": "{{count}} packages",
@@ -26,7 +31,9 @@
       "namePlaceholder": "Station name",
       "description": "Description",
       "descriptionPlaceholder": "Short description (optional)",
-      "isPremium": "Premium"
+      "isPremium": "Premium",
+      "price": "Price per person",
+      "priceCaption": "Optional. Multiplied by the number of people on the quote."
     },
     "duplicateConfirm": {
       "title": "Duplicate this station?",

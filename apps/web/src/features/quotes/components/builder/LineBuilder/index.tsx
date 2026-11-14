@@ -3,6 +3,8 @@ import { Empty } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
 import { nextLineKey } from '../../../helpers';
+import { useLineConfig } from '../../../hooks/useLineConfig';
+import { buildNewLine } from '../../../lineHelpers';
 import { useQuoteBuilder } from '../../../hooks/useQuoteBuilder';
 import { LineCard } from './LineCard';
 import { ProductPicker } from './ProductPicker';
@@ -15,18 +17,13 @@ interface LineBuilderProps {
 
 export function LineBuilder({ catalog, readOnly, canEditPricing }: LineBuilderProps) {
   const { t } = useTranslation('quotes');
+  const { priceTiersEnabled, minPersons } = useLineConfig();
   const { state, addLine, removeLine, updateLine, setSelection } = useQuoteBuilder();
 
   const handleAdd = (product: Product) => {
-    const firstTier = product.priceTiers[0];
-    if (!firstTier) return;
-    addLine({
-      key: nextLineKey(),
-      productId: product.id,
-      numPersons: firstTier.numPersons,
-      subtotal: firstTier.price,
-      selections: {},
-    });
+    const newLine = buildNewLine(product, { priceTiersEnabled, minPersons });
+    if (!newLine) return;
+    addLine({ key: nextLineKey(), productId: product.id, ...newLine, selections: {} });
   };
 
   return (

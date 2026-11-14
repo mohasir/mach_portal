@@ -113,6 +113,7 @@
       "numPersons": "Guests",
       "numPersonsCount_one": "{{count}} guest",
       "numPersonsCount_other": "{{count}} guests",
+      "notQuotable": "Not quotable: its price is not set in the catalog",
       "price": "Price",
       "included": "Included",
       "selectAny": "Pick as many as you like",

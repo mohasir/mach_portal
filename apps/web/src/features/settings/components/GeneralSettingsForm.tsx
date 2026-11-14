@@ -1,4 +1,5 @@
 'use client';
+import { Feature } from '@/lib/auth/Feature';
 import { QuoteDefaultsCard } from './forms/QuoteDefaultsCard';
 import { TaxRatesCard } from './forms/TaxRatesCard';
 import { QuoteStagesCard } from './forms/QuoteStagesCard';
@@ -6,9 +7,13 @@ import { QuoteStagesCard } from './forms/QuoteStagesCard';
 export function GeneralSettingsForm() {
   return (
     <div className="flex flex-col gap-6">
-      <QuoteDefaultsCard />
+      <Feature name="quotes">
+        <QuoteDefaultsCard />
+      </Feature>
       <TaxRatesCard />
-      <QuoteStagesCard />
+      <Feature name="quotes">
+        <QuoteStagesCard />
+      </Feature>
     </div>
   );
 }

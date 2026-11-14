@@ -1,0 +1,67 @@
+import { describe, expect, it } from 'vitest';
+import { visibleSettingsSections, withStoredValues } from '../helpers';
+
+describe('withStoredValues', () => {
+  it('fills fields whose controls were not rendered with the stored value', () => {
+    const stored = { allowSelectOptionsAtQuote: true, promptRateChanges: false };
+    expect(withStoredValues(stored, { promptRateChanges: true } as typeof stored)).toEqual({
+      allowSelectOptionsAtQuote: true,
+      promptRateChanges: true,
+    });
+  });
+
+  it('lets submitted values win', () => {
+    expect(withStoredValues({ a: 1, b: 2 }, { a: 5 } as { a: number; b: number })).toEqual({
+      a: 5,
+      b: 2,
+    });
+  });
+});
+
+describe('visibleSettingsSections', () => {
+  const all = {
+    quotesActive: true,
+    canTaxRates: true,
+    canQuoteDefaults: true,
+    canQuoteStages: true,
+    canCatalogPreferences: true,
+    canQuotePdfTemplate: true,
+  };
+
+  it('shows every section when quotes is active and the user can see everything', () => {
+    expect(visibleSettingsSections(all)).toEqual({
+      general: true,
+      preferences: true,
+      quotePdfTemplate: true,
+    });
+  });
+
+  it('hides the quote PDF template without quotes but keeps the tax rates in general', () => {
+    expect(visibleSettingsSections({ ...all, quotesActive: false })).toEqual({
+      general: true,
+      preferences: true,
+      quotePdfTemplate: false,
+    });
+  });
+
+  it('hides general when only quote cards would remain and quotes is off', () => {
+    expect(
+      visibleSettingsSections({ ...all, quotesActive: false, canTaxRates: false }).general,
+    ).toBe(false);
+    expect(visibleSettingsSections({ ...all, canTaxRates: false }).general).toBe(true);
+  });
+
+  it('still depends on the permissions', () => {
+    expect(
+      visibleSettingsSections({
+        ...all,
+        canQuoteDefaults: false,
+        canQuoteStages: false,
+        canTaxRates: false,
+      }).general,
+    ).toBe(false);
+    expect(visibleSettingsSections({ ...all, canCatalogPreferences: false }).preferences).toBe(
+      false,
+    );
+  });
+});

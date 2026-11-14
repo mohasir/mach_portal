@@ -16,6 +16,11 @@
   },
   "product": {
     "add": "Nueva estación",
+    "notQuotable": {
+      "tag": "No cotizable",
+      "hintFixedPrice": "Esta estación no se puede cotizar todavía. Definí un precio por persona para poder usarla en cotizaciones.",
+      "hintPriceOrTiers": "Esta estación no se puede cotizar todavía. Definí un precio por persona o agregá paquetes de precio."
+    },
     "premium": "Premium",
     "optionGroupsCount": "{{count}} servicios",
     "priceTiersCount": "{{count}} paquetes",
@@ -26,7 +31,9 @@
       "namePlaceholder": "Nombre de la estación",
       "description": "Descripción",
       "descriptionPlaceholder": "Descripción breve (opcional)",
-      "isPremium": "Premium"
+      "isPremium": "Premium",
+      "price": "Precio por persona",
+      "priceCaption": "Opcional. Se multiplica por la cantidad de personas de la cotización."
     },
     "duplicateConfirm": {
       "title": "¿Duplicar esta estación?",

@@ -84,3 +84,29 @@ export function toQuoteStagesUpdateInput(values: QuoteStagesFormValues): UpdateQ
     description: s.description,
   }));
 }
+
+/** Form submits only rendered fields; this restores the stored value of hidden ones. */
+export const withStoredValues = <T extends object>(stored: T, submitted: T): T => ({
+  ...stored,
+  ...submitted,
+});
+
+export interface SettingsSectionGateInput {
+  quotesActive: boolean;
+  canTaxRates: boolean;
+  canQuoteDefaults: boolean;
+  canQuoteStages: boolean;
+  canCatalogPreferences: boolean;
+  canQuotePdfTemplate: boolean;
+}
+
+// The quote-related cards disappear without the `quotes` module, so a section is shown only while
+// at least one of its cards still is. The preferences section keeps the catalog card either way.
+export function visibleSettingsSections(input: SettingsSectionGateInput) {
+  return {
+    general:
+      input.canTaxRates || (input.quotesActive && (input.canQuoteDefaults || input.canQuoteStages)),
+    preferences: input.canCatalogPreferences,
+    quotePdfTemplate: input.quotesActive && input.canQuotePdfTemplate,
+  };
+}

@@ -8,6 +8,7 @@ import { paginationOf, type QuotesListQuery } from '@repo/schemas';
 import { QuoteRowCard, useQuotesColumns, useQuotesList, type Quote } from '@/features/quotes';
 import { DataTable, useDataTable } from '@/components/shared/DataTable';
 import { useCan } from '@/lib/auth/useCan';
+import { useFeature } from '@/lib/auth/useFeature';
 import type { ClientDetail } from '../../types';
 
 interface ClientQuotesTabProps {
@@ -20,6 +21,7 @@ export function ClientQuotesTab({ client }: ClientQuotesTabProps) {
   const { t: tClients } = useTranslation('clients');
   const router = useRouter();
   const can = useCan();
+  const quotesActive = useFeature('quotes');
   const table = useDataTable<QuotesListQuery['sortBy']>({ defaultSortBy: 'createdAt' });
   const { data, isLoading } = useQuotesList({ ...table.query, clientId: client.id });
   const columns = useQuotesColumns();
@@ -32,7 +34,7 @@ export function ClientQuotesTab({ client }: ClientQuotesTabProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      {can({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] }) && (
+      {quotesActive && can({ [RESOURCES.QUOTE]: [ACTIONS.CREATE] }) && (
         <div className="flex justify-end">
           <Button type="primary" icon={<Plus size={16} />} onClick={onNewQuote}>
             {tClients('detail.newQuote')}
