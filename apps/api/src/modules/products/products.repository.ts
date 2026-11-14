@@ -1,4 +1,4 @@
-import { and, asc, eq, max, type SQL } from 'drizzle-orm';
+import { and, asc, count, eq, max, type SQL } from 'drizzle-orm';
 import type {
   CreateOptionGroupInput,
   CreateOptionInput,
@@ -6,7 +6,6 @@ import type {
   PriceTierInput,
   UpdateOptionGroupInput,
   UpdateOptionInput,
-  UpdateProductInput,
 } from '@repo/schemas';
 import type { Executor, Tx } from '../../db';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
@@ -23,6 +22,9 @@ import {
   publicProductColumns,
   publicTierColumns,
 } from './products.resource';
+
+// `tiers` left undefined keeps the stored tiers; an array (even empty) replaces them.
+export type ProductWriteInput = Omit<CreateProductInput, 'tiers'> & { tiers?: PriceTierInput[] };
 
 export class ProductsRepository {
   constructor(
@@ -142,7 +144,7 @@ export class ProductsRepository {
     }
   }
 
-  createProduct(data: CreateProductInput) {
+  createProduct(data: ProductWriteInput) {
     return this.db.transaction(async (tx) => {
       const [product] = await tx
         .insert(products)
@@ -150,10 +152,11 @@ export class ProductsRepository {
           name: data.name,
           description: data.description ?? null,
           isPremium: data.isPremium,
+          price: data.price ?? null,
           tenantId: this.tenantId,
         })
         .returning(publicProductColumns);
-      await this.replaceTiers(tx, product!.id, data.tiers);
+      if (data.tiers) await this.replaceTiers(tx, product!.id, data.tiers);
       return product!;
     });
   }
@@ -176,6 +179,7 @@ export class ProductsRepository {
           name,
           description: source.description,
           isPremium: source.isPremium,
+          price: source.price,
           isActive: true,
           sortOrder: (last?.value ?? -1) + 1,
           tenantId: this.tenantId,
@@ -239,17 +243,33 @@ export class ProductsRepository {
     });
   }
 
-  updateProduct(id: string, data: UpdateProductInput) {
+  updateProduct(id: string, data: ProductWriteInput) {
     return this.db.transaction(async (tx) => {
       const [product] = await tx
         .update(products)
-        .set({ name: data.name, description: data.description ?? null, isPremium: data.isPremium })
+        .set({
+          name: data.name,
+          description: data.description ?? null,
+          isPremium: data.isPremium,
+          // Omitted keeps the stored price; an explicit null clears it.
+          ...(data.price !== undefined && { price: data.price }),
+        })
         .where(and(eq(products.id, id), tenantEq(products, this.tenantId)))
         .returning(publicProductColumns);
       if (!product) return undefined;
-      await this.replaceTiers(tx, id, data.tiers);
+      if (data.tiers) await this.replaceTiers(tx, id, data.tiers);
       return product;
     });
+  }
+
+  countTiers(productId: string) {
+    return this.db
+      .select({ value: count() })
+      .from(productPriceTiers)
+      .where(
+        and(eq(productPriceTiers.productId, productId), tenantEq(productPriceTiers, this.tenantId)),
+      )
+      .then((r) => r[0]?.value ?? 0);
   }
 
   updateTiers(id: string, tiers: PriceTierInput[]) {

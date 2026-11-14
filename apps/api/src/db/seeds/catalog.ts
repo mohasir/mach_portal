@@ -24,6 +24,8 @@ export interface SeedProduct {
   name: string;
   description: string;
   isPremium?: boolean;
+  // Per-unit price in cents.
+  price?: number;
   tiers: SeedTier[];
   groups: SeedGroup[];
 }
@@ -565,6 +567,7 @@ export async function seedCatalog(
         name: p.name,
         description: p.description,
         isPremium: p.isPremium ?? false,
+        price: p.price ?? null,
         sortOrder: productIndex,
         tenantId,
       })

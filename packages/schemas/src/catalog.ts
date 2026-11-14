@@ -5,9 +5,16 @@ export const OPTION_GROUP_TYPES = ['select', 'included'] as const;
 export const optionGroupTypeSchema = z.enum(OPTION_GROUP_TYPES);
 export type OptionGroupType = z.infer<typeof optionGroupTypeSchema>;
 
+// Prices are stored in Postgres integer columns; larger values would fail at insert time.
+const PG_INT_MAX = 2_147_483_647;
+
 export const priceTierSchema = z.object({
   numPersons: z.number().int().min(1, 'catalog.validation.numPersonsInvalid'),
-  price: z.number().int().min(0, 'catalog.validation.priceInvalid'), // cents, total for numPersons
+  price: z
+    .number()
+    .int()
+    .min(0, 'catalog.validation.priceInvalid')
+    .max(PG_INT_MAX, 'catalog.validation.priceInvalid'), // cents, total for numPersons
 });
 export type PriceTierInput = z.infer<typeof priceTierSchema>;
 
@@ -23,6 +30,14 @@ const productMutationFields = {
   description: optionalText(500),
   isPremium: z.boolean(),
   tiers: productTiersSchema,
+  // Per-unit price in cents; null clears it, omitted keeps the stored one on update.
+  price: z
+    .number()
+    .int()
+    .min(0, 'catalog.validation.priceInvalid')
+    .max(PG_INT_MAX, 'catalog.validation.priceInvalid')
+    .nullable()
+    .optional(),
 } as const;
 
 export const createProductSchema = z.object(productMutationFields);

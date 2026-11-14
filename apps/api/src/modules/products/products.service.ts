@@ -15,23 +15,45 @@ import {
   PG_FOREIGN_KEY_VIOLATION,
   PG_UNIQUE_VIOLATION,
 } from '../../lib/errors';
-import { ProductsRepository } from './products.repository';
+import { featureNotEnabled } from '../../core/trpc/requireFeature';
+import { isQuotable } from './products.pricing';
+import { ProductsRepository, type ProductWriteInput } from './products.repository';
 import {
   buildPricesList,
   buildProductTree,
   optionGroupResource,
   optionResource,
   productResource,
+  type PublicProduct,
   productWithTiersResource,
   withCatalogUsage,
 } from './products.resource';
 
 export class ProductsService {
-  constructor(private repo: ProductsRepository) {}
+  constructor(
+    private repo: ProductsRepository,
+    private priceTiersActive: boolean,
+  ) {}
+
+  // Without the add-on no tiers can be written and the stored ones are kept: an empty `tiers` (the
+  // schema default) must not delete them.
+  private withTiersRule(input: CreateProductInput | UpdateProductInput): ProductWriteInput {
+    if (this.priceTiersActive) return input;
+    if (input.tiers.length > 0) throw featureNotEnabled('priceTiers');
+    const { tiers: _ignored, ...rest } = input;
+    return rest;
+  }
+
+  // Written rows carry no tiers; they only matter when the price alone does not decide.
+  private async withQuotable(row: PublicProduct) {
+    const tiers =
+      row.price == null && this.priceTiersActive ? await this.repo.countTiers(row.id) : 0;
+    return productResource(row, isQuotable(row, new Array<unknown>(tiers), this.priceTiersActive));
+  }
 
   async list() {
     const { productRows, tierRows, groupRows, optionRows } = await this.repo.findTree(false);
-    return buildProductTree(productRows, tierRows, groupRows, optionRows);
+    return buildProductTree(productRows, tierRows, groupRows, optionRows, this.priceTiersActive);
   }
 
   async catalog(includeInactive: boolean) {
@@ -39,30 +61,34 @@ export class ProductsService {
       this.repo.findTree(includeInactive),
       this.repo.findUsage(),
     ]);
-    return withCatalogUsage(buildProductTree(productRows, tierRows, groupRows, optionRows), usage);
+    return withCatalogUsage(
+      buildProductTree(productRows, tierRows, groupRows, optionRows, this.priceTiersActive),
+      usage,
+    );
   }
 
   async pricesList() {
     const { productRows, tierRows } = await this.repo.findPricesTree();
-    return buildPricesList(productRows, tierRows);
+    return buildPricesList(productRows, tierRows, this.priceTiersActive);
   }
 
   async updateProductTiers(id: string, tiers: PriceTierInput[]) {
     const result = await this.repo.updateTiers(id, tiers);
     if (!result)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
-    return productWithTiersResource(result.product, result.tierRows);
+    return productWithTiersResource(result.product, result.tierRows, this.priceTiersActive);
   }
 
   // ── product ──
   async createProduct(input: CreateProductInput) {
+    const data = this.withTiersRule(input);
     const existing = await this.repo.findProductByName(input.name);
     if (existing)
       throw new TRPCError({
         code: 'CONFLICT',
         cause: new AppError(ErrorCodes.product.ALREADY_EXISTS),
       });
-    return productResource(await this.repo.createProduct(input));
+    return this.withQuotable(await this.repo.createProduct(data));
   }
 
   async duplicateProduct(id: string) {
@@ -86,29 +112,31 @@ export class ProductsService {
     });
     if (!copy)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
-    return productResource(copy);
+    return this.withQuotable(copy);
   }
 
   async updateProduct(id: string, input: UpdateProductInput) {
-    const updated = await this.repo.updateProduct(id, input).catch((error: unknown) => {
-      if (isPgError(error, PG_UNIQUE_VIOLATION, 'products_tenant_name')) {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          cause: new AppError(ErrorCodes.product.ALREADY_EXISTS),
-        });
-      }
-      throw error;
-    });
+    const updated = await this.repo
+      .updateProduct(id, this.withTiersRule(input))
+      .catch((error: unknown) => {
+        if (isPgError(error, PG_UNIQUE_VIOLATION, 'products_tenant_name')) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            cause: new AppError(ErrorCodes.product.ALREADY_EXISTS),
+          });
+        }
+        throw error;
+      });
     if (!updated)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
-    return productResource(updated);
+    return this.withQuotable(updated);
   }
 
   async toggleProductActive(id: string, isActive: boolean) {
     const updated = await this.repo.setProductActive(id, isActive);
     if (!updated)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
-    return productResource(updated);
+    return this.withQuotable(updated);
   }
 
   async reorderProducts(ids: string[]) {

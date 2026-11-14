@@ -97,7 +97,7 @@ describe('products tenant isolation', () => {
 
   it('renaming a product to a name taken in the tenant is a CONFLICT, not a 500', async () => {
     const other = await seedCatalog(a, 'Other');
-    const service = new ProductsService(repoA);
+    const service = new ProductsService(repoA, true);
     const tiers = [{ numPersons: 10, price: 1000 }];
     await expect(
       service.updateProduct(other.productId, { name: 'Menu A', isPremium: false, tiers }),
@@ -335,7 +335,7 @@ describe('products tenant isolation', () => {
 
     it('the service refuses to delete an option or group used by a quote', async () => {
       await useInQuote(a, sa.productId, sa.groupId, sa.optionId);
-      const service = new ProductsService(repoA);
+      const service = new ProductsService(repoA, true);
       await expect(service.deleteOption(sa.optionId)).rejects.toMatchObject({
         code: 'CONFLICT',
         cause: { code: 'OPTION_IN_USE' },
@@ -347,7 +347,9 @@ describe('products tenant isolation', () => {
     });
 
     it('the service answers NOT_FOUND when deleting an option of another tenant', async () => {
-      await expect(new ProductsService(repoA).deleteOption(sb.optionId)).rejects.toMatchObject({
+      await expect(
+        new ProductsService(repoA, true).deleteOption(sb.optionId),
+      ).rejects.toMatchObject({
         code: 'NOT_FOUND',
         cause: { code: 'OPTION_NOT_FOUND' },
       });
@@ -356,7 +358,7 @@ describe('products tenant isolation', () => {
     it('catalog flags isUsed only from the tenant own quote lines', async () => {
       await useInQuote(a, sa.productId, sa.groupId, sa.optionId);
       await useInQuote(b, sb.productId, sb.groupId, sb.optionId);
-      const [product] = await new ProductsService(repoA).catalog(true);
+      const [product] = await new ProductsService(repoA, true).catalog(true);
       expect(product?.optionGroups.map((g) => g.isUsed)).toEqual([true]);
       expect(product?.optionGroups[0]?.options.map((o) => o.isUsed)).toEqual([true]);
     });
@@ -403,7 +405,7 @@ describe('products tenant isolation', () => {
     });
 
     it('the service names the copy after the source and avoids names taken in the tenant', async () => {
-      const service = new ProductsService(repoA);
+      const service = new ProductsService(repoA, true);
       expect(await service.duplicateProduct(sa.productId)).toMatchObject({
         name: 'Menu A (copia)',
       });

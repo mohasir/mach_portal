@@ -1,4 +1,4 @@
-import type { QuoteLineSelectionInput } from '@repo/schemas';
+import type { QuoteLineInput, QuoteLineSelectionInput } from '@repo/schemas';
 import type { QuotesRepository } from './quotes.repository';
 
 export type CatalogContext = Awaited<ReturnType<QuotesRepository['loadCatalogContext']>>;
@@ -29,4 +29,38 @@ export function validateLineSelections(
     }
   }
   return true;
+}
+
+type LineShape = { productId: string; numPersons: number; subtotal: number };
+
+// Order-insensitive identity of a line: its values plus the set of chosen options. Groups with
+// no chosen option are dropped because a stored line cannot represent them.
+function lineKey(
+  line: LineShape,
+  selections: ReadonlyArray<{ optionGroupId: string; optionIds: readonly string[] }>,
+): string {
+  const picked = selections
+    .flatMap((s) => s.optionIds.map((optionId) => `${s.optionGroupId}:${optionId}`))
+    .sort();
+  return JSON.stringify([line.productId, line.numPersons, line.subtotal, picked]);
+}
+
+// Submitted lines that do not match a stored line of the quote. Matching is a multiset: each
+// stored line excuses at most one submitted line.
+export function changedLines(
+  submitted: readonly QuoteLineInput[],
+  stored: ReadonlyArray<LineShape & { selections: QuoteLineInput['selections'] }>,
+): QuoteLineInput[] {
+  const available = new Map<string, number>();
+  for (const line of stored) {
+    const key = lineKey(line, line.selections);
+    available.set(key, (available.get(key) ?? 0) + 1);
+  }
+  return submitted.filter((line) => {
+    const key = lineKey(line, line.selections);
+    const left = available.get(key) ?? 0;
+    if (left === 0) return true;
+    available.set(key, left - 1);
+    return false;
+  });
 }

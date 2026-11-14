@@ -211,10 +211,19 @@ export class QuotesRepository {
       .limit(1);
     if (!quoteRow) return undefined;
 
+    const { lineRows, optionRows } = await this.findLinesWithOptions(id);
+
+    const historyRows = await this.findStageHistory(id);
+    const assignmentHistoryRows = await this.findAssignmentHistory(id);
+
+    return { quoteRow, lineRows, optionRows, historyRows, assignmentHistoryRows };
+  }
+
+  async findLinesWithOptions(quoteId: string) {
     const lineRows = await this.db
       .select(publicQuoteLineColumns)
       .from(quoteLines)
-      .where(and(eq(quoteLines.quoteId, id), tenantEq(quoteLines, this.tenantId)));
+      .where(and(eq(quoteLines.quoteId, quoteId), tenantEq(quoteLines, this.tenantId)));
 
     const lineIds = lineRows.map((l) => l.id);
     const optionRows = lineIds.length
@@ -228,11 +237,7 @@ export class QuotesRepository {
             ),
           )
       : [];
-
-    const historyRows = await this.findStageHistory(id);
-    const assignmentHistoryRows = await this.findAssignmentHistory(id);
-
-    return { quoteRow, lineRows, optionRows, historyRows, assignmentHistoryRows };
+    return { lineRows, optionRows };
   }
 
   findStageHistory(quoteId: string) {
@@ -541,7 +546,7 @@ export class QuotesRepository {
 
     const [productRows, tierRows, groupRows] = await Promise.all([
       this.db
-        .select({ id: products.id, isActive: products.isActive })
+        .select({ id: products.id, isActive: products.isActive, price: products.price })
         .from(products)
         .where(and(inArray(products.id, uniqueIds), tenantEq(products, this.tenantId))),
       this.db
@@ -739,12 +744,13 @@ export class QuotesRepository {
 
   // Approve → create the derived event, atomically (mach-bar-domain.md §11). The transition
   // matrix (no CONFIRMED→CONFIRMED edge) is what keeps this idempotent in practice — a second
-  // approve on an already-confirmed quote never reaches here.
-  approveWithEvent(
+  // approve on an already-confirmed quote never reaches here. `eventData` is null when the events
+  // module is off: the quote is confirmed and no event is derived from it.
+  approve(
     id: string,
     fromStageId: QuoteStageId,
     userId: string,
-    eventData: Omit<typeof events.$inferInsert, 'quoteId' | 'tenantId'>,
+    eventData: Omit<typeof events.$inferInsert, 'quoteId' | 'tenantId'> | null,
   ) {
     return this.db.transaction(async (tx) => {
       const [updated] = await tx
@@ -760,7 +766,9 @@ export class QuotesRepository {
         changedById: userId,
         tenantId: this.tenantId,
       });
-      await tx.insert(events).values({ ...eventData, quoteId: id, tenantId: this.tenantId });
+      if (eventData) {
+        await tx.insert(events).values({ ...eventData, quoteId: id, tenantId: this.tenantId });
+      }
       return updated;
     });
   }

@@ -38,6 +38,8 @@ const product = (
   isPremium: false,
   isActive,
   sortOrder: 0,
+  price: null,
+  quotable: false,
   priceTiers: [],
   optionGroups,
 });
