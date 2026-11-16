@@ -15,7 +15,7 @@ import { WrapperCard } from '@/components/shared/WrapperCard';
 import { Feature } from '@/lib/auth/Feature';
 import { useCan } from '@/lib/auth/useCan';
 import { useFeature } from '@/lib/auth/useFeature';
-import { unitNoun } from '@/lib/format/quantity';
+import { formatQuantity, unitNoun } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { getDetailTabs } from '../helpers';
 import { useProduct } from '../hooks/useCatalog';
@@ -38,6 +38,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const canDisable = can({ [RESOURCES.PRODUCT]: [ACTIONS.DISABLE] });
   const canEnable = can({ [RESOURCES.PRODUCT]: [ACTIONS.ENABLE] });
   const canDuplicate = can({ [RESOURCES.PRODUCT]: [ACTIONS.DUPLICATE] });
+  const canSeeCost = can({ [RESOURCES.PRODUCT_COST]: [ACTIONS.READ] });
   const router = useRouter();
   const priceTiers = useFeature('priceTiers');
   const configurableOptions = useFeature('configurableOptions');
@@ -163,6 +164,37 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                 </Typography.Text>
               </div>
 
+              <div>
+                <Typography.Text strong className="block text-sm">
+                  {t('product.detailFields.minQuantity')}
+                </Typography.Text>
+                <Typography.Text type="secondary" className="block text-sm">
+                  {formatQuantity(product.minQuantity, product.unit)}
+                </Typography.Text>
+              </div>
+
+              {product.sku && (
+                <div>
+                  <Typography.Text strong className="block text-sm">
+                    {t('product.detailFields.sku')}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" className="block text-sm">
+                    {product.sku}
+                  </Typography.Text>
+                </div>
+              )}
+
+              {product.category && (
+                <div>
+                  <Typography.Text strong className="block text-sm">
+                    {t('product.detailFields.category')}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" className="block text-sm">
+                    {product.category.name}
+                  </Typography.Text>
+                </div>
+              )}
+
               {product.price != null && (
                 <div>
                   <Typography.Text strong className="block text-sm">
@@ -173,6 +205,17 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                       price: money(product.price),
                       unit: unitNoun(product.unit, 1),
                     })}
+                  </Typography.Text>
+                </div>
+              )}
+
+              {canSeeCost && product.cost != null && (
+                <div>
+                  <Typography.Text strong className="block text-sm">
+                    {t('product.detailFields.cost')}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" className="block text-sm">
+                    {money(product.cost)}
                   </Typography.Text>
                 </div>
               )}

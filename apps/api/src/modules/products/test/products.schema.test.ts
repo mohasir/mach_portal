@@ -31,3 +31,35 @@ describe('price upper bound (Postgres integer column)', () => {
     expect(priceTierSchema.safeParse({ quantity: 10, price: INT4_MAX + 1 }).success).toBe(false);
   });
 });
+
+describe('product SKU, cost, minimum quantity and category', () => {
+  it('trims the SKU and turns a blank one into null', () => {
+    expect(createProductSchema.parse({ ...product(1), sku: '  AB-1 ' }).sku).toBe('AB-1');
+    expect(createProductSchema.parse({ ...product(1), sku: '   ' }).sku).toBeNull();
+    expect(createProductSchema.parse(product(1)).sku).toBeUndefined();
+    expect(createProductSchema.safeParse({ ...product(1), sku: 'x'.repeat(65) }).success).toBe(
+      false,
+    );
+  });
+
+  it('accepts a cost of zero or more cents, or null', () => {
+    expect(createProductSchema.safeParse({ ...product(1), cost: 0 }).success).toBe(true);
+    expect(createProductSchema.safeParse({ ...product(1), cost: null }).success).toBe(true);
+    const negative = createProductSchema.safeParse({ ...product(1), cost: -1 });
+    expect(negative.error?.issues[0]?.message).toBe('catalog.validation.costInvalid');
+    expect(createProductSchema.safeParse({ ...product(1), cost: 1.5 }).success).toBe(false);
+  });
+
+  it('requires a minimum quantity of at least 1 when given', () => {
+    expect(createProductSchema.parse(product(1)).minQuantity).toBeUndefined();
+    expect(createProductSchema.safeParse({ ...product(1), minQuantity: 1 }).success).toBe(true);
+    const zero = createProductSchema.safeParse({ ...product(1), minQuantity: 0 });
+    expect(zero.error?.issues[0]?.message).toBe('catalog.validation.minQuantityInvalid');
+  });
+
+  it('takes a category id or null', () => {
+    expect(createProductSchema.safeParse({ ...product(1), categoryId: UOM_ID }).success).toBe(true);
+    expect(createProductSchema.safeParse({ ...product(1), categoryId: null }).success).toBe(true);
+    expect(createProductSchema.safeParse({ ...product(1), categoryId: 'x' }).success).toBe(false);
+  });
+});

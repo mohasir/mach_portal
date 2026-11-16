@@ -38,6 +38,7 @@ export function ProductPanel({ product }: ProductPanelProps) {
                 </Tag>
               )}
               {!product.quotable && <NotQuotableTag />}
+              {product.category && <Tag className="m-0">{product.category.name}</Tag>}
             </div>
             <div className="text-muted flex items-center gap-2 text-xs">
               <Feature name="configurableOptions">

@@ -155,6 +155,14 @@
         "label": "Unidades de medida",
         "caption": "Unidades en que se cobra y se cuenta cada {{item}}."
       },
+      "product_category": {
+        "label": "Categorías",
+        "caption": "Categorías para agrupar y filtrar los {{items}} del catálogo."
+      },
+      "product_cost": {
+        "label": "Costo de {{items}}",
+        "caption": "Ver y editar el costo interno de cada {{item}}; nunca se muestra en cotizaciones ni eventos."
+      },
       "event_type": {
         "label": "Tipos de evento",
         "caption": "Tipos de evento usados en las cotizaciones."
@@ -172,7 +180,7 @@
       },
       "quote_defaults": {
         "label": "Valores por defecto",
-        "caption": "Depósito, validez, mínimo de personas y consecutivo de cotizaciones nuevas."
+        "caption": "Depósito, validez y consecutivo de cotizaciones nuevas."
       },
       "quote_stages": {
         "label": "Estados de cotización",

@@ -6,6 +6,27 @@ export interface ProductFormValues {
   isPremium: boolean;
   price?: number | null;
   uomId: string;
+  sku?: string | null;
+  categoryId?: string | null;
+  cost?: number | null;
+  minQuantity: number;
+}
+
+/**
+ * How the product form treats the internal cost. Editing needs read too: without it the stored
+ * cost is unknown and saving the form would overwrite it blindly.
+ */
+export type CostFieldMode = 'edit' | 'read' | 'hidden';
+
+export function costFieldMode({
+  canRead,
+  canUpdate,
+}: {
+  canRead: boolean;
+  canUpdate: boolean;
+}): CostFieldMode {
+  if (!canRead) return 'hidden';
+  return canUpdate ? 'edit' : 'read';
 }
 
 export interface CatalogFeatures {
@@ -20,7 +41,11 @@ export type DetailTab = 'details' | 'prices';
 
 export function buildProductPayload(
   values: ProductFormValues,
-  { tiers, priceTiersEnabled }: { tiers: PriceTierInput[]; priceTiersEnabled: boolean },
+  {
+    tiers,
+    priceTiersEnabled,
+    costMode = 'hidden',
+  }: { tiers: PriceTierInput[]; priceTiersEnabled: boolean; costMode?: CostFieldMode },
 ): ProductPayload {
   return {
     name: values.name,
@@ -28,9 +53,49 @@ export function buildProductPayload(
     isPremium: values.isPremium ?? false,
     price: values.price ?? null,
     uomId: values.uomId,
+    sku: values.sku ?? null,
+    categoryId: values.categoryId ?? null,
+    minQuantity: values.minQuantity,
     // Stored tiers are kept untouched while the add-on is off; the API rejects any tiers then.
     ...(priceTiersEnabled ? { tiers } : {}),
+    // The API rejects a cost from a caller who may not edit it; omitted keeps the stored one.
+    ...(costMode === 'edit' ? { cost: values.cost ?? null } : {}),
   };
+}
+
+/** Filter value for the products that have no category. */
+export const NO_CATEGORY = 'none';
+
+export function filterByCategory<T extends { categoryId: string | null }>(
+  products: readonly T[],
+  filter: string | undefined,
+): T[] {
+  if (!filter) return [...products];
+  if (filter === NO_CATEGORY) return products.filter((p) => p.categoryId === null);
+  return products.filter((p) => p.categoryId === filter);
+}
+
+/** Categories to filter the catalog by: the active ones and those its products still have. */
+export function categoryFilterOptions(
+  products: readonly { category: { id: string; name: string } | null }[],
+  active: readonly { id: string; name: string }[],
+): { value: string; label: string }[] {
+  const byId = new Map<string, string>();
+  for (const category of active) byId.set(category.id, category.name);
+  for (const { category } of products) if (category) byId.set(category.id, category.name);
+  return [...byId]
+    .map(([value, label]) => ({ value, label }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+/**
+ * Full order after dragging inside a filtered list: the visible products take, in their new
+ * order, the positions they already held, and the hidden ones stay where they were.
+ */
+export function mergeReorder(allIds: readonly string[], visibleIds: readonly string[]): string[] {
+  const visible = new Set(visibleIds);
+  const next = [...visibleIds];
+  return allIds.map((id) => (visible.has(id) ? next.shift()! : id));
 }
 
 export function getDetailTabs({ priceTiers, configurableOptions }: CatalogFeatures): DetailTab[] {

@@ -1,5 +1,18 @@
-import { pgTable, uuid, text, integer, boolean, pgEnum, unique, index } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import {
+  pgTable,
+  uuid,
+  text,
+  integer,
+  boolean,
+  pgEnum,
+  unique,
+  index,
+  uniqueIndex,
+  check,
+} from 'drizzle-orm/pg-core';
 import { tenantId } from './tenantColumn';
+import { productCategories } from './productCategories';
 import { unitsOfMeasure } from './unitsOfMeasure';
 import { tenantIsolationPolicy } from '../rls/policy';
 
@@ -21,10 +34,25 @@ export const products = pgTable(
     uomId: uuid('uom_id')
       .notNull()
       .references(() => unitsOfMeasure.id, { onDelete: 'restrict' }),
+    categoryId: uuid('category_id').references(() => productCategories.id, {
+      onDelete: 'restrict',
+    }),
+    sku: text('sku'),
+    // Internal cost in cents; only callers with the product_cost permission see or write it.
+    cost: integer('cost'),
+    // Smallest quantity of a quote line, in the product's unit.
+    minQuantity: integer('min_quantity').default(1).notNull(),
   },
   (t) => [
     unique('products_tenant_name_unique').on(t.tenantId, t.name),
+    // "ab-1" and "AB-1" would read as the same SKU; products without one do not collide.
+    uniqueIndex('products_tenant_sku_uidx')
+      .on(t.tenantId, sql`lower(${t.sku})`)
+      .where(sql`${t.sku} IS NOT NULL`),
     index('products_uom_idx').on(t.uomId),
+    index('products_category_idx').on(t.categoryId),
+    check('products_min_quantity_check', sql`min_quantity >= 1`),
+    check('products_cost_check', sql`cost >= 0`),
     tenantIsolationPolicy('products'),
   ],
 ).enableRLS();

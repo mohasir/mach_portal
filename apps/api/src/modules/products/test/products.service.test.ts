@@ -20,6 +20,9 @@ const copy = {
   sortOrder: 3,
   price: null,
   uomId: 'u1',
+  categoryId: null,
+  sku: null,
+  minQuantity: 1,
 };
 
 function makeRepo() {
@@ -31,7 +34,7 @@ function makeRepo() {
     findProductById: vi.fn().mockResolvedValue({ id: 'id-1', name: 'Barra' }),
     findProductByName: vi.fn().mockResolvedValue(undefined),
     duplicateProduct: vi.fn().mockResolvedValue(copy),
-    countTiers: vi.fn().mockResolvedValue(0),
+    findTierQuantities: vi.fn().mockResolvedValue([]),
     findUnit: vi.fn().mockResolvedValue(unit),
   };
 }
@@ -47,7 +50,7 @@ describe('ProductsService.duplicateProduct', () => {
 
   it('names the copy after the source with a "copia" suffix', async () => {
     await expect(service.duplicateProduct('id-1')).resolves.toMatchObject({ id: 'new-id' });
-    expect(repo.duplicateProduct).toHaveBeenCalledWith('id-1', 'Barra (copia)');
+    expect(repo.duplicateProduct).toHaveBeenCalledWith('id-1', 'Barra (copia)', false);
   });
 
   it('increments the suffix while the name is taken', async () => {
@@ -56,7 +59,7 @@ describe('ProductsService.duplicateProduct', () => {
       .mockResolvedValueOnce({ id: 'b' })
       .mockResolvedValueOnce(undefined);
     await service.duplicateProduct('id-1');
-    expect(repo.duplicateProduct).toHaveBeenCalledWith('id-1', 'Barra (copia 3)');
+    expect(repo.duplicateProduct).toHaveBeenCalledWith('id-1', 'Barra (copia 3)', false);
   });
 
   it('rejects an unknown product', async () => {
@@ -139,9 +142,16 @@ describe('ProductsService price and quotable', () => {
     sortOrder: 0,
     price: null as number | null,
     uomId: 'u1',
+    categoryId: null,
+    sku: null,
+    minQuantity: 1,
   };
   const tier = { id: 't1', productId: 'p1', quantity: 30, price: 1000, sortOrder: 0 };
-  const emptyTree = { groupRows: [], optionRows: [], units: new Map([['u1', unit]]) };
+  const emptyTree = {
+    groupRows: [],
+    optionRows: [],
+    lookups: { units: new Map([['u1', unit]]), categories: new Map() },
+  };
 
   it('exposes price and quotable on the catalog, keeping stored tiers with the add-on off', async () => {
     const repo = {
@@ -174,7 +184,7 @@ describe('ProductsService price and quotable', () => {
     const repo = {
       findProductByName: vi.fn().mockResolvedValue(undefined),
       createProduct: vi.fn().mockResolvedValue(row),
-      countTiers: vi.fn().mockResolvedValue(2),
+      findTierQuantities: vi.fn().mockResolvedValue([{ quantity: 1 }, { quantity: 2 }]),
       findUnit: vi.fn().mockResolvedValue(unit),
     };
     const input = { name: 'Barra', isPremium: false, tiers: [], uomId: 'u1' };

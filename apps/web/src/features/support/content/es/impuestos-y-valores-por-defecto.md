@@ -3,8 +3,8 @@
 ## Valores por defecto de cotizaciones
 
 Depósito por defecto (%), Validez de la cotización (meses — de esto depende la fecha de
-vencimiento), Mínimo de personas por línea, Inicio de consecutivo de cotización, Moneda y Fecha
-límite para elegir opciones (días antes del evento).
+vencimiento), Inicio de consecutivo de cotización, Moneda y Fecha límite para elegir opciones (días
+antes del evento). La cantidad mínima de cada línea se define en cada elemento del catálogo.
 
 > El inicio de consecutivo **no se puede bajar** por debajo del último número ya usado — cualquier
 > intento en ese sentido se rechaza.

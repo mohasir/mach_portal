@@ -188,4 +188,24 @@ describe('quote prices are frozen once a line is saved', () => {
       cause: { code: 'PRODUCT_NOT_QUOTABLE' },
     });
   });
+
+  it('re-saves an unchanged line below a minimum quantity raised afterwards', async () => {
+    await testDb.update(products).set({ minQuantity: 50 }).where(eq(products.id, productId));
+    const updated = await save(serviceFor(tenantId, true), [{ ...tierLine, productId }]);
+    expect(updated).toMatchObject({ notes: 'edited' });
+  });
+
+  it('rejects a new or modified line below the product minimum quantity', async () => {
+    await testDb
+      .insert(productPriceTiers)
+      .values({ tenantId, productId, quantity: 30, price: 120000 });
+    await testDb.update(products).set({ minQuantity: 35 }).where(eq(products.id, productId));
+    const belowMin = { ...tierLine, productId, quantity: 30, subtotal: 120000 };
+    await expect(
+      save(serviceFor(tenantId, true), [{ ...tierLine, productId }, belowMin]),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST', cause: { code: 'QUOTE_BELOW_MIN_QUANTITY' } });
+    await expect(save(serviceFor(tenantId, true), [belowMin])).rejects.toMatchObject({
+      cause: { code: 'QUOTE_BELOW_MIN_QUANTITY' },
+    });
+  });
 });

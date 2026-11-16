@@ -1,4 +1,4 @@
-import { and, asc, count, eq, max, type SQL } from 'drizzle-orm';
+import { and, asc, eq, max, ne, sql, type SQL } from 'drizzle-orm';
 import type {
   CreateOptionGroupInput,
   CreateOptionInput,
@@ -12,19 +12,28 @@ import { tenantEq } from '../../lib/tenancy/tenantEq';
 import {
   options,
   optionGroups,
+  productCategories,
   productPriceTiers,
   products,
   quoteLineOptions,
   unitsOfMeasure,
 } from '../../db/schema';
 import {
+  categoryRefColumns,
+  productCostColumns,
   publicOptionColumns,
   publicOptionGroupColumns,
   publicProductColumns,
   publicTierColumns,
   unitRefColumns,
+  type CategoriesById,
   type UnitsById,
 } from './products.resource';
+
+// The cost is selected only when the caller states it may read it; every read defaults to
+// leaving it out.
+const productColumns = (withCost: boolean) =>
+  withCost ? productCostColumns : publicProductColumns;
 
 // `tiers` left undefined keeps the stored tiers; an array (even empty) replaces them.
 export type ProductWriteInput = Omit<CreateProductInput, 'tiers'> & { tiers?: PriceTierInput[] };
@@ -35,7 +44,7 @@ export class ProductsRepository {
     private tenantId: string,
   ) {}
 
-  async findTree(includeInactive: boolean) {
+  async findTree(includeInactive: boolean, withCost = false) {
     const activeOnly = (col: SQL | undefined) => (includeInactive ? undefined : col);
     const productWhere = and(
       tenantEq(products, this.tenantId),
@@ -51,9 +60,9 @@ export class ProductsRepository {
       activeOnly(eq(options.isActive, true)),
     );
 
-    const [productRows, tierRows, groupRows, optionRows, units] = await Promise.all([
+    const [productRows, tierRows, groupRows, optionRows, units, categories] = await Promise.all([
       this.db
-        .select(publicProductColumns)
+        .select(productColumns(withCost))
         .from(products)
         .where(productWhere)
         .orderBy(asc(products.sortOrder)),
@@ -73,9 +82,10 @@ export class ProductsRepository {
         .where(optionWhere)
         .orderBy(asc(options.sortOrder)),
       this.findUnits(),
+      this.findCategories(),
     ]);
 
-    return { productRows, tierRows, groupRows, optionRows, units };
+    return { productRows, tierRows, groupRows, optionRows, lookups: { units, categories } };
   }
 
   // Every unit of the tenant, inactive ones included: a product may keep a unit disabled later.
@@ -85,6 +95,40 @@ export class ProductsRepository {
       .from(unitsOfMeasure)
       .where(tenantEq(unitsOfMeasure, this.tenantId));
     return new Map(rows.map((row) => [row.id, row]));
+  }
+
+  // Every category of the tenant, inactive ones included: a product keeps a category disabled later.
+  async findCategories(): Promise<CategoriesById> {
+    const rows = await this.db
+      .select(categoryRefColumns)
+      .from(productCategories)
+      .where(tenantEq(productCategories, this.tenantId));
+    return new Map(rows.map((row) => [row.id, row]));
+  }
+
+  findCategory(id: string) {
+    return this.db
+      .select(categoryRefColumns)
+      .from(productCategories)
+      .where(and(eq(productCategories.id, id), tenantEq(productCategories, this.tenantId)))
+      .limit(1)
+      .then((r) => r[0]);
+  }
+
+  // Case-insensitive, like the unique index on (tenant_id, lower(sku)).
+  findProductBySku(sku: string, excludeId?: string) {
+    return this.db
+      .select({ id: products.id })
+      .from(products)
+      .where(
+        and(
+          sql`lower(${products.sku}) = lower(${sku})`,
+          tenantEq(products, this.tenantId),
+          excludeId ? ne(products.id, excludeId) : undefined,
+        ),
+      )
+      .limit(1)
+      .then((r) => r[0]);
   }
 
   findUnit(id: string) {
@@ -112,10 +156,10 @@ export class ProductsRepository {
     };
   }
 
-  async findPricesTree() {
-    const [productRows, tierRows, units] = await Promise.all([
+  async findPricesTree(withCost = false) {
+    const [productRows, tierRows, units, categories] = await Promise.all([
       this.db
-        .select(publicProductColumns)
+        .select(productColumns(withCost))
         .from(products)
         .where(tenantEq(products, this.tenantId))
         .orderBy(asc(products.sortOrder)),
@@ -125,9 +169,10 @@ export class ProductsRepository {
         .where(tenantEq(productPriceTiers, this.tenantId))
         .orderBy(asc(productPriceTiers.sortOrder)),
       this.findUnits(),
+      this.findCategories(),
     ]);
 
-    return { productRows, tierRows, units };
+    return { productRows, tierRows, lookups: { units, categories } };
   }
 
   findProductByName(name: string) {
@@ -141,7 +186,12 @@ export class ProductsRepository {
 
   findProductById(id: string) {
     return this.db
-      .select({ id: products.id, name: products.name, uomId: products.uomId })
+      .select({
+        id: products.id,
+        name: products.name,
+        uomId: products.uomId,
+        categoryId: products.categoryId,
+      })
       .from(products)
       .where(and(eq(products.id, id), tenantEq(products, this.tenantId)))
       .limit(1)
@@ -167,7 +217,7 @@ export class ProductsRepository {
     }
   }
 
-  createProduct(data: ProductWriteInput) {
+  createProduct(data: ProductWriteInput, withCost = false) {
     return this.db.transaction(async (tx) => {
       const [product] = await tx
         .insert(products)
@@ -177,15 +227,20 @@ export class ProductsRepository {
           isPremium: data.isPremium,
           price: data.price ?? null,
           uomId: data.uomId,
+          categoryId: data.categoryId ?? null,
+          sku: data.sku ?? null,
+          cost: data.cost ?? null,
+          ...(data.minQuantity !== undefined && { minQuantity: data.minQuantity }),
           tenantId: this.tenantId,
         })
-        .returning(publicProductColumns);
+        .returning(productColumns(withCost));
       if (data.tiers) await this.replaceTiers(tx, product!.id, data.tiers);
       return product!;
     });
   }
 
-  duplicateProduct(id: string, name: string) {
+  // The SKU identifies one product, so the copy starts without one.
+  duplicateProduct(id: string, name: string, withCost = false) {
     return this.db.transaction(async (tx) => {
       const [source] = await tx
         .select()
@@ -205,11 +260,14 @@ export class ProductsRepository {
           isPremium: source.isPremium,
           price: source.price,
           uomId: source.uomId,
+          categoryId: source.categoryId,
+          cost: source.cost,
+          minQuantity: source.minQuantity,
           isActive: true,
           sortOrder: (last?.value ?? -1) + 1,
           tenantId: this.tenantId,
         })
-        .returning(publicProductColumns);
+        .returning(productColumns(withCost));
 
       const tiers = await tx
         .select()
@@ -268,7 +326,7 @@ export class ProductsRepository {
     });
   }
 
-  updateProduct(id: string, data: ProductWriteInput) {
+  updateProduct(id: string, data: ProductWriteInput, withCost = false) {
     return this.db.transaction(async (tx) => {
       const [product] = await tx
         .update(products)
@@ -277,31 +335,34 @@ export class ProductsRepository {
           description: data.description ?? null,
           isPremium: data.isPremium,
           uomId: data.uomId,
-          // Omitted keeps the stored price; an explicit null clears it.
+          // Omitted keeps the stored value; an explicit null clears it.
           ...(data.price !== undefined && { price: data.price }),
+          ...(data.sku !== undefined && { sku: data.sku }),
+          ...(data.cost !== undefined && { cost: data.cost }),
+          ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
+          ...(data.minQuantity !== undefined && { minQuantity: data.minQuantity }),
         })
         .where(and(eq(products.id, id), tenantEq(products, this.tenantId)))
-        .returning(publicProductColumns);
+        .returning(productColumns(withCost));
       if (!product) return undefined;
       if (data.tiers) await this.replaceTiers(tx, id, data.tiers);
       return product;
     });
   }
 
-  countTiers(productId: string) {
+  findTierQuantities(productId: string) {
     return this.db
-      .select({ value: count() })
+      .select({ quantity: productPriceTiers.quantity })
       .from(productPriceTiers)
       .where(
         and(eq(productPriceTiers.productId, productId), tenantEq(productPriceTiers, this.tenantId)),
-      )
-      .then((r) => r[0]?.value ?? 0);
+      );
   }
 
-  updateTiers(id: string, tiers: PriceTierInput[]) {
+  updateTiers(id: string, tiers: PriceTierInput[], withCost = false) {
     return this.db.transaction(async (tx) => {
       const [product] = await tx
-        .select(publicProductColumns)
+        .select(productColumns(withCost))
         .from(products)
         .where(and(eq(products.id, id), tenantEq(products, this.tenantId)));
       if (!product) return undefined;
@@ -315,12 +376,12 @@ export class ProductsRepository {
     });
   }
 
-  setProductActive(id: string, isActive: boolean) {
+  setProductActive(id: string, isActive: boolean, withCost = false) {
     return this.db
       .update(products)
       .set({ isActive })
       .where(and(eq(products.id, id), tenantEq(products, this.tenantId)))
-      .returning(publicProductColumns)
+      .returning(productColumns(withCost))
       .then((r) => r[0]);
   }
 

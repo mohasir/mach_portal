@@ -29,14 +29,49 @@ import {
   withCatalogUsage,
 } from './products.resource';
 
+// What the caller may do with the internal cost (product_cost.read / product_cost.update).
+export type CostAccess = { read: boolean; update: boolean };
+const NO_COST_ACCESS: CostAccess = { read: false, update: false };
+
 const unitNotFound = () =>
   new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.unit.NOT_FOUND) });
+const categoryNotFound = () =>
+  new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.productCategory.NOT_FOUND) });
+const productNotFound = () =>
+  new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
+const skuTaken = () =>
+  new TRPCError({ code: 'CONFLICT', cause: new AppError(ErrorCodes.product.SKU_TAKEN) });
+const costForbidden = () =>
+  new TRPCError({ code: 'FORBIDDEN', cause: new AppError(ErrorCodes.product.COST_FORBIDDEN) });
+
+// A concurrent request can take the name or the SKU between the lookup and the write; the unique
+// constraints then reject it.
+const rethrowUniqueViolation = (error: unknown): never => {
+  if (isPgError(error, PG_UNIQUE_VIOLATION, 'products_tenant_name')) {
+    throw new TRPCError({
+      code: 'CONFLICT',
+      cause: new AppError(ErrorCodes.product.ALREADY_EXISTS),
+    });
+  }
+  if (isPgError(error, PG_UNIQUE_VIOLATION, 'products_tenant_sku')) throw skuTaken();
+  throw error;
+};
 
 export class ProductsService {
   constructor(
     private repo: ProductsRepository,
     private priceTiersActive: boolean,
+    private cost: CostAccess = NO_COST_ACCESS,
   ) {}
+
+  private get visibility() {
+    return { canSeeCost: this.cost.read };
+  }
+
+  // Checked before anything is written: an explicit null also writes the cost.
+  private assertCostWritable(input: { cost?: number | null }) {
+    if (input.cost !== undefined && !this.cost.update) throw costForbidden();
+  }
 
   // Without the add-on no tiers can be written and the stored ones are kept: an empty `tiers` (the
   // schema default) must not delete them.
@@ -49,16 +84,32 @@ export class ProductsService {
 
   // Written rows carry no tiers; they only matter when the price alone does not decide.
   private async withQuotable(row: PublicProduct) {
-    const [tiers, unit] = await Promise.all([
-      row.price == null && this.priceTiersActive ? this.repo.countTiers(row.id) : 0,
+    const [tiers, unit, category] = await Promise.all([
+      row.price == null && this.priceTiersActive ? this.repo.findTierQuantities(row.id) : [],
       this.repo.findUnit(row.uomId),
+      row.categoryId ? this.repo.findCategory(row.categoryId) : null,
     ]);
     if (!unit) throw unitNotFound();
     return productResource(
       row,
-      isQuotable(row, new Array<unknown>(tiers), this.priceTiersActive),
-      unit,
+      {
+        quotable: isQuotable(row, tiers, this.priceTiersActive),
+        unit,
+        category: category ?? null,
+      },
+      this.visibility,
     );
+  }
+
+  // Same rule as the unit: resolved inside the tenant, active unless the product already has it.
+  private async assertCategory(categoryId: string | null | undefined, currentId?: string | null) {
+    if (!categoryId) return;
+    const category = await this.repo.findCategory(categoryId);
+    if (!category || (!category.isActive && categoryId !== currentId)) throw categoryNotFound();
+  }
+
+  private async assertSkuFree(sku: string | null | undefined, productId?: string) {
+    if (sku && (await this.repo.findProductBySku(sku, productId))) throw skuTaken();
   }
 
   // The unit is resolved inside the tenant (a foreign key would accept another tenant's id) and
@@ -69,58 +120,83 @@ export class ProductsService {
   }
 
   async list() {
-    const { productRows, tierRows, groupRows, optionRows, units } = await this.repo.findTree(false);
+    const { productRows, tierRows, groupRows, optionRows, lookups } = await this.repo.findTree(
+      false,
+      this.cost.read,
+    );
     return buildProductTree(
       productRows,
       tierRows,
       groupRows,
       optionRows,
       this.priceTiersActive,
-      units,
+      lookups,
+      this.visibility,
     );
   }
 
   async catalog(includeInactive: boolean) {
-    const [{ productRows, tierRows, groupRows, optionRows, units }, usage] = await Promise.all([
-      this.repo.findTree(includeInactive),
+    const [{ productRows, tierRows, groupRows, optionRows, lookups }, usage] = await Promise.all([
+      this.repo.findTree(includeInactive, this.cost.read),
       this.repo.findUsage(),
     ]);
     return withCatalogUsage(
-      buildProductTree(productRows, tierRows, groupRows, optionRows, this.priceTiersActive, units),
+      buildProductTree(
+        productRows,
+        tierRows,
+        groupRows,
+        optionRows,
+        this.priceTiersActive,
+        lookups,
+        this.visibility,
+      ),
       usage,
     );
   }
 
   async pricesList() {
-    const { productRows, tierRows, units } = await this.repo.findPricesTree();
-    return buildPricesList(productRows, tierRows, this.priceTiersActive, units);
+    const { productRows, tierRows, lookups } = await this.repo.findPricesTree(this.cost.read);
+    return buildPricesList(productRows, tierRows, this.priceTiersActive, lookups, this.visibility);
   }
 
   async updateProductTiers(id: string, tiers: PriceTierInput[]) {
-    const result = await this.repo.updateTiers(id, tiers);
-    if (!result)
-      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
-    const unit = await this.repo.findUnit(result.product.uomId);
+    const result = await this.repo.updateTiers(id, tiers, this.cost.read);
+    if (!result) throw productNotFound();
+    const { product } = result;
+    const [unit, category] = await Promise.all([
+      this.repo.findUnit(product.uomId),
+      product.categoryId ? this.repo.findCategory(product.categoryId) : null,
+    ]);
     if (!unit) throw unitNotFound();
     return productWithTiersResource(
-      result.product,
+      product,
       result.tierRows,
       this.priceTiersActive,
-      new Map([[unit.id, unit]]),
+      {
+        units: new Map([[unit.id, unit]]),
+        categories: new Map(category ? [[category.id, category]] : []),
+      },
+      this.visibility,
     );
   }
 
   // ── product ──
   async createProduct(input: CreateProductInput) {
+    this.assertCostWritable(input);
     const data = this.withTiersRule(input);
     await this.assertUnit(input.uomId);
+    await this.assertCategory(input.categoryId);
     const existing = await this.repo.findProductByName(input.name);
     if (existing)
       throw new TRPCError({
         code: 'CONFLICT',
         cause: new AppError(ErrorCodes.product.ALREADY_EXISTS),
       });
-    return this.withQuotable(await this.repo.createProduct(data));
+    await this.assertSkuFree(input.sku);
+    const created = await this.repo
+      .createProduct(data, this.cost.read)
+      .catch(rethrowUniqueViolation);
+    return this.withQuotable(created);
   }
 
   async duplicateProduct(id: string) {
@@ -133,43 +209,31 @@ export class ProductsService {
       name = `${source.name} (copia ${n})`;
     }
 
-    const copy = await this.repo.duplicateProduct(id, name).catch((error: unknown) => {
-      if (isPgError(error, PG_UNIQUE_VIOLATION, 'products_tenant_name')) {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          cause: new AppError(ErrorCodes.product.ALREADY_EXISTS),
-        });
-      }
-      throw error;
-    });
+    const copy = await this.repo
+      .duplicateProduct(id, name, this.cost.read)
+      .catch(rethrowUniqueViolation);
     if (!copy)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
     return this.withQuotable(copy);
   }
 
   async updateProduct(id: string, input: UpdateProductInput) {
+    this.assertCostWritable(input);
     const current = await this.repo.findProductById(id);
-    if (!current)
-      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
+    if (!current) throw productNotFound();
     await this.assertUnit(input.uomId, current.uomId);
+    await this.assertCategory(input.categoryId, current.categoryId);
+    await this.assertSkuFree(input.sku, id);
     const updated = await this.repo
-      .updateProduct(id, this.withTiersRule(input))
-      .catch((error: unknown) => {
-        if (isPgError(error, PG_UNIQUE_VIOLATION, 'products_tenant_name')) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            cause: new AppError(ErrorCodes.product.ALREADY_EXISTS),
-          });
-        }
-        throw error;
-      });
+      .updateProduct(id, this.withTiersRule(input), this.cost.read)
+      .catch(rethrowUniqueViolation);
     if (!updated)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
     return this.withQuotable(updated);
   }
 
   async toggleProductActive(id: string, isActive: boolean) {
-    const updated = await this.repo.setProductActive(id, isActive);
+    const updated = await this.repo.setProductActive(id, isActive, this.cost.read);
     if (!updated)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
     return this.withQuotable(updated);

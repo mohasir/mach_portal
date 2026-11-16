@@ -12,7 +12,13 @@ import { formatQuantity } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { getStationIcon } from '../../../helpers';
 import { useLineConfig } from '../../../hooks/useLineConfig';
-import { isQuantityLocked, lineSubtotalForQuantity, usesTierPicker } from '../../../lineHelpers';
+import {
+  isQuantityLocked,
+  lineMinQuantity,
+  lineSubtotalForQuantity,
+  selectableTiers,
+  usesTierPicker,
+} from '../../../lineHelpers';
 
 interface QuickLineCardBaseProps {
   line: { quantity: number; subtotal: number };
@@ -42,7 +48,8 @@ export function QuickLineCard(props: QuickLineCardProps) {
   const { money } = useMoneyFormatter();
   const Icon = getStationIcon(product.name);
   const [editOpen, setEditOpen] = useState(false);
-  const { priceTiersEnabled, minPersons } = useLineConfig();
+  const { priceTiersEnabled } = useLineConfig();
+  const minQuantity = lineMinQuantity(product, mode === 'edit' && props.canEditPricing);
   const tierPicker = usesTierPicker(product, priceTiersEnabled);
   const quantityLocked = isQuantityLocked(product, priceTiersEnabled);
 
@@ -56,7 +63,8 @@ export function QuickLineCard(props: QuickLineCardProps) {
         ).length
       : 0;
 
-  const sortedTiers = [...product.priceTiers].sort((a, b) => a.quantity - b.quantity);
+  const tiers = selectableTiers(product);
+  const sortedTiers = [...tiers].sort((a, b) => a.quantity - b.quantity);
   const tierIndex = Math.max(
     0,
     sortedTiers.findIndex((tier) => tier.quantity === line.quantity),
@@ -70,7 +78,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
 
   const handleQuantityChange = (value: number | null) => {
     if (mode !== 'edit') return;
-    const quantity = value ?? minPersons;
+    const quantity = value ?? minQuantity;
     props.onChange({
       quantity,
       subtotal: lineSubtotalForQuantity(product.price, quantity, line.subtotal),
@@ -80,7 +88,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
   const stepTier = (direction: 1 | -1) => {
     if (mode !== 'edit') return;
     if (!tierPicker) {
-      handleQuantityChange(Math.max(minPersons, line.quantity + direction));
+      handleQuantityChange(Math.max(minQuantity, line.quantity + direction));
       return;
     }
     const tier = sortedTiers[tierIndex + direction];
@@ -147,7 +155,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
               size="small"
               value={line.quantity}
               onChange={handleTierChange}
-              options={product.priceTiers.map((tier) => ({
+              options={tiers.map((tier) => ({
                 value: tier.quantity,
                 label: formatQuantity(tier.quantity, product.unit),
               }))}
@@ -157,7 +165,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
               className="w-36"
               size="small"
               disabled={quantityLocked}
-              min={minPersons}
+              min={minQuantity}
               precision={0}
               value={line.quantity}
               onChange={handleQuantityChange}
@@ -229,7 +237,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
                   type="text"
                   icon={<Minus size={16} />}
                   disabled={
-                    quantityLocked || (tierPicker ? tierIndex <= 0 : line.quantity <= minPersons)
+                    quantityLocked || (tierPicker ? tierIndex <= 0 : line.quantity <= minQuantity)
                   }
                   onClick={() => stepTier(-1)}
                   aria-label={t('builder.lines.decrease')}
@@ -238,7 +246,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
                   variant="borderless"
                   controls={false}
                   disabled={quantityLocked}
-                  min={tierPicker ? 1 : minPersons}
+                  min={minQuantity}
                   precision={0}
                   className="flex-1 text-center font-semibold"
                   value={line.quantity}

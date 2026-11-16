@@ -25,8 +25,12 @@
     "pricePerUnit": "{{price}} por {{unit}}",
     "optionGroupsCount": "{{count}} secciones",
     "priceTiersCount": "{{count}} paquetes",
-    "create": { "title": "Nuevo {{item}}" },
-    "edit": { "title": "Editar {{item}}" },
+    "create": {
+      "title": "Nuevo {{item}}"
+    },
+    "edit": {
+      "title": "Editar {{item}}"
+    },
     "form": {
       "name": "Nombre",
       "namePlaceholder": "Nombre del {{item}}",
@@ -37,7 +41,15 @@
       "priceCaption": "Opcional. Precio de una unidad del {{item}}; se multiplica por la cantidad de la cotización.",
       "unit": "Unidad de medida",
       "unitCaption": "En qué se cobra y se cuenta el {{item}} (personas, horas, kilos…).",
-      "unitPlaceholder": "Elegí una unidad"
+      "unitPlaceholder": "Elegí una unidad",
+      "sku": "SKU",
+      "skuPlaceholder": "Código interno (opcional)",
+      "category": "Categoría",
+      "categoryPlaceholder": "Sin categoría",
+      "cost": "Costo",
+      "costCaption": "Interno: solo lo ven quienes tienen permiso. Nunca aparece en cotizaciones ni eventos.",
+      "minQuantity": "Cantidad mínima",
+      "minQuantityCaption": "Menor cantidad que puede tener una línea de cotización de este {{item}}, en su unidad."
     },
     "duplicateConfirm": {
       "title": "¿Duplicar este {{item}}?",
@@ -50,6 +62,18 @@
     "enableConfirm": {
       "title": "¿Activar este {{item}}?",
       "content": "Volverá a estar disponible para nuevas cotizaciones."
+    },
+    "detailFields": {
+      "sku": "SKU",
+      "category": "Categoría",
+      "cost": "Costo",
+      "minQuantity": "Cantidad mínima"
+    },
+    "filter": {
+      "category": "Categoría",
+      "allCategories": "Todas las categorías",
+      "noCategory": "Sin categoría",
+      "emptyFiltered": "No hay {{items}} en esta categoría"
     }
   },
   "prices": {
@@ -133,6 +157,9 @@
     "priceInvalid": "Precio inválido",
     "tiersDuplicate": "Hay paquetes con la misma cantidad",
     "unitRequired": "Elegí una unidad de medida",
-    "maxSelectInvalid": "Selección máxima inválida"
+    "maxSelectInvalid": "Selección máxima inválida",
+    "skuInvalid": "SKU inválido (hasta 64 caracteres)",
+    "costInvalid": "Costo inválido",
+    "minQuantityInvalid": "La cantidad mínima debe ser 1 o más"
   }
 }

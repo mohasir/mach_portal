@@ -1,7 +1,14 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { DEFAULT_UNIT_CODE } from '@repo/schemas';
 import { db } from '../index';
-import { options, optionGroups, productPriceTiers, products, unitsOfMeasure } from '../schema';
+import {
+  options,
+  optionGroups,
+  productCategories,
+  productPriceTiers,
+  products,
+  unitsOfMeasure,
+} from '../schema';
 import type { Executor } from '../index';
 
 export interface SeedTier {
@@ -29,9 +36,16 @@ export interface SeedProduct {
   price?: number;
   // Code of a unit the tenant already has (seedUnitsOfMeasure runs first); defaults to 'pers'.
   uomCode?: string;
+  // Smallest quantity per quote line; defaults to the smallest tier, or 1 without tiers.
+  minQuantity?: number;
+  // Category name, created for the tenant when missing.
+  category?: string;
   tiers: SeedTier[];
   groups: SeedGroup[];
 }
+
+export const seedMinQuantity = (p: Pick<SeedProduct, 'minQuantity' | 'tiers'>): number =>
+  p.minQuantity ?? (p.tiers.length > 0 ? Math.min(...p.tiers.map((t) => t.quantity)) : 1);
 
 const SWEET_TOPPINGS: SeedGroup = {
   label: 'Premium Toppings',
@@ -76,6 +90,7 @@ const SWEET_SYRUPS: SeedGroup = {
 export const SEED_CATALOG: SeedProduct[] = [
   {
     name: 'Crepes',
+    category: 'Desserts',
     description: 'Crepes preparados en vivo con toppings, frutas y jarabes premium.',
     tiers: [
       { quantity: 30, price: 63000 },
@@ -94,6 +109,7 @@ export const SEED_CATALOG: SeedProduct[] = [
   },
   {
     name: 'Mini Pancakes',
+    category: 'Desserts',
     description: 'Pancakes miniatura apilados con toppings a elección.',
     tiers: [
       { quantity: 30, price: 61000 },
@@ -113,6 +129,7 @@ export const SEED_CATALOG: SeedProduct[] = [
   },
   {
     name: 'Crepaletas',
+    category: 'Desserts',
     description: 'Paletas de crepe bañadas y decoradas al momento.',
     tiers: [
       { quantity: 30, price: 48500 },
@@ -132,6 +149,7 @@ export const SEED_CATALOG: SeedProduct[] = [
   },
   {
     name: 'Esquites',
+    category: 'Snacks',
     description: 'Elote desgranado al estilo mexicano con base de maíz fresco.',
     tiers: [
       { quantity: 30, price: 41000 },
@@ -187,6 +205,7 @@ export const SEED_CATALOG: SeedProduct[] = [
   },
   {
     name: 'Nachos',
+    category: 'Snacks',
     description: 'Estación de nachos con base a elección y guarniciones incluidas.',
     tiers: [
       { quantity: 30, price: 50000 },
@@ -236,6 +255,7 @@ export const SEED_CATALOG: SeedProduct[] = [
   },
   {
     name: 'Fruit Station',
+    category: 'Desserts',
     description: 'Selección de fruta fresca con yogurt y toppings crocantes.',
     tiers: [
       { quantity: 30, price: 46000 },
@@ -300,6 +320,7 @@ export const SEED_CATALOG: SeedProduct[] = [
   },
   {
     name: 'Snack Station',
+    category: 'Snacks',
     description: 'Botanas saladas y dulces con chips base, toppings y frutas.',
     tiers: [
       { quantity: 30, price: 43500 },
@@ -373,6 +394,7 @@ export const SEED_CATALOG: SeedProduct[] = [
   },
   {
     name: 'Popsicles',
+    category: 'Desserts',
     description: 'Paletas heladas artesanales con toppings, frutas y jarabes.',
     tiers: [
       { quantity: 30, price: 47000 },
@@ -442,6 +464,7 @@ export const SEED_CATALOG: SeedProduct[] = [
   },
   {
     name: 'Hot Chocolate',
+    category: 'Drinks',
     description: 'Chocolate caliente premium con toppings, salsas y galleta a elección.',
     tiers: [
       { quantity: 30, price: 42000 },
@@ -505,6 +528,7 @@ export const SEED_CATALOG: SeedProduct[] = [
   },
   {
     name: 'Craft Bar',
+    category: 'Drinks',
     description:
       'Barra de cócteles de autor con bartender profesional. El alcohol lo provee el cliente; el bartender entrega una lista de compras personalizada antes del evento.',
     isPremium: true,
@@ -546,6 +570,29 @@ export const SEED_CATALOG: SeedProduct[] = [
   },
 ];
 
+// Idempotent by name (case-insensitive, like the unique index); new ones go at the end.
+async function seedCategoryId(tenantId: string, name: string, x: Executor): Promise<string> {
+  const match = and(
+    eq(productCategories.tenantId, tenantId),
+    sql`lower(${productCategories.name}) = lower(${name})`,
+  );
+  const [existing] = await x
+    .select({ id: productCategories.id })
+    .from(productCategories)
+    .where(match)
+    .limit(1);
+  if (existing) return existing.id;
+  const [last] = await x
+    .select({ value: sql<number>`coalesce(max(${productCategories.sortOrder}), -1)::int` })
+    .from(productCategories)
+    .where(eq(productCategories.tenantId, tenantId));
+  const [created] = await x
+    .insert(productCategories)
+    .values({ tenantId, name, sortOrder: (last?.value ?? -1) + 1 })
+    .returning({ id: productCategories.id });
+  return created!.id;
+}
+
 export async function seedCatalog(
   tenantId: string,
   x: Executor = db,
@@ -572,6 +619,8 @@ export async function seedCatalog(
       .limit(1);
     if (!unit) throw new Error(`Unit "${uomCode}" does not exist for tenant ${tenantId}`);
 
+    const categoryId = p.category ? await seedCategoryId(tenantId, p.category, x) : null;
+
     const [product] = await x
       .insert(products)
       .values({
@@ -580,6 +629,8 @@ export async function seedCatalog(
         isPremium: p.isPremium ?? false,
         price: p.price ?? null,
         uomId: unit.id,
+        minQuantity: seedMinQuantity(p),
+        categoryId,
         sortOrder: productIndex,
         tenantId,
       })

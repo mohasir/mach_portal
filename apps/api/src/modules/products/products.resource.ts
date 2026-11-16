@@ -2,11 +2,13 @@ import { isQuotable } from './products.pricing';
 import {
   options,
   optionGroups,
+  productCategories,
   productPriceTiers,
   products,
   unitsOfMeasure,
 } from '../../db/schema';
 
+// `cost` is deliberately absent: it is internal and only `productCostColumns` selects it.
 export const publicProductColumns = {
   id: products.id,
   name: products.name,
@@ -16,6 +18,18 @@ export const publicProductColumns = {
   sortOrder: products.sortOrder,
   price: products.price,
   uomId: products.uomId,
+  categoryId: products.categoryId,
+  sku: products.sku,
+  minQuantity: products.minQuantity,
+} as const;
+
+// Added to the selection only for callers holding product_cost.read.
+export const productCostColumns = { ...publicProductColumns, cost: products.cost } as const;
+
+export const categoryRefColumns = {
+  id: productCategories.id,
+  name: productCategories.name,
+  isActive: productCategories.isActive,
 } as const;
 
 // What the web needs to write a quantity in the product's unit ("40 personas", "5 kg").
@@ -54,9 +68,23 @@ export const publicOptionColumns = {
   sortOrder: options.sortOrder,
 } as const;
 
-export type PublicProduct = Pick<typeof products.$inferSelect, keyof typeof publicProductColumns>;
+// A row read with `productCostColumns` carries `cost`; one read with `publicProductColumns` does not.
+export type PublicProduct = Pick<
+  typeof products.$inferSelect,
+  keyof typeof publicProductColumns
+> & {
+  cost?: number | null;
+};
 export type UnitRef = Pick<typeof unitsOfMeasure.$inferSelect, keyof typeof unitRefColumns>;
 export type UnitsById = ReadonlyMap<string, UnitRef>;
+export type CategoryRef = Pick<
+  typeof productCategories.$inferSelect,
+  keyof typeof categoryRefColumns
+>;
+export type CategoriesById = ReadonlyMap<string, CategoryRef>;
+
+// Whether the caller may read the internal cost; false unless a caller states otherwise.
+export type CostVisibility = { canSeeCost?: boolean };
 export type PublicTier = Pick<
   typeof productPriceTiers.$inferSelect,
   keyof typeof publicTierColumns
@@ -75,7 +103,23 @@ const unitRefResource = (unit: UnitRef) => ({
   dimension: unit.dimension,
 });
 
-export const productResource = (row: PublicProduct, quotable: boolean, unit: UnitRef) => ({
+const categoryRefResource = (category: CategoryRef) => ({
+  id: category.id,
+  name: category.name,
+  isActive: category.isActive,
+});
+
+export type ProductRefs = {
+  quotable: boolean;
+  unit: UnitRef;
+  category: CategoryRef | null;
+};
+
+export const productResource = (
+  row: PublicProduct,
+  { quotable, unit, category }: ProductRefs,
+  { canSeeCost = false }: CostVisibility = {},
+) => ({
   id: row.id,
   name: row.name,
   description: row.description,
@@ -85,7 +129,12 @@ export const productResource = (row: PublicProduct, quotable: boolean, unit: Uni
   price: row.price,
   uomId: row.uomId,
   unit: unitRefResource(unit),
+  categoryId: row.categoryId,
+  category: category ? categoryRefResource(category) : null,
+  sku: row.sku,
+  minQuantity: row.minQuantity,
   quotable,
+  ...(canSeeCost ? { cost: row.cost ?? null } : {}),
 });
 
 // products.uom_id is NOT NULL with a foreign key, so a missing entry means the units were read
@@ -95,6 +144,19 @@ const unitOf = (product: PublicProduct, units: UnitsById): UnitRef => {
   if (!unit) throw new Error(`Unit ${product.uomId} of product ${product.id} was not loaded`);
   return unit;
 };
+
+// Same reasoning as unitOf, for the optional category.
+const categoryOf = (product: PublicProduct, categories: CategoriesById): CategoryRef | null => {
+  if (!product.categoryId) return null;
+  const category = categories.get(product.categoryId);
+  if (!category) {
+    throw new Error(`Category ${product.categoryId} of product ${product.id} was not loaded`);
+  }
+  return category;
+};
+
+// What a product row refers to, read once per list.
+export type ProductLookups = { units: UnitsById; categories: CategoriesById };
 
 export const tierResource = (row: PublicTier) => ({
   id: row.id,
@@ -138,17 +200,25 @@ export type ProductWithGroups = ProductResource & {
 
 export type ProductWithTiers = ProductResource & { priceTiers: TierResource[] };
 
+const refsOf = (
+  product: PublicProduct,
+  tiers: readonly { quantity: number }[],
+  priceTiersActive: boolean,
+  { units, categories }: ProductLookups,
+): ProductRefs => ({
+  quotable: isQuotable(product, tiers, priceTiersActive),
+  unit: unitOf(product, units),
+  category: categoryOf(product, categories),
+});
+
 export const productWithTiersResource = (
   product: PublicProduct,
   tierRows: PublicTier[],
   priceTiersActive: boolean,
-  units: UnitsById,
+  lookups: ProductLookups,
+  visibility: CostVisibility = {},
 ): ProductWithTiers => ({
-  ...productResource(
-    product,
-    isQuotable(product, tierRows, priceTiersActive),
-    unitOf(product, units),
-  ),
+  ...productResource(product, refsOf(product, tierRows, priceTiersActive, lookups), visibility),
   priceTiers: tierRows.map(tierResource),
 });
 
@@ -158,15 +228,16 @@ export const buildProductTree = (
   groupRows: PublicOptionGroup[],
   optionRows: PublicOption[],
   priceTiersActive: boolean,
-  units: UnitsById,
+  lookups: ProductLookups,
+  visibility: CostVisibility = {},
 ): ProductWithGroups[] =>
   productRows.map((product) => {
     const productTiers = tierRows.filter((tier) => tier.productId === product.id);
     return {
       ...productResource(
         product,
-        isQuotable(product, productTiers, priceTiersActive),
-        unitOf(product, units),
+        refsOf(product, productTiers, priceTiersActive, lookups),
+        visibility,
       ),
       priceTiers: productTiers.map(tierResource),
       optionGroups: groupRows
@@ -184,14 +255,16 @@ export const buildPricesList = (
   productRows: PublicProduct[],
   tierRows: PublicTier[],
   priceTiersActive: boolean,
-  units: UnitsById,
+  lookups: ProductLookups,
+  visibility: CostVisibility = {},
 ): ProductWithTiers[] =>
   productRows.map((product) =>
     productWithTiersResource(
       product,
       tierRows.filter((tier) => tier.productId === product.id),
       priceTiersActive,
-      units,
+      lookups,
+      visibility,
     ),
   );
 

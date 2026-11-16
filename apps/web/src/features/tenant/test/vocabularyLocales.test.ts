@@ -5,6 +5,7 @@ import esVocabulary from '@/locales/es/vocabulary.json';
 import enAdmin from '@/locales/en/admin.json';
 import enApi from '@/locales/en/api.json';
 import enCatalog from '@/locales/en/catalog.json';
+import enProductCategories from '@/locales/en/productCategories.json';
 import enDashboard from '@/locales/en/dashboard.json';
 import enEvents from '@/locales/en/events.json';
 import enQuotes from '@/locales/en/quotes.json';
@@ -14,6 +15,7 @@ import enSupport from '@/locales/en/support.json';
 import esAdmin from '@/locales/es/admin.json';
 import esApi from '@/locales/es/api.json';
 import esCatalog from '@/locales/es/catalog.json';
+import esProductCategories from '@/locales/es/productCategories.json';
 import esDashboard from '@/locales/es/dashboard.json';
 import esEvents from '@/locales/es/events.json';
 import esQuotes from '@/locales/es/quotes.json';
@@ -30,6 +32,7 @@ const NAMESPACES: Record<string, { es: Tree; en: Tree }> = {
   catalog: { es: esCatalog, en: enCatalog },
   dashboard: { es: esDashboard, en: enDashboard },
   events: { es: esEvents, en: enEvents },
+  productCategories: { es: esProductCategories, en: enProductCategories },
   quotes: { es: esQuotes, en: enQuotes },
   roles: { es: esRoles, en: enRoles },
   settings: { es: esSettings, en: enSettings },

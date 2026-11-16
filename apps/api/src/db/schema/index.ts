@@ -16,3 +16,4 @@ export * from './roles';
 export * from './features';
 export * from './tenantProfile';
 export * from './unitsOfMeasure';
+export * from './productCategories';

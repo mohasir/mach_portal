@@ -8,7 +8,13 @@ import { formatQuantity } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useLineConfig } from '../../../hooks/useLineConfig';
 import type { LineDraft } from '../../../hooks/useQuoteBuilder';
-import { isQuantityLocked, lineSubtotalForQuantity, usesTierPicker } from '../../../lineHelpers';
+import {
+  isQuantityLocked,
+  lineMinQuantity,
+  lineSubtotalForQuantity,
+  selectableTiers,
+  usesTierPicker,
+} from '../../../lineHelpers';
 import { OptionGroupChips } from './OptionGroupChips';
 
 interface LineCardProps {
@@ -32,7 +38,8 @@ export function LineCard({
 }: LineCardProps) {
   const { t } = useTranslation('quotes');
   const { money } = useMoneyFormatter();
-  const { priceTiersEnabled, configurableOptions, minPersons } = useLineConfig();
+  const { priceTiersEnabled, configurableOptions } = useLineConfig();
+  const minQuantity = lineMinQuantity(product, canEditPricing);
   const tierPicker = usesTierPicker(product, priceTiersEnabled);
   const quantityLocked = isQuantityLocked(product, priceTiersEnabled);
 
@@ -42,7 +49,7 @@ export function LineCard({
   };
 
   const handleQuantityChange = (value: number | null) => {
-    const quantity = value ?? minPersons;
+    const quantity = value ?? minQuantity;
     onChange({
       quantity,
       subtotal: lineSubtotalForQuantity(product.price, quantity, line.subtotal),
@@ -80,7 +87,7 @@ export function LineCard({
                       disabled={readOnly}
                       value={line.quantity}
                       onChange={handleTierChange}
-                      options={product.priceTiers.map((tier) => ({
+                      options={selectableTiers(product).map((tier) => ({
                         value: tier.quantity,
                         label: `${formatQuantity(tier.quantity, product.unit)} — ${money(tier.price)}`,
                       }))}
@@ -90,7 +97,7 @@ export function LineCard({
                       <InputNumber
                         disabled={readOnly || quantityLocked}
                         className="w-full"
-                        min={minPersons}
+                        min={minQuantity}
                         precision={0}
                         value={line.quantity}
                         onChange={handleQuantityChange}

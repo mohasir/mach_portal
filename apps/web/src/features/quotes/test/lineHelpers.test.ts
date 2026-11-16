@@ -3,20 +3,23 @@ import {
   buildNewLine,
   getPickerState,
   isQuantityLocked,
+  lineMinQuantity,
   lineSubtotalForQuantity,
+  selectableTiers,
   usesTierPicker,
 } from '../lineHelpers';
 
 const tiered = {
   quotable: true,
   price: null,
+  minQuantity: 1,
   priceTiers: [
     { quantity: 100, price: 20000 },
     { quantity: 50, price: 12000 },
   ],
 };
-const flat = { quotable: true, price: 350, priceTiers: [] };
-const notQuotable = { quotable: false, price: null, priceTiers: [] };
+const flat = { quotable: true, price: 350, minQuantity: 10, priceTiers: [] };
+const notQuotable = { quotable: false, price: null, minQuantity: 1, priceTiers: [] };
 
 describe('lineSubtotalForQuantity', () => {
   it('multiplies the per-unit price by the quantity in cents', () => {
@@ -38,29 +41,50 @@ describe('usesTierPicker', () => {
 
 describe('buildNewLine', () => {
   it('starts on the first tier with the add-on on', () => {
-    expect(buildNewLine(tiered, { priceTiersEnabled: true, minPersons: 10 })).toEqual({
+    expect(buildNewLine(tiered, { priceTiersEnabled: true })).toEqual({
       quantity: 100,
       subtotal: 20000,
     });
   });
 
-  it('uses price x minimum quantity without the add-on', () => {
-    expect(buildNewLine(flat, { priceTiersEnabled: false, minPersons: 10 })).toEqual({
+  it('uses price x the product minimum quantity without the add-on', () => {
+    expect(buildNewLine(flat, { priceTiersEnabled: false })).toEqual({
       quantity: 10,
       subtotal: 3500,
     });
   });
 
   it('falls back to the fixed price when the add-on is on but the product has no tiers', () => {
-    expect(buildNewLine(flat, { priceTiersEnabled: true, minPersons: 20 })).toEqual({
+    expect(buildNewLine({ ...flat, minQuantity: 20 }, { priceTiersEnabled: true })).toEqual({
       quantity: 20,
       subtotal: 7000,
     });
   });
 
+  it('starts on the first tier that reaches the product minimum', () => {
+    expect(buildNewLine({ ...tiered, minQuantity: 60 }, { priceTiersEnabled: true })).toEqual({
+      quantity: 100,
+      subtotal: 20000,
+    });
+  });
+
   it('returns null for a product that cannot be quoted', () => {
-    expect(buildNewLine(notQuotable, { priceTiersEnabled: true, minPersons: 10 })).toBeNull();
-    expect(buildNewLine(tiered, { priceTiersEnabled: false, minPersons: 10 })).toBeNull();
+    expect(buildNewLine(notQuotable, { priceTiersEnabled: true })).toBeNull();
+    expect(buildNewLine(tiered, { priceTiersEnabled: false })).toBeNull();
+  });
+});
+
+describe('selectableTiers', () => {
+  it('leaves out the tiers below the product minimum quantity', () => {
+    expect(selectableTiers({ ...tiered, minQuantity: 60 })).toEqual([
+      { quantity: 100, price: 20000 },
+    ]);
+    expect(selectableTiers({ ...tiered, minQuantity: 50 })).toHaveLength(2);
+  });
+
+  it('turns off the tier picker when no tier reaches the minimum', () => {
+    expect(usesTierPicker({ ...tiered, minQuantity: 500 }, true)).toBe(false);
+    expect(isQuantityLocked({ ...tiered, minQuantity: 500 }, true)).toBe(true);
   });
 });
 
@@ -93,6 +117,15 @@ describe('isQuantityLocked', () => {
 
   it('is locked when there is no price and no tier picker is shown', () => {
     expect(isQuantityLocked({ ...tiered, quotable: true }, false)).toBe(true);
-    expect(isQuantityLocked({ quotable: true, price: null, priceTiers: [] }, true)).toBe(true);
+    expect(
+      isQuantityLocked({ quotable: true, price: null, minQuantity: 1, priceTiers: [] }, true),
+    ).toBe(true);
+  });
+});
+
+describe('lineMinQuantity', () => {
+  it('is the product minimum, or 1 for whoever manages line pricing', () => {
+    expect(lineMinQuantity(flat, false)).toBe(10);
+    expect(lineMinQuantity(flat, true)).toBe(1);
   });
 });

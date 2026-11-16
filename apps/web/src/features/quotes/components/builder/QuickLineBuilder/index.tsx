@@ -19,11 +19,11 @@ interface QuickLineBuilderProps {
 export function QuickLineBuilder({ catalog, readOnly, canEditPricing }: QuickLineBuilderProps) {
   const { t } = useTranslation('quotes');
   const vocabulary = useCatalogVocabulary();
-  const { priceTiersEnabled, minPersons } = useLineConfig();
+  const { priceTiersEnabled } = useLineConfig();
   const { state, addLine, removeLine, updateLine } = useQuoteBuilder();
 
   const handleAdd = (product: Product) => {
-    const newLine = buildNewLine(product, { priceTiersEnabled, minPersons });
+    const newLine = buildNewLine(product, { priceTiersEnabled });
     if (!newLine) return;
     addLine({ key: nextLineKey(), productId: product.id, ...newLine, selections: {} });
   };

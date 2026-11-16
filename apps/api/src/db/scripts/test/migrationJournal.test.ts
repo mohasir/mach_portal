@@ -11,8 +11,9 @@ const { entries } = JSON.parse(readFileSync(journalPath, 'utf8')) as {
 describe('drizzle migration journal', () => {
   it('has strictly increasing `when` values in entry order', () => {
     entries.slice(1).forEach((entry, i) => {
-      expect(entry.when, `${entry.tag} must be after ${entries[i].tag}`).toBeGreaterThan(
-        entries[i].when,
+      const previous = entries[i]!;
+      expect(entry.when, `${entry.tag} must be after ${previous.tag}`).toBeGreaterThan(
+        previous.when,
       );
     });
   });

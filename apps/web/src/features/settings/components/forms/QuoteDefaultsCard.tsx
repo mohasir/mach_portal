@@ -1,7 +1,6 @@
 'use client';
 import { Button, Form, InputNumber, Select, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { CURRENCY_OPTIONS } from '../../contants';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
@@ -20,7 +19,6 @@ import { WrapperCard } from '@/components/shared/WrapperCard';
 
 export function QuoteDefaultsCard() {
   const { t } = useTranslation('settings');
-  const vocabulary = useCatalogVocabulary();
   const can = useCan();
   const { data, isLoading } = useConfig();
   const { updateQuoteDefaults, isPending } = useUpdateQuoteDefaults();
@@ -72,20 +70,6 @@ export function QuoteDefaultsCard() {
             rules={[{ required: true, message: t('validation.quoteValidityInvalid') }]}
           >
             <InputNumber min={1} className="w-full" suffix={t('quoteDefaults.months')} />
-          </Form.Item>
-        </FieldRow>
-
-        <FieldRow
-          title={t('quoteDefaults.minPersonsPerLine')}
-          caption={t('quoteDefaults.minPersonsPerLineCaption', vocabulary)}
-          required
-        >
-          <Form.Item
-            name="minPersonsPerLine"
-            className="mb-0"
-            rules={[{ required: true, message: t('validation.minPersonsInvalid') }]}
-          >
-            <InputNumber min={1} className="w-full" />
           </Form.Item>
         </FieldRow>
 

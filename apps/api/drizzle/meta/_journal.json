@@ -71,6 +71,13 @@
       "when": 1794662000000,
       "tag": "0009_units_of_measure",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794680916542,
+      "tag": "0010_product_fields",
+      "breakpoints": true
     }
   ]
 }

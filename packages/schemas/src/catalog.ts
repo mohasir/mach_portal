@@ -8,6 +8,8 @@ export type OptionGroupType = z.infer<typeof optionGroupTypeSchema>;
 // Prices are stored in Postgres integer columns; larger values would fail at insert time.
 const PG_INT_MAX = 2_147_483_647;
 
+export const SKU_MAX = 64;
+
 export const priceTierSchema = z.object({
   quantity: z.number().int().min(1, 'catalog.validation.quantityInvalid'),
   price: z
@@ -40,6 +42,30 @@ const productMutationFields = {
     .max(PG_INT_MAX, 'catalog.validation.priceInvalid')
     .nullable()
     .optional(),
+  // A blank SKU clears it (null) instead of keeping the stored one (undefined).
+  sku: z.preprocess(
+    (v) => (typeof v === 'string' ? v.trim() || null : v),
+    z.string().max(SKU_MAX, 'catalog.validation.skuInvalid').nullable().optional(),
+  ),
+  // Internal cost in cents, written only with the product_cost update permission. Null clears it,
+  // omitted keeps the stored one on update.
+  cost: z
+    .number()
+    .int()
+    .min(0, 'catalog.validation.costInvalid')
+    .max(PG_INT_MAX, 'catalog.validation.costInvalid')
+    .nullable()
+    .optional(),
+  // Smallest quantity a quote line of the product may have, in the product's unit. Omitted keeps
+  // the stored one on update (1 on create).
+  minQuantity: z
+    .number()
+    .int()
+    .min(1, 'catalog.validation.minQuantityInvalid')
+    .max(PG_INT_MAX, 'catalog.validation.minQuantityInvalid')
+    .optional(),
+  // Null leaves the product without a category; omitted keeps the stored one on update.
+  categoryId: z.uuid().nullable().optional(),
 } as const;
 
 export const createProductSchema = z.object(productMutationFields);

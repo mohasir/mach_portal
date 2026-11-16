@@ -81,6 +81,12 @@ function productNotQuotable() {
     cause: new AppError(ErrorCodes.product.NOT_QUOTABLE),
   });
 }
+function belowMinQuantity() {
+  return new TRPCError({
+    code: 'BAD_REQUEST',
+    cause: new AppError(ErrorCodes.quote.BELOW_MIN_QUANTITY),
+  });
+}
 function pricingNotAllowed() {
   return new TRPCError({
     code: 'FORBIDDEN',
@@ -118,7 +124,8 @@ export class QuotePdfGenerator {
       const lines = buildQuoteLineDetails(result.lineRows, result.optionRows);
       // Inactive stations stay in the tree so older quotes keep their line; the PDF itself
       // skips inactive groups and options (see quotes.pdf.ts).
-      const { productRows, tierRows, groupRows, optionRows, units } =
+      // Read without the cost: the PDF is sent to the client and never shows it.
+      const { productRows, tierRows, groupRows, optionRows, lookups } =
         await repos.products.findTree(true);
       const catalog = buildProductTree(
         productRows,
@@ -126,7 +133,7 @@ export class QuotePdfGenerator {
         groupRows,
         optionRows,
         this.priceTiersActive,
-        units,
+        lookups,
       );
       const templateRow = await repos.templates.findByType(TEMPLATE_TYPES.QUOTE_PDF);
       const { content: template } = quotePdfTemplateResource(templateRow);
@@ -541,6 +548,9 @@ export class QuotesService {
 
     const productTiers = ctx.tiers.filter((tier) => tier.productId === line.productId);
     if (!isQuotable(product, productTiers, this.priceTiersActive)) throw productNotQuotable();
+
+    // MANAGE_LINE_PRICING may quote below the product minimum, like it may set the subtotal.
+    if (!canManagePricing && line.quantity < product.minQuantity) throw belowMinQuantity();
 
     // Only MANAGE_LINE_PRICING (admin/superadmin) may set a subtotal that deviates from the
     // catalog — everyone else's lines must land on an active price tier or on price × persons

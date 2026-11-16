@@ -99,7 +99,6 @@ describe('config tenant isolation', () => {
         r.updateQuoteDefaults({
           depositRate: 0.3,
           quoteValidityMonths: 6,
-          minPersonsPerLine: 10,
           quoteSeqStart: 77,
           currency: 'MXN',
           optionsSelectionDeadlineDays: 3,

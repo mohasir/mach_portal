@@ -181,7 +181,8 @@ describe('0001 on a legacy database with data', () => {
   let legacyCounts: Record<string, number>;
   let legacySets: Record<string, string[]>;
   let legacyPrints: Fingerprints;
-  // Legacy columns that still exist after 0001 (only app_settings.id is dropped).
+  // Legacy columns that still exist after the migrations (app_settings.id and
+  // app_settings.min_persons_per_line are dropped).
   let survivingSets: Record<string, string[]>;
   let survivingPrints: Fingerprints;
   let renamedSets: Record<string, string[]>;
@@ -193,9 +194,12 @@ describe('0001 on a legacy database with data', () => {
     legacyCounts = await countRows(db.sql, legacyTables);
     legacySets = await legacyColumnSets(db.sql);
     legacyPrints = await fingerprints(db.sql, legacySets);
+    // 0010 moves min_persons_per_line into products.min_quantity and drops it.
     survivingSets = {
       ...legacySets,
-      app_settings: legacySets['app_settings']!.filter((c) => c !== 'id'),
+      app_settings: legacySets['app_settings']!.filter(
+        (c) => c !== 'id' && c !== 'min_persons_per_line',
+      ),
     };
     survivingPrints = await fingerprints(db.sql, survivingSets);
     // 0007 renames num_persons to quantity; row content is what must survive.
@@ -278,6 +282,7 @@ describe('0001 on a legacy database with data', () => {
       tenant_feature_events: 0,
       tenant_profile: 1,
       units_of_measure: SYSTEM_UNITS.length,
+      product_categories: 0,
     });
   });
 
@@ -318,8 +323,8 @@ describe('0001 on a legacy database with data', () => {
         quote_stage_settings: legacyCounts['quote_stages'],
         units_of_measure: SYSTEM_UNITS.length,
       };
-      const n = created[t] ?? legacyCounts[t];
-      expect(rows, t).toEqual([{ tenant_id: orgId, n }]);
+      const n = created[t] ?? legacyCounts[t] ?? 0;
+      expect(rows, t).toEqual(n === 0 ? [] : [{ tenant_id: orgId, n }]);
     }
   });
 
@@ -358,14 +363,19 @@ describe('0001 on a legacy database with data', () => {
 
   it('turns the app_settings singleton into the tenant row with the original values', async () => {
     const [row] = await db.sql`
-      SELECT tenant_id, deposit_rate::text, quote_validity_months, min_persons_per_line,
+      SELECT tenant_id, deposit_rate::text, quote_validity_months,
              quote_seq_start, currency, catalog_sortable, options_selection_deadline_days,
              allow_select_options_at_quote, prompt_rate_changes, hide_stale_quotes,
              apply_tax_by_state, card_surcharge_rate::text,
              to_char(updated_at, 'YYYY-MM-DD HH24:MI:SS') AS updated_at
       FROM app_settings`;
-    expect(row).toEqual({ tenant_id: orgId, ...LEGACY_APP_SETTINGS });
+    const { min_persons_per_line: minPerLine, ...kept } = LEGACY_APP_SETTINGS;
+    expect(row).toEqual({ tenant_id: orgId, ...kept });
     expect(await columnsOf(db.sql, 'app_settings')).not.toContain('id');
+    expect(await columnsOf(db.sql, 'app_settings')).not.toContain('min_persons_per_line');
+    // Both legacy products have a 30 tier, below the global 45: they keep that tier quotable.
+    const minimums = await db.sql`SELECT DISTINCT min_quantity FROM products`;
+    expect(minimums).toEqual([{ min_quantity: Math.min(minPerLine, 30) }]);
   });
 
   it('keeps quote numbering and enforces the per-tenant uniques', async () => {
@@ -478,9 +488,9 @@ describe('0001 backfill edge cases', () => {
     ]);
     const post = await verifyMultitenant(db.url);
     // Migrated only up to 0003, so the RLS checks (0005), the feature tables (0006) and the
-    // later tables (units_of_measure, 0009) legitimately fail here.
+    // later tables (units_of_measure, 0009; product_categories, 0010) legitimately fail here.
     const rlsProblem =
-      /row level security|policy|^tenant_(features?|profile)\w*: missing table$|^units_of_measure: missing table/;
+      /row level security|policy|^tenant_(features?|profile)\w*: missing table$|^(units_of_measure|product_categories): missing table/;
     expect(post.problems.filter((p) => !rlsProblem.test(p))).toEqual([
       'member: 2 row(s) without role_id',
       `organization: 1 without an owner role that has a member (${SLUG})`,

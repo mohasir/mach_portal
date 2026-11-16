@@ -546,7 +546,12 @@ export class QuotesRepository {
 
     const [productRows, tierRows, groupRows] = await Promise.all([
       this.db
-        .select({ id: products.id, isActive: products.isActive, price: products.price })
+        .select({
+          id: products.id,
+          isActive: products.isActive,
+          price: products.price,
+          minQuantity: products.minQuantity,
+        })
         .from(products)
         .where(and(inArray(products.id, uniqueIds), tenantEq(products, this.tenantId))),
       this.db

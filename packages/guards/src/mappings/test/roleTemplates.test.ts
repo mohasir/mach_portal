@@ -58,6 +58,33 @@ describe('ROLE_TEMPLATES', () => {
     expect(isCatalogPermission('unit_of_measure', 'delete')).toBe(false);
   });
 
+  it('gives product categories to the roles that administer the catalog, at the product level', () => {
+    const actionsOf = (key: string) =>
+      template(key)
+        .permissions.filter((p) => p.resource === 'product_category')
+        .map((p) => p.action)
+        .sort();
+    expect(actionsOf(ROLES.ADMIN)).toEqual(['create', 'delete', 'disable', 'read', 'update']);
+    expect(actionsOf(ROLES.OPERATOR)).toEqual(['read']);
+    expect(actionsOf(ROLES.MEMBER)).toEqual([]);
+    expect(isCatalogPermission('product_category', 'enable')).toBe(true);
+    expect(isCatalogPermission('product_category', 'delete')).toBe(true);
+  });
+
+  it('keeps the product cost to the roles that administer the catalog', () => {
+    const actionsOf = (key: string) =>
+      template(key)
+        .permissions.filter((p) => p.resource === 'product_cost')
+        .map((p) => p.action)
+        .sort();
+    expect(actionsOf(ROLES.ADMIN)).toEqual(['read', 'update']);
+    expect(actionsOf(ROLES.OPERATOR)).toEqual([]);
+    expect(actionsOf(ROLES.MEMBER)).toEqual([]);
+    expect(isCatalogPermission('product_cost', 'read')).toBe(true);
+    expect(isCatalogPermission('product_cost', 'update')).toBe(true);
+    expect(isCatalogPermission('product_cost', 'create')).toBe(false);
+  });
+
   it('gives admin a few hard-coded grants', () => {
     const perms = template(ROLES.ADMIN).permissions;
     expect(perms).toContainEqual({ resource: 'user', action: 'list', scope: 'all' });

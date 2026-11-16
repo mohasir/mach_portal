@@ -69,6 +69,7 @@ export const TENANT_TABLES = [
   'notifications',
   'option_groups',
   'options',
+  'product_categories',
   'product_price_tiers',
   'products',
   'quote_assignment_history',
@@ -92,6 +93,7 @@ export const TENANT_TABLES = [
 const PARENT_LINKS: [string, string, string][] = [
   ['product_price_tiers', 'product_id', 'products'],
   ['products', 'uom_id', 'units_of_measure'],
+  ['products', 'category_id', 'product_categories'],
   ['option_groups', 'product_id', 'products'],
   ['options', 'option_group_id', 'option_groups'],
   ['quotes', 'client_id', 'clients'],

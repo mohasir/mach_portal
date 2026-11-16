@@ -1,13 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildProductPayload,
+  categoryFilterOptions,
+  costFieldMode,
+  filterByCategory,
   getDetailTabs,
   getNotQuotableHintKey,
   isNotQuotable,
+  mergeReorder,
+  NO_CATEGORY,
 } from '../helpers';
 
 const tiers = [{ quantity: 50, price: 10000 }];
-const values = { name: 'Taco bar', description: 'x', isPremium: true, uomId: 'unit-1' };
+const values = {
+  name: 'Taco bar',
+  description: 'x',
+  isPremium: true,
+  uomId: 'unit-1',
+  minQuantity: 1,
+};
 
 describe('buildProductPayload', () => {
   it('omits tiers when priceTiers is off so the API does not reject them', () => {
@@ -46,10 +57,96 @@ describe('buildProductPayload', () => {
 
   it('defaults isPremium to false', () => {
     const payload = buildProductPayload(
-      { name: 'a', isPremium: undefined as unknown as boolean, uomId: 'unit-1' },
+      { name: 'a', isPremium: undefined as unknown as boolean, uomId: 'unit-1', minQuantity: 1 },
       { tiers: [], priceTiersEnabled: false },
     );
     expect(payload.isPremium).toBe(false);
+  });
+});
+
+describe('buildProductPayload with SKU, category, minimum and cost', () => {
+  const off = { tiers, priceTiersEnabled: false };
+
+  it('sends the SKU, the category (null without one) and the minimum quantity', () => {
+    const payload = buildProductPayload(
+      { ...values, sku: 'AB-1', categoryId: 'cat-1', minQuantity: 25 },
+      off,
+    );
+    expect(payload).toMatchObject({ sku: 'AB-1', categoryId: 'cat-1', minQuantity: 25 });
+    const empty = buildProductPayload({ ...values, sku: undefined, categoryId: undefined }, off);
+    expect(empty).toMatchObject({ sku: null, categoryId: null });
+  });
+
+  it('sends the cost only when the caller may edit it', () => {
+    const withCost = { ...values, cost: 1200 };
+    expect(buildProductPayload(withCost, { ...off, costMode: 'edit' }).cost).toBe(1200);
+    expect(buildProductPayload({ ...values }, { ...off, costMode: 'edit' }).cost).toBeNull();
+    for (const costMode of ['read', 'hidden'] as const) {
+      expect(buildProductPayload(withCost, { ...off, costMode })).not.toHaveProperty('cost');
+    }
+    expect(buildProductPayload(withCost, off)).not.toHaveProperty('cost');
+  });
+});
+
+describe('costFieldMode', () => {
+  it('edits with read and update, shows with read only and hides otherwise', () => {
+    expect(costFieldMode({ canRead: true, canUpdate: true })).toBe('edit');
+    expect(costFieldMode({ canRead: true, canUpdate: false })).toBe('read');
+    expect(costFieldMode({ canRead: false, canUpdate: false })).toBe('hidden');
+    // Without read the stored cost is unknown, so the form would overwrite it blindly.
+    expect(costFieldMode({ canRead: false, canUpdate: true })).toBe('hidden');
+  });
+});
+
+describe('filterByCategory', () => {
+  const products = [
+    { id: 'a', categoryId: 'c1' },
+    { id: 'b', categoryId: null },
+    { id: 'c', categoryId: 'c2' },
+  ];
+
+  it('keeps every product without a filter', () => {
+    expect(filterByCategory(products, undefined)).toEqual(products);
+  });
+
+  it('keeps the products of a category, or those without one', () => {
+    expect(filterByCategory(products, 'c1').map((p) => p.id)).toEqual(['a']);
+    expect(filterByCategory(products, NO_CATEGORY).map((p) => p.id)).toEqual(['b']);
+  });
+});
+
+describe('categoryFilterOptions', () => {
+  it('offers the active categories and the inactive ones that still have products, by name', () => {
+    const products = [
+      { category: { id: 'old', name: 'Antigua' } },
+      { category: null },
+      { category: { id: 'b', name: 'Bebidas' } },
+    ];
+    const active = [
+      { id: 'p', name: 'Postres' },
+      { id: 'b', name: 'Bebidas' },
+    ];
+    expect(categoryFilterOptions(products, active)).toEqual([
+      { value: 'old', label: 'Antigua' },
+      { value: 'b', label: 'Bebidas' },
+      { value: 'p', label: 'Postres' },
+    ]);
+  });
+});
+
+describe('mergeReorder', () => {
+  it('returns the reordered list when nothing is filtered', () => {
+    expect(mergeReorder(['a', 'b', 'c'], ['c', 'a', 'b'])).toEqual(['c', 'a', 'b']);
+  });
+
+  it('moves the visible products inside the slots they held in the full list', () => {
+    expect(mergeReorder(['a', 'x', 'b', 'y', 'c'], ['c', 'a', 'b'])).toEqual([
+      'c',
+      'x',
+      'a',
+      'y',
+      'b',
+    ]);
   });
 });
 

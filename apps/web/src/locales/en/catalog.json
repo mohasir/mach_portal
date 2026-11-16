@@ -25,8 +25,12 @@
     "pricePerUnit": "{{price}} per {{unit}}",
     "optionGroupsCount": "{{count}} sections",
     "priceTiersCount": "{{count}} packages",
-    "create": { "title": "New {{item}}" },
-    "edit": { "title": "Edit {{item}}" },
+    "create": {
+      "title": "New {{item}}"
+    },
+    "edit": {
+      "title": "Edit {{item}}"
+    },
     "form": {
       "name": "Name",
       "namePlaceholder": "{{Item}} name",
@@ -37,7 +41,15 @@
       "priceCaption": "Optional. Price of one unit of the {{item}}; multiplied by the quantity on the quote.",
       "unit": "Unit of measure",
       "unitCaption": "What the {{item}} is priced and counted in (people, hours, kilos…).",
-      "unitPlaceholder": "Choose a unit"
+      "unitPlaceholder": "Choose a unit",
+      "sku": "SKU",
+      "skuPlaceholder": "Internal code (optional)",
+      "category": "Category",
+      "categoryPlaceholder": "No category",
+      "cost": "Cost",
+      "costCaption": "Internal: only people with permission see it. Never shown on quotes or events.",
+      "minQuantity": "Minimum quantity",
+      "minQuantityCaption": "Smallest quantity a quote line of this {{item}} may have, in its unit."
     },
     "duplicateConfirm": {
       "title": "Duplicate this {{item}}?",
@@ -50,6 +62,18 @@
     "enableConfirm": {
       "title": "Activate this {{item}}?",
       "content": "It will be available for new quotes again."
+    },
+    "detailFields": {
+      "sku": "SKU",
+      "category": "Category",
+      "cost": "Cost",
+      "minQuantity": "Minimum quantity"
+    },
+    "filter": {
+      "category": "Category",
+      "allCategories": "All categories",
+      "noCategory": "No category",
+      "emptyFiltered": "There are no {{items}} in this category"
     }
   },
   "prices": {
@@ -133,6 +157,9 @@
     "priceInvalid": "Invalid price",
     "tiersDuplicate": "Some packages have the same quantity",
     "unitRequired": "Choose a unit of measure",
-    "maxSelectInvalid": "Invalid max selection"
+    "maxSelectInvalid": "Invalid max selection",
+    "skuInvalid": "Invalid SKU (up to 64 characters)",
+    "costInvalid": "Invalid cost",
+    "minQuantityInvalid": "The minimum quantity must be 1 or more"
   }
 }

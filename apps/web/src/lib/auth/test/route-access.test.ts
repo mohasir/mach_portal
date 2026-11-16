@@ -27,6 +27,12 @@ describe('resolveRouteAccess', () => {
     });
   });
 
+  it('requires PRODUCT_CATEGORY:READ on the categories catalog', () => {
+    expect(resolveRouteAccess('/admin/product-categories')).toEqual({
+      [RESOURCES.PRODUCT_CATEGORY]: [ACTIONS.READ],
+    });
+  });
+
   it('requires ROLE:READ on the roles editor', () => {
     expect(resolveRouteAccess('/admin/roles')).toEqual({
       [RESOURCES.ROLE]: [ACTIONS.READ],
@@ -71,6 +77,7 @@ describe('resolveRouteFeature', () => {
       '/admin/users',
       '/admin/settings',
       '/admin/units-of-measure',
+      '/admin/product-categories',
       '/nowhere',
     ]) {
       expect(resolveRouteFeature(path)).toBeUndefined();

@@ -18,13 +18,14 @@ const withDatabase = (name: string) => {
   return url.toString();
 };
 
-// A copy of the migrations folder that stops right before 0009.
-function migrationsBefore(tag: string, dir: string) {
+// A copy of the migrations folder that stops right before 0009 (or right after it, so later
+// migrations do not change what this suite asserts).
+function migrationsBefore(tag: string, dir: string, { inclusive = false } = {}) {
   mkdirSync(join(dir, 'meta'));
   const journal = JSON.parse(readFileSync(join(MIGRATIONS_FOLDER, 'meta/_journal.json'), 'utf8'));
   const index = (journal.entries as { tag: string }[]).findIndex((e) => e.tag === tag);
   expect(index).toBeGreaterThan(0);
-  journal.entries = journal.entries.slice(0, index);
+  journal.entries = journal.entries.slice(0, inclusive ? index + 1 : index);
   writeFileSync(join(dir, 'meta/_journal.json'), JSON.stringify(journal));
   for (const { tag: t } of journal.entries as { tag: string }[])
     copyFileSync(join(MIGRATIONS_FOLDER, `${t}.sql`), join(dir, `${t}.sql`));
@@ -48,12 +49,15 @@ describe('0009 on a database with organizations and products', () => {
   let admin: postgres.Sql;
   let sql: postgres.Sql;
   let dir: string;
+  let throughDir: string;
 
   beforeAll(async () => {
     admin = postgres(serverUrl, { max: 1, onnotice: () => {} });
     await admin.unsafe(`CREATE DATABASE ${name}`);
     dir = mkdtempSync(join(tmpdir(), 'mt-mig-0009-'));
     migrationsBefore(TAG, dir);
+    throughDir = mkdtempSync(join(tmpdir(), 'mt-mig-0009-through-'));
+    migrationsBefore(TAG, throughDir, { inclusive: true });
     await runMigrate(withDatabase(name), { migrationsFolder: dir });
     sql = postgres(withDatabase(name), { max: 1, onnotice: () => {} });
     for (const id of tenants) {
@@ -78,7 +82,7 @@ describe('0009 on a database with organizations and products', () => {
       await sql`INSERT INTO role_permission (role_id, tenant_id, resource, action)
                 SELECT ${roleId}, tenant_id, ${resource}, ${action} FROM role WHERE id = ${roleId}`;
     }
-    await runMigrate(withDatabase(name));
+    await runMigrate(withDatabase(name), { migrationsFolder: throughDir });
   });
 
   afterAll(async () => {
@@ -86,6 +90,7 @@ describe('0009 on a database with organizations and products', () => {
     await admin?.unsafe(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
     await admin?.end();
     if (dir) rmSync(dir, { recursive: true, force: true });
+    if (throughDir) rmSync(throughDir, { recursive: true, force: true });
   });
 
   it('inserts exactly SYSTEM_UNITS for every pre-existing organization', async () => {

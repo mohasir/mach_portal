@@ -64,10 +64,15 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
                     isPremium: product.isPremium,
                     price: product.price,
                     uomId: product.uomId,
+                    sku: product.sku,
+                    categoryId: product.categoryId,
+                    cost: product.cost,
+                    minQuantity: product.minQuantity,
                   }
                 : undefined
             }
             currentUnit={product?.unit}
+            currentCategory={product?.category}
             tiers={product?.priceTiers.map((tier) => ({
               quantity: tier.quantity,
               price: tier.price,
