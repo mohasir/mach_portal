@@ -11,7 +11,7 @@ describe('price upper bound (Postgres integer column)', () => {
   });
 
   it('accepts the largest integer and rejects the next one for a tier price', () => {
-    expect(priceTierSchema.safeParse({ numPersons: 10, price: INT4_MAX }).success).toBe(true);
-    expect(priceTierSchema.safeParse({ numPersons: 10, price: INT4_MAX + 1 }).success).toBe(false);
+    expect(priceTierSchema.safeParse({ quantity: 10, price: INT4_MAX }).success).toBe(true);
+    expect(priceTierSchema.safeParse({ quantity: 10, price: INT4_MAX + 1 }).success).toBe(false);
   });
 });

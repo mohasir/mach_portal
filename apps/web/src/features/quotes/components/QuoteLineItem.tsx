@@ -15,7 +15,7 @@ export interface QuoteLineItemGroup {
 interface QuoteLineItemProps {
   icon: LucideIcon;
   name: string;
-  numPersons?: number;
+  quantity?: number;
   total?: number;
   groups: QuoteLineItemGroup[];
   onRemove?: () => void;
@@ -25,7 +25,7 @@ interface QuoteLineItemProps {
 export function QuoteLineItem({
   icon: Icon,
   name,
-  numPersons,
+  quantity,
   total,
   groups,
   onRemove,
@@ -63,8 +63,8 @@ export function QuoteLineItem({
             </Typography.Text>
           </div>
         )}
-        {numPersons !== undefined && (
-          <span className="shrink-0 text-right text-xs text-gray-500">{numPersons}</span>
+        {quantity !== undefined && (
+          <span className="shrink-0 text-right text-xs text-gray-500">{quantity}</span>
         )}
         {total !== undefined && (
           <span className="shrink-0 text-right text-base font-medium">{money(total)}</span>

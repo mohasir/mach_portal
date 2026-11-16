@@ -4,7 +4,7 @@ import { changedLines } from '../quotes.validation';
 
 const line = (over: Partial<QuoteLineInput> = {}): QuoteLineInput => ({
   productId: 'p1',
-  numPersons: 40,
+  quantity: 40,
   subtotal: 200,
   selections: [],
   ...over,
@@ -18,7 +18,7 @@ describe('changedLines', () => {
   it('flags a line whose product, persons, subtotal or selections differ', () => {
     const stored = [line({ selections: [{ optionGroupId: 'g', optionIds: ['a'] }] })];
     expect(changedLines([line({ productId: 'p2' })], stored)).toHaveLength(1);
-    expect(changedLines([line({ numPersons: 50 })], stored)).toHaveLength(1);
+    expect(changedLines([line({ quantity: 50 })], stored)).toHaveLength(1);
     expect(changedLines([line({ subtotal: 1 })], stored)).toHaveLength(1);
     expect(changedLines([line()], stored)).toHaveLength(1);
   });

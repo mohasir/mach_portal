@@ -125,7 +125,7 @@ async function seedTenant(tenant: TestTenant, label: string, spec: Spec): Promis
         tenantId: tenant.id,
         quoteId: confirmedQuoteIds[0]!,
         productId: productIds[name]!,
-        numPersons: 10,
+        quantity: 10,
         subtotal: 1000,
       })),
     );
@@ -253,7 +253,7 @@ describe('dashboard tenant isolation', () => {
         tenantId: b.id,
         quoteId: sa.confirmedQuoteIds[0]!,
         productId: sa.productIds['Menu A1']!,
-        numPersons: 10,
+        quantity: 10,
         subtotal: 1000,
       });
       const res = await svcA.topProducts(topQ);
@@ -266,7 +266,7 @@ describe('dashboard tenant isolation', () => {
         tenantId: a.id,
         quoteId: sb.confirmedQuoteIds[0]!,
         productId: sa.productIds['Menu A1']!,
-        numPersons: 10,
+        quantity: 10,
         subtotal: 1000,
       });
       const res = await svcA.topProducts(topQ);
@@ -279,7 +279,7 @@ describe('dashboard tenant isolation', () => {
         tenantId: a.id,
         quoteId: sa.confirmedQuoteIds[0]!,
         productId: sb.productIds['Menu B1']!,
-        numPersons: 10,
+        quantity: 10,
         subtotal: 1000,
       });
       const res = await svcA.topProducts(topQ);

@@ -7,11 +7,11 @@ import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 
 interface StationSheetHeaderProps {
   product: Product;
-  numPersons: number;
+  quantity: number;
   subtotal: number;
 }
 
-export function StationSheetHeader({ product, numPersons, subtotal }: StationSheetHeaderProps) {
+export function StationSheetHeader({ product, quantity, subtotal }: StationSheetHeaderProps) {
   const { t } = useTranslation('quotes');
   const { money } = useMoneyFormatter();
   const Icon = getStationIcon(product.name);
@@ -27,7 +27,7 @@ export function StationSheetHeader({ product, numPersons, subtotal }: StationShe
         </Typography.Text>
         <div className="flex flex-col mt-1">
           <span className="text-sm text-gray-500">
-            {t('builder.lines.numPersonsCount', { count: numPersons })}
+            {t('builder.lines.quantityCount', { count: quantity })}
           </span>
           <span className="text-lg font-semibold">{money(subtotal)}</span>
         </div>

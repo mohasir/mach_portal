@@ -14,7 +14,7 @@ import { useLineConfig } from '../../../hooks/useLineConfig';
 import { isQuantityLocked, lineSubtotalForQuantity, usesTierPicker } from '../../../lineHelpers';
 
 interface QuickLineCardBaseProps {
-  line: { numPersons: number; subtotal: number };
+  line: { quantity: number; subtotal: number };
   product: Product;
 }
 
@@ -24,7 +24,7 @@ type QuickLineCardProps = QuickLineCardBaseProps &
         mode: 'edit';
         canEditPricing: boolean;
         onRemove: () => void;
-        onChange: (payload: { numPersons?: number; subtotal?: number }) => void;
+        onChange: (payload: { quantity?: number; subtotal?: number }) => void;
       }
     | {
         mode: 'selection';
@@ -55,35 +55,35 @@ export function QuickLineCard(props: QuickLineCardProps) {
         ).length
       : 0;
 
-  const sortedTiers = [...product.priceTiers].sort((a, b) => a.numPersons - b.numPersons);
+  const sortedTiers = [...product.priceTiers].sort((a, b) => a.quantity - b.quantity);
   const tierIndex = Math.max(
     0,
-    sortedTiers.findIndex((tier) => tier.numPersons === line.numPersons),
+    sortedTiers.findIndex((tier) => tier.quantity === line.quantity),
   );
 
-  const handleTierChange = (numPersons: number) => {
+  const handleTierChange = (quantity: number) => {
     if (mode !== 'edit') return;
-    const tier = product.priceTiers.find((pt) => pt.numPersons === numPersons);
-    props.onChange({ numPersons, subtotal: tier ? tier.price : line.subtotal });
+    const tier = product.priceTiers.find((pt) => pt.quantity === quantity);
+    props.onChange({ quantity, subtotal: tier ? tier.price : line.subtotal });
   };
 
   const handleQuantityChange = (value: number | null) => {
     if (mode !== 'edit') return;
-    const numPersons = value ?? minPersons;
+    const quantity = value ?? minPersons;
     props.onChange({
-      numPersons,
-      subtotal: lineSubtotalForQuantity(product.price, numPersons, line.subtotal),
+      quantity,
+      subtotal: lineSubtotalForQuantity(product.price, quantity, line.subtotal),
     });
   };
 
   const stepTier = (direction: 1 | -1) => {
     if (mode !== 'edit') return;
     if (!tierPicker) {
-      handleQuantityChange(Math.max(minPersons, line.numPersons + direction));
+      handleQuantityChange(Math.max(minPersons, line.quantity + direction));
       return;
     }
     const tier = sortedTiers[tierIndex + direction];
-    if (tier) props.onChange({ numPersons: tier.numPersons, subtotal: tier.price });
+    if (tier) props.onChange({ quantity: tier.quantity, subtotal: tier.price });
   };
 
   return (
@@ -144,11 +144,11 @@ export function QuickLineCard(props: QuickLineCardProps) {
             <Select
               className="w-36 py-1"
               size="small"
-              value={line.numPersons}
+              value={line.quantity}
               onChange={handleTierChange}
               options={product.priceTiers.map((tier) => ({
-                value: tier.numPersons,
-                label: t('builder.lines.numPersonsCount', { count: tier.numPersons }),
+                value: tier.quantity,
+                label: t('builder.lines.quantityCount', { count: tier.quantity }),
               }))}
             />
           ) : mode === 'edit' ? (
@@ -158,13 +158,13 @@ export function QuickLineCard(props: QuickLineCardProps) {
               disabled={quantityLocked}
               min={minPersons}
               precision={0}
-              value={line.numPersons}
+              value={line.quantity}
               onChange={handleQuantityChange}
-              aria-label={t('builder.lines.numPersons')}
+              aria-label={t('builder.lines.quantity')}
             />
           ) : (
             <span className="text-base text-gray-500">
-              {t('builder.lines.numPersonsCount', { count: line.numPersons })}
+              {t('builder.lines.quantityCount', { count: line.quantity })}
             </span>
           )}
           <div className="flex items-center gap-2">
@@ -221,13 +221,13 @@ export function QuickLineCard(props: QuickLineCardProps) {
         >
           <div className="flex flex-col gap-4 p-4 pb-8">
             <div className="flex flex-col gap-1">
-              <span className="text-xs text-gray-500">{t('builder.lines.numPersons')}</span>
+              <span className="text-xs text-gray-500">{t('builder.lines.quantity')}</span>
               <div className="quantity-stepper border-line focus-within:border-primary flex h-10 items-center justify-between rounded-lg border px-1">
                 <Button
                   type="text"
                   icon={<Minus size={16} />}
                   disabled={
-                    quantityLocked || (tierPicker ? tierIndex <= 0 : line.numPersons <= minPersons)
+                    quantityLocked || (tierPicker ? tierIndex <= 0 : line.quantity <= minPersons)
                   }
                   onClick={() => stepTier(-1)}
                   aria-label={t('builder.lines.decrease')}
@@ -239,10 +239,10 @@ export function QuickLineCard(props: QuickLineCardProps) {
                   min={tierPicker ? 1 : minPersons}
                   precision={0}
                   className="flex-1 text-center font-semibold"
-                  value={line.numPersons}
+                  value={line.quantity}
                   onChange={(value) =>
                     tierPicker
-                      ? props.onChange({ numPersons: value ?? 1 })
+                      ? props.onChange({ quantity: value ?? 1 })
                       : handleQuantityChange(value)
                   }
                 />

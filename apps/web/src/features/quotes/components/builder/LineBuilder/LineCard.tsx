@@ -16,7 +16,7 @@ interface LineCardProps {
   readOnly?: boolean;
   canEditPricing: boolean;
   onRemove: () => void;
-  onChange: (payload: Partial<Pick<LineDraft, 'numPersons' | 'subtotal'>>) => void;
+  onChange: (payload: Partial<Pick<LineDraft, 'quantity' | 'subtotal'>>) => void;
   onSelectionChange: (optionGroupId: string, optionIds: string[]) => void;
 }
 
@@ -35,16 +35,16 @@ export function LineCard({
   const tierPicker = usesTierPicker(product, priceTiersEnabled);
   const quantityLocked = isQuantityLocked(product, priceTiersEnabled);
 
-  const handleTierChange = (numPersons: number) => {
-    const tier = product.priceTiers.find((pt) => pt.numPersons === numPersons);
-    onChange({ numPersons, subtotal: tier ? tier.price : line.subtotal });
+  const handleTierChange = (quantity: number) => {
+    const tier = product.priceTiers.find((pt) => pt.quantity === quantity);
+    onChange({ quantity, subtotal: tier ? tier.price : line.subtotal });
   };
 
   const handleQuantityChange = (value: number | null) => {
-    const numPersons = value ?? minPersons;
+    const quantity = value ?? minPersons;
     onChange({
-      numPersons,
-      subtotal: lineSubtotalForQuantity(product.price, numPersons, line.subtotal),
+      quantity,
+      subtotal: lineSubtotalForQuantity(product.price, quantity, line.subtotal),
     });
   };
 
@@ -73,15 +73,15 @@ export function LineCard({
             <>
               <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs text-gray-500">{t('builder.lines.numPersons')}</span>
+                  <span className="text-xs text-gray-500">{t('builder.lines.quantity')}</span>
                   {tierPicker ? (
                     <Select
                       disabled={readOnly}
-                      value={line.numPersons}
+                      value={line.quantity}
                       onChange={handleTierChange}
                       options={product.priceTiers.map((tier) => ({
-                        value: tier.numPersons,
-                        label: `${tier.numPersons} — ${money(tier.price)}`,
+                        value: tier.quantity,
+                        label: `${tier.quantity} — ${money(tier.price)}`,
                       }))}
                     />
                   ) : (
@@ -91,7 +91,7 @@ export function LineCard({
                         className="w-full"
                         min={minPersons}
                         precision={0}
-                        value={line.numPersons}
+                        value={line.quantity}
                         onChange={handleQuantityChange}
                       />
                       {quantityLocked && !readOnly && (

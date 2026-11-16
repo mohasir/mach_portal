@@ -371,7 +371,7 @@ describe('events tenant isolation', () => {
         tenantId: a.id,
         quoteId: sa.freeQuoteId,
         productId: sa.productId,
-        numPersons: 1,
+        quantity: 1,
         subtotal: 1,
       });
       const list = await repoA.findPaginated(
@@ -436,7 +436,7 @@ describe('events tenant isolation', () => {
         tenantId: a.id,
         quoteId: sb.freeQuoteId,
         productId: sa.productId,
-        numPersons: 1,
+        quantity: 1,
         subtotal: 1,
       });
       const list = await repoA.findPaginated(
@@ -771,7 +771,7 @@ describe('events tenant isolation', () => {
         tenantId: b.id,
         quoteId: sa.quoteId,
         productId: sb.productId,
-        numPersons: 1,
+        quantity: 1,
         subtotal: 1,
       });
       await testDb.insert(quoteLineOptions).values({
@@ -790,7 +790,7 @@ describe('events tenant isolation', () => {
         tenantId: b.id,
         quoteId: sa.quote2Id,
         productId: sa.productId,
-        numPersons: 1,
+        quantity: 1,
         subtotal: 1,
       });
       expect((await repoA.findById(sa.event2Id))?.selectionsIncomplete).toBe(false);

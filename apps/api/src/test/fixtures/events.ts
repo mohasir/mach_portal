@@ -89,7 +89,7 @@ export async function seedEventsTenant(tenant: TestTenant, label: string): Promi
     .returning({ id: products.id });
   await testDb
     .insert(productPriceTiers)
-    .values({ tenantId: t, productId: product!.id, numPersons: 10, price: 1000 });
+    .values({ tenantId: t, productId: product!.id, quantity: 10, price: 1000 });
   const [group] = await testDb
     .insert(optionGroups)
     .values({ tenantId: t, productId: product!.id, label: `Group ${label}` })
@@ -124,7 +124,7 @@ export async function seedEventsTenant(tenant: TestTenant, label: string): Promi
       tenantId: t,
       quoteId: quote!.id,
       productId: product!.id,
-      numPersons: 10,
+      quantity: 10,
       subtotal: 1000,
     })
     .returning({ id: quoteLines.id });

@@ -32,7 +32,7 @@ function ownerScope(ctx: AccessCtx, action: ScopedAction<typeof RESOURCES.QUOTE>
   );
 }
 
-// Requires quote.manage_line_pricing to set a line numPersons/subtotal that does not come from a
+// Requires quote.manage_line_pricing to set a line quantity/subtotal that does not come from a
 // catalog price tier.
 function canManagePricing(ctx: AccessCtx) {
   return can(ctx.access, { [RESOURCES.QUOTE]: [ACTIONS.MANAGE_LINE_PRICING] });

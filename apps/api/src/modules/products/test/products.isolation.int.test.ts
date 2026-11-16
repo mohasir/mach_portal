@@ -25,7 +25,7 @@ async function seedCatalog(tenant: TestTenant, name: string): Promise<Seeded> {
   await testDb.insert(productPriceTiers).values({
     tenantId: tenant.id,
     productId: product!.id,
-    numPersons: 10,
+    quantity: 10,
     price: 1000,
   });
   const [group] = await testDb
@@ -71,7 +71,7 @@ async function useInQuote(
     .returning({ id: quotes.id });
   const [line] = await testDb
     .insert(quoteLines)
-    .values({ tenantId: tenant.id, quoteId: quote!.id, productId, numPersons: 10, subtotal: 1000 })
+    .values({ tenantId: tenant.id, quoteId: quote!.id, productId, quantity: 10, subtotal: 1000 })
     .returning({ id: quoteLines.id });
   await testDb
     .insert(quoteLineOptions)
@@ -98,7 +98,7 @@ describe('products tenant isolation', () => {
   it('renaming a product to a name taken in the tenant is a CONFLICT, not a 500', async () => {
     const other = await seedCatalog(a, 'Other');
     const service = new ProductsService(repoA, true);
-    const tiers = [{ numPersons: 10, price: 1000 }];
+    const tiers = [{ quantity: 10, price: 1000 }];
     await expect(
       service.updateProduct(other.productId, { name: 'Menu A', isPremium: false, tiers }),
     ).rejects.toMatchObject({ code: 'CONFLICT', cause: { code: 'PRODUCT_ALREADY_EXISTS' } });
@@ -137,7 +137,7 @@ describe('products tenant isolation', () => {
     const created = await repoA.createProduct({
       name: 'Menu B',
       isPremium: false,
-      tiers: [{ numPersons: 5, price: 500 }],
+      tiers: [{ quantity: 5, price: 500 }],
     });
     const [row] = await testDb.select().from(products).where(eq(products.id, created.id));
     expect(row?.tenantId).toBe(a.id);
@@ -159,7 +159,7 @@ describe('products tenant isolation', () => {
     const res = await repoA.updateProduct(sb.productId, {
       name: 'Hacked',
       isPremium: false,
-      tiers: [{ numPersons: 99, price: 1 }],
+      tiers: [{ quantity: 99, price: 1 }],
     });
     expect(res).toBeUndefined();
     const [row] = await testDb.select().from(products).where(eq(products.id, sb.productId));
@@ -168,34 +168,34 @@ describe('products tenant isolation', () => {
       .select()
       .from(productPriceTiers)
       .where(eq(productPriceTiers.productId, sb.productId));
-    expect(tiers.map((t) => t.numPersons)).toEqual([10]);
+    expect(tiers.map((t) => t.quantity)).toEqual([10]);
   });
 
   it('updateProduct on own product replaces tiers stamped with the tenant', async () => {
     await repoA.updateProduct(sa.productId, {
       name: 'Menu A',
       isPremium: false,
-      tiers: [{ numPersons: 20, price: 2000 }],
+      tiers: [{ quantity: 20, price: 2000 }],
     });
     const tiers = await testDb
       .select()
       .from(productPriceTiers)
       .where(eq(productPriceTiers.productId, sa.productId));
-    expect(tiers.map((t) => [t.numPersons, t.tenantId])).toEqual([[20, a.id]]);
+    expect(tiers.map((t) => [t.quantity, t.tenantId])).toEqual([[20, a.id]]);
   });
 
   it('updateTiers cannot touch another tenant product tiers', async () => {
-    expect(await repoA.updateTiers(sb.productId, [{ numPersons: 7, price: 7 }])).toBeUndefined();
+    expect(await repoA.updateTiers(sb.productId, [{ quantity: 7, price: 7 }])).toBeUndefined();
     const tiers = await testDb
       .select()
       .from(productPriceTiers)
       .where(eq(productPriceTiers.productId, sb.productId));
-    expect(tiers.map((t) => t.numPersons)).toEqual([10]);
+    expect(tiers.map((t) => t.quantity)).toEqual([10]);
   });
 
   it('updateTiers returns only the tenant tiers', async () => {
-    const res = await repoA.updateTiers(sa.productId, [{ numPersons: 3, price: 3 }]);
-    expect(res?.tierRows.map((t) => t.numPersons)).toEqual([3]);
+    const res = await repoA.updateTiers(sa.productId, [{ quantity: 3, price: 3 }]);
+    expect(res?.tierRows.map((t) => t.quantity)).toEqual([3]);
   });
 
   it('setProductActive cannot toggle another tenant product', async () => {
@@ -280,16 +280,16 @@ describe('products tenant isolation', () => {
     // Deliberately inconsistent row: B tier pointing at A's product.
     await testDb
       .insert(productPriceTiers)
-      .values({ tenantId: b.id, productId: sa.productId, numPersons: 50, price: 5 });
-    expect((await repoA.findTree(true)).tierRows.map((t) => t.numPersons)).toEqual([10]);
-    expect((await repoA.findPricesTree()).tierRows.map((t) => t.numPersons)).toEqual([10]);
-    const res = await repoA.updateTiers(sa.productId, [{ numPersons: 3, price: 3 }]);
-    expect(res?.tierRows.map((t) => t.numPersons)).toEqual([3]);
+      .values({ tenantId: b.id, productId: sa.productId, quantity: 50, price: 5 });
+    expect((await repoA.findTree(true)).tierRows.map((t) => t.quantity)).toEqual([10]);
+    expect((await repoA.findPricesTree()).tierRows.map((t) => t.quantity)).toEqual([10]);
+    const res = await repoA.updateTiers(sa.productId, [{ quantity: 3, price: 3 }]);
+    expect(res?.tierRows.map((t) => t.quantity)).toEqual([3]);
     const strays = await testDb
       .select()
       .from(productPriceTiers)
       .where(eq(productPriceTiers.tenantId, b.id));
-    expect(strays.map((t) => t.numPersons).sort()).toEqual([10, 50]);
+    expect(strays.map((t) => t.quantity).sort()).toEqual([10, 50]);
   });
 
   describe('usage, permanent delete and duplicate', () => {
@@ -381,7 +381,7 @@ describe('products tenant isolation', () => {
         .select()
         .from(productPriceTiers)
         .where(eq(productPriceTiers.productId, copy!.id));
-      expect(tiers.map((t) => [t.numPersons, t.tenantId])).toEqual([[10, a.id]]);
+      expect(tiers.map((t) => [t.quantity, t.tenantId])).toEqual([[10, a.id]]);
       const groups = await testDb
         .select()
         .from(optionGroups)

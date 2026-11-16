@@ -202,7 +202,7 @@ describe('createTenant', () => {
         .select()
         .from(productPriceTiers)
         .where(eq(productPriceTiers.productId, product!.id))
-        .orderBy(productPriceTiers.numPersons)
+        .orderBy(productPriceTiers.quantity)
         .limit(1);
 
       const quote = await quotesModule(ctxFor(tenantId)).create(
@@ -213,7 +213,7 @@ describe('createTenant', () => {
           lines: [
             {
               productId: product!.id,
-              numPersons: tier!.numPersons,
+              quantity: tier!.quantity,
               subtotal: tier!.price,
               selections: [],
             },

@@ -43,7 +43,7 @@ describe('product price', () => {
   });
 
   it('is quotable through stored tiers only while the add-on is active', async () => {
-    const tiers = [{ numPersons: 10, price: 1000 }];
+    const tiers = [{ quantity: 10, price: 1000 }];
     const { id } = await serviceFor(true).createProduct({ ...base, tiers });
     expect(await serviceFor(true).updateProduct(id, { ...base, tiers })).toMatchObject({
       quotable: true,

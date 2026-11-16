@@ -52,7 +52,7 @@
     "title": "Prices",
     "tabDescription": "Define this station's price packages by number of people.",
     "autoSortNote": "Packages are automatically reordered by number of people when you save.",
-    "numPersonsShort": "People",
+    "quantityShort": "People",
     "addTier": "Add package",
     "removeTier": "Remove package",
     "removeTierConfirm": {
@@ -126,7 +126,7 @@
   "validation": {
     "nameRequired": "Name is required",
     "labelRequired": "Name is required",
-    "numPersonsInvalid": "Invalid quantity",
+    "quantityInvalid": "Invalid quantity",
     "priceInvalid": "Invalid price",
     "tiersDuplicate": "Some packages have the same number of people",
     "maxSelectInvalid": "Invalid max selection"

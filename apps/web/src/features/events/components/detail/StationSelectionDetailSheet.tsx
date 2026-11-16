@@ -30,7 +30,7 @@ export function StationSelectionDetailSheet({
   return (
     <BottomSheet open={open} onClose={onClose} title={t('detail.selections.detailTitle')}>
       <div className="flex flex-col gap-4 px-4 pb-8">
-        <StationSheetHeader product={product} numPersons={line.numPersons} subtotal={line.subtotal} />
+        <StationSheetHeader product={product} quantity={line.quantity} subtotal={line.subtotal} />
         {groups.map((group) => (
           <OptionGroupSelectList
             key={group.id}

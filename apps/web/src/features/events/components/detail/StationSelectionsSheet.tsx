@@ -70,11 +70,7 @@ export function StationSelectionsSheet({
       }
     >
       <div className="flex flex-col gap-6 px-4 pb-4">
-        <StationSheetHeader
-          product={product}
-          numPersons={line.numPersons}
-          subtotal={line.subtotal}
-        />
+        <StationSheetHeader product={product} quantity={line.quantity} subtotal={line.subtotal} />
         <div className="flex flex-col gap-2">
           {selectGroups.map((group) => (
             <OptionGroupSelectList

@@ -72,7 +72,7 @@ const EVENT_FULL = [
   VIEW_RESCHEDULES,
 ];
 const DASHBOARD_FULL = [READ, VIEW_SUMMARY, VIEW_QUOTES_CHART, VIEW_TOP_PRODUCTS];
-// Only admin/superadmin can override a quote line's numPersons/price away from the
+// Only admin/superadmin can override a quote line's quantity/price away from the
 // catalog's price tiers, or reassign a quote to another user — operator (scope 'own')
 // stays plain CRUD.
 const QUOTE_FULL = [...CRUD, MANAGE_LINE_PRICING, MANAGE_ASSIGNMENT];

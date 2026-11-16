@@ -552,7 +552,7 @@ export class QuotesRepository {
       this.db
         .select({
           productId: productPriceTiers.productId,
-          numPersons: productPriceTiers.numPersons,
+          quantity: productPriceTiers.quantity,
           price: productPriceTiers.price,
         })
         .from(productPriceTiers)
@@ -596,7 +596,7 @@ export class QuotesRepository {
       id: randomUUID(),
       quoteId,
       productId: line.productId,
-      numPersons: line.numPersons,
+      quantity: line.quantity,
       subtotal: line.subtotal,
       sortOrder: index,
       tenantId: this.tenantId,

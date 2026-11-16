@@ -31,7 +31,7 @@ export interface SeedSelection {
 
 export interface SeedLine {
   productName: string;
-  numPersons: number;
+  quantity: number;
   selections?: SeedSelection[];
 }
 
@@ -64,7 +64,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Crepes',
-        numPersons: 70,
+        quantity: 70,
         selections: [
           {
             groupLabel: 'Premium Toppings',
@@ -75,7 +75,7 @@ export const SEED_QUOTES: SeedQuote[] = [
       },
       {
         productName: 'Craft Bar',
-        numPersons: 70,
+        quantity: 70,
         selections: [
           {
             groupLabel: 'Signature Cocktails',
@@ -98,7 +98,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Mini Pancakes',
-        numPersons: 100,
+        quantity: 100,
         selections: [
           {
             groupLabel: 'Premium Toppings',
@@ -120,12 +120,12 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Esquites',
-        numPersons: 60,
+        quantity: 60,
         selections: [{ groupLabel: 'Base Chip', optionNames: ['Doritos Nacho Cheese', 'Ruffles'] }],
       },
       {
         productName: 'Snack Station',
-        numPersons: 60,
+        quantity: 60,
         selections: [
           { groupLabel: 'Base Chips', optionNames: ['Nacho Cheese', 'Cool Ranch', "Flamin' Hot"] },
           { groupLabel: 'Toppings', optionNames: ['Peanuts', 'Gummy Bears'] },
@@ -144,7 +144,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Crepaletas',
-        numPersons: 40,
+        quantity: 40,
         selections: [
           { groupLabel: 'Premium Toppings', optionNames: ['Chopped Peanuts', 'Coconut Flakes'] },
         ],
@@ -164,7 +164,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Fruit Station',
-        numPersons: 50,
+        quantity: 50,
         selections: [
           { groupLabel: 'Fresh Fruits', optionNames: ['Mango', 'Watermelon', 'Strawberry'] },
           { groupLabel: 'Yogurt', optionNames: ['Vanilla Yogurt'] },
@@ -172,7 +172,7 @@ export const SEED_QUOTES: SeedQuote[] = [
       },
       {
         productName: 'Popsicles',
-        numPersons: 50,
+        quantity: 50,
         selections: [
           { groupLabel: 'Toppings', optionNames: ['Sprinkles', "M&M's"] },
           { groupLabel: 'Fruits', optionNames: ['Strawberries'] },
@@ -198,7 +198,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Crepes',
-        numPersons: 150,
+        quantity: 150,
         selections: [
           { groupLabel: 'Premium Toppings', optionNames: ['Mazapan', 'White Chocolate'] },
           { groupLabel: 'Fresh Fruits', optionNames: ['Strawberry', 'Blueberry'] },
@@ -206,14 +206,14 @@ export const SEED_QUOTES: SeedQuote[] = [
       },
       {
         productName: 'Mini Pancakes',
-        numPersons: 150,
+        quantity: 150,
         selections: [
           { groupLabel: 'Premium Toppings', optionNames: ['Sprinkles', 'Coffee Chocolate'] },
         ],
       },
       {
         productName: 'Craft Bar',
-        numPersons: 150,
+        quantity: 150,
         selections: [
           {
             groupLabel: 'Signature Cocktails',
@@ -233,7 +233,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Nachos',
-        numPersons: 40,
+        quantity: 40,
         selections: [{ groupLabel: 'Choose Your Base', optionNames: ['Tortilla Chips'] }],
       },
     ],
@@ -251,7 +251,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Esquites',
-        numPersons: 60,
+        quantity: 60,
         selections: [{ groupLabel: 'Base Chip', optionNames: ['Doritos Nacho Cheese'] }],
       },
     ],
@@ -267,7 +267,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Snack Station',
-        numPersons: 60,
+        quantity: 60,
         selections: [
           { groupLabel: 'Base Chips', optionNames: ['Nacho Cheese', 'Cool Ranch'] },
           { groupLabel: 'Toppings', optionNames: ['Peanuts'] },
@@ -287,7 +287,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Snack Station',
-        numPersons: 60,
+        quantity: 60,
         selections: [
           { groupLabel: 'Base Chips', optionNames: ["Flamin' Hot", 'Cool Ranch'] },
           { groupLabel: 'Toppings', optionNames: ['Gummy Bears'] },
@@ -307,7 +307,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Snack Station',
-        numPersons: 60,
+        quantity: 60,
         selections: [
           { groupLabel: 'Base Chips', optionNames: ['Nacho Cheese'] },
           { groupLabel: 'Toppings', optionNames: ['Peanuts', 'Gummy Bears'] },
@@ -327,7 +327,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Crepaletas',
-        numPersons: 40,
+        quantity: 40,
         selections: [
           { groupLabel: 'Premium Toppings', optionNames: ['Chopped Peanuts', 'Coconut Flakes'] },
         ],
@@ -345,7 +345,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Fruit Station',
-        numPersons: 50,
+        quantity: 50,
         selections: [
           { groupLabel: 'Fresh Fruits', optionNames: ['Mango', 'Watermelon'] },
           { groupLabel: 'Yogurt', optionNames: ['Vanilla Yogurt'] },
@@ -364,7 +364,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Nachos',
-        numPersons: 40,
+        quantity: 40,
         selections: [{ groupLabel: 'Choose Your Base', optionNames: ['Tortilla Chips'] }],
       },
     ],
@@ -384,7 +384,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Hot Chocolate',
-        numPersons: 50,
+        quantity: 50,
         selections: [
           { groupLabel: 'Premium Toppings', optionNames: ['Crushed Oreo', 'Mini Marshmallows'] },
           { groupLabel: 'Cookie', optionNames: ['Classic Cookie'] },
@@ -403,7 +403,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Popsicles',
-        numPersons: 60,
+        quantity: 60,
         selections: [
           { groupLabel: 'Toppings', optionNames: ['Oreo', 'White Chocolate'] },
           { groupLabel: 'Fruits', optionNames: ['Mango', 'Watermelon'] },
@@ -422,7 +422,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Fruit Station',
-        numPersons: 40,
+        quantity: 40,
         selections: [
           { groupLabel: 'Fresh Fruits', optionNames: ['Mango', 'Pineapple'] },
           { groupLabel: 'Yogurt', optionNames: ['Strawberry Yogurt'] },
@@ -430,7 +430,7 @@ export const SEED_QUOTES: SeedQuote[] = [
       },
       {
         productName: 'Crepaletas',
-        numPersons: 40,
+        quantity: 40,
         selections: [
           { groupLabel: 'Premium Toppings', optionNames: ['Sprinkles', 'Crushed Oreo'] },
         ],
@@ -448,7 +448,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Snack Station',
-        numPersons: 70,
+        quantity: 70,
         selections: [
           { groupLabel: 'Base Chips', optionNames: ['Nacho Cheese', 'Ruffles'] },
           { groupLabel: 'Toppings', optionNames: ['Gummy Bears', 'Nerds'] },
@@ -468,7 +468,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Crepes',
-        numPersons: 90,
+        quantity: 90,
         selections: [
           { groupLabel: 'Premium Toppings', optionNames: ['Mazapan', 'Sprinkles'] },
           { groupLabel: 'Fresh Fruits', optionNames: ['Strawberry', 'Raspberry'] },
@@ -476,7 +476,7 @@ export const SEED_QUOTES: SeedQuote[] = [
       },
       {
         productName: 'Craft Bar',
-        numPersons: 100,
+        quantity: 100,
         selections: [
           {
             groupLabel: 'Signature Cocktails',
@@ -497,7 +497,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Nachos',
-        numPersons: 60,
+        quantity: 60,
         selections: [
           { groupLabel: 'Choose Your Base', optionNames: ['Tortilla Chips', 'Ruffles'] },
         ],
@@ -515,7 +515,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Mini Pancakes',
-        numPersons: 50,
+        quantity: 50,
         selections: [
           { groupLabel: 'Premium Toppings', optionNames: ["M&M's", 'Sprinkles'] },
           { groupLabel: 'Fresh Fruits', optionNames: ['Banana'] },
@@ -534,7 +534,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Esquites',
-        numPersons: 40,
+        quantity: 40,
         selections: [{ groupLabel: 'Base Chip', optionNames: ['Cool Ranch'] }],
       },
     ],
@@ -549,7 +549,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Popsicles',
-        numPersons: 40,
+        quantity: 40,
         selections: [
           { groupLabel: 'Toppings', optionNames: ['Sprinkles'] },
           { groupLabel: 'Fruits', optionNames: ['Strawberries'] },
@@ -568,7 +568,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Hot Chocolate',
-        numPersons: 60,
+        quantity: 60,
         selections: [
           { groupLabel: 'Premium Toppings', optionNames: ['Almonds', 'Chocolate Chips'] },
           { groupLabel: 'Cookie', optionNames: ['Flamed Cookie with Toasted Marshmallows'] },
@@ -587,7 +587,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     lines: [
       {
         productName: 'Crepaletas',
-        numPersons: 30,
+        quantity: 30,
         selections: [{ groupLabel: 'Premium Toppings', optionNames: ['Lotus Biscoff'] }],
       },
     ],
@@ -634,7 +634,7 @@ async function loadContext(
     db
       .select({
         productId: productPriceTiers.productId,
-        numPersons: productPriceTiers.numPersons,
+        quantity: productPriceTiers.quantity,
         price: productPriceTiers.price,
       })
       .from(productPriceTiers)
@@ -699,12 +699,10 @@ function resolveLine(line: SeedLine, ctx: Context) {
   const product = ctx.productRows.find((p) => p.name === line.productName);
   if (!product) throw new Error(`seedQuotes: producto "${line.productName}" no existe`);
 
-  const tier = ctx.tierRows.find(
-    (t) => t.productId === product.id && t.numPersons === line.numPersons,
-  );
+  const tier = ctx.tierRows.find((t) => t.productId === product.id && t.quantity === line.quantity);
   if (!tier)
     throw new Error(
-      `seedQuotes: "${line.productName}" no tiene paquete para ${line.numPersons} personas`,
+      `seedQuotes: "${line.productName}" no tiene paquete para ${line.quantity} personas`,
     );
 
   const selections = (line.selections ?? []).map((sel) => {
@@ -722,7 +720,7 @@ function resolveLine(line: SeedLine, ctx: Context) {
     return { optionGroupId: group.id, optionIds };
   });
 
-  return { productId: product.id, numPersons: line.numPersons, subtotal: tier.price, selections };
+  return { productId: product.id, quantity: line.quantity, subtotal: tier.price, selections };
 }
 
 export async function seedQuotes(
@@ -853,7 +851,7 @@ export async function seedQuotes(
         id: randomUUID(),
         quoteId: quote!.id,
         productId: line.productId,
-        numPersons: line.numPersons,
+        quantity: line.quantity,
         subtotal: line.subtotal,
         sortOrder: i,
         tenantId,

@@ -157,7 +157,7 @@ function buildItems(lines: QuoteLineDetail[], catalog: ProductWithGroups[]): Quo
       {
         sku: product.id,
         description: product.name,
-        quantity: line.numPersons,
+        quantity: line.quantity,
         total: line.subtotal / 100,
         details: buildItemDetails(product),
       },

@@ -65,7 +65,7 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
                 : undefined
             }
             tiers={product?.priceTiers.map((tier) => ({
-              numPersons: tier.numPersons,
+              quantity: tier.quantity,
               price: tier.price,
             }))}
             onSubmit={onSubmit}

@@ -75,14 +75,14 @@ describe('quote prices are frozen once a line is saved', () => {
       .returning({ id: products.id })) as [{ id: string }];
     await testDb
       .insert(productPriceTiers)
-      .values({ tenantId, productId, numPersons: 40, price: 150000 });
+      .values({ tenantId, productId, quantity: 40, price: 150000 });
 
     const created = await serviceFor(tenantId, true).create(
       {
         isDraft: false,
         selectOptionsAtQuote: false,
         clientId,
-        lines: [{ productId, numPersons: 40, subtotal: 150000, selections: [] }],
+        lines: [{ productId, quantity: 40, subtotal: 150000, selections: [] }],
       },
       userId,
       false,
@@ -138,7 +138,7 @@ describe('quote prices are frozen once a line is saved', () => {
     );
   const tierLine: QuoteLineInput = {
     productId: '',
-    numPersons: 40,
+    quantity: 40,
     subtotal: 150000,
     selections: [],
   };
@@ -154,7 +154,7 @@ describe('quote prices are frozen once a line is saved', () => {
   it('validates a modified line as before', async () => {
     await loseTiersAndPrice();
     const service = serviceFor(tenantId, false);
-    for (const change of [{ numPersons: 50 }, { subtotal: 140000 }]) {
+    for (const change of [{ quantity: 50 }, { subtotal: 140000 }]) {
       await expect(save(service, [{ ...tierLine, productId, ...change }])).rejects.toMatchObject({
         cause: { code: 'PRODUCT_NOT_QUOTABLE' },
       });

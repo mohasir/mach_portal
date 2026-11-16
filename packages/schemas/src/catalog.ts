@@ -9,19 +9,19 @@ export type OptionGroupType = z.infer<typeof optionGroupTypeSchema>;
 const PG_INT_MAX = 2_147_483_647;
 
 export const priceTierSchema = z.object({
-  numPersons: z.number().int().min(1, 'catalog.validation.numPersonsInvalid'),
+  quantity: z.number().int().min(1, 'catalog.validation.quantityInvalid'),
   price: z
     .number()
     .int()
     .min(0, 'catalog.validation.priceInvalid')
-    .max(PG_INT_MAX, 'catalog.validation.priceInvalid'), // cents, total for numPersons
+    .max(PG_INT_MAX, 'catalog.validation.priceInvalid'), // cents, total for quantity
 });
 export type PriceTierInput = z.infer<typeof priceTierSchema>;
 
 export const productTiersSchema = z
   .array(priceTierSchema)
   .default([])
-  .refine((tiers) => new Set(tiers.map((t) => t.numPersons)).size === tiers.length, {
+  .refine((tiers) => new Set(tiers.map((t) => t.quantity)).size === tiers.length, {
     message: 'catalog.validation.tiersDuplicate',
   });
 

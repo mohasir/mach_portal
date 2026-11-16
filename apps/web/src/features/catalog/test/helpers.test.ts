@@ -6,7 +6,7 @@ import {
   isNotQuotable,
 } from '../helpers';
 
-const tiers = [{ numPersons: 50, price: 10000 }];
+const tiers = [{ quantity: 50, price: 10000 }];
 const values = { name: 'Taco bar', description: 'x', isPremium: true };
 
 describe('buildProductPayload', () => {

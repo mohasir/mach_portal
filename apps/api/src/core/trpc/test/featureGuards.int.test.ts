@@ -121,7 +121,7 @@ describe('add-on guards', () => {
     await expectNotEnabled(
       caller.products.prices.update({
         id: seed.productId,
-        data: { tiers: [{ numPersons: 20, price: 2000 }] },
+        data: { tiers: [{ quantity: 20, price: 2000 }] },
       }),
       'priceTiers',
     );
@@ -135,7 +135,7 @@ describe('add-on guards', () => {
       await outcome(
         caller.products.prices.update({
           id: seed.productId,
-          data: { tiers: [{ numPersons: 20, price: 2000 }] },
+          data: { tiers: [{ quantity: 20, price: 2000 }] },
         }),
       ),
     ).toBe('ok');
@@ -144,7 +144,7 @@ describe('add-on guards', () => {
   describe('tiers sent through the product form', () => {
     const tiersOf = (productId: string) =>
       testDb
-        .select({ numPersons: productPriceTiers.numPersons, price: productPriceTiers.price })
+        .select({ quantity: productPriceTiers.quantity, price: productPriceTiers.price })
         .from(productPriceTiers)
         .where(eq(productPriceTiers.productId, productId));
     const productNamed = (tenantId: string, name: string) =>
@@ -152,7 +152,7 @@ describe('add-on guards', () => {
         .select({ id: products.id })
         .from(products)
         .where(and(eq(products.tenantId, tenantId), eq(products.name, name)));
-    const form = (name: string, tiers: { numPersons: number; price: number }[]) => ({
+    const form = (name: string, tiers: { quantity: number; price: number }[]) => ({
       name,
       isPremium: false,
       tiers,
@@ -163,7 +163,7 @@ describe('add-on guards', () => {
       const caller = callerFor(tenant, { id: tenant.userId });
 
       await expectNotEnabled(
-        caller.products.create(form('New menu', [{ numPersons: 5, price: 500 }])),
+        caller.products.create(form('New menu', [{ quantity: 5, price: 500 }])),
         'priceTiers',
       );
       expect(await productNamed(tenant.id, 'New menu')).toEqual([]);
@@ -171,12 +171,12 @@ describe('add-on guards', () => {
       await expectNotEnabled(
         caller.products.update({
           id: seed.productId,
-          data: form('Renamed', [{ numPersons: 5, price: 500 }]),
+          data: form('Renamed', [{ quantity: 5, price: 500 }]),
         }),
         'priceTiers',
       );
       expect(await productNamed(tenant.id, 'Renamed')).toEqual([]);
-      expect(await tiersOf(seed.productId)).toEqual([{ numPersons: 10, price: 1000 }]);
+      expect(await tiersOf(seed.productId)).toEqual([{ quantity: 10, price: 1000 }]);
     });
 
     it('with priceTiers off, create and update without tiers leave the stored tiers alone', async () => {
@@ -188,17 +188,15 @@ describe('add-on guards', () => {
 
       await caller.products.update({ id: seed.productId, data: form('Renamed', []) });
       expect(await productNamed(tenant.id, 'Renamed')).toHaveLength(1);
-      expect(await tiersOf(seed.productId)).toEqual([{ numPersons: 10, price: 1000 }]);
+      expect(await tiersOf(seed.productId)).toEqual([{ quantity: 10, price: 1000 }]);
     });
 
     it('with priceTiers on, the form replaces the tiers as before', async () => {
       const { tenant, seed } = await seedTenant('form-on');
       const caller = callerFor(tenant, { id: tenant.userId });
 
-      const created = await caller.products.create(
-        form('New menu', [{ numPersons: 5, price: 500 }]),
-      );
-      expect(await tiersOf(created.id)).toEqual([{ numPersons: 5, price: 500 }]);
+      const created = await caller.products.create(form('New menu', [{ quantity: 5, price: 500 }]));
+      expect(await tiersOf(created.id)).toEqual([{ quantity: 5, price: 500 }]);
 
       await caller.products.update({ id: seed.productId, data: form('Renamed', []) });
       expect(await tiersOf(seed.productId)).toEqual([]);

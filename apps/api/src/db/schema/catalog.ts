@@ -31,12 +31,12 @@ export const productPriceTiers = pgTable(
     productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
-    numPersons: integer('num_persons').notNull(),
-    price: integer('price').notNull(), // cents, total for numPersons
+    quantity: integer('quantity').notNull(),
+    price: integer('price').notNull(), // cents, total for quantity
     sortOrder: integer('sort_order').default(0).notNull(),
   },
   (t) => [
-    unique('product_price_tiers_product_persons_unique').on(t.productId, t.numPersons),
+    unique('product_price_tiers_product_quantity_unique').on(t.productId, t.quantity),
     index('product_price_tiers_tenant_idx').on(t.tenantId),
     tenantIsolationPolicy('product_price_tiers'),
   ],

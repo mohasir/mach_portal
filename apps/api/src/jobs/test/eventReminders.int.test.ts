@@ -66,7 +66,7 @@ async function seedPendingEvent(
     tenantId: t,
     quoteId: quote!.id,
     productId: product!.id,
-    numPersons: 10,
+    quantity: 10,
     subtotal: 1000,
   });
   const [event] = await testDb

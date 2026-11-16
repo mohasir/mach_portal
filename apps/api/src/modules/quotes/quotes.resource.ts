@@ -44,7 +44,7 @@ export const publicQuoteLineColumns = {
   id: quoteLines.id,
   quoteId: quoteLines.quoteId,
   productId: quoteLines.productId,
-  numPersons: quoteLines.numPersons,
+  quantity: quoteLines.quantity,
   subtotal: quoteLines.subtotal,
   sortOrder: quoteLines.sortOrder,
 } as const;
@@ -167,7 +167,7 @@ export type QuoteLineSelection = { optionGroupId: string; optionIds: string[] };
 export type QuoteLineDetail = {
   id: string;
   productId: string;
-  numPersons: number;
+  quantity: number;
   subtotal: number;
   sortOrder: number;
   selections: QuoteLineSelection[];
@@ -205,7 +205,7 @@ export const buildQuoteLineDetails = (
       return {
         id: line.id,
         productId: line.productId,
-        numPersons: line.numPersons,
+        quantity: line.quantity,
         subtotal: line.subtotal,
         sortOrder: line.sortOrder,
         selections: groupIds.map((optionGroupId) => ({

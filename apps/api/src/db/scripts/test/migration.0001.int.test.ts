@@ -183,6 +183,7 @@ describe('0001 on a legacy database with data', () => {
   // Legacy columns that still exist after 0001 (only app_settings.id is dropped).
   let survivingSets: Record<string, string[]>;
   let survivingPrints: Fingerprints;
+  let renamedSets: Record<string, string[]>;
   let orgId: string;
 
   beforeAll(async () => {
@@ -196,6 +197,13 @@ describe('0001 on a legacy database with data', () => {
       app_settings: legacySets['app_settings']!.filter((c) => c !== 'id'),
     };
     survivingPrints = await fingerprints(db.sql, survivingSets);
+    // 0007 renames num_persons to quantity; row content is what must survive.
+    renamedSets = Object.fromEntries(
+      Object.entries(survivingSets).map(([t, cols]) => [
+        t,
+        cols.map((c) => (c === 'num_persons' ? 'quantity' : c)),
+      ]),
+    );
   });
 
   afterAll(async () => {
@@ -288,7 +296,7 @@ describe('0001 on a legacy database with data', () => {
   });
 
   it('keeps the content of every legacy column', async () => {
-    expect(await fingerprints(db.sql, survivingSets)).toEqual(survivingPrints);
+    expect(await fingerprints(db.sql, renamedSets)).toEqual(survivingPrints);
   });
 
   it('assigns every business row to the new organization', async () => {

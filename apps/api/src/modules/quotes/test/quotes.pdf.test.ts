@@ -53,9 +53,7 @@ const quoteRow = {
   depositAmount: 0,
 } as unknown as QuoteDetailRow;
 
-const lines = [
-  { productId: 'p1', numPersons: 20, subtotal: 100000 },
-] as unknown as QuoteLineDetail[];
+const lines = [{ productId: 'p1', quantity: 20, subtotal: 100000 }] as unknown as QuoteLineDetail[];
 
 const detailsOf = (catalog: ProductWithGroups[]) =>
   buildQuotePdfPayload(quoteRow, lines, catalog, undefined).items[0]?.details;

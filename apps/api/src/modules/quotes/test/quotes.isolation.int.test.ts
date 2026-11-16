@@ -64,7 +64,7 @@ async function seedTenant(tenant: TestTenant, label: string): Promise<Seeded> {
     .returning({ id: products.id });
   await testDb
     .insert(productPriceTiers)
-    .values({ tenantId: tenant.id, productId: product!.id, numPersons: 10, price: 1000 });
+    .values({ tenantId: tenant.id, productId: product!.id, quantity: 10, price: 1000 });
   const [group] = await testDb
     .insert(optionGroups)
     .values({ tenantId: tenant.id, productId: product!.id, label: `Group ${label}` })
@@ -100,7 +100,7 @@ async function seedTenant(tenant: TestTenant, label: string): Promise<Seeded> {
       tenantId: tenant.id,
       quoteId: quote!.id,
       productId: product!.id,
-      numPersons: 10,
+      quantity: 10,
       subtotal: 1000,
     })
     .returning({ id: quoteLines.id });
@@ -157,7 +157,7 @@ async function seedTenant(tenant: TestTenant, label: string): Promise<Seeded> {
 function lineFor(s: Seeded): QuoteLineInput {
   return {
     productId: s.productId,
-    numPersons: 10,
+    quantity: 10,
     subtotal: 1000,
     selections: [{ optionGroupId: s.groupId, optionIds: [s.optionId] }],
   };
@@ -285,7 +285,7 @@ describe('quotes tenant isolation', () => {
           tenantId: b.id,
           quoteId: sa.quoteId,
           productId: sb.productId,
-          numPersons: 1,
+          quantity: 1,
           subtotal: 1,
         })
         .returning({ id: quoteLines.id });
@@ -448,7 +448,7 @@ describe('quotes tenant isolation', () => {
     it('catalog rows of B attached to an A product are ignored', async () => {
       await testDb
         .insert(productPriceTiers)
-        .values({ tenantId: b.id, productId: sa.productId, numPersons: 99, price: 1 });
+        .values({ tenantId: b.id, productId: sa.productId, quantity: 99, price: 1 });
       const [strayGroup] = await testDb
         .insert(optionGroups)
         .values({ tenantId: b.id, productId: sa.productId, label: 'stray' })
@@ -461,7 +461,7 @@ describe('quotes tenant isolation', () => {
         .values({ tenantId: a.id, optionGroupId: strayGroup!.id, name: 'orphan' });
 
       const ctx = await repoA.loadCatalogContext([sa.productId]);
-      expect(ctx.tiers.map((t) => t.numPersons)).toEqual([10]);
+      expect(ctx.tiers.map((t) => t.quantity)).toEqual([10]);
       expect(ctx.groups.map((g) => g.id)).toEqual([sa.groupId]);
       expect(ctx.options.map((o) => o.id)).toEqual([sa.optionId]);
     });
@@ -644,7 +644,7 @@ describe('quotes tenant isolation', () => {
         tenantId: b.id,
         quoteId: sa.quoteId,
         productId: sb.productId,
-        numPersons: 1,
+        quantity: 1,
         subtotal: 1,
       });
       const res = await repoA.replaceLines(sa.quoteId, quoteData(a, sa.clientId), [

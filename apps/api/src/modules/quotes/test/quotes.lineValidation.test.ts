@@ -5,7 +5,7 @@ import { QuotesService } from '../quotes.service';
 import type { CatalogContext } from '../quotes.validation';
 
 const PRODUCT = 'p1';
-const tier40 = { productId: PRODUCT, numPersons: 40, price: 150 };
+const tier40 = { productId: PRODUCT, quantity: 40, price: 150 };
 
 function catalog(
   price: number | null,
@@ -31,14 +31,14 @@ function validate(
     tiersOn,
     true,
   );
-  const lines = [{ productId: PRODUCT, numPersons: 40, subtotal: 200, selections: [], ...line }];
+  const lines = [{ productId: PRODUCT, quantity: 40, subtotal: 200, selections: [], ...line }];
   return (
     service as unknown as { validateLines: (l: unknown[], m: boolean) => Promise<void> }
   ).validateLines(lines, manager);
 }
 
 describe('quote line validation with a fixed price', () => {
-  it('accepts price x numPersons without the tiers add-on', async () => {
+  it('accepts price x quantity without the tiers add-on', async () => {
     await expect(validate(catalog(5), { subtotal: 200 }, false, false)).resolves.toBeUndefined();
   });
 

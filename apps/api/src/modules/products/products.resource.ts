@@ -14,7 +14,7 @@ export const publicProductColumns = {
 export const publicTierColumns = {
   id: productPriceTiers.id,
   productId: productPriceTiers.productId,
-  numPersons: productPriceTiers.numPersons,
+  quantity: productPriceTiers.quantity,
   price: productPriceTiers.price,
   sortOrder: productPriceTiers.sortOrder,
 } as const;
@@ -62,7 +62,7 @@ export const productResource = (row: PublicProduct, quotable: boolean) => ({
 
 export const tierResource = (row: PublicTier) => ({
   id: row.id,
-  numPersons: row.numPersons,
+  quantity: row.quantity,
   price: row.price,
   sortOrder: row.sortOrder,
 });

@@ -11,8 +11,8 @@ const tiered = {
   quotable: true,
   price: null,
   priceTiers: [
-    { numPersons: 100, price: 20000 },
-    { numPersons: 50, price: 12000 },
+    { quantity: 100, price: 20000 },
+    { quantity: 50, price: 12000 },
   ],
 };
 const flat = { quotable: true, price: 350, priceTiers: [] };
@@ -39,21 +39,21 @@ describe('usesTierPicker', () => {
 describe('buildNewLine', () => {
   it('starts on the first tier with the add-on on', () => {
     expect(buildNewLine(tiered, { priceTiersEnabled: true, minPersons: 10 })).toEqual({
-      numPersons: 100,
+      quantity: 100,
       subtotal: 20000,
     });
   });
 
   it('uses price x minimum quantity without the add-on', () => {
     expect(buildNewLine(flat, { priceTiersEnabled: false, minPersons: 10 })).toEqual({
-      numPersons: 10,
+      quantity: 10,
       subtotal: 3500,
     });
   });
 
   it('falls back to the fixed price when the add-on is on but the product has no tiers', () => {
     expect(buildNewLine(flat, { priceTiersEnabled: true, minPersons: 20 })).toEqual({
-      numPersons: 20,
+      quantity: 20,
       subtotal: 7000,
     });
   });

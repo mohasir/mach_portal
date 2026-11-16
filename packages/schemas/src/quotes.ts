@@ -74,7 +74,7 @@ export type QuoteLineSelectionInput = z.infer<typeof quoteLineSelectionSchema>;
 
 export const quoteLineInputSchema = z.object({
   productId: z.uuid(),
-  numPersons: z.number().int().min(1, 'quotes:validation.numPersonsInvalid'),
+  quantity: z.number().int().min(1, 'quotes:validation.quantityInvalid'),
   subtotal: z.number().int().min(0, 'quotes:validation.subtotalInvalid'),
   selections: z.array(quoteLineSelectionSchema).default([]),
 });
@@ -202,9 +202,7 @@ export interface SavedQuoteRates extends QuoteRates {
 
 /** The tax rate config assigns to `state` (0 when tax by state is off or the state has none). */
 export const configTaxRate = (config: QuoteRatesConfig, state: StateValue | null | undefined) =>
-  config.applyTaxByState
-    ? (config.stateSettings.find((s) => s.state === state)?.taxRate ?? 0)
-    : 0;
+  config.applyTaxByState ? (config.stateSettings.find((s) => s.state === state)?.taxRate ?? 0) : 0;
 
 /** Whether resolveQuoteRates has to read config: a new quote, or one moved to another state. */
 export const needsConfigRates = (

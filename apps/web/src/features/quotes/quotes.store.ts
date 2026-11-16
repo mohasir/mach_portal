@@ -4,7 +4,7 @@ import type { DiscountType, StateValue } from '@repo/schemas';
 export interface LineDraft {
   key: string;
   productId: string;
-  numPersons: number;
+  quantity: number;
   subtotal: number;
   selections: Record<string, string[]>;
 }
@@ -69,7 +69,7 @@ export interface QuoteBuilderStore {
   setFields: (payload: Partial<QuoteBuilderState>) => void;
   addLine: (line: LineDraft) => void;
   removeLine: (key: string) => void;
-  updateLine: (key: string, payload: Partial<Pick<LineDraft, 'numPersons' | 'subtotal'>>) => void;
+  updateLine: (key: string, payload: Partial<Pick<LineDraft, 'quantity' | 'subtotal'>>) => void;
   setSelection: (key: string, optionGroupId: string, optionIds: string[]) => void;
   reset: (state: QuoteBuilderState) => void;
 }

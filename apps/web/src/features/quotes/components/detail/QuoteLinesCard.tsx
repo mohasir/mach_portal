@@ -52,7 +52,7 @@ export function QuoteLinesCard({ detail, catalog, variant }: QuoteLinesCardProps
               <QuickLineCard
                 key={row.id}
                 mode="readOnly"
-                line={{ numPersons: row.numPersons, subtotal: row.subtotal }}
+                line={{ quantity: row.quantity, subtotal: row.subtotal }}
                 product={row.product}
               />
             ))}

@@ -57,7 +57,7 @@ interface QuoteBuilderState {
 
 interface LineDraft {                    // una línea de la quote (UI Mach Bar: una "Estación")
   productId: string;
-  numPersons: number;                   // tramo elegido (existe en product_price_tiers) — D16
+  quantity: number;                   // tramo elegido (existe en product_price_tiers) — D16
   price: number;                        // cents, total de la línea; pre-carga del tramo, editable — D16
   selections: Record<string, string[]>; // optionGroupId → optionId[] (solo grupos 'select')
 }
@@ -129,7 +129,7 @@ sin salir del builder.
 ### 2.7 Interacciones clave
 
 - **Agregar línea** → `ProductPicker` toma un product del catálogo; nace un `LineDraft`. Se **elige un
-  tramo** (`numPersons`) de los `product_price_tiers` del producto (dropdown); `price` = precio del
+  tramo** (`quantity`) de los `product_price_tiers` del producto (dropdown); `price` = precio del
   tramo, **editable**.
 - **Chips por grupo** (`OptionGroupChips`): solo para grupos `selection_type = 'select'`; al llegar a
   `maxSelect`, los chips no elegidos se **deshabilitan** (límite UX en vivo; el server revalida).
@@ -140,7 +140,7 @@ sin salir del builder.
 
 ### 2.8 Validación (`isValid`)
 
-Habilita "Enviar": ≥1 línea, cada línea con un `numPersons` que **existe en los tramos del producto**,
+Habilita "Enviar": ≥1 línea, cada línea con un `quantity` que **existe en los tramos del producto**,
 `clientId` + `state` + `address` presentes. Espeja `createQuoteSchema` de `@repo/schemas`; las `rules`
 de AntD son solo UX, el backend es el límite real. "Guardar borrador" es más laxo (permite incompletos).
 
@@ -313,7 +313,7 @@ Los **tramos de precio** (`product_price_tiers`) se editan dentro del modal del 
 ### 4.2 Operaciones por nivel
 
 - **Producto**: crear, editar (nombre, descripción, `isPremium` + **tabla de tramos de precio**
-  `product_price_tiers`: filas `numPersons → price`), activar/desactivar, reordenar.
+  `product_price_tiers`: filas `quantity → price`), activar/desactivar, reordenar.
 - **Grupo** (`option_group`): crear (bajo un producto), editar (`label`, `selectionType` `select`/`included`,
   `maxSelect` — solo si `select`), activar/desactivar, reordenar.
 - **Opción** (`option`): crear (bajo un grupo), editar (nombre, **`description`** opcional), activar/desactivar, reordenar.

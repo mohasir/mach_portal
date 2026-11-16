@@ -548,10 +548,9 @@ export class QuotesService {
       const matchesTier =
         this.priceTiersActive &&
         productTiers.some(
-          (tier) => tier.numPersons === line.numPersons && tier.price === line.subtotal,
+          (tier) => tier.quantity === line.quantity && tier.price === line.subtotal,
         );
-      const matchesPrice =
-        product.price != null && line.subtotal === product.price * line.numPersons;
+      const matchesPrice = product.price != null && line.subtotal === product.price * line.quantity;
       if (!matchesTier && !matchesPrice) throw pricingNotAllowed();
     }
 
@@ -584,7 +583,7 @@ function storedLinesWithSelections({
     }
     return {
       productId: line.productId,
-      numPersons: line.numPersons,
+      quantity: line.quantity,
       subtotal: line.subtotal,
       selections: [...byGroup].map(([optionGroupId, optionIds]) => ({ optionGroupId, optionIds })),
     };

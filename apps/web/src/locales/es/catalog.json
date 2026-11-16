@@ -52,7 +52,7 @@
     "title": "Precios",
     "tabDescription": "Definí los paquetes de precio de esta estación según la cantidad de personas.",
     "autoSortNote": "Al guardar, los paquetes se reordenan automáticamente por cantidad de personas.",
-    "numPersonsShort": "Personas",
+    "quantityShort": "Personas",
     "addTier": "Agregar paquete",
     "removeTier": "Quitar paquete",
     "removeTierConfirm": {
@@ -126,7 +126,7 @@
   "validation": {
     "nameRequired": "Nombre requerido",
     "labelRequired": "Nombre requerido",
-    "numPersonsInvalid": "Cantidad inválida",
+    "quantityInvalid": "Cantidad inválida",
     "priceInvalid": "Precio inválido",
     "tiersDuplicate": "Hay paquetes con la misma cantidad de personas",
     "maxSelectInvalid": "Selección máxima inválida"

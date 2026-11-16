@@ -135,7 +135,7 @@ export class ProductsRepository {
       await tx.insert(productPriceTiers).values(
         tiers.map((tier, index) => ({
           productId,
-          numPersons: tier.numPersons,
+          quantity: tier.quantity,
           price: tier.price,
           sortOrder: index,
           tenantId: this.tenantId,
@@ -196,7 +196,7 @@ export class ProductsRepository {
         await tx.insert(productPriceTiers).values(
           tiers.map((tier) => ({
             productId: copy!.id,
-            numPersons: tier.numPersons,
+            quantity: tier.quantity,
             price: tier.price,
             sortOrder: tier.sortOrder,
             tenantId: this.tenantId,

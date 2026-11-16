@@ -31,7 +31,7 @@ export function validateLineSelections(
   return true;
 }
 
-type LineShape = { productId: string; numPersons: number; subtotal: number };
+type LineShape = { productId: string; quantity: number; subtotal: number };
 
 // Order-insensitive identity of a line: its values plus the set of chosen options. Groups with
 // no chosen option are dropped because a stored line cannot represent them.
@@ -42,7 +42,7 @@ function lineKey(
   const picked = selections
     .flatMap((s) => s.optionIds.map((optionId) => `${s.optionGroupId}:${optionId}`))
     .sort();
-  return JSON.stringify([line.productId, line.numPersons, line.subtotal, picked]);
+  return JSON.stringify([line.productId, line.quantity, line.subtotal, picked]);
 }
 
 // Submitted lines that do not match a stored line of the quote. Matching is a multiset: each

@@ -2,7 +2,7 @@ interface QuotableProduct {
   quotable: boolean;
   /** Cents per unit. */
   price: number | null;
-  priceTiers: { numPersons: number; price: number }[];
+  priceTiers: { quantity: number; price: number }[];
 }
 
 export const lineSubtotalForQuantity = (
@@ -24,14 +24,14 @@ export const isQuantityLocked = (product: QuotableProduct, priceTiersEnabled: bo
 export function buildNewLine(
   product: QuotableProduct,
   { priceTiersEnabled, minPersons }: { priceTiersEnabled: boolean; minPersons: number },
-): { numPersons: number; subtotal: number } | null {
+): { quantity: number; subtotal: number } | null {
   if (!product.quotable) return null;
   if (usesTierPicker(product, priceTiersEnabled)) {
     const first = product.priceTiers[0]!;
-    return { numPersons: first.numPersons, subtotal: first.price };
+    return { quantity: first.quantity, subtotal: first.price };
   }
   if (product.price == null) return null;
-  return { numPersons: minPersons, subtotal: product.price * minPersons };
+  return { quantity: minPersons, subtotal: product.price * minPersons };
 }
 
 export function getPickerState(product: Pick<QuotableProduct, 'quotable'>) {

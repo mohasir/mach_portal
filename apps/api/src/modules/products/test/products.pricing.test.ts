@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isQuotable } from '../products.pricing';
 
-const tier = { numPersons: 30, price: 1000 };
+const tier = { quantity: 30, price: 1000 };
 
 describe('isQuotable', () => {
   it('is quotable with a price, tiers or not, add-on or not', () => {

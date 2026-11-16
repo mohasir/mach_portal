@@ -133,7 +133,7 @@ export const quoteLines = pgTable(
     productId: uuid('product_id')
       .notNull()
       .references(() => products.id),
-    numPersons: integer('num_persons').notNull(),
+    quantity: integer('quantity').notNull(),
     subtotal: integer('subtotal').notNull(),
     sortOrder: integer('sort_order').default(0).notNull(),
   },

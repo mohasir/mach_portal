@@ -128,7 +128,7 @@ describe('ProductsService price and quotable', () => {
     sortOrder: 0,
     price: null as number | null,
   };
-  const tier = { id: 't1', productId: 'p1', numPersons: 30, price: 1000, sortOrder: 0 };
+  const tier = { id: 't1', productId: 'p1', quantity: 30, price: 1000, sortOrder: 0 };
   const emptyTree = { groupRows: [], optionRows: [] };
 
   it('exposes price and quotable on the catalog, keeping stored tiers with the add-on off', async () => {

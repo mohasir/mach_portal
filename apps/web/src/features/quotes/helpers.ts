@@ -52,7 +52,7 @@ export function getStationIcon(stationName: string): LucideIcon {
 export function toQuoteLineInputs(lines: LineDraft[]): QuoteLineInput[] {
   return lines.map((line) => ({
     productId: line.productId,
-    numPersons: line.numPersons,
+    quantity: line.quantity,
     subtotal: line.subtotal,
     selections: Object.entries(line.selections)
       .filter(([, optionIds]) => optionIds.length > 0)
@@ -111,7 +111,7 @@ export function toBuilderState(detail: QuoteDetail): QuoteBuilderState {
     lines: detail.lines.map((line) => ({
       key: nextLineKey(),
       productId: line.productId,
-      numPersons: line.numPersons,
+      quantity: line.quantity,
       subtotal: line.subtotal,
       selections: Object.fromEntries(line.selections.map((s) => [s.optionGroupId, s.optionIds])),
     })),

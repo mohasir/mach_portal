@@ -13,7 +13,7 @@ import { useUpdatePriceTiers } from '../../hooks/usePrices';
 import type { Product } from '../../types';
 
 interface TierFormValue {
-  numPersons: number;
+  quantity: number;
   price: number;
 }
 
@@ -36,14 +36,14 @@ export function PriceTiersForm({ product }: PriceTiersFormProps) {
   const [confirm, confirmContextHolder] = useActionConfirm();
 
   const handleFinish = async (values: PriceTiersFormValues) => {
-    const tiers = [...values.tiers].sort((a, b) => a.numPersons - b.numPersons);
+    const tiers = [...values.tiers].sort((a, b) => a.quantity - b.quantity);
     await updateTiers(product.id, { tiers });
     form.setFieldsValue({ tiers });
   };
 
   const handleRemove = (fieldName: number, remove: (name: number) => void) => {
     const tier = form.getFieldValue(['tiers', fieldName]) as TierFormValue | undefined;
-    const hasData = tier?.numPersons != null || tier?.price != null;
+    const hasData = tier?.quantity != null || tier?.price != null;
     if (!hasData) {
       remove(fieldName);
       return;
@@ -68,7 +68,7 @@ export function PriceTiersForm({ product }: PriceTiersFormProps) {
         disabled={!canEdit}
         initialValues={{
           tiers: product.priceTiers.map((tier) => ({
-            numPersons: tier.numPersons,
+            quantity: tier.quantity,
             price: tier.price,
           })),
         }}
@@ -92,11 +92,11 @@ export function PriceTiersForm({ product }: PriceTiersFormProps) {
               {fields.map((field) => (
                 <div key={field.key} className="flex items-start gap-2">
                   <Space.Compact className="mb-0 flex-1">
-                    <Space.Addon>{t('prices.numPersonsShort')}</Space.Addon>
+                    <Space.Addon>{t('prices.quantityShort')}</Space.Addon>
                     <Form.Item
-                      name={[field.name, 'numPersons']}
+                      name={[field.name, 'quantity']}
                       noStyle
-                      rules={[{ required: true, message: t('validation.numPersonsInvalid') }]}
+                      rules={[{ required: true, message: t('validation.quantityInvalid') }]}
                     >
                       <InputNumber min={1} step={10} precision={0} className="w-full" />
                     </Form.Item>

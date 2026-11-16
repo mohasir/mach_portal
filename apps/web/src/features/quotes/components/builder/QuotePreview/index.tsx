@@ -89,7 +89,7 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
                   key={line.key}
                   icon={getStationIcon(product.name)}
                   name={product.name}
-                  numPersons={line.numPersons}
+                  quantity={line.quantity}
                   total={line.subtotal}
                   groups={groups}
                   onRemove={readOnly ? undefined : () => removeLine(line.key)}

@@ -47,7 +47,7 @@ Tres clusters de datos: **comercial** (`clients → quotes → …`), **operaci�
 | D13 | **El evento NO copia su composición**: lee sus líneas y opciones de la quote (`event.quote_id`). Se **elimina la copia** (`event_lines`). | El evento se ejecuta exacto a lo cotizado; la quote es read-only tras Aprobada → una sola fuente de verdad (coherente con D6). |
 | D14 | **`event_type` es una tabla** (`event_types`), no un varchar. `quotes`/`events` la referencian por FK (`event_type_id`), con soft-delete. | Tipos de evento consistentes y administrables (evita texto libre duplicado). |
 | D15 | **Nombres genéricos** del catálogo: `stations→products`, `station_sections→option_groups`, `station_items→options`, `quote_stations→quote_lines`, `quote_station_selections→quote_line_options`. Etiquetas Mach Bar por i18n. | Reuso en otros negocios del giro sin atar el schema a su jerga (patrón Producto→Grupo de opciones→Opción, **no** *variants*). Multi-tenant queda como futuro aditivo (sin `tenant_id` aún). |
-| D16 | **Precio por tramo (bracket), no por persona.** Cada `product` tiene una tabla `product_price_tiers` `(numPersons → price)` donde `price` es el **total** para esa cantidad. En la quote se **elige un tramo existente** (dropdown, sin cantidades libres); el precio **pre-carga** del tramo pero es **editable por línea**. Se elimina `products.base_price` y `quote_lines.price_per_person`. | El negocio cobra por cantidad fija (Excel: 40 personas → $450 total), no lineal por persona. Distintos productos tienen distintos tramos y topes (Esquites hasta 200, Mini Pancakes hasta 400). |
+| D16 | **Precio por tramo (bracket), no por persona.** Cada `product` tiene una tabla `product_price_tiers` `(quantity → price)` donde `price` es el **total** para esa cantidad. En la quote se **elige un tramo existente** (dropdown, sin cantidades libres); el precio **pre-carga** del tramo pero es **editable por línea**. Se elimina `products.base_price` y `quote_lines.price_per_person`. | El negocio cobra por cantidad fija (Excel: 40 personas → $450 total), no lineal por persona. Distintos productos tienen distintos tramos y topes (Esquites hasta 200, Mini Pancakes hasta 400). |
 | D17 | **`option_groups` tienen `selection_type` (`select` \| `included`).** `select` = el cliente elige **hasta `max_select`** ítems (sin mínimo). `included` = viene incluido, **no se selecciona** (informativo; se muestra en quote/PDF). `options.description` opcional para el detalle del ítem. | Muchas "secciones" del menú son fijas ("Premium Syrups Included", "Warm Cheese Sauce Included"); otras son elegibles ("Choose Any 7"). El Craft Bar lista cócteles con sus ingredientes en `description`. |
 | — | **Craft Bar**: se modela como una estación más con su propia `product_price_tiers`. Si al cargar los precios resulta ser tarifa fija u horaria, se ajusta (una fila única en tiers ya cubre "fija"). **A confirmar** con los datos de precio. | — |
 | — | **Templates de textos del PDF**: PAUSADO. | Se retoma más adelante. |
@@ -145,7 +145,7 @@ quote_stage_history {
 
 quote_lines {
   id, quoteId* -> quotes (cascade), productId* -> products,
-  numPersons*  integer,               // tramo elegido (debe existir en product_price_tiers) — D16
+  quantity*  integer,               // tramo elegido (debe existir en product_price_tiers) — D16
   subtotal*    integer,               // cents, total de la línea; pre-carga del tramo, EDITABLE — D16
   sortOrder
 }
@@ -190,10 +190,10 @@ products {
 }
 product_price_tiers {                 // precio por tramo (bracket) — D16
   id, productId* -> products (cascade),
-  numPersons* integer,                // 30, 40, 50, ...
+  quantity* integer,                // 30, 40, 50, ...
   price*      integer,                // cents, TOTAL para esa cantidad (no por persona)
   sortOrder
-  // unique(productId, numPersons)
+  // unique(productId, quantity)
 }
 option_groups {
   id, productId* -> products (cascade), label*,
@@ -297,7 +297,7 @@ erDiagram
     uuid id PK
     uuid quote_id FK
     uuid product_id FK
-    int num_persons "tramo elegido"
+    int quantity "tramo elegido"
     int subtotal "cents · total línea (editable)"
   }
   quote_line_options {
@@ -336,7 +336,7 @@ erDiagram
   product_price_tiers {
     uuid id PK
     uuid product_id FK
-    int num_persons
+    int quantity
     int price "cents · total"
   }
   option_groups {
