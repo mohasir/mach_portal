@@ -3,12 +3,11 @@ import { Tag } from 'antd';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, Layers, Star, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { getStationIcon } from '@/features/quotes';
-import { IconBadge } from '@/components/shared/IconBadge';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { Feature } from '@/lib/auth/Feature';
 import type { Product } from '../types';
 import { NotQuotableTag } from './NotQuotableTag';
+import { ProductThumb } from './ProductThumb';
 
 interface ProductPanelProps {
   product: Product;
@@ -26,7 +25,7 @@ export function ProductPanel({ product }: ProductPanelProps) {
           onClick={() => router.push(`/admin/products/${product.id}`)}
           className="flex min-w-0 flex-1 items-center gap-2 text-left"
         >
-          <IconBadge icon={getStationIcon(product.name)} shape="square" />
+          <ProductThumb product={product} size="sm" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className={`truncate font-medium ${product.isActive ? '' : 'text-muted'}`}>

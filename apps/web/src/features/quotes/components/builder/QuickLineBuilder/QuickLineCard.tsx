@@ -3,14 +3,13 @@ import { useState } from 'react';
 import { Button, InputNumber, Select, Tag } from 'antd';
 import { Eye, ListChecks, Minus, Plus, SquarePen, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { Product } from '@/features/catalog';
+import { ProductThumb, type Product } from '@/features/catalog';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { IconButton } from '@/components/shared/IconButton';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { formatQuantity } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
-import { getStationIcon } from '../../../helpers';
 import { useLineConfig } from '../../../hooks/useLineConfig';
 import {
   isQuantityLocked,
@@ -46,7 +45,6 @@ export function QuickLineCard(props: QuickLineCardProps) {
   const { line, product, mode } = props;
   const { t } = useTranslation('quotes');
   const { money } = useMoneyFormatter();
-  const Icon = getStationIcon(product.name);
   const [editOpen, setEditOpen] = useState(false);
   const { priceTiersEnabled } = useLineConfig();
   const minQuantity = lineMinQuantity(product, mode === 'edit' && props.canEditPricing);
@@ -97,9 +95,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
 
   return (
     <div className="border-line flex gap-3 rounded-xl border p-2">
-      <div className="bg-mist text-navy flex size-12 shrink-0 items-center justify-center rounded-lg">
-        <Icon size={22} />
-      </div>
+      <ProductThumb product={product} size="md" />
 
       <div
         className={`flex min-w-0 flex-1 flex-col ${

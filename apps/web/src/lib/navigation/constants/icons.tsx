@@ -26,7 +26,6 @@ import { TbCalendarTime } from 'react-icons/tb';
 import optionCalendarIcon from '@/assets/icons/option_calendar_icon.svg';
 import optionPaymentIcon from '@/assets/icons/option_payment_icon.svg';
 import optionGenericIcon from '@/assets/icons/option_generic_icon.svg';
-import optionStationIcon from '@/assets/icons/option_station_icon.svg';
 
 const iconSize = 18;
 
@@ -59,7 +58,7 @@ export const IconCardOptionsMap: Record<string, StaticImageData> = {
   clients: optionGenericIcon,
   payments: optionPaymentIcon,
   staff: optionGenericIcon,
-  catalog: optionStationIcon,
+  catalog: optionGenericIcon,
   unitsOfMeasure: optionGenericIcon,
   productCategories: optionGenericIcon,
   eventTypes: optionGenericIcon,

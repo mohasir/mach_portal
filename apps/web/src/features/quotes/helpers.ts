@@ -1,4 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
 import {
   QUOTE_STAGE,
   type CreateQuoteInput,
@@ -6,7 +5,6 @@ import {
   type QuotesFilters,
 } from '@repo/schemas';
 import { isPastDate, type DateInput } from '@/lib/date';
-import { DEFAULT_STATION_ICON, STATION_ICON_RULES } from './constants';
 import type { LineDraft, QuoteBuilderState } from './hooks/useQuoteBuilder';
 import type { QuoteDetail } from './types';
 
@@ -40,14 +38,6 @@ export const countActiveFilters = ({
 
 export const nextLineKey = (): string =>
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-
-export function getStationIcon(stationName: string): LucideIcon {
-  const lower = stationName.toLowerCase();
-  return (
-    STATION_ICON_RULES.find((rule) => rule.keywords.some((keyword) => lower.includes(keyword)))
-      ?.icon ?? DEFAULT_STATION_ICON
-  );
-}
 
 export function toQuoteLineInputs(lines: LineDraft[]): QuoteLineInput[] {
   return lines.map((line) => ({

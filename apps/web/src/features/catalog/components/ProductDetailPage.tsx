@@ -7,7 +7,6 @@ import { TbRestore, TbTrashFilled } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { ACTIONS, RESOURCES } from '@repo/guards';
-import { getStationIcon } from '@/features/quotes';
 import { useActionConfirm } from '@/components/shared/ConfirmDialogs';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -25,6 +24,8 @@ import { NotQuotableTag } from './NotQuotableTag';
 import { OptionGroupList } from './OptionGroupList';
 import { ProductFormModal } from './ProductFormModal';
 import { PriceTiersForm } from './prices/PriceTiersForm';
+import { ProductGallery } from './ProductGallery';
+import { ProductThumb } from './ProductThumb';
 
 interface ProductDetailPageProps {
   productId: string;
@@ -77,8 +78,6 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
       onOk: () => enableProduct(product.id),
     });
 
-  const ProductIcon = product && getStationIcon(product.name);
-
   return (
     <div>
       <PageHeader
@@ -99,9 +98,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
           <WrapperCard>
             <div className="flex flex-col gap-3">
               <div className="flex items-start justify-between">
-                <div className="bg-mist text-navy flex size-16 shrink-0 items-center justify-center rounded-2xl">
-                  {ProductIcon && <ProductIcon size={32} />}
-                </div>
+                <ProductThumb product={product} size="lg" />
                 {product.isActive
                   ? canDisable && (
                       <Button
@@ -251,6 +248,8 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
               )}
             </div>
           </WrapperCard>
+
+          <ProductGallery product={product} canEdit={canEdit} />
 
           {detailTabs.length > 0 && (
             <WrapperCard>

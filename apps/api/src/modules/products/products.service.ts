@@ -84,10 +84,11 @@ export class ProductsService {
 
   // Written rows carry no tiers; they only matter when the price alone does not decide.
   private async withQuotable(row: PublicProduct) {
-    const [tiers, unit, category] = await Promise.all([
+    const [tiers, unit, category, images] = await Promise.all([
       row.price == null && this.priceTiersActive ? this.repo.findTierQuantities(row.id) : [],
       this.repo.findUnit(row.uomId),
       row.categoryId ? this.repo.findCategory(row.categoryId) : null,
+      this.repo.findProductImages(row.id),
     ]);
     if (!unit) throw unitNotFound();
     return productResource(
@@ -96,6 +97,7 @@ export class ProductsService {
         quotable: isQuotable(row, tiers, this.priceTiersActive),
         unit,
         category: category ?? null,
+        images,
       },
       this.visibility,
     );
@@ -163,9 +165,10 @@ export class ProductsService {
     const result = await this.repo.updateTiers(id, tiers, this.cost.read);
     if (!result) throw productNotFound();
     const { product } = result;
-    const [unit, category] = await Promise.all([
+    const [unit, category, images] = await Promise.all([
       this.repo.findUnit(product.uomId),
       product.categoryId ? this.repo.findCategory(product.categoryId) : null,
+      this.repo.findProductImages(product.id),
     ]);
     if (!unit) throw unitNotFound();
     return productWithTiersResource(
@@ -175,6 +178,7 @@ export class ProductsService {
       {
         units: new Map([[unit.id, unit]]),
         categories: new Map(category ? [[category.id, category]] : []),
+        images: new Map([[product.id, images]]),
       },
       this.visibility,
     );

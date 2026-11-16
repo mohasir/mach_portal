@@ -17,3 +17,4 @@ export * from './features';
 export * from './tenantProfile';
 export * from './unitsOfMeasure';
 export * from './productCategories';
+export * from './productImages';

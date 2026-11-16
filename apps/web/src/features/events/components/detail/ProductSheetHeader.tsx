@@ -1,7 +1,6 @@
 'use client';
 import { Typography } from 'antd';
-import type { Product } from '@/features/catalog';
-import { getStationIcon } from '@/features/quotes';
+import { ProductThumb, type Product } from '@/features/catalog';
 import { formatQuantity } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 
@@ -13,13 +12,10 @@ interface ProductSheetHeaderProps {
 
 export function ProductSheetHeader({ product, quantity, subtotal }: ProductSheetHeaderProps) {
   const { money } = useMoneyFormatter();
-  const Icon = getStationIcon(product.name);
 
   return (
     <div className="flex items-center gap-3">
-      <div className="bg-mist text-navy flex size-20 shrink-0 items-center justify-center rounded-2xl">
-        <Icon size={40} />
-      </div>
+      <ProductThumb product={product} size="xl" />
       <div className="flex min-w-0 flex-col gap-0.5">
         <Typography.Text strong className="truncate text-lg">
           {product.name}

@@ -18,6 +18,7 @@ import {
   quoteLineOptions,
   unitsOfMeasure,
 } from '../../db/schema';
+import { ProductImagesRepository } from './products.images.repository';
 import {
   categoryRefColumns,
   productCostColumns,
@@ -39,10 +40,14 @@ const productColumns = (withCost: boolean) =>
 export type ProductWriteInput = Omit<CreateProductInput, 'tiers'> & { tiers?: PriceTierInput[] };
 
 export class ProductsRepository {
+  private images: ProductImagesRepository;
+
   constructor(
     private db: Executor,
     private tenantId: string,
-  ) {}
+  ) {
+    this.images = new ProductImagesRepository(db, tenantId);
+  }
 
   async findTree(includeInactive: boolean, withCost = false) {
     const activeOnly = (col: SQL | undefined) => (includeInactive ? undefined : col);
@@ -60,32 +65,40 @@ export class ProductsRepository {
       activeOnly(eq(options.isActive, true)),
     );
 
-    const [productRows, tierRows, groupRows, optionRows, units, categories] = await Promise.all([
-      this.db
-        .select(productColumns(withCost))
-        .from(products)
-        .where(productWhere)
-        .orderBy(asc(products.sortOrder)),
-      this.db
-        .select(publicTierColumns)
-        .from(productPriceTiers)
-        .where(tierWhere)
-        .orderBy(asc(productPriceTiers.sortOrder)),
-      this.db
-        .select(publicOptionGroupColumns)
-        .from(optionGroups)
-        .where(groupWhere)
-        .orderBy(asc(optionGroups.sortOrder)),
-      this.db
-        .select(publicOptionColumns)
-        .from(options)
-        .where(optionWhere)
-        .orderBy(asc(options.sortOrder)),
-      this.findUnits(),
-      this.findCategories(),
-    ]);
+    const [productRows, tierRows, groupRows, optionRows, units, categories, images] =
+      await Promise.all([
+        this.db
+          .select(productColumns(withCost))
+          .from(products)
+          .where(productWhere)
+          .orderBy(asc(products.sortOrder)),
+        this.db
+          .select(publicTierColumns)
+          .from(productPriceTiers)
+          .where(tierWhere)
+          .orderBy(asc(productPriceTiers.sortOrder)),
+        this.db
+          .select(publicOptionGroupColumns)
+          .from(optionGroups)
+          .where(groupWhere)
+          .orderBy(asc(optionGroups.sortOrder)),
+        this.db
+          .select(publicOptionColumns)
+          .from(options)
+          .where(optionWhere)
+          .orderBy(asc(options.sortOrder)),
+        this.findUnits(),
+        this.findCategories(),
+        this.images.listAll(),
+      ]);
 
-    return { productRows, tierRows, groupRows, optionRows, lookups: { units, categories } };
+    return {
+      productRows,
+      tierRows,
+      groupRows,
+      optionRows,
+      lookups: { units, categories, images },
+    };
   }
 
   // Every unit of the tenant, inactive ones included: a product may keep a unit disabled later.
@@ -104,6 +117,10 @@ export class ProductsRepository {
       .from(productCategories)
       .where(tenantEq(productCategories, this.tenantId));
     return new Map(rows.map((row) => [row.id, row]));
+  }
+
+  findProductImages(productId: string) {
+    return this.images.listByProduct(productId);
   }
 
   findCategory(id: string) {
@@ -157,7 +174,7 @@ export class ProductsRepository {
   }
 
   async findPricesTree(withCost = false) {
-    const [productRows, tierRows, units, categories] = await Promise.all([
+    const [productRows, tierRows, units, categories, images] = await Promise.all([
       this.db
         .select(productColumns(withCost))
         .from(products)
@@ -170,9 +187,10 @@ export class ProductsRepository {
         .orderBy(asc(productPriceTiers.sortOrder)),
       this.findUnits(),
       this.findCategories(),
+      this.images.listAll(),
     ]);
 
-    return { productRows, tierRows, lookups: { units, categories } };
+    return { productRows, tierRows, lookups: { units, categories, images } };
   }
 
   findProductByName(name: string) {

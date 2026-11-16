@@ -161,5 +161,25 @@
     "skuInvalid": "Invalid SKU (up to 64 characters)",
     "costInvalid": "Invalid cost",
     "minQuantityInvalid": "The minimum quantity must be 1 or more"
+  },
+  "gallery": {
+    "title": "Images",
+    "counter": "{{count}}/{{max}}",
+    "empty": "No images",
+    "featured": "Featured",
+    "add": "Add image",
+    "hint": "JPG, PNG or WebP, up to {{size}} MB",
+    "uploaded": "Image uploaded",
+    "invalidType": "The file isn't an allowed image. Use a JPG, PNG or WebP",
+    "tooLarge": "The image exceeds the maximum allowed size ({{size}} MB)",
+    "limitReached": "A {{item}} can have up to {{max}} images",
+    "setFeatured": "Feature",
+    "moveLeft": "Move earlier",
+    "moveRight": "Move later",
+    "delete": "Delete image",
+    "deleteConfirm": {
+      "title": "Delete the image?",
+      "content": "The image is permanently deleted."
+    }
   }
 }

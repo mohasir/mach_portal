@@ -70,6 +70,7 @@ export const TENANT_TABLES = [
   'option_groups',
   'options',
   'product_categories',
+  'product_images',
   'product_price_tiers',
   'products',
   'quote_assignment_history',
@@ -92,6 +93,7 @@ export const TENANT_TABLES = [
 // [child table, child column, parent table]: the child's tenant must equal the parent's.
 const PARENT_LINKS: [string, string, string][] = [
   ['product_price_tiers', 'product_id', 'products'],
+  ['product_images', 'product_id', 'products'],
   ['products', 'uom_id', 'units_of_measure'],
   ['products', 'category_id', 'product_categories'],
   ['option_groups', 'product_id', 'products'],

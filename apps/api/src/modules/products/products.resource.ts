@@ -3,6 +3,7 @@ import {
   options,
   optionGroups,
   productCategories,
+  productImages,
   productPriceTiers,
   products,
   unitsOfMeasure,
@@ -39,6 +40,16 @@ export const unitRefColumns = {
   pluralName: unitsOfMeasure.pluralName,
   code: unitsOfMeasure.code,
   dimension: unitsOfMeasure.dimension,
+} as const;
+
+// The storage keys stay on the server: only the public URLs leave it.
+export const publicImageColumns = {
+  id: productImages.id,
+  productId: productImages.productId,
+  imageUrl: productImages.imageUrl,
+  thumbUrl: productImages.thumbUrl,
+  isFeatured: productImages.isFeatured,
+  sortOrder: productImages.sortOrder,
 } as const;
 
 export const publicTierColumns = {
@@ -82,6 +93,9 @@ export type CategoryRef = Pick<
   keyof typeof categoryRefColumns
 >;
 export type CategoriesById = ReadonlyMap<string, CategoryRef>;
+export type PublicImage = Pick<typeof productImages.$inferSelect, keyof typeof publicImageColumns>;
+// Each product's images in display order; a product without images has no entry.
+export type ImagesByProduct = ReadonlyMap<string, readonly PublicImage[]>;
 
 // Whether the caller may read the internal cost; false unless a caller states otherwise.
 export type CostVisibility = { canSeeCost?: boolean };
@@ -109,15 +123,26 @@ const categoryRefResource = (category: CategoryRef) => ({
   isActive: category.isActive,
 });
 
+export const productImageResource = (row: PublicImage) => ({
+  id: row.id,
+  imageUrl: row.imageUrl,
+  thumbUrl: row.thumbUrl,
+  isFeatured: row.isFeatured,
+  sortOrder: row.sortOrder,
+});
+
+export type ProductImageResource = ReturnType<typeof productImageResource>;
+
 export type ProductRefs = {
   quotable: boolean;
   unit: UnitRef;
   category: CategoryRef | null;
+  images: readonly PublicImage[];
 };
 
 export const productResource = (
   row: PublicProduct,
-  { quotable, unit, category }: ProductRefs,
+  { quotable, unit, category, images }: ProductRefs,
   { canSeeCost = false }: CostVisibility = {},
 ) => ({
   id: row.id,
@@ -133,6 +158,7 @@ export const productResource = (
   category: category ? categoryRefResource(category) : null,
   sku: row.sku,
   minQuantity: row.minQuantity,
+  images: images.map(productImageResource),
   quotable,
   ...(canSeeCost ? { cost: row.cost ?? null } : {}),
 });
@@ -156,7 +182,11 @@ const categoryOf = (product: PublicProduct, categories: CategoriesById): Categor
 };
 
 // What a product row refers to, read once per list.
-export type ProductLookups = { units: UnitsById; categories: CategoriesById };
+export type ProductLookups = {
+  units: UnitsById;
+  categories: CategoriesById;
+  images: ImagesByProduct;
+};
 
 export const tierResource = (row: PublicTier) => ({
   id: row.id,
@@ -204,11 +234,12 @@ const refsOf = (
   product: PublicProduct,
   tiers: readonly { quantity: number }[],
   priceTiersActive: boolean,
-  { units, categories }: ProductLookups,
+  { units, categories, images }: ProductLookups,
 ): ProductRefs => ({
   quotable: isQuotable(product, tiers, priceTiersActive),
   unit: unitOf(product, units),
   category: categoryOf(product, categories),
+  images: images.get(product.id) ?? [],
 });
 
 export const productWithTiersResource = (

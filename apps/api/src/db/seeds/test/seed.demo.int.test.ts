@@ -23,8 +23,9 @@ import { PROD_SUPERADMIN_EMAIL, seedProdTenant } from '../prod';
 const allTables = (Object.values(schema).filter((v) => is(v, PgTable)) as unknown as PgTable[]).map(
   (t) => getTableConfig(t).name,
 );
-// The audit log only fills when roles are edited, which the seed never does.
-const UNSEEDED_TABLES = ['role_audit_log'];
+// The audit log only fills when roles are edited, which the seed never does; product images need
+// their files in object storage, so the seed leaves every product with the placeholder.
+const UNSEEDED_TABLES = ['role_audit_log', 'product_images'];
 // Feature tables hold platform-managed state, not tenant business data, so these checks skip them.
 const tenantTables = allTables.filter(
   (name) =>

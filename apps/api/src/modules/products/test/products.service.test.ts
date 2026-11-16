@@ -36,6 +36,7 @@ function makeRepo() {
     duplicateProduct: vi.fn().mockResolvedValue(copy),
     findTierQuantities: vi.fn().mockResolvedValue([]),
     findUnit: vi.fn().mockResolvedValue(unit),
+    findProductImages: vi.fn().mockResolvedValue([]),
   };
 }
 
@@ -150,7 +151,7 @@ describe('ProductsService price and quotable', () => {
   const emptyTree = {
     groupRows: [],
     optionRows: [],
-    lookups: { units: new Map([['u1', unit]]), categories: new Map() },
+    lookups: { units: new Map([['u1', unit]]), categories: new Map(), images: new Map() },
   };
 
   it('exposes price and quotable on the catalog, keeping stored tiers with the add-on off', async () => {
@@ -186,6 +187,7 @@ describe('ProductsService price and quotable', () => {
       createProduct: vi.fn().mockResolvedValue(row),
       findTierQuantities: vi.fn().mockResolvedValue([{ quantity: 1 }, { quantity: 2 }]),
       findUnit: vi.fn().mockResolvedValue(unit),
+      findProductImages: vi.fn().mockResolvedValue([]),
     };
     const input = { name: 'Barra', isPremium: false, tiers: [], uomId: 'u1' };
     const withTiers = new ProductsService(repo as unknown as ProductsRepository, true);

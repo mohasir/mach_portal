@@ -161,5 +161,25 @@
     "skuInvalid": "SKU inválido (hasta 64 caracteres)",
     "costInvalid": "Costo inválido",
     "minQuantityInvalid": "La cantidad mínima debe ser 1 o más"
+  },
+  "gallery": {
+    "title": "Imágenes",
+    "counter": "{{count}}/{{max}}",
+    "empty": "Sin imágenes",
+    "featured": "Destacada",
+    "add": "Agregar imagen",
+    "hint": "JPG, PNG o WebP, hasta {{size}} MB",
+    "uploaded": "Imagen subida",
+    "invalidType": "El archivo no es una imagen permitida. Usá un JPG, PNG o WebP",
+    "tooLarge": "La imagen supera el tamaño máximo permitido ({{size}} MB)",
+    "limitReached": "Un {{item}} puede tener hasta {{max}} imágenes",
+    "setFeatured": "Destacar",
+    "moveLeft": "Mover antes",
+    "moveRight": "Mover después",
+    "delete": "Eliminar imagen",
+    "deleteConfirm": {
+      "title": "¿Eliminar la imagen?",
+      "content": "La imagen se borra definitivamente."
+    }
   }
 }

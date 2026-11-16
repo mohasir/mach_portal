@@ -21,3 +21,4 @@ export * from './features';
 export * from './catalogKinds';
 export * from './unitsOfMeasure';
 export * from './productCategories';
+export * from './productImages';

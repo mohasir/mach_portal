@@ -66,6 +66,7 @@ describe('RLS migration', () => {
     expect(rows.map((r) => r.table)).toEqual(RLS_TABLES);
     expect(RLS_TABLES).toContain('units_of_measure');
     expect(RLS_TABLES).toContain('product_categories');
+    expect(RLS_TABLES).toContain('product_images');
     for (const row of rows) expect(row, row.table).toMatchObject({ enabled: true, forced: true });
   });
 
