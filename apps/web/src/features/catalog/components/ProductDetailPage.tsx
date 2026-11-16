@@ -5,6 +5,7 @@ import { Copy, Layers, Star, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TbRestore, TbTrashFilled } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { getStationIcon } from '@/features/quotes';
 import { useActionConfirm } from '@/components/shared/ConfirmDialogs';
@@ -30,6 +31,7 @@ interface ProductDetailPageProps {
 
 export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const { t } = useTranslation('catalog');
+  const vocabulary = useCatalogVocabulary();
   const can = useCan();
   const canEdit = can({ [RESOURCES.PRODUCT]: [ACTIONS.UPDATE] });
   const canDisable = can({ [RESOURCES.PRODUCT]: [ACTIONS.DISABLE] });
@@ -48,7 +50,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const handleDisable = () =>
     product &&
     confirm({
-      title: t('product.disableConfirm.title'),
+      title: t('product.disableConfirm.title', vocabulary),
       content: t('product.disableConfirm.content'),
       danger: true,
       onOk: () => disableProduct(product.id),
@@ -57,7 +59,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const handleDuplicate = () =>
     product &&
     confirm({
-      title: t('product.duplicateConfirm.title'),
+      title: t('product.duplicateConfirm.title', vocabulary),
       content: t('product.duplicateConfirm.content'),
       onOk: async () => {
         const copy = await duplicateProduct(product.id);
@@ -68,28 +70,35 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const handleEnable = () =>
     product &&
     confirm({
-      title: t('product.enableConfirm.title'),
+      title: t('product.enableConfirm.title', vocabulary),
       content: t('product.enableConfirm.content'),
       onOk: () => enableProduct(product.id),
     });
 
-  const StationIcon = product && getStationIcon(product.name);
+  const ProductIcon = product && getStationIcon(product.name);
 
   return (
     <div>
-      <PageHeader title={product?.name ?? t('breadcrumbRoot')} backHref="/admin/products" />
+      <PageHeader
+        title={product?.name ?? t('breadcrumbRoot', vocabulary)}
+        backHref="/admin/products"
+      />
 
       {isLoading ? (
         <Skeleton active paragraph={{ rows: 8 }} />
       ) : !product ? (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('empty')} className="mt-16" />
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={t('empty', vocabulary)}
+          className="mt-16"
+        />
       ) : (
         <div className="flex flex-col gap-4">
           <WrapperCard>
             <div className="flex flex-col gap-3">
               <div className="flex items-start justify-between">
                 <div className="bg-mist text-navy flex size-16 shrink-0 items-center justify-center rounded-2xl">
-                  {StationIcon && <StationIcon size={32} />}
+                  {ProductIcon && <ProductIcon size={32} />}
                 </div>
                 {product.isActive
                   ? canDisable && (
@@ -176,7 +185,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
 
               {canEdit && (
                 <Button type="primary" className="mt-2" onClick={() => setEditOpen(true)}>
-                  {t('product.edit.title')}
+                  {t('product.edit.title', vocabulary)}
                 </Button>
               )}
               {canDuplicate && (

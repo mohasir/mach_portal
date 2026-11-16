@@ -275,6 +275,7 @@ describe('0001 on a legacy database with data', () => {
       role_audit_log: 0,
       tenant_features: BACKFILLED_FEATURES.length,
       tenant_feature_events: 0,
+      tenant_profile: 1,
     });
   });
 
@@ -293,6 +294,12 @@ describe('0001 on a legacy database with data', () => {
         currency: null,
       })),
     );
+  });
+
+  it('gives the organization the products catalog kind', async () => {
+    expect(await db.sql`SELECT tenant_id, catalog_kind FROM tenant_profile`).toEqual([
+      { tenant_id: orgId, catalog_kind: 'products' },
+    ]);
   });
 
   it('keeps the content of every legacy column', async () => {
@@ -464,7 +471,7 @@ describe('0001 backfill edge cases', () => {
     const post = await verifyMultitenant(db.url);
     // Migrated only up to 0003, so the RLS checks (0005) and the feature tables (0006)
     // legitimately fail here.
-    const rlsProblem = /row level security|policy|^tenant_features?\w*: missing table$/;
+    const rlsProblem = /row level security|policy|^tenant_(features?|profile)\w*: missing table$/;
     expect(post.problems.filter((p) => !rlsProblem.test(p))).toEqual([
       'member: 2 row(s) without role_id',
       `organization: 1 without an owner role that has a member (${SLUG})`,

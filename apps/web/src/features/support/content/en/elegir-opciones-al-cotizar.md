@@ -1,14 +1,14 @@
-Each station can have option sections (ingredients, flavors, extras). There are two possible
+Each {{item}} can have option sections (ingredients, flavors, extras). There are two possible
 moments to choose them, and which one is used depends on a global switch.
 
 ## The two modes
 
-- **Choose later (default)**: while building the quote you only pick the station and the package
+- **Choose later (default)**: while building the quote you only pick the {{item}} and the package
   for the headcount. Each section's options stay pending and are filled in later, from the already-confirmed
   event's page.
 - **Choose now**: if OraviCloud's support team turned on the "Allow choosing options when quoting"
   switch in Settings → Preferences, you'll see a **"Choose options now"** switch in the builder. Turning it
-  on lets you pick each station's options right there, while quoting.
+  on lets you pick each {{item}}'s options right there, while quoting.
 
 If the global switch is off, you won't see this option in the builder at all — every new quote
 stays in "choose later" mode with no way to change it.

@@ -1,6 +1,7 @@
 'use client';
 import { Divider, Empty, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import type { QuoteTotals } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
@@ -21,6 +22,7 @@ interface QuotePreviewProps {
 
 export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePreviewProps) {
   const { t } = useTranslation('quotes');
+  const vocabulary = useCatalogVocabulary();
   const { date } = useDateFormatter();
   const { state, removeLine, setFields } = useQuoteBuilder();
 
@@ -57,7 +59,10 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
       <Divider className="my-3 shrink-0" />
 
       {state.lines.length === 0 ? (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('builder.lines.empty')} />
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={t('builder.lines.empty', vocabulary)}
+        />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
           {[...state.lines]

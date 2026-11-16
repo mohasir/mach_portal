@@ -1,6 +1,7 @@
 'use client';
 import { Empty } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import type { Product } from '@/features/catalog';
 import { nextLineKey } from '../../../helpers';
 import { useLineConfig } from '../../../hooks/useLineConfig';
@@ -17,6 +18,7 @@ interface LineBuilderProps {
 
 export function LineBuilder({ catalog, readOnly, canEditPricing }: LineBuilderProps) {
   const { t } = useTranslation('quotes');
+  const vocabulary = useCatalogVocabulary();
   const { priceTiersEnabled, minPersons } = useLineConfig();
   const { state, addLine, removeLine, updateLine, setSelection } = useQuoteBuilder();
 
@@ -30,7 +32,10 @@ export function LineBuilder({ catalog, readOnly, canEditPricing }: LineBuilderPr
     <div className="flex flex-col gap-3">
       {!readOnly && <ProductPicker catalog={catalog} onAdd={handleAdd} />}
       {state.lines.length === 0 ? (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('builder.lines.empty')} />
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={t('builder.lines.empty', vocabulary)}
+        />
       ) : (
         state.lines.map((line) => {
           const product = catalog.find((p) => p.id === line.productId);

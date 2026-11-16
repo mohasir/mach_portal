@@ -36,6 +36,7 @@ import { configModule } from '../../../modules/config/config.module';
 import { quotesModule } from '../../../modules/quotes/quotes.module';
 import { auth } from '../../auth';
 import { createTenant } from '../createTenant';
+import { getCatalogKind } from '../profile';
 
 vi.mock('../../../db/seeds/defaults', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../../db/seeds/defaults')>();
@@ -95,6 +96,33 @@ describe('createTenant', () => {
   afterEach(() => {
     vi.mocked(defaults.seedTenantDefaults).mockClear();
     vi.restoreAllMocks();
+  });
+
+  describe('catalog kind', () => {
+    it('stores the requested kind in the profile of the new tenant', async () => {
+      const { tenantId } = await createTenant(
+        { ...input('kind-svc'), catalogKind: 'services' },
+        testDb,
+      );
+      expect(await getCatalogKind(testDb, tenantId)).toBe('services');
+    });
+
+    it('writes no profile row when no kind is given, so the default applies', async () => {
+      const { tenantId } = await createTenant(input('kind-default'), testDb);
+      expect(await rowsPerTenant('tenant_profile', tenantId)).toBe(0);
+      expect(await getCatalogKind(testDb, tenantId)).toBe('products');
+    });
+
+    it('rejects an unknown kind before creating the account or the organization', async () => {
+      await expect(
+        createTenant({ ...input('kind-bad'), catalogKind: 'stations' }, testDb),
+      ).rejects.toMatchObject({
+        code: 'BAD_REQUEST',
+        cause: { code: 'TENANT_UNKNOWN_CATALOG_KIND' },
+      });
+      expect(await countOf(organization)).toBe(0);
+      expect(await countOf(user)).toBe(0);
+    });
   });
 
   describe('validation', () => {

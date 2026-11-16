@@ -24,7 +24,7 @@
     },
     "catalogo": {
       "label": "Catalog",
-      "caption": "Stations, services, options and pricing"
+      "caption": "{{Items}}, sections, options and pricing"
     },
     "tipos-de-evento": {
       "label": "Event types",
@@ -54,7 +54,7 @@
   "articles": {
     "crear-una-cotizacion": {
       "title": "How to create a quote step by step",
-      "description": "Client, event details, stations, charges, discount and deposit"
+      "description": "Client, event details, {{items}}, charges, discount and deposit"
     },
     "estados-de-una-cotizacion": {
       "title": "Quote stages explained",
@@ -104,12 +104,12 @@
       "title": "The events calendar",
       "description": "Month view, week view, and colors by event type"
     },
-    "crear-estacion-y-precios": {
-      "title": "How to create a station and load its prices",
+    "crear-producto-y-precios": {
+      "title": "How to create a {{item}} and load its prices",
       "description": "Packages by number of people"
     },
     "armar-servicios-y-opciones": {
-      "title": "How to build a station's services and options",
+      "title": "How to build a {{item}}'s sections and options",
       "description": "Selectable vs included sections"
     },
     "activar-desactivar-reordenar-catalogo": {

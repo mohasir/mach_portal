@@ -8,9 +8,9 @@ import { BottomSheet } from '@/components/shared/BottomSheet';
 import { OptionGroupSelectList } from '@/features/quotes';
 import { useUpdateEventSelections } from '../../hooks/useEventSelections';
 import type { EventDetail } from '../../types';
-import { StationSheetHeader } from './StationSheetHeader';
+import { ProductSheetHeader } from './ProductSheetHeader';
 
-interface StationSelectionsSheetProps {
+interface ProductSelectionsSheetProps {
   eventId: string;
   line: EventDetail['lines'][number];
   product: Product;
@@ -24,13 +24,13 @@ function buildInitialState(line: EventDetail['lines'][number]): GroupSelections 
   return Object.fromEntries(line.selections.map((s) => [s.optionGroupId, s.optionIds]));
 }
 
-export function StationSelectionsSheet({
+export function ProductSelectionsSheet({
   eventId,
   line,
   product,
   open,
   onClose,
-}: StationSelectionsSheetProps) {
+}: ProductSelectionsSheetProps) {
   const { t } = useTranslation('events');
   const [selections, setSelections] = useState<GroupSelections>(() => buildInitialState(line));
   const { updateSelections, isPending } = useUpdateEventSelections();
@@ -70,7 +70,7 @@ export function StationSelectionsSheet({
       }
     >
       <div className="flex flex-col gap-6 px-4 pb-4">
-        <StationSheetHeader product={product} quantity={line.quantity} subtotal={line.subtotal} />
+        <ProductSheetHeader product={product} quantity={line.quantity} subtotal={line.subtotal} />
         <div className="flex flex-col gap-2">
           {selectGroups.map((group) => (
             <OptionGroupSelectList

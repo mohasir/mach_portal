@@ -4,10 +4,12 @@ import { pgPolicy } from 'drizzle-orm/pg-core';
 export const TENANT_SETTING = 'app.tenant_id';
 
 // Tenant-owned tables written only by the platform role (BYPASSRLS), so they stay out of the FOR ALL
-// isolation contract: tenant_features has a read-only policy and tenant_feature_events none.
+// isolation contract: tenant_features and tenant_profile have a read-only policy and
+// tenant_feature_events none.
 export const PLATFORM_MANAGED_TABLES: readonly string[] = [
   'tenant_features',
   'tenant_feature_events',
+  'tenant_profile',
 ];
 
 export const tenantPolicyName = (table: string) => `${table}_tenant_isolation`;

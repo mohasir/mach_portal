@@ -1,6 +1,7 @@
 import type { MenuProps } from 'antd';
 import type { TFunction } from 'i18next';
 import type { PermissionCheck } from '@repo/guards';
+import type { CatalogVocabulary } from '@/features/tenant/vocabulary';
 import { IconMap, type NavGroup, type NavItem } from '@/lib/navigation';
 
 type CanFn = (permissions: PermissionCheck) => boolean;
@@ -20,6 +21,7 @@ const toMenuItem = (
   item: NavItem,
   can: CanFn,
   t: TFunction,
+  vocabulary: CatalogVocabulary,
 ): NonNullable<MenuProps['items']>[number] => {
   const icon = item.icon ? IconMap[item.icon] : undefined;
 
@@ -28,15 +30,15 @@ const toMenuItem = (
     return {
       key: item.href ?? item.label,
       icon,
-      label: t(item.label),
-      children: visibleChildren.map((child) => toMenuItem(child, can, t)),
+      label: t(item.label, vocabulary),
+      children: visibleChildren.map((child) => toMenuItem(child, can, t, vocabulary)),
     };
   }
 
   return {
     key: item.href!,
     icon,
-    label: t(item.label),
+    label: t(item.label, vocabulary),
   };
 };
 
@@ -44,6 +46,7 @@ export function buildMenuItems(
   menu: NavGroup[],
   can: CanFn,
   t: TFunction,
+  vocabulary: CatalogVocabulary,
   collapsed = false,
 ): MenuProps['items'] {
   const items: NonNullable<MenuProps['items']> = [];
@@ -57,7 +60,7 @@ export function buildMenuItems(
           ? item.children.some((c) => isItemVisible(c, can))
           : isItemVisible(item, can),
       )
-      .map((item) => toMenuItem(item, can, t));
+      .map((item) => toMenuItem(item, can, t, vocabulary));
 
     if (group.group) {
       items.push({

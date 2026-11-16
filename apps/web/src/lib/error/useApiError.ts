@@ -4,6 +4,8 @@ import type { MessageInstance } from 'antd/es/message/interface';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { TRPCClientError } from '@trpc/client';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
+import type { CatalogVocabulary } from '@/features/tenant/vocabulary';
 
 interface ApiFieldError {
   path: (string | number)[];
@@ -25,8 +27,14 @@ export function reportApiErrorCode(
   errorCode: string | null | undefined,
   t: TFunction<'api'>,
   message: MessageInstance,
+  vocabulary?: CatalogVocabulary,
 ) {
-  message.error(t(errorCode ? `errors.${errorCode}` : 'errors.generic', t('errors.generic')));
+  message.error(
+    t(errorCode ? `errors.${errorCode}` : 'errors.generic', {
+      defaultValue: t('errors.generic'),
+      ...vocabulary,
+    }),
+  );
 }
 
 /**
@@ -39,6 +47,7 @@ export function reportApiErrorCode(
 export function useApiError(form?: FormInstance) {
   const { message } = App.useApp();
   const { t } = useTranslation('api');
+  const vocabulary = useCatalogVocabulary();
 
   return (error: unknown) => {
     if (error instanceof TRPCClientError) {
@@ -49,7 +58,7 @@ export function useApiError(form?: FormInstance) {
         );
         return;
       }
-      reportApiErrorCode(data?.errorCode ?? data?.code, t, message);
+      reportApiErrorCode(data?.errorCode ?? data?.code, t, message, vocabulary);
       return;
     }
     message.error(t('errors.generic'));

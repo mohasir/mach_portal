@@ -3,6 +3,7 @@ import { Button, Form, InputNumber, Space, Typography } from 'antd';
 import { Plus } from 'lucide-react';
 import { TbTrashFilled } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { useActionConfirm } from '@/components/shared/ConfirmDialogs';
 import { IconBadge } from '@/components/shared/IconBadge';
@@ -27,6 +28,7 @@ interface PriceTiersFormProps {
 
 export function PriceTiersForm({ product }: PriceTiersFormProps) {
   const { t } = useTranslation('catalog');
+  const vocabulary = useCatalogVocabulary();
   const can = useCan();
   const canCreate = can({ [RESOURCES.PRICE_TIERS]: [ACTIONS.CREATE] });
   const canEdit = can({ [RESOURCES.PRICE_TIERS]: [ACTIONS.UPDATE] });
@@ -50,7 +52,7 @@ export function PriceTiersForm({ product }: PriceTiersFormProps) {
     }
     confirm({
       title: t('prices.removeTierConfirm.title'),
-      content: t('prices.removeTierConfirm.content'),
+      content: t('prices.removeTierConfirm.content', vocabulary),
       danger: true,
       onOk: () => remove(fieldName),
     });
@@ -59,7 +61,7 @@ export function PriceTiersForm({ product }: PriceTiersFormProps) {
   return (
     <div>
       <Typography.Text type="secondary" className="block text-sm mb-4">
-        {t('prices.tabDescription')}
+        {t('prices.tabDescription', vocabulary)}
       </Typography.Text>
 
       <Form

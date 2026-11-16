@@ -1,7 +1,7 @@
 {
-  "breadcrumbRoot": "Products",
-  "title": "Stations",
-  "empty": "No stations",
+  "breadcrumbRoot": "{{Items}}",
+  "title": "{{Items}}",
+  "empty": "No {{items}}",
   "status": {
     "inactive": "Inactive"
   },
@@ -15,20 +15,20 @@
     "save": "Save"
   },
   "product": {
-    "add": "New station",
+    "add": "New {{item}}",
     "notQuotable": {
       "tag": "Not quotable",
-      "hintFixedPrice": "This station cannot be quoted yet. Set a price per person to use it in quotes.",
-      "hintPriceOrTiers": "This station cannot be quoted yet. Set a price per person or add price tiers."
+      "hintFixedPrice": "This {{item}} cannot be quoted yet. Set a price per person to use it in quotes.",
+      "hintPriceOrTiers": "This {{item}} cannot be quoted yet. Set a price per person or add price tiers."
     },
     "premium": "Premium",
-    "optionGroupsCount": "{{count}} services",
+    "optionGroupsCount": "{{count}} sections",
     "priceTiersCount": "{{count}} packages",
-    "create": { "title": "New station" },
-    "edit": { "title": "Edit station" },
+    "create": { "title": "New {{item}}" },
+    "edit": { "title": "Edit {{item}}" },
     "form": {
       "name": "Name",
-      "namePlaceholder": "Station name",
+      "namePlaceholder": "{{Item}} name",
       "description": "Description",
       "descriptionPlaceholder": "Short description (optional)",
       "isPremium": "Premium",
@@ -36,34 +36,34 @@
       "priceCaption": "Optional. Multiplied by the number of people on the quote."
     },
     "duplicateConfirm": {
-      "title": "Duplicate this station?",
-      "content": "A copy will be created with its services, items and price packages."
+      "title": "Duplicate this {{item}}?",
+      "content": "A copy will be created with its sections, items and price packages."
     },
     "disableConfirm": {
-      "title": "Deactivate this station?",
+      "title": "Deactivate this {{item}}?",
       "content": "It will no longer be available for new quotes."
     },
     "enableConfirm": {
-      "title": "Activate this station?",
+      "title": "Activate this {{item}}?",
       "content": "It will be available for new quotes again."
     }
   },
   "prices": {
     "title": "Prices",
-    "tabDescription": "Define this station's price packages by number of people.",
+    "tabDescription": "Define this {{item}}'s price packages by number of people.",
     "autoSortNote": "Packages are automatically reordered by number of people when you save.",
     "quantityShort": "People",
     "addTier": "Add package",
     "removeTier": "Remove package",
     "removeTierConfirm": {
       "title": "Remove this package?",
-      "content": "This price package will be removed from the station."
+      "content": "This price package will be removed from the {{item}}."
     }
   },
   "detail": {
     "tabs": {
-      "details": "Services",
-      "detailsDescription": "Organize this station's services into sections and add the available items within each one.",
+      "details": "Sections",
+      "detailsDescription": "Organize this {{item}}'s sections and add the available items within each one.",
       "prices": "Prices"
     }
   },

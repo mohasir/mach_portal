@@ -1,6 +1,7 @@
 'use client';
 import { Button, Form, InputNumber, Select, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { CURRENCY_OPTIONS } from '../../contants';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
@@ -19,6 +20,7 @@ import { WrapperCard } from '@/components/shared/WrapperCard';
 
 export function QuoteDefaultsCard() {
   const { t } = useTranslation('settings');
+  const vocabulary = useCatalogVocabulary();
   const can = useCan();
   const { data, isLoading } = useConfig();
   const { updateQuoteDefaults, isPending } = useUpdateQuoteDefaults();
@@ -75,7 +77,7 @@ export function QuoteDefaultsCard() {
 
         <FieldRow
           title={t('quoteDefaults.minPersonsPerLine')}
-          caption={t('quoteDefaults.minPersonsPerLineCaption')}
+          caption={t('quoteDefaults.minPersonsPerLineCaption', vocabulary)}
           required
         >
           <Form.Item

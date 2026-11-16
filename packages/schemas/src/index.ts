@@ -18,3 +18,4 @@ export * from './storage';
 export * from './templates';
 export * from './notifications';
 export * from './features';
+export * from './catalogKinds';

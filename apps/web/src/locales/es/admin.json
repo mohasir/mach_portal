@@ -10,7 +10,7 @@
     "quotes": "Cotizaciones",
     "pipeline": "Pipeline",
     "staff": "Staff",
-    "catalogProducts": "Estaciones",
+    "catalogProducts": "{{Items}}",
     "prices": "Precios",
     "eventTypes": "Tipos de evento",
     "rescheduleReasons": "Motivos de reprogramación",

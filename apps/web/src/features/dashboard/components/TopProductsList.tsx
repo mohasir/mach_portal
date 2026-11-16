@@ -1,6 +1,7 @@
 'use client';
 import { Empty, Skeleton, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
@@ -24,6 +25,7 @@ interface DonutSlice {
 
 export function TopProductsList({ data, isLoading, month, year }: TopProductsListProps) {
   const { t } = useTranslation('dashboard');
+  const vocabulary = useCatalogVocabulary();
   const { monthYear } = useDateFormatter();
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
@@ -57,7 +59,10 @@ export function TopProductsList({ data, isLoading, month, year }: TopProductsLis
   const slices = rawSlices.filter((slice): slice is DonutSlice => Boolean(slice));
 
   return (
-    <WrapperCard title={t('topProducts.title')} caption={monthYear(new Date(year, month - 1, 1))}>
+    <WrapperCard
+      title={t('topProducts.title', vocabulary)}
+      caption={monthYear(new Date(year, month - 1, 1))}
+    >
       {isLoading ? (
         <Skeleton active paragraph={{ rows: 4 }} />
       ) : items.length === 0 ? (

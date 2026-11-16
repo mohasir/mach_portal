@@ -1,6 +1,7 @@
 'use client';
 import { Form, Input, Switch, type FormInstance } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import type { PriceTierInput } from '@repo/schemas';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
@@ -17,6 +18,7 @@ interface ProductFormProps {
 
 export function ProductForm({ form, initialValues, tiers = [], onSubmit }: ProductFormProps) {
   const { t } = useTranslation('catalog');
+  const vocabulary = useCatalogVocabulary();
   const priceTiersEnabled = useFeature('priceTiers');
 
   const handleFinish = (values: ProductFormValues) =>
@@ -35,7 +37,7 @@ export function ProductForm({ form, initialValues, tiers = [], onSubmit }: Produ
         label={<FieldLabel title={t('product.form.name')} required />}
         rules={[{ required: true, message: t('validation.nameRequired') }, { max: 120 }]}
       >
-        <Input placeholder={t('product.form.namePlaceholder')} />
+        <Input placeholder={t('product.form.namePlaceholder', vocabulary)} />
       </Form.Item>
 
       <Form.Item

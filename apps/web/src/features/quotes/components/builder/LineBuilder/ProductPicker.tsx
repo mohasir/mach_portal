@@ -1,6 +1,7 @@
 'use client';
 import { Select } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import type { Product } from '@/features/catalog';
 import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 import { getPickerState } from '../../../lineHelpers';
@@ -12,6 +13,7 @@ interface ProductPickerProps {
 
 export function ProductPicker({ catalog, onAdd }: ProductPickerProps) {
   const { t } = useTranslation('quotes');
+  const vocabulary = useCatalogVocabulary();
 
   return (
     <div className="sticky top-4 z-10">
@@ -19,7 +21,7 @@ export function ProductPicker({ catalog, onAdd }: ProductPickerProps) {
         showSearch={{ optionFilterProp: 'label' }}
         value={null}
         size="large"
-        placeholder={t('builder.lines.addPlaceholder')}
+        placeholder={t('builder.lines.addPlaceholder', vocabulary)}
         className="w-full"
         options={catalog.map((p) => ({
           value: p.id,

@@ -104,7 +104,7 @@
       "view_archived": "Ver archivadas",
       "view_summary": "Ver métricas del mes",
       "view_quotes_chart": "Ver gráfica de cotizaciones",
-      "view_top_products": "Ver estaciones más pedidas",
+      "view_top_products": "Ver {{items}} más pedidos",
       "reschedule": "Reprogramar",
       "view_reschedules": "Ver reprogramaciones",
       "list": "Ver listado",
@@ -140,16 +140,16 @@
         "caption": "Miembros del staff y sus asignaciones."
       },
       "product": {
-        "label": "Estaciones",
-        "caption": "Estaciones del catálogo y sus opciones."
+        "label": "{{Items}}",
+        "caption": "{{Items}} del catálogo y sus opciones."
       },
       "product_option": {
-        "label": "Ítems de estación",
-        "caption": "Ítems y secciones dentro de cada estación."
+        "label": "Ítems de {{item}}",
+        "caption": "Ítems y secciones dentro de cada {{item}}."
       },
       "price_tiers": {
         "label": "Tarifas de precio",
-        "caption": "Precios por cantidad de personas de cada estación."
+        "caption": "Precios por cantidad de personas de cada {{item}}."
       },
       "event_type": {
         "label": "Tipos de evento",
@@ -176,7 +176,7 @@
       },
       "catalog_preferences": {
         "label": "Preferencias de catálogo",
-        "caption": "Orden del catálogo de estaciones."
+        "caption": "Orden del catálogo de {{items}}."
       },
       "quote_pdf_template": {
         "label": "Plantilla de PDF",

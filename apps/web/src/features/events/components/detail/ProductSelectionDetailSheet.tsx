@@ -4,21 +4,21 @@ import type { Product } from '@/features/catalog';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { OptionGroupSelectList } from '@/features/quotes';
 import type { EventDetail } from '../../types';
-import { StationSheetHeader } from './StationSheetHeader';
+import { ProductSheetHeader } from './ProductSheetHeader';
 
-interface StationSelectionDetailSheetProps {
+interface ProductSelectionDetailSheetProps {
   line: EventDetail['lines'][number];
   product: Product;
   open: boolean;
   onClose: () => void;
 }
 
-export function StationSelectionDetailSheet({
+export function ProductSelectionDetailSheet({
   line,
   product,
   open,
   onClose,
-}: StationSelectionDetailSheetProps) {
+}: ProductSelectionDetailSheetProps) {
   const { t } = useTranslation('events');
 
   const groups = product.optionGroups.filter((group) => {
@@ -30,7 +30,7 @@ export function StationSelectionDetailSheet({
   return (
     <BottomSheet open={open} onClose={onClose} title={t('detail.selections.detailTitle')}>
       <div className="flex flex-col gap-4 px-4 pb-8">
-        <StationSheetHeader product={product} quantity={line.quantity} subtotal={line.subtotal} />
+        <ProductSheetHeader product={product} quantity={line.quantity} subtotal={line.subtotal} />
         {groups.map((group) => (
           <OptionGroupSelectList
             key={group.id}

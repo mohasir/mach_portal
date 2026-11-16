@@ -10,7 +10,7 @@
     "quotes": "Quotes",
     "pipeline": "Pipeline",
     "staff": "Staff",
-    "catalogProducts": "Stations",
+    "catalogProducts": "{{Items}}",
     "prices": "Prices",
     "eventTypes": "Event types",
     "rescheduleReasons": "Reschedule reasons",

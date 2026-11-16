@@ -1,11 +1,11 @@
-Dentro de cada estación hay dos niveles más: **secciones** (o servicios) y **ítems** dentro de
+Dentro de cada {{item}} hay dos niveles más: **secciones** y **ítems** dentro de
 cada sección.
 
-![Servicios de una estación](/support/armar-servicios-y-opciones/1.png)
+![Secciones de un {{item}}](/support/armar-servicios-y-opciones/1.png)
 
 ## Crear una sección
 
-Desde el detalle de la estación, pestaña "Servicios", botón "Nueva sección". Pide:
+Desde el detalle del {{item}}, pestaña "Secciones", botón "Nueva sección". Pide:
 
 - **Nombre** (obligatorio).
 - **Tipo**: **Seleccionable** (el cliente elige cuáles quiere) o **Incluido** (vienen todos
@@ -27,5 +27,5 @@ y Descripción (opcional, pensada para detalle de ingredientes).
   ninguno).
 
 Si una sección cambia de Incluido a Seleccionable (o al revés) después de que ya existan
-cotizaciones con esa estación, esas cotizaciones **no se actualizan solas** — conservan lo que
+cotizaciones con ese {{item}}, esas cotizaciones **no se actualizan solas** — conservan lo que
 tenían al momento de cotizarse.

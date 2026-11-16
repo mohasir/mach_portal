@@ -68,7 +68,7 @@
     "catalog": {
       "title": "Catalog",
       "sortable": "Sortable catalog",
-      "sortableCaption": "Allows reordering stations, sections and items by dragging. When off, the order stays fixed."
+      "sortableCaption": "Allows reordering {{items}}, sections and items by dragging. When off, the order stays fixed."
     },
     "quoteBuilder": {
       "title": "Quote builder",
@@ -94,8 +94,8 @@
     "title": "PDF template",
     "caption": "Fixed text printed on the PDF of every generated quote.",
     "services": "Service duration",
-    "servicesCaption": "Printed as \"Station: Duration\" under the \"SERVICE DURATION\" section of the PDF.",
-    "serviceLabelPlaceholder": "E.g. Snack Station",
+    "servicesCaption": "Printed as \"{{Item}}: Duration\" under the \"SERVICE DURATION\" section of the PDF.",
+    "serviceLabelPlaceholder": "E.g. Premium package",
     "serviceDurationPlaceholder": "E.g. Up to 2 hours of service",
     "addService": "Add service",
     "removeService": "Remove service",
@@ -143,7 +143,7 @@
     "quoteValidityMonthsCaption": "How many months a quote stays valid before it expires.",
     "months": "months",
     "minPersonsPerLine": "Min persons/line",
-    "minPersonsPerLineCaption": "Minimum number of people required per station on a quote.",
+    "minPersonsPerLineCaption": "Minimum number of people required per {{item}} on a quote.",
     "quoteSeqStart": "Sequence start",
     "quoteSeqStartCaption": "Number the next quote sequence will start from.",
     "lastUsedSeqHint": "Last used: {{seq}}",

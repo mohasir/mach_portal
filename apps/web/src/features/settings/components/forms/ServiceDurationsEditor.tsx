@@ -4,6 +4,7 @@ import { Button, Input } from 'antd';
 import { Plus } from 'lucide-react';
 import { TbTrashFilled } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import type { ServiceInfo } from '@repo/schemas';
 import { useActionConfirm } from '@/components/shared/ConfirmDialogs';
 import { IconBadge } from '@/components/shared/IconBadge';
@@ -22,6 +23,7 @@ export function ServiceDurationsEditor({
   disabled,
 }: ServiceDurationsEditorProps) {
   const { t } = useTranslation('settings');
+  const vocabulary = useCatalogVocabulary();
   const { t: tc } = useTranslation('common');
   const [confirm, confirmContextHolder] = useActionConfirm();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -61,7 +63,7 @@ export function ServiceDurationsEditor({
       <Input
         autoFocus
         maxLength={100}
-        placeholder={t('quotePdfTemplate.serviceLabelPlaceholder')}
+        placeholder={t('quotePdfTemplate.serviceLabelPlaceholder', vocabulary)}
         value={draft.label}
         onChange={(e) => setDraft((d) => ({ ...d, label: e.target.value }))}
       />

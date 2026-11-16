@@ -3,7 +3,7 @@ en el menú de Configuración del cliente. Estas son las dos cosas que se pueden
 
 ## Catálogo ordenable
 
-Switch que activa/desactiva el drag & drop en Estaciones, Servicios e Ítems del catálogo. Si se
+Switch que activa/desactiva el drag & drop en {{Items}}, Secciones e Ítems del catálogo. Si se
 apaga, el ícono de arrastre desaparece de toda la app y el orden queda fijo tal cual esté guardado.
 
 ## Elegir opciones al cotizar
@@ -11,7 +11,7 @@ apaga, el ícono de arrastre desaparece de toda la app y el orden queda fijo tal
 Switch que habilita (o no) el toggle "Elegir opciones ahora" dentro del armador de cotizaciones:
 
 - **Activado**: el staff ve el switch en el armador y puede elegir resolver las opciones de cada
-  estación en el momento de cotizar.
+  {{item}} en el momento de cotizar.
 - **Desactivado**: el switch no aparece, y **todas** las cotizaciones nuevas difieren la elección
   de opciones para el momento del evento.
 

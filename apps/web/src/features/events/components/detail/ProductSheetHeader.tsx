@@ -5,13 +5,13 @@ import type { Product } from '@/features/catalog';
 import { getStationIcon } from '@/features/quotes';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 
-interface StationSheetHeaderProps {
+interface ProductSheetHeaderProps {
   product: Product;
   quantity: number;
   subtotal: number;
 }
 
-export function StationSheetHeader({ product, quantity, subtotal }: StationSheetHeaderProps) {
+export function ProductSheetHeader({ product, quantity, subtotal }: ProductSheetHeaderProps) {
   const { t } = useTranslation('quotes');
   const { money } = useMoneyFormatter();
   const Icon = getStationIcon(product.name);

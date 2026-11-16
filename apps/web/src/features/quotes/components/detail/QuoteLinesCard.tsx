@@ -1,6 +1,7 @@
 'use client';
 import { Empty } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import type { Product } from '@/features/catalog';
 import { useConfig } from '@/features/settings';
 import { WrapperAlert } from '@/components/shared/WrapperAlert';
@@ -19,6 +20,7 @@ interface QuoteLinesCardProps {
 
 export function QuoteLinesCard({ detail, catalog, variant }: QuoteLinesCardProps) {
   const { t } = useTranslation('quotes');
+  const vocabulary = useCatalogVocabulary();
   const { date } = useDateFormatter();
   const { data: config } = useConfig();
 
@@ -29,7 +31,7 @@ export function QuoteLinesCard({ detail, catalog, variant }: QuoteLinesCardProps
     })
     .filter((row): row is LineRow => row !== null);
 
-  const title = `${t('builder.lines.title')}${lineRows.length > 0 ? ` (${lineRows.length})` : ''}`;
+  const title = `${t('builder.lines.title', vocabulary)}${lineRows.length > 0 ? ` (${lineRows.length})` : ''}`;
 
   return (
     <WrapperCard variant={variant} title={title}>
@@ -45,7 +47,10 @@ export function QuoteLinesCard({ detail, catalog, variant }: QuoteLinesCardProps
           />
         )}
         {lineRows.length === 0 ? (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('builder.lines.empty')} />
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={t('builder.lines.empty', vocabulary)}
+          />
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {lineRows.map((row) => (

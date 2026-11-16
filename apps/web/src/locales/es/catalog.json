@@ -1,7 +1,7 @@
 {
-  "breadcrumbRoot": "Productos",
-  "title": "Estaciones",
-  "empty": "No hay estaciones",
+  "breadcrumbRoot": "{{Items}}",
+  "title": "{{Items}}",
+  "empty": "No hay {{items}}",
   "status": {
     "inactive": "Inactivo"
   },
@@ -15,20 +15,20 @@
     "save": "Guardar"
   },
   "product": {
-    "add": "Nueva estación",
+    "add": "Nuevo {{item}}",
     "notQuotable": {
       "tag": "No cotizable",
-      "hintFixedPrice": "Esta estación no se puede cotizar todavía. Definí un precio por persona para poder usarla en cotizaciones.",
-      "hintPriceOrTiers": "Esta estación no se puede cotizar todavía. Definí un precio por persona o agregá paquetes de precio."
+      "hintFixedPrice": "Este {{item}} no se puede cotizar todavía. Definí un precio por persona para poder usarlo en cotizaciones.",
+      "hintPriceOrTiers": "Este {{item}} no se puede cotizar todavía. Definí un precio por persona o agregá paquetes de precio."
     },
     "premium": "Premium",
-    "optionGroupsCount": "{{count}} servicios",
+    "optionGroupsCount": "{{count}} secciones",
     "priceTiersCount": "{{count}} paquetes",
-    "create": { "title": "Nueva estación" },
-    "edit": { "title": "Editar estación" },
+    "create": { "title": "Nuevo {{item}}" },
+    "edit": { "title": "Editar {{item}}" },
     "form": {
       "name": "Nombre",
-      "namePlaceholder": "Nombre de la estación",
+      "namePlaceholder": "Nombre del {{item}}",
       "description": "Descripción",
       "descriptionPlaceholder": "Descripción breve (opcional)",
       "isPremium": "Premium",
@@ -36,34 +36,34 @@
       "priceCaption": "Opcional. Se multiplica por la cantidad de personas de la cotización."
     },
     "duplicateConfirm": {
-      "title": "¿Duplicar esta estación?",
-      "content": "Se creará una copia con sus servicios, ítems y paquetes de precios."
+      "title": "¿Duplicar este {{item}}?",
+      "content": "Se creará una copia con sus secciones, ítems y paquetes de precios."
     },
     "disableConfirm": {
-      "title": "¿Desactivar esta estación?",
+      "title": "¿Desactivar este {{item}}?",
       "content": "Dejará de estar disponible para nuevas cotizaciones."
     },
     "enableConfirm": {
-      "title": "¿Activar esta estación?",
+      "title": "¿Activar este {{item}}?",
       "content": "Volverá a estar disponible para nuevas cotizaciones."
     }
   },
   "prices": {
     "title": "Precios",
-    "tabDescription": "Definí los paquetes de precio de esta estación según la cantidad de personas.",
+    "tabDescription": "Definí los paquetes de precio de este {{item}} según la cantidad de personas.",
     "autoSortNote": "Al guardar, los paquetes se reordenan automáticamente por cantidad de personas.",
     "quantityShort": "Personas",
     "addTier": "Agregar paquete",
     "removeTier": "Quitar paquete",
     "removeTierConfirm": {
       "title": "¿Quitar este paquete?",
-      "content": "Se eliminará este paquete de precio de la estación."
+      "content": "Se eliminará este paquete de precio del {{item}}."
     }
   },
   "detail": {
     "tabs": {
-      "details": "Servicios",
-      "detailsDescription": "Organizá los servicios de esta estación en secciones y agregá los ítems disponibles dentro de cada una.",
+      "details": "Secciones",
+      "detailsDescription": "Organizá las secciones de este {{item}} y agregá los ítems disponibles dentro de cada una.",
       "prices": "Precios"
     }
   },

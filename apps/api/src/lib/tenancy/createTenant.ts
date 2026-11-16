@@ -2,8 +2,9 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { and, eq, like, notExists, sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { ROLES } from '@repo/guards';
+import { CATALOG_KINDS, isCatalogKind } from '@repo/schemas';
 import type { Database } from '../../db';
-import { member, organization, user, verification } from '../../db/schema';
+import { member, organization, tenantProfile, user, verification } from '../../db/schema';
 import { seedTenantDefaults } from '../../db/seeds/defaults';
 import { lockUserEmail } from '../../db/locks';
 import { env } from '../../env';
@@ -19,6 +20,8 @@ export type CreateTenantInput = {
   name: string;
   adminEmail: string;
   adminName: string;
+  // Defaults to the products catalog when omitted.
+  catalogKind?: string;
 };
 
 export type CreateTenantResult = { tenantId: string; setupUrl: string | null };
@@ -102,6 +105,16 @@ export async function createTenant(
     });
   }
 
+  if (input.catalogKind !== undefined && !isCatalogKind(input.catalogKind)) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      cause: new AppError(
+        ErrorCodes.tenant.UNKNOWN_CATALOG_KIND,
+        `Unknown catalog kind "${input.catalogKind}". Known: ${CATALOG_KINDS.join(', ')}`,
+      ),
+    });
+  }
+
   const account = await provisionAccount(database, email, adminName);
 
   try {
@@ -110,6 +123,9 @@ export async function createTenant(
       const tenantId = randomUUID();
       await tx.insert(organization).values({ id: tenantId, name, slug, createdAt: new Date() });
       await seedTenantDefaults(tenantId, tx);
+      if (input.catalogKind !== undefined && isCatalogKind(input.catalogKind)) {
+        await tx.insert(tenantProfile).values({ tenantId, catalogKind: input.catalogKind });
+      }
 
       const roleIds = await seedTenantRoles(tenantId, tx);
       await tx.insert(member).values({

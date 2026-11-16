@@ -73,7 +73,7 @@
       "unknownUser": "Someone",
       "staffAssigned": "assigned {{staffName}} as staff",
       "staffRemoved": "removed {{staffName}} from staff",
-      "selectionsUpdated": "updated the station selections",
+      "selectionsUpdated": "updated the {{item}} selections",
       "paymentRegistered": "registered a payment of {{amount}}",
       "paymentRemoved": "removed a payment of {{amount}}",
       "completed": "marked the event as completed",

@@ -10,7 +10,7 @@ also see "Mark as completed" and "Cancel event".
 
 ## Services included
 
-The stations and their options, as they ended up in the quote. If you have permission to manage
+The {{items}} and their options, as they ended up in the quote. If you have permission to manage
 selections, each line has buttons to view/edit its selection; otherwise it's read-only.
 
 ## Staff

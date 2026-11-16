@@ -3,6 +3,7 @@ import { Card, Col, Row, Typography } from 'antd';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useFeatures } from '@/features/tenant/hooks/useFeatures';
 import { useCan } from '@/lib/auth/useCan';
@@ -16,6 +17,7 @@ import {
 
 export function OptionsPage() {
   const { t } = useTranslation('admin');
+  const vocabulary = useCatalogVocabulary();
   const can = useCan();
   const { keys } = useFeatures();
   const router = useRouter();
@@ -45,7 +47,7 @@ export function OptionsPage() {
             className="h-full w-full object-contain"
           />
         </div>
-        <span className="text-base">{t(item.label)}</span>
+        <span className="text-base">{t(item.label, vocabulary)}</span>
       </Card>
     </Col>
   );

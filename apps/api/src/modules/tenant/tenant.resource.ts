@@ -1,3 +1,4 @@
+import type { CatalogKind, TenantProfile } from '@repo/schemas';
 import { organization } from '../../db/schema';
 import { permissionsVersion, type ResolvedAccess } from '../../lib/rbac/access';
 
@@ -24,3 +25,5 @@ export const permissionsResource = (access: ResolvedAccess) => ({
   roleName: access.roleName,
   version: permissionsVersion(access),
 });
+
+export const tenantProfileResource = (catalogKind: CatalogKind): TenantProfile => ({ catalogKind });

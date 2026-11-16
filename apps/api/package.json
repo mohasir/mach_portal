@@ -20,6 +20,7 @@
     "db:fresh": "pnpm db:preflight && pnpm db:reset && pnpm db:roles && pnpm db:migrate && pnpm db:seed --demo=local",
     "mt:verify": "tsx src/db/scripts/verifyMultitenant.ts",
     "tenant:create": "tsx src/db/scripts/createTenant.ts",
+    "tenant:set-catalog-kind": "tsx src/db/scripts/tenantProfile.ts",
     "feature:list": "tsx src/db/scripts/feature.ts list",
     "feature:set": "tsx src/db/scripts/feature.ts set",
     "feature:unset": "tsx src/db/scripts/feature.ts unset",

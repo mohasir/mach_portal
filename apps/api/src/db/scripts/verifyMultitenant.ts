@@ -41,9 +41,10 @@ role the API connects with.
           - a table with tenant_id whose RLS is not enabled or not forced, that lacks its
             <table>_tenant_isolation policy (FOR ALL, USING and WITH CHECK comparing tenant_id
             with app.tenant_id) or that has another permissive policy;
-          - tenant_features or tenant_feature_events whose RLS is not enabled or not forced,
-            tenant_features with any policy other than tenant_features_tenant_read (FOR SELECT,
-            USING comparing tenant_id with app.tenant_id), or tenant_feature_events with any policy;
+          - tenant_features, tenant_profile or tenant_feature_events whose RLS is not enabled or
+            not forced, tenant_features or tenant_profile with any policy other than
+            <table>_tenant_read (FOR SELECT, USING comparing tenant_id with app.tenant_id), or
+            tenant_feature_events with any policy;
           - tenant_features rows whose feature_key is a core feature or not in the catalog;
           - organizations with events active (enabled and not expired) without quotes active;
           - the DATABASE_APP_URL role is a superuser, has BYPASSRLS or CREATEROLE, or is a member
@@ -211,8 +212,11 @@ async function checkRowLevelSecurity(sql: postgres.Sql, tables: string[], proble
   }
 }
 
-// The app role must read its own tenant_features rows and write neither table, so any extra
-// policy (even a restrictive one, which still needs a permissive one to grant) is a deviation.
+// The app role must read its own tenant_features and tenant_profile rows and write no platform
+// table, so any extra policy (even a restrictive one, which still needs a permissive one to grant)
+// is a deviation.
+const READABLE_PLATFORM_TABLES = ['tenant_features', 'tenant_profile'];
+
 async function checkPlatformManagedTables(
   sql: postgres.Sql,
   tables: readonly string[],
@@ -234,7 +238,7 @@ async function checkPlatformManagedTables(
     if (!cls.forced) problems.push(`${table}: row level security is not forced`);
 
     const own = policies.filter((p) => p.tablename === table);
-    if (table === 'tenant_features') {
+    if (READABLE_PLATFORM_TABLES.includes(table)) {
       const name = tenantReadPolicyName(table);
       const read = own[0];
       if (own.length !== 1 || read?.policyname !== name || read.cmd !== 'SELECT') {

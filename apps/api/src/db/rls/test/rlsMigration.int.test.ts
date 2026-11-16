@@ -97,16 +97,26 @@ describe('RLS migration', () => {
     }
   });
 
-  it('gives tenant_features a single read policy and tenant_feature_events none', async () => {
+  it('gives tenant_features and tenant_profile a single read policy and tenant_feature_events none', async () => {
     const policies = await sql`
       SELECT tablename AS table, policyname AS policy, permissive, roles, cmd,
              qual, with_check AS check
       FROM pg_policies
-      WHERE schemaname = 'public' AND tablename IN ${sql([...PLATFORM_MANAGED_TABLES])}`;
+      WHERE schemaname = 'public' AND tablename IN ${sql([...PLATFORM_MANAGED_TABLES])}
+      ORDER BY tablename`;
     expect(policies).toEqual([
       {
         table: 'tenant_features',
         policy: tenantReadPolicyName('tenant_features'),
+        permissive: 'PERMISSIVE',
+        roles: ['public'],
+        cmd: 'SELECT',
+        qual: SAME_TENANT,
+        check: null,
+      },
+      {
+        table: 'tenant_profile',
+        policy: tenantReadPolicyName('tenant_profile'),
         permissive: 'PERMISSIVE',
         roles: ['public'],
         cmd: 'SELECT',

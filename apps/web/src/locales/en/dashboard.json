@@ -10,7 +10,7 @@
     "empty": "No quotes recorded this year"
   },
   "topProducts": {
-    "title": "Top requested stations",
+    "title": "Top requested {{items}}",
     "empty": "No confirmed events this month",
     "other": "Other"
   }

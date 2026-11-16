@@ -68,7 +68,7 @@
     "catalog": {
       "title": "Catálogo",
       "sortable": "Catálogo ordenable",
-      "sortableCaption": "Permite reordenar estaciones, secciones e ítems arrastrando. Si se desactiva, el orden queda fijo."
+      "sortableCaption": "Permite reordenar {{items}}, secciones e ítems arrastrando. Si se desactiva, el orden queda fijo."
     },
     "quoteBuilder": {
       "title": "Armador de cotizaciones",
@@ -94,8 +94,8 @@
     "title": "Plantilla de PDF",
     "caption": "Textos fijos que se imprimen en el PDF de cada cotización generada.",
     "services": "Duración de servicios",
-    "servicesCaption": "Se imprimen como \"Estación: Duración\" en la sección \"SERVICE DURATION\" del PDF.",
-    "serviceLabelPlaceholder": "Ej: Snack Station",
+    "servicesCaption": "Se imprimen como \"{{Item}}: Duración\" en la sección \"SERVICE DURATION\" del PDF.",
+    "serviceLabelPlaceholder": "Ej: Paquete premium",
     "serviceDurationPlaceholder": "Ej: Up to 2 hours of service",
     "addService": "Agregar servicio",
     "removeService": "Quitar servicio",
@@ -143,7 +143,7 @@
     "quoteValidityMonthsCaption": "Cantidad de meses que una cotización queda vigente antes de expirar.",
     "months": "meses",
     "minPersonsPerLine": "Mínimo personas/línea",
-    "minPersonsPerLineCaption": "Cantidad mínima de personas requerida por cada estación en una cotización.",
+    "minPersonsPerLineCaption": "Cantidad mínima de personas requerida por cada {{item}} en una cotización.",
     "quoteSeqStart": "Inicio de consecutivo",
     "quoteSeqStartCaption": "Número desde el que arrancará el próximo consecutivo de cotización.",
     "lastUsedSeqHint": "Último usado: {{seq}}",

@@ -1,6 +1,7 @@
 'use client';
 import { Button, Form, Skeleton, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { useCan } from '@/lib/auth/useCan';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
@@ -15,6 +16,7 @@ interface CatalogPreferencesFormValues {
 
 export function CatalogPreferencesCard() {
   const { t } = useTranslation('settings');
+  const vocabulary = useCatalogVocabulary();
   const can = useCan();
   const { data, isLoading } = useConfig();
   const { updateCatalogPreferences, isPending } = useUpdateCatalogPreferences();
@@ -44,7 +46,7 @@ export function CatalogPreferencesCard() {
       >
         <SwitchRow
           title={t('preferences.catalog.sortable')}
-          caption={t('preferences.catalog.sortableCaption')}
+          caption={t('preferences.catalog.sortableCaption', vocabulary)}
           control={
             <Form.Item name="catalogSortable" valuePropName="checked" noStyle>
               <Switch />

@@ -1,6 +1,7 @@
 'use client';
 import { Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { Product } from '@/features/catalog';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
@@ -17,20 +18,21 @@ interface LinesBuilderSectionProps {
   readOnly?: boolean;
 }
 
-// Flow A (default): QuickLineBuilder, stations only, no option picking.
+// Flow A (default): QuickLineBuilder, products only, no option picking.
 // Flow B (opt-in, gated globally by appSettings.allowSelectOptionsAtQuote): LineBuilder, the
-// original per-station option picker. The toggle only controls which builder is shown to add
+// original per-product option picker. The toggle only controls which builder is shown to add
 // selections; a quote that already has `selectOptionsAtQuote: true` saved keeps showing
 // LineBuilder even if the global preference is later turned off.
 export function LinesBuilderSection({ catalog, readOnly }: LinesBuilderSectionProps) {
   const { t } = useTranslation('quotes');
+  const vocabulary = useCatalogVocabulary();
   const { state, setFields } = useQuoteBuilder();
   const { data: config } = useConfig();
   const can = useCan();
   const canEditPricing = can({ [RESOURCES.QUOTE]: [ACTIONS.MANAGE_LINE_PRICING] });
   const configurableOptions = useFeature('configurableOptions');
   const allowToggle = configurableOptions && !!config?.appSettings.allowSelectOptionsAtQuote;
-  const title = `${t('builder.lines.title')}${state.lines.length > 0 ? ` (${state.lines.length})` : ''}`;
+  const title = `${t('builder.lines.title', vocabulary)}${state.lines.length > 0 ? ` (${state.lines.length})` : ''}`;
 
   return (
     <WrapperCard title={title}>
@@ -38,7 +40,7 @@ export function LinesBuilderSection({ catalog, readOnly }: LinesBuilderSectionPr
         {allowToggle && (
           <SwitchRow
             title={t('builder.selectionsMode.label')}
-            caption={t('builder.selectionsMode.hint')}
+            caption={t('builder.selectionsMode.hint', vocabulary)}
             control={
               <Switch
                 checked={state.selectOptionsAtQuote}
