@@ -65,7 +65,7 @@ const sortColumns = {
 const assignedToUser = alias(user, 'assigned_to_user');
 
 // Single source of truth for "selections pending": some line of the event's quote has an
-// active `select` group with no option chosen. Matches the per-station count shown in the UI.
+// active `select` group with no option chosen. Matches the per-product count shown in the UI.
 // Only valid in a WHERE clause (see findById).
 const selectionsIncomplete = (tenantId: string) => sql<boolean>`exists (
   select 1 from ${quoteLines}

@@ -122,7 +122,7 @@ export class QuotePdfGenerator {
       }
 
       const lines = buildQuoteLineDetails(result.lineRows, result.optionRows);
-      // Inactive stations stay in the tree so older quotes keep their line; the PDF itself
+      // Inactive products stay in the tree so older quotes keep their line; the PDF itself
       // skips inactive groups and options (see quotes.pdf.ts).
       // Read without the cost: the PDF is sent to the client and never shows it.
       const { productRows, tierRows, groupRows, optionRows, lookups } =

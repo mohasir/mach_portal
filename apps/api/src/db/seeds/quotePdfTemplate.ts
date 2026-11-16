@@ -9,13 +9,13 @@ const LOCALE = 'es';
 const CONTENT: QuotePdfTemplateContent = {
   services: [
     {
-      label: 'Snack Stations',
+      label: 'Standard services',
       duration:
-        'Up to 2 hours or until all contracted servings have been distributed, whichever occurs first.',
+        'Until all contracted units have been delivered or the scheduled end time is reached, whichever occurs first.',
     },
     {
-      label: 'Mach Craft Bar',
-      duration: '4-hour premium beverage service for the contracted number of guests.',
+      label: 'Premium services',
+      duration: 'Dedicated team for the contracted period and number of guests.',
     },
   ],
   termsAndConditions: [
@@ -24,16 +24,14 @@ const CONTENT: QuotePdfTemplateContent = {
     'In the event of a natural disaster, government-mandated restriction, or other force majeure circumstance preventing the event, the client may reschedule at no additional cost, subject to availability, or receive a full refund minus the non-refundable deposit.',
     'The remaining balance must be paid on the day of the event prior to the start of the service, without exception.',
     'The last payment are accepted in cash. Otherwise, an additional 10% fee will be applied to the remaining balance.',
-    'Only the portions contracted will be served. The service is NOT an open bar or refill service.',
-    'If the contracted portions are not fully consumed by the end of the service, they will be left prepared. If the portions are fully consumed before the scheduled end time, the service will conclude.',
+    'Only the quantities contracted will be provided.',
     'Please assign a clean and dry space, with outlet.',
     'If staff members are assaulted or mistreated by the client or guests, the service will be immediately canceled with no refund.',
     'Please notify us if the service will be located on more than 3 floors WITHOUT an elevator.',
-    'For Mach Craft Bar, alcohol must be provided by the client. A professional bartender will contact you prior to the event with recommended alcohol selections, brands and quantities if cocktails are requested.',
   ],
   validityNote: 'Prices are valid for 3 months from the date of issue',
   dietaryNote:
-    'If you have any dietary restrictions, allergies, religious requirements, or ingredient preferences, please let us know in advance so we can accommodate your needs whenever possible.',
+    'If you have any special requirements or preferences, please let us know in advance so we can accommodate your needs whenever possible.',
 };
 
 export async function seedQuotePdfTemplate(tenantId: string, x: Executor = db) {

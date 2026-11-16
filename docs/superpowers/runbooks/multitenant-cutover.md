@@ -256,3 +256,56 @@ DELETE FROM drizzle.__drizzle_migrations WHERE created_at = 1794598857324;
 - Se pierden con las tablas todas las filas cargadas en ellas, incluido el backfill de las 5 features a las organizaciones existentes (se vuelve a generar al re-aplicar la `0006`, pero los cambios hechos con `feature:set`/`feature:unset` y el historial de `tenant_feature_events` no).
 - Eliminar `products.price` descarta los precios fijos cargados desde la fase.
 
+---
+
+## 9. Catálogo genérico, fase 1 (migraciones `0007`–`0011`)
+
+Spec: `docs/superpowers/specs/2026-11-14-catalogo-generico-fase1-design.md`. Arquitectura: `docs/backend/architecture.md` §14. **Nada de esta sección se ejecuta contra producción sin la aprobación del dueño del proyecto.**
+
+### 9.1 Qué hacen las migraciones
+
+Se aplican en orden con `db:migrate` (`DATABASE_OWNER_URL`):
+
+| Migración | Efecto |
+| --- | --- |
+| `0007_quantity_rename` | Renombra `quote_lines.num_persons` y `product_price_tiers.num_persons` a `quantity` (y sus restricciones). Sin pérdida de datos. |
+| `0008_tenant_profile` | Crea `tenant_profile` (RLS solo lectura, `FORCE`) y rellena una fila `products` por organización existente. |
+| `0009_units_of_measure` | Crea `units_of_measure`, siembra las 23 unidades de sistema por organización, asigna "Persona" a todo producto existente y deja `products.uom_id` `NOT NULL`. Otorga `unit_of_measure` a los roles que ya administran `product` y sube `role.version`. |
+| `0010_product_fields` | Crea `product_categories`; agrega `products.category_id`, `sku`, `cost` y `min_quantity`; copia `app_settings.min_persons_per_line` a `products.min_quantity` y **elimina** esa columna; otorga `product_category` y `product_cost` a los roles correspondientes. |
+| `0011_product_images` | Crea `product_images` (RLS con `FORCE`). |
+
+Efecto para las organizaciones existentes: todo sigue funcionando con unidad "Persona" y tipo de catálogo `products`; el cotizador exige ahora el mínimo de cada producto en lugar del ajuste global.
+
+### 9.2 Tipo de catálogo por organización
+
+Con el rol `platform` (`DATABASE_PLATFORM_URL`):
+
+```bash
+pnpm --filter api tenant:set-catalog-kind --tenant <slug> --kind <products|services>
+```
+
+También se puede fijar al crear (`tenant:create --catalog-kind <kind>`). Un tipo desconocido falla con `TENANT_UNKNOWN_CATALOG_KIND`. La web lo toma en hasta 30 s.
+
+### 9.3 `sharp` en el despliegue
+
+- Las imágenes de producto se procesan con `sharp` (binario nativo, `--external:sharp` en el `build`). En el host/imagen de la API hay que ejecutar `pnpm install` **en la plataforma de destino**; no copiar un `node_modules` de otro sistema operativo o arquitectura.
+- Si el binario falta, la API arranca y solo fallan las subidas de imágenes (carga dinámica).
+- Las claves en R2 siguen el prefijo `t/{tenantId}/products/{productId}/{uuid}.webp` (y `…-thumb.webp`). El bucket y las credenciales de R2 son los mismos que usan los adjuntos de pagos.
+
+### 9.4 Orden de despliegue y verificación
+
+1. Backup con el dueño, como en la sección 3 (paso 1).
+2. `db:migrate` (`0007`–`0011`) y **después** desplegar API y web de la misma versión: el código nuevo necesita `quantity`, `uom_id`, `tenant_profile` y las tablas nuevas.
+3. `mt:verify` con exit 0 (incluye `product_categories` y `product_images` y los enlaces `products.uom_id` y `products.category_id`).
+4. Fijar el tipo de catálogo donde corresponda (9.2).
+
+### 9.5 Cambios de comportamiento a tener presentes
+
+- El PDF de la cotización **ya no imprime las descripciones de ingredientes de las opciones**; cada grupo activo se muestra como un bloque normal.
+- Quien aplicó localmente la `0010` anterior (antes de su versión final) debe correr `db:fresh`: el SQL de la `0010` cambió y esa base queda inconsistente con el journal.
+- La cantidad mínima por línea es ahora un campo de cada producto (`min_quantity`); el ajuste `min_persons_per_line` ya no existe.
+
+### 9.6 Reversión
+
+No hay migraciones inversas. **Recomendado: restaurar el backup previo y desplegar la versión anterior de API y web.** La reversión manual no es trivial: `0010` elimina `app_settings.min_persons_per_line` y `0007` renombra columnas que el código anterior usa; deshacerlas implica recrear la columna, devolver los nombres y borrar de `drizzle.__drizzle_migrations` las filas con `created_at` igual al `when` de cada migración en `apps/api/drizzle/meta/_journal.json`. Los archivos ya subidos a R2 bajo `t/{tenantId}/products/` quedan huérfanos si se descarta `product_images`.
+

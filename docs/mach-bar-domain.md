@@ -6,6 +6,12 @@
 >
 > Diagrama ER: `docs/mach-bar-model.dbml` (pegar en [dbdiagram.io](https://dbdiagram.io)) + Mermaid abajo.
 
+> **Nota (catálogo genérico).** El portal ya no está atado a Mach Bar: el catálogo es genérico
+> (unidades de medida, categorías, SKU, costo, imágenes y vocabulario por organización). Este
+> documento conserva el vocabulario original de estaciones y personas como **referencia histórica**
+> del dominio de origen; lo vigente está en `docs/superpowers/specs/2026-11-14-catalogo-generico-fase1-design.md`
+> y en `docs/backend/architecture.md` §14.
+
 ---
 
 ## 1. Propósito y alcance

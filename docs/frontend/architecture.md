@@ -666,8 +666,17 @@ El catálogo de features (`FEATURES`, `FeatureKey`, `isToggleable`) vive en `@re
 - Recursos en `locales/{es,en}/<namespace>.json`.
 - **Todo** texto visible usa `t('clave')` con `useTranslation('<feature>')`.
 - Namespaces transversales: **`common`** (acciones y tabla: `save`, `cancel`, `edit`, `delete`, `yes`/`no`, `table.actions/copyId/copied/search/total`, `confirm.*`); **`admin`** (shell/navegación); **`auth`** (login + estados de sesión del `AuthProvider`); **`api`** (errores).
+- **Namespaces del catálogo genérico:** `vocabulary` (palabras por tipo de catálogo), `unitsOfMeasure` y `productCategories`, registrados en `lib/i18n/config.ts`; es/en deben tener las mismas claves (hay tests de paridad).
 - Fechas: **nunca** `toLocaleDateString`; usar `useDateFormatter()` (dayjs, locale-aware).
 - **Convenciones de claves:** validación `<feature>.validation.<regla>`; UI `<feature>.<seccion>.<clave>` (ej. `<feature>.columns.name`, `<feature>.index.add`); errores `errors.<CODE>` en `api`.
+
+### 10.1 Vocabulario del catálogo, cantidades con unidad y galería
+
+- **Vocabulario por organización:** el texto que nombra lo que se vende (producto, servicio…) **no se escribe a mano**. `useCatalogVocabulary()` (`features/tenant/hooks/useCatalogVocabulary.ts`) devuelve `{ item, items, Item, Items }` según el `catalogKind` de la organización (`useTenantProfile`, que lee `tenant.profile`) y las claves se interpolan: `t('clave', vocabulary)` con `{{item}}`, `{{items}}`, `{{Item}}`, `{{Items}}`. Mientras el perfil carga se usan palabras neutras (grupo `neutral`). Las palabras viven en `locales/{es,en}/vocabulary.json`; un test impide que contengan términos de un cliente.
+- **Cantidades con unidad:** siempre `formatQuantity(quantity, unit, mode?)` y `unitNoun(unit, quantity?)` (`lib/format/quantity.ts`); nunca `"{{n}} personas"` a mano. Singular solo para exactamente 1; `mode: 'code'` imprime la abreviatura (`5 kg`).
+- **Selector de unidad y categoría:** `UnitSelect` (`features/units-of-measure`) y `CategorySelect` (`features/product-categories`) se alimentan de `unitsOfMeasure.options` y `productCategories.options`, y conservan el valor actual aunque esté inactivo.
+- **Imágenes del producto:** `ProductGallery` (`features/catalog/components/ProductGallery.tsx`, subida, destacada, reordenar y borrar con los hooks de `features/catalog/hooks/useProductImages.ts`; helpers puros en `features/catalog/gallery.ts`) y `ProductThumb` (miniatura o icono de marcador de posición; se reutiliza desde cotizaciones y eventos). La subida va al endpoint de Express (`/api/uploads/products/:id/images`), no a tRPC; permisos: `product.update`.
+- **Costo:** el campo del formulario del producto depende de `product_cost` (`edit`, `read` o `hidden`); sin `product_cost.read` el costo no viaja.
 
 ---
 

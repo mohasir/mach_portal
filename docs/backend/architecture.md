@@ -801,3 +801,45 @@ pnpm --filter api feature:unset --tenant <slug> --key <key>
 4. **i18n es/en:** el nombre en `features.<key>` de `locales/{es,en}/common.json`.
 5. **Tests:** catálogo (dependencias), guard o `requireFeature` (mutación bloqueada, consulta no), y web si hay gating de UI. Si la feature añade datos nuevos por organización, aplicar §11 como siempre.
 6. **Organizaciones existentes:** una feature nueva no tiene fila en ninguna, así que nace apagada. Para darla a organizaciones que ya la usaban, activarla con `feature:set` o con una migración de datos.
+
+---
+
+## 14. Catálogo genérico
+
+El catálogo no asume un tipo de negocio. Spec: `docs/superpowers/specs/2026-11-14-catalogo-generico-fase1-design.md`.
+
+### 14.1 Regla: nunca atar nombres al cliente
+
+- Ningún código, texto, seed ni plantilla puede depender del nombre de un producto, grupo u opción de un cliente (p. ej. ramas por `name === '...'` en el PDF). El comportamiento sale de **datos** (unidad, categoría, tipo de selección), nunca de un nombre.
+- Los seeds usan productos neutros (`db/seeds/catalog.ts`) y todos los textos de dominio en la web salen del vocabulario por organización (frontend §10.1).
+
+### 14.2 Unidades de medida (`modules/unitsOfMeasure`)
+
+- Tabla `units_of_measure` por organización (`name`, `plural_name`, `code`, `dimension`, `factor` decimal, `is_base`, `is_system`). Las 23 unidades de sistema salen de `SYSTEM_UNITS` (`@repo/schemas`) y las siembra `seedUnitsOfMeasure` (dentro de `seedTenantDefaults`, **antes** del catálogo). `products.uom_id` es `NOT NULL` con FK `RESTRICT`; `DEFAULT_UNIT_CODE` es `pers`.
+- Router `unitsOfMeasure`: `list`, `options` (`guardedProcedureAnyOf`: `unit_of_measure.read` o `product.create`/`product.update`), `create`, `update`, `disable`, `enable`. Sin borrado.
+- Reglas: código único por organización sin distinguir mayúsculas (`UNIT_CODE_TAKEN`); factor > 0 y la base vale 1 (`UNIT_INVALID_FACTOR`); una unidad de sistema no cambia código, dimensión ni factor (`UNIT_SYSTEM_IMMUTABLE`); una unidad en uso no cambia dimensión ni factor y no se desactiva si la usa un producto activo (`UNIT_IN_USE`); id ajeno o inexistente (`UNIT_NOT_FOUND`).
+
+### 14.3 Categorías y campos del producto (`modules/productCategories`)
+
+- Tabla `product_categories` (nombre único sin distinguir mayúsculas por organización). Router `productCategories`: `list`, `options`, `create`, `update`, `disable`, `enable`, `delete` (solo sin productos; con productos solo se desactiva: `PRODUCT_CATEGORY_IN_USE`). Otros códigos: `PRODUCT_CATEGORY_NOT_FOUND`, `PRODUCT_CATEGORY_NAME_TAKEN`.
+- `products` suma `category_id`, `sku` (único por organización sin distinguir mayúsculas cuando existe: `PRODUCT_SKU_TAKEN`), `cost` y `min_quantity` (≥ 1, reemplaza al ajuste `min_persons_per_line`). Las cotizaciones rechazan una línea por debajo del mínimo (`QUOTE_BELOW_MIN_QUANTITY`).
+- **`cost` es un dato sensible:** solo lo ve y edita quien tiene `product_cost.read` / `product_cost.update`. `publicProductColumns` no lo incluye; solo `productCostColumns` lo selecciona, y el PDF y las lecturas internas nunca lo devuelven (`PRODUCT_COST_FORBIDDEN` si se intenta escribir sin permiso).
+- Cantidades: en BD y API el campo se llama `quantity` (antes `num_persons`; migración `0007`).
+
+### 14.4 Perfil de la organización (`tenant_profile`)
+
+- Tabla `tenant_profile` (PK `tenant_id`, `catalog_kind`). Es **platform-managed** (`PLATFORM_MANAGED_TABLES` en `db/rls/policy.ts`): la app solo la lee (política de solo `SELECT`, `FORCE ROW LEVEL SECURITY`) y la escribe el rol `platform`. Sin fila se aplica `DEFAULT_CATALOG_KIND` (`products`).
+- `CATALOG_KINDS` (`@repo/schemas`, hoy `products` y `services`) decide qué palabras usa la web para los ítems del catálogo. Agregar un tipo es una entrada en esa lista más sus palabras en el namespace `vocabulary` de la web; la columna es texto, sin migración.
+- Lectura: `tenant.profile` (`protectedProcedure`, `getCatalogKind`). Escritura: `setCatalogKind` (`lib/tenancy/profile.ts`), expuesta solo por scripts: `pnpm --filter api tenant:set-catalog-kind --tenant <slug> --kind <products|services>` y `tenant:create --catalog-kind <kind>`. Un tipo desconocido falla con `TENANT_UNKNOWN_CATALOG_KIND`.
+- El seed de demo asigna un tipo a cada tenant (`demo-norte` `products`, `demo-sur` `services`).
+
+### 14.5 Imágenes de producto y `sharp`
+
+- Tabla `product_images` (hasta `PRODUCT_IMAGES_MAX` = 5 por producto; una sola destacada, índice único parcial). Las claves de R2 nunca salen del servidor; el recurso expone `{ id, imageUrl, thumbUrl, isFeatured, sortOrder }`.
+- Subida: `POST /api/uploads/products/:productId/images` (`modules/products/products.express.ts`, `guardTenantSession({ product: [update] })`, multer en memoria, 5 MB, jpeg/png/webp). El servicio `ProductImageUploader` usa el patrón de tres fases (§12.4): comprobar en una transacción corta, procesar y subir **sin** transacción, insertar en otra corta; si algo falla tras subir, borra los archivos.
+- `lib/images/processImage.ts` usa **`sharp`** (carga dinámica): valida el formato por contenido, límite de 50 MP, corrige la orientación, quita EXIF y genera WebP de hasta 1600 px y una miniatura de hasta 400 px.
+- Claves en R2: `t/<tenantId>/products/<productId>/<uuid>.webp` y `…-thumb.webp`.
+- Mutaciones por tRPC (`products.images.setFeatured`, `reorder`, `delete`) con `product.update`; cada una bloquea la fila del producto (`FOR UPDATE`). Duplicar un producto **no** copia imágenes.
+- Errores: `PRODUCT_IMAGE_NOT_FOUND`, `PRODUCT_IMAGE_LIMIT_REACHED`, `PRODUCT_IMAGE_INVALID_IMAGE`, `PRODUCT_IMAGE_TOO_LARGE`, `PRODUCT_IMAGE_UPLOAD_FAILED`.
+- **Despliegue:** `sharp` es un binario nativo y está como `--external:sharp` en el `build` de esbuild; hay que ejecutar `pnpm install` en la plataforma de destino (no copiar `node_modules` de otra). Si falta, solo fallan las subidas.
+

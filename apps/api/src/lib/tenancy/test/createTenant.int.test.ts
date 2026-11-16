@@ -225,7 +225,7 @@ describe('createTenant', () => {
       const [product] = await testDb
         .select({ id: products.id })
         .from(products)
-        .where(and(eq(products.tenantId, tenantId), eq(products.name, 'Crepes')));
+        .where(and(eq(products.tenantId, tenantId), eq(products.name, 'Paquete Esencial')));
       const [tier] = await testDb
         .select()
         .from(productPriceTiers)

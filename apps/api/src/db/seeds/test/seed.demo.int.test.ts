@@ -6,7 +6,17 @@ import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
 import { FEATURE_KEYS, isToggleable } from '@repo/guards';
 import { QUOTE_STAGE } from '@repo/schemas';
 import * as schema from '../../schema';
-import { account, clients, member, organization, products, quotes, role, user } from '../../schema';
+import {
+  account,
+  clients,
+  member,
+  organization,
+  products,
+  quotes,
+  role,
+  tenantProfile,
+  user,
+} from '../../schema';
 import { PLATFORM_MANAGED_TABLES } from '../../rls/policy';
 import { TENANT_EXEMPT_TABLES } from '../../schema/tenantColumn';
 import { createTestTenant, createTestUser, resetDb, testDb } from '../../../test/db';
@@ -215,6 +225,22 @@ describe('db:seed --demo=local', () => {
         SELECT action, actor FROM tenant_feature_events WHERE tenant_id = ${tenant}`);
       expect(events).toHaveLength(expected.length);
       expect(events.every((e) => e.action === 'enabled' && e.actor === 'seed')).toBe(true);
+    }
+  });
+
+  it('assigns the catalog kind and a unit and category to every product of each demo tenant', async () => {
+    const kinds = await testDb.select().from(tenantProfile);
+    expect(Object.fromEntries(kinds.map((k) => [k.tenantId, k.catalogKind]))).toEqual({
+      [norte]: 'products',
+      [sur]: 'services',
+    });
+    for (const tenantId of [norte, sur]) {
+      const rows = await testDb
+        .select({ uomId: products.uomId, categoryId: products.categoryId })
+        .from(products)
+        .where(eq(products.tenantId, tenantId));
+      expect(rows.length).toBeGreaterThan(0);
+      expect(rows.every((r) => r.uomId && r.categoryId)).toBe(true);
     }
   });
 
