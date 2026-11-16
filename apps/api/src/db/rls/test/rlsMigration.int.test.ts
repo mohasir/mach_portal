@@ -64,6 +64,7 @@ describe('RLS migration', () => {
         AND (c.relrowsecurity OR c.relforcerowsecurity)
       ORDER BY c.relname`;
     expect(rows.map((r) => r.table)).toEqual(RLS_TABLES);
+    expect(RLS_TABLES).toContain('units_of_measure');
     for (const row of rows) expect(row, row.table).toMatchObject({ enabled: true, forced: true });
   });
 

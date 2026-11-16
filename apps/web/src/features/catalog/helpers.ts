@@ -5,6 +5,7 @@ export interface ProductFormValues {
   description?: string;
   isPremium: boolean;
   price?: number | null;
+  uomId: string;
 }
 
 export interface CatalogFeatures {
@@ -26,6 +27,7 @@ export function buildProductPayload(
     description: values.description,
     isPremium: values.isPremium ?? false,
     price: values.price ?? null,
+    uomId: values.uomId,
     // Stored tiers are kept untouched while the add-on is off; the API rejects any tiers then.
     ...(priceTiersEnabled ? { tiers } : {}),
   };

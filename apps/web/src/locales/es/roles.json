@@ -149,7 +149,11 @@
       },
       "price_tiers": {
         "label": "Tarifas de precio",
-        "caption": "Precios por cantidad de personas de cada {{item}}."
+        "caption": "Precios por cantidad de cada {{item}}, en su unidad."
+      },
+      "unit_of_measure": {
+        "label": "Unidades de medida",
+        "caption": "Unidades en que se cobra y se cuenta cada {{item}}."
       },
       "event_type": {
         "label": "Tipos de evento",

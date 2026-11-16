@@ -106,7 +106,7 @@
     },
     "crear-producto-y-precios": {
       "title": "How to create a {{item}} and load its prices",
-      "description": "Packages by number of people"
+      "description": "Packages by quantity"
     },
     "armar-servicios-y-opciones": {
       "title": "How to build a {{item}}'s sections and options",

@@ -34,6 +34,7 @@ export function ProductPicker({ catalog, onAdd }: ProductPickerProps) {
           return (
             <div className="flex flex-col">
               <span>{option.label}</span>
+              {product && <span className="text-muted text-xs">{product.unit.pluralName}</span>}
               {state && !state.selectable && (
                 <span className="text-muted text-xs whitespace-normal">{t(state.reasonKey)}</span>
               )}

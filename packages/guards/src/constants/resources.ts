@@ -9,6 +9,7 @@ export const RESOURCES = {
   PRODUCT: 'product',
   PRODUCT_OPTION: 'product_option',
   PRICE_TIERS: 'price_tiers',
+  UNIT_OF_MEASURE: 'unit_of_measure',
   EVENT_TYPE: 'event_type',
   RESCHEDULE_REASON: 'reschedule_reason',
   TAX_RATES: 'tax_rates',

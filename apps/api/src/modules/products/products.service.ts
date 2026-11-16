@@ -29,6 +29,9 @@ import {
   withCatalogUsage,
 } from './products.resource';
 
+const unitNotFound = () =>
+  new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.unit.NOT_FOUND) });
+
 export class ProductsService {
   constructor(
     private repo: ProductsRepository,
@@ -46,42 +49,71 @@ export class ProductsService {
 
   // Written rows carry no tiers; they only matter when the price alone does not decide.
   private async withQuotable(row: PublicProduct) {
-    const tiers =
-      row.price == null && this.priceTiersActive ? await this.repo.countTiers(row.id) : 0;
-    return productResource(row, isQuotable(row, new Array<unknown>(tiers), this.priceTiersActive));
+    const [tiers, unit] = await Promise.all([
+      row.price == null && this.priceTiersActive ? this.repo.countTiers(row.id) : 0,
+      this.repo.findUnit(row.uomId),
+    ]);
+    if (!unit) throw unitNotFound();
+    return productResource(
+      row,
+      isQuotable(row, new Array<unknown>(tiers), this.priceTiersActive),
+      unit,
+    );
+  }
+
+  // The unit is resolved inside the tenant (a foreign key would accept another tenant's id) and
+  // must be active, unless the product already uses it.
+  private async assertUnit(uomId: string, currentUomId?: string) {
+    const unit = await this.repo.findUnit(uomId);
+    if (!unit || (!unit.isActive && uomId !== currentUomId)) throw unitNotFound();
   }
 
   async list() {
-    const { productRows, tierRows, groupRows, optionRows } = await this.repo.findTree(false);
-    return buildProductTree(productRows, tierRows, groupRows, optionRows, this.priceTiersActive);
+    const { productRows, tierRows, groupRows, optionRows, units } = await this.repo.findTree(false);
+    return buildProductTree(
+      productRows,
+      tierRows,
+      groupRows,
+      optionRows,
+      this.priceTiersActive,
+      units,
+    );
   }
 
   async catalog(includeInactive: boolean) {
-    const [{ productRows, tierRows, groupRows, optionRows }, usage] = await Promise.all([
+    const [{ productRows, tierRows, groupRows, optionRows, units }, usage] = await Promise.all([
       this.repo.findTree(includeInactive),
       this.repo.findUsage(),
     ]);
     return withCatalogUsage(
-      buildProductTree(productRows, tierRows, groupRows, optionRows, this.priceTiersActive),
+      buildProductTree(productRows, tierRows, groupRows, optionRows, this.priceTiersActive, units),
       usage,
     );
   }
 
   async pricesList() {
-    const { productRows, tierRows } = await this.repo.findPricesTree();
-    return buildPricesList(productRows, tierRows, this.priceTiersActive);
+    const { productRows, tierRows, units } = await this.repo.findPricesTree();
+    return buildPricesList(productRows, tierRows, this.priceTiersActive, units);
   }
 
   async updateProductTiers(id: string, tiers: PriceTierInput[]) {
     const result = await this.repo.updateTiers(id, tiers);
     if (!result)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
-    return productWithTiersResource(result.product, result.tierRows, this.priceTiersActive);
+    const unit = await this.repo.findUnit(result.product.uomId);
+    if (!unit) throw unitNotFound();
+    return productWithTiersResource(
+      result.product,
+      result.tierRows,
+      this.priceTiersActive,
+      new Map([[unit.id, unit]]),
+    );
   }
 
   // ── product ──
   async createProduct(input: CreateProductInput) {
     const data = this.withTiersRule(input);
+    await this.assertUnit(input.uomId);
     const existing = await this.repo.findProductByName(input.name);
     if (existing)
       throw new TRPCError({
@@ -116,6 +148,10 @@ export class ProductsService {
   }
 
   async updateProduct(id: string, input: UpdateProductInput) {
+    const current = await this.repo.findProductById(id);
+    if (!current)
+      throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.product.NOT_FOUND) });
+    await this.assertUnit(input.uomId, current.uomId);
     const updated = await this.repo
       .updateProduct(id, this.withTiersRule(input))
       .catch((error: unknown) => {

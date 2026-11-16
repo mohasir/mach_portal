@@ -6,6 +6,7 @@ import type { QuoteTotals } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
 import { AddressLines } from '@/components/shared/AddressLines';
+import { formatQuantity } from '@/lib/format/quantity';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { getStationIcon } from '../../../helpers';
 import { useQuoteBuilder } from '../../../hooks/useQuoteBuilder';
@@ -94,7 +95,7 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
                   key={line.key}
                   icon={getStationIcon(product.name)}
                   name={product.name}
-                  quantity={line.quantity}
+                  quantity={formatQuantity(line.quantity, product.unit)}
                   total={line.subtotal}
                   groups={groups}
                   onRemove={readOnly ? undefined : () => removeLine(line.key)}

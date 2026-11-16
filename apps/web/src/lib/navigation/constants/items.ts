@@ -82,6 +82,13 @@ export const CATALOG_PRODUCTS_ITEM: NavItem = {
   layout: 'bare',
 };
 
+export const UNITS_OF_MEASURE_ITEM: NavItem = {
+  label: 'nav.unitsOfMeasure',
+  href: '/admin/units-of-measure',
+  icon: 'unitsOfMeasure',
+  guard: { [RESOURCES.UNIT_OF_MEASURE]: [READ] },
+};
+
 export const EVENT_TYPES_ITEM: NavItem = {
   feature: 'events',
   label: 'nav.eventTypes',
@@ -149,6 +156,7 @@ export const NAV_ITEMS = {
   PIPELINE: PIPELINE_ITEM,
   STAFF: STAFF_ITEM,
   CATALOG_PRODUCTS: CATALOG_PRODUCTS_ITEM,
+  UNITS_OF_MEASURE: UNITS_OF_MEASURE_ITEM,
   EVENT_TYPES: EVENT_TYPES_ITEM,
   RESCHEDULE_REASONS: RESCHEDULE_REASONS_ITEM,
   SETTINGS: SETTINGS_ITEM,

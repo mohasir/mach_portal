@@ -10,6 +10,7 @@ import { IconBadge } from '@/components/shared/IconBadge';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { useCan } from '@/lib/auth/useCan';
+import { unitNoun } from '@/lib/format/quantity';
 import { useUpdatePriceTiers } from '../../hooks/usePrices';
 import type { Product } from '../../types';
 
@@ -61,7 +62,7 @@ export function PriceTiersForm({ product }: PriceTiersFormProps) {
   return (
     <div>
       <Typography.Text type="secondary" className="block text-sm mb-4">
-        {t('prices.tabDescription', vocabulary)}
+        {t('prices.tabDescription', { ...vocabulary, unit: unitNoun(product.unit) })}
       </Typography.Text>
 
       <Form
@@ -94,7 +95,7 @@ export function PriceTiersForm({ product }: PriceTiersFormProps) {
               {fields.map((field) => (
                 <div key={field.key} className="flex items-start gap-2">
                   <Space.Compact className="mb-0 flex-1">
-                    <Space.Addon>{t('prices.quantityShort')}</Space.Addon>
+                    <Space.Addon>{product.unit.pluralName}</Space.Addon>
                     <Form.Item
                       name={[field.name, 'quantity']}
                       noStyle

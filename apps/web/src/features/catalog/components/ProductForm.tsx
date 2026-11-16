@@ -1,4 +1,5 @@
 'use client';
+import type { ComponentProps } from 'react';
 import { Form, Input, Switch, type FormInstance } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
@@ -6,17 +7,26 @@ import type { PriceTierInput } from '@repo/schemas';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
+import { UnitSelect } from '@/features/units-of-measure';
 import { useFeature } from '@/lib/auth/useFeature';
 import { buildProductPayload, type ProductFormValues, type ProductPayload } from '../helpers';
 
 interface ProductFormProps {
   form: FormInstance<ProductFormValues>;
   initialValues?: Partial<ProductFormValues>;
+  /** The product's unit when editing, offered even if it was deactivated later. */
+  currentUnit?: ComponentProps<typeof UnitSelect>['current'];
   tiers?: PriceTierInput[];
   onSubmit: (values: ProductPayload) => Promise<void> | void;
 }
 
-export function ProductForm({ form, initialValues, tiers = [], onSubmit }: ProductFormProps) {
+export function ProductForm({
+  form,
+  initialValues,
+  currentUnit,
+  tiers = [],
+  onSubmit,
+}: ProductFormProps) {
   const { t } = useTranslation('catalog');
   const vocabulary = useCatalogVocabulary();
   const priceTiersEnabled = useFeature('priceTiers');
@@ -52,9 +62,18 @@ export function ProductForm({ form, initialValues, tiers = [], onSubmit }: Produ
       </Form.Item>
 
       <Form.Item
+        name="uomId"
+        label={<FieldLabel title={t('product.form.unit')} required />}
+        extra={t('product.form.unitCaption', vocabulary)}
+        rules={[{ required: true, message: t('validation.unitRequired') }]}
+      >
+        <UnitSelect current={currentUnit} placeholder={t('product.form.unitPlaceholder')} />
+      </Form.Item>
+
+      <Form.Item
         name="price"
         label={<FieldLabel title={t('product.form.price')} />}
-        extra={t('product.form.priceCaption')}
+        extra={t('product.form.priceCaption', vocabulary)}
         rules={[{ type: 'number', min: 0, message: t('validation.priceInvalid') }]}
       >
         <MoneyInput min={0} step={5} className="w-full" placeholder="0.00" />

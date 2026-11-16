@@ -1,5 +1,6 @@
 import { pgTable, uuid, text, integer, boolean, pgEnum, unique, index } from 'drizzle-orm/pg-core';
 import { tenantId } from './tenantColumn';
+import { unitsOfMeasure } from './unitsOfMeasure';
 import { tenantIsolationPolicy } from '../rls/policy';
 
 export const optionGroupTypeEnum = pgEnum('option_group_type', ['select', 'included']);
@@ -16,9 +17,14 @@ export const products = pgTable(
     sortOrder: integer('sort_order').default(0).notNull(),
     // Per-unit price in cents; NULL leaves the product without a base price.
     price: integer('price'),
+    // Unit of the price and of the quantity sold.
+    uomId: uuid('uom_id')
+      .notNull()
+      .references(() => unitsOfMeasure.id, { onDelete: 'restrict' }),
   },
   (t) => [
     unique('products_tenant_name_unique').on(t.tenantId, t.name),
+    index('products_uom_idx').on(t.uomId),
     tenantIsolationPolicy('products'),
   ],
 ).enableRLS();

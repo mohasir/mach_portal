@@ -54,6 +54,8 @@ export const permissionsMatrix = [
   { resource: RESOURCES.PRODUCT, actions: [...CRUD, DISABLE, ENABLE, DUPLICATE] },
   { resource: RESOURCES.PRODUCT_OPTION, actions: [DELETE] },
   { resource: RESOURCES.PRICE_TIERS, actions: CRUD },
+  // No delete: system units cannot be deleted and own units are deactivated instead.
+  { resource: RESOURCES.UNIT_OF_MEASURE, actions: [CREATE, READ, UPDATE, DISABLE, ENABLE] },
   { resource: RESOURCES.EVENT_TYPE, actions: CRUD },
   { resource: RESOURCES.RESCHEDULE_REASON, actions: [VIEW, ...CRUD] },
   { resource: RESOURCES.TAX_RATES, actions: VIEW_UPDATE },

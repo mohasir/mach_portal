@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { QUOTE_STAGE } from '@repo/schemas';
 import { eventPayments, events, products, quoteLines, quotes, clients } from '../../../db/schema';
-import { resetDb, seedTwoTenants, testDb, type TestTenant } from '../../../test/db';
+import { resetDb, seedTwoTenants, testDb, testUnitId, type TestTenant } from '../../../test/db';
 import { seedQuoteStages } from '../../../test/fixtures/events';
 import { DashboardRepository } from '../dashboard.repository';
 import { DashboardService } from '../dashboard.service';
@@ -88,7 +88,7 @@ async function seedTenant(tenant: TestTenant, label: string, spec: Spec): Promis
   for (const [name] of spec.productLines) {
     const [p] = await testDb
       .insert(products)
-      .values({ tenantId: tenant.id, name })
+      .values({ tenantId: tenant.id, name, uomId: await testUnitId(tenant.id) })
       .returning({ id: products.id });
     productIds[name] = p!.id;
   }

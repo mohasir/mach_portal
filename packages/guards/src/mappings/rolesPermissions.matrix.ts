@@ -60,6 +60,9 @@ const CRUD = [CREATE, READ, UPDATE, DELETE];
 // (a soft-deleted product/section/item needs superadmin to bring back).
 const PRODUCT_FULL = [...CRUD, DISABLE, ENABLE, DUPLICATE];
 const PRODUCT_ADMIN = [...CRUD, DISABLE, DUPLICATE];
+// Units of measure follow the product grants: only superadmin re-enables a disabled unit.
+const UNIT_FULL = [CREATE, READ, UPDATE, DISABLE, ENABLE];
+const UNIT_ADMIN = [CREATE, READ, UPDATE, DISABLE];
 const READ_ONLY = [READ];
 const VIEW_UPDATE = [VIEW, UPDATE];
 
@@ -94,6 +97,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.PRODUCT]: PRODUCT_FULL,
       [RESOURCES.PRODUCT_OPTION]: [DELETE],
       [RESOURCES.PRICE_TIERS]: CRUD,
+      [RESOURCES.UNIT_OF_MEASURE]: UNIT_FULL,
       [RESOURCES.EVENT_TYPE]: CRUD,
       [RESOURCES.RESCHEDULE_REASON]: [VIEW, ...CRUD],
       [RESOURCES.TAX_RATES]: VIEW_UPDATE,
@@ -122,6 +126,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.PRODUCT]: PRODUCT_ADMIN,
       [RESOURCES.PRODUCT_OPTION]: [DELETE],
       [RESOURCES.PRICE_TIERS]: CRUD,
+      [RESOURCES.UNIT_OF_MEASURE]: UNIT_ADMIN,
       [RESOURCES.EVENT_TYPE]: CRUD,
       // Only to populate the reason picker when rescheduling; the catalog page needs VIEW.
       [RESOURCES.RESCHEDULE_REASON]: READ_ONLY,
@@ -145,6 +150,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.QUOTE]: { actions: CRUD, scope: 'own' },
       [RESOURCES.PIPELINE]: CRUD,
       [RESOURCES.PRODUCT]: READ_ONLY,
+      [RESOURCES.UNIT_OF_MEASURE]: READ_ONLY,
       [RESOURCES.EVENT_TYPE]: READ_ONLY,
       [RESOURCES.STAFF]: READ_ONLY,
     },

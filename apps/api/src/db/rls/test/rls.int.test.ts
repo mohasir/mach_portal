@@ -96,8 +96,9 @@ describe('row level security on every tenant table', () => {
 
   beforeAll(async () => {
     await resetDb();
-    tenantA = (await createTestTenant('rls-a')).id;
-    tenantB = (await createTestTenant('rls-b')).id;
+    // One row per table and tenant: the default system units would add more.
+    tenantA = (await createTestTenant('rls-a', 'rls-a', { units: false })).id;
+    tenantB = (await createTestTenant('rls-b', 'rls-b', { units: false })).id;
     for (const table of RLS_TABLES) columnsOf.set(table, await requiredColumns(table));
     // Replica mode disables the foreign key triggers, so each table gets one row per tenant without
     // building its parent chain. Only the superuser seeding connection can do this.

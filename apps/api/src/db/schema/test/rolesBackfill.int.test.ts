@@ -29,6 +29,10 @@ async function insertLegacyMember(tenantId: string, legacyRole: string): Promise
 
 const runMigration = () => testDb.execute(sql.raw(migrationSql));
 
+// Resources added to the templates after 0003; their migration grants them to existing roles
+// (0009: unit_of_measure, see migration.0009.int.test.ts).
+const GRANTED_BY_LATER_MIGRATIONS = ['unit_of_measure'];
+
 // Drizzle wraps the driver error, so the RAISE message sits on the cause.
 async function migrationError(): Promise<string | undefined> {
   const error = (await runMigration().then(
@@ -97,7 +101,10 @@ describe('0003 roles backfill', () => {
     const t = await createTestTenant('ta');
     await runMigration();
     for (const tpl of ROLE_TEMPLATES) {
-      const expected = tpl.permissions.map((p) => `${p.resource}:${p.action}:${p.scope}`).sort();
+      const expected = tpl.permissions
+        .filter((p) => !GRANTED_BY_LATER_MIGRATIONS.includes(p.resource))
+        .map((p) => `${p.resource}:${p.action}:${p.scope}`)
+        .sort();
       expect(await permissionsOf(t.id, tpl.name)).toEqual(expected);
     }
   });

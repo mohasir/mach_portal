@@ -29,6 +29,8 @@ const productMutationFields = {
   name: z.string().trim().min(1, 'catalog.validation.nameRequired').max(120),
   description: optionalText(500),
   isPremium: z.boolean(),
+  // Unit the price and the quantity of the product are expressed in.
+  uomId: z.uuid('catalog.validation.unitRequired'),
   tiers: productTiersSchema,
   // Per-unit price in cents; null clears it, omitted keeps the stored one on update.
   price: z

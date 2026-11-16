@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ROLE_TEMPLATES } from '@repo/guards';
+import { SYSTEM_UNITS } from '@repo/schemas';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { markBaseline } from '../markBaseline';
@@ -276,6 +277,7 @@ describe('0001 on a legacy database with data', () => {
       tenant_features: BACKFILLED_FEATURES.length,
       tenant_feature_events: 0,
       tenant_profile: 1,
+      units_of_measure: SYSTEM_UNITS.length,
     });
   });
 
@@ -311,7 +313,12 @@ describe('0001 on a legacy database with data', () => {
       const rows = await db.sql.unsafe<{ tenant_id: string | null; n: number }[]>(
         `SELECT tenant_id, count(*)::int AS n FROM "${t}" GROUP BY tenant_id`,
       );
-      const n = t === 'quote_stage_settings' ? legacyCounts['quote_stages'] : legacyCounts[t];
+      // Rows 0001 and later migrations create for the organization rather than carry over.
+      const created: Record<string, number | undefined> = {
+        quote_stage_settings: legacyCounts['quote_stages'],
+        units_of_measure: SYSTEM_UNITS.length,
+      };
+      const n = created[t] ?? legacyCounts[t];
       expect(rows, t).toEqual([{ tenant_id: orgId, n }]);
     }
   });
@@ -368,7 +375,8 @@ describe('0001 on a legacy database with data', () => {
       /quotes_tenant_seq_unique/,
     );
     await expect(
-      db.sql`INSERT INTO products (tenant_id, name) VALUES (${orgId}, 'Tacos')`,
+      db.sql`INSERT INTO products (tenant_id, name, uom_id)
+             SELECT ${orgId}, 'Tacos', id FROM units_of_measure WHERE tenant_id = ${orgId} LIMIT 1`,
     ).rejects.toThrow(/products_tenant_name_unique/);
     await expect(
       db.sql`INSERT INTO member (id, organization_id, user_id, role, role_id, created_at)
@@ -469,9 +477,10 @@ describe('0001 backfill edge cases', () => {
       { id: 'u_multi', is_platform_admin: true, role: 'admin,superadmin' },
     ]);
     const post = await verifyMultitenant(db.url);
-    // Migrated only up to 0003, so the RLS checks (0005) and the feature tables (0006)
-    // legitimately fail here.
-    const rlsProblem = /row level security|policy|^tenant_(features?|profile)\w*: missing table$/;
+    // Migrated only up to 0003, so the RLS checks (0005), the feature tables (0006) and the
+    // later tables (units_of_measure, 0009) legitimately fail here.
+    const rlsProblem =
+      /row level security|policy|^tenant_(features?|profile)\w*: missing table$|^units_of_measure: missing table/;
     expect(post.problems.filter((p) => !rlsProblem.test(p))).toEqual([
       'member: 2 row(s) without role_id',
       `organization: 1 without an owner role that has a member (${SLUG})`,
@@ -560,7 +569,8 @@ describe('verifyMultitenant on corrupted data', () => {
     await db.sql`INSERT INTO clients (name) VALUES ('orphan')`;
     await db.sql`INSERT INTO "user" (id, name, email) VALUES ('u_lost', 'l', 'lost@x.test')`;
     await db.sql`ALTER TABLE products DROP CONSTRAINT products_tenant_name_unique`;
-    await db.sql`INSERT INTO products (tenant_id, name) VALUES (${org!.id}, 'Tacos')`;
+    await db.sql`INSERT INTO products (tenant_id, name, uom_id)
+                 SELECT ${org!.id}, 'Tacos', id FROM units_of_measure WHERE tenant_id = ${org!.id} LIMIT 1`;
 
     const { problems } = await verifyMultitenant(db.url);
     expect(problems).toEqual(

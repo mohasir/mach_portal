@@ -11,7 +11,14 @@ import {
   quoteStages,
   quotes,
 } from '../../../db/schema';
-import { createTestUser, createTestTenant, addMember, resetDb, testDb } from '../../../test/db';
+import {
+  createTestUser,
+  createTestTenant,
+  addMember,
+  resetDb,
+  testDb,
+  testUnitId,
+} from '../../../test/db';
 import { ConfigRepository } from '../../config/config.repository';
 import type { NotificationsRepository } from '../../notifications/notifications.repository';
 import { ProductsRepository } from '../../products/products.repository';
@@ -71,7 +78,7 @@ describe('quote prices are frozen once a line is saved', () => {
       .returning({ id: clients.id })) as [{ id: string }];
     [{ id: productId }] = (await testDb
       .insert(products)
-      .values({ tenantId, name: 'Bar' })
+      .values({ tenantId, name: 'Bar', uomId: await testUnitId(tenantId) })
       .returning({ id: products.id })) as [{ id: string }];
     await testDb
       .insert(productPriceTiers)
@@ -164,7 +171,7 @@ describe('quote prices are frozen once a line is saved', () => {
   it('rejects a new line for a product that is not quotable', async () => {
     const [other] = await testDb
       .insert(products)
-      .values({ tenantId, name: 'No price' })
+      .values({ tenantId, name: 'No price', uomId: await testUnitId(tenantId) })
       .returning({ id: products.id });
     await expect(
       save(serviceFor(tenantId, true), [

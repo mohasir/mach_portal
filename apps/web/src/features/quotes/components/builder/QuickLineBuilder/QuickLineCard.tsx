@@ -8,6 +8,7 @@ import { BottomSheet } from '@/components/shared/BottomSheet';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { IconButton } from '@/components/shared/IconButton';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
+import { formatQuantity } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { getStationIcon } from '../../../helpers';
 import { useLineConfig } from '../../../hooks/useLineConfig';
@@ -148,7 +149,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
               onChange={handleTierChange}
               options={product.priceTiers.map((tier) => ({
                 value: tier.quantity,
-                label: t('builder.lines.quantityCount', { count: tier.quantity }),
+                label: formatQuantity(tier.quantity, product.unit),
               }))}
             />
           ) : mode === 'edit' ? (
@@ -160,11 +161,12 @@ export function QuickLineCard(props: QuickLineCardProps) {
               precision={0}
               value={line.quantity}
               onChange={handleQuantityChange}
+              suffix={product.unit.code}
               aria-label={t('builder.lines.quantity')}
             />
           ) : (
             <span className="text-base text-gray-500">
-              {t('builder.lines.quantityCount', { count: line.quantity })}
+              {formatQuantity(line.quantity, product.unit)}
             </span>
           )}
           <div className="flex items-center gap-2">

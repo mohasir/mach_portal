@@ -23,7 +23,14 @@ import {
   quoteStages,
   quotes,
 } from '../../../db/schema';
-import { createTestUser, resetDb, seedTwoTenants, testDb, type TestTenant } from '../../../test/db';
+import {
+  createTestUser,
+  resetDb,
+  seedTwoTenants,
+  testDb,
+  testUnitId,
+  type TestTenant,
+} from '../../../test/db';
 import { ConfigRepository } from '../../config/config.repository';
 import type { NotificationsRepository } from '../../notifications/notifications.repository';
 import { ProductsRepository } from '../../products/products.repository';
@@ -60,7 +67,7 @@ async function seedTenant(tenant: TestTenant, label: string): Promise<Seeded> {
     .returning({ id: eventTypes.id });
   const [product] = await testDb
     .insert(products)
-    .values({ tenantId: tenant.id, name: `Menu ${label}` })
+    .values({ tenantId: tenant.id, name: `Menu ${label}`, uomId: await testUnitId(tenant.id) })
     .returning({ id: products.id });
   await testDb
     .insert(productPriceTiers)

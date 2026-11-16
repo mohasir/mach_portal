@@ -39,6 +39,8 @@ const product = (
   isActive,
   sortOrder: 0,
   price: null,
+  uomId: 'u1',
+  unit: { id: 'u1', name: 'Persona', pluralName: 'Personas', code: 'pers', dimension: 'quantity' },
   quotable: false,
   priceTiers: [],
   optionGroups,

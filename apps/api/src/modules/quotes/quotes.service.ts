@@ -118,13 +118,15 @@ export class QuotePdfGenerator {
       const lines = buildQuoteLineDetails(result.lineRows, result.optionRows);
       // Inactive stations stay in the tree so older quotes keep their line; the PDF itself
       // skips inactive groups and options (see quotes.pdf.ts).
-      const { productRows, tierRows, groupRows, optionRows } = await repos.products.findTree(true);
+      const { productRows, tierRows, groupRows, optionRows, units } =
+        await repos.products.findTree(true);
       const catalog = buildProductTree(
         productRows,
         tierRows,
         groupRows,
         optionRows,
         this.priceTiersActive,
+        units,
       );
       const templateRow = await repos.templates.findByType(TEMPLATE_TYPES.QUOTE_PDF);
       const { content: template } = quotePdfTemplateResource(templateRow);

@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { organization, tenantFeatures } from '../../../db/schema';
+import { organization, tenantFeatures, unitsOfMeasure } from '../../../db/schema';
 import { createTestTenant, resetDb, testDb } from '../../../test/db';
 import { invalidateTenantCache, resolveTenantById } from '../tenantResolver';
 
@@ -42,6 +42,7 @@ describe('resolveTenantById', () => {
 
 async function testDeleteOrg(id: string) {
   await testDb.delete(tenantFeatures).where(eq(tenantFeatures.tenantId, id));
+  await testDb.delete(unitsOfMeasure).where(eq(unitsOfMeasure.tenantId, id));
   await testDb.delete(organization).where(eq(organization.id, id));
 }
 

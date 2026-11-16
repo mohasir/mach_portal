@@ -149,7 +149,11 @@
       },
       "price_tiers": {
         "label": "Price tiers",
-        "caption": "Prices by number of guests for each {{item}}."
+        "caption": "Prices by quantity for each {{item}}, in its unit."
+      },
+      "unit_of_measure": {
+        "label": "Units of measure",
+        "caption": "Units each {{item}} is priced and counted in."
       },
       "event_type": {
         "label": "Event types",

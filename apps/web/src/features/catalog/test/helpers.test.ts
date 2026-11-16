@@ -7,7 +7,7 @@ import {
 } from '../helpers';
 
 const tiers = [{ quantity: 50, price: 10000 }];
-const values = { name: 'Taco bar', description: 'x', isPremium: true };
+const values = { name: 'Taco bar', description: 'x', isPremium: true, uomId: 'unit-1' };
 
 describe('buildProductPayload', () => {
   it('omits tiers when priceTiers is off so the API does not reject them', () => {
@@ -40,9 +40,13 @@ describe('buildProductPayload', () => {
     ).toBe(0);
   });
 
+  it('sends the chosen unit', () => {
+    expect(buildProductPayload(values, { tiers, priceTiersEnabled: false }).uomId).toBe('unit-1');
+  });
+
   it('defaults isPremium to false', () => {
     const payload = buildProductPayload(
-      { name: 'a', isPremium: undefined as unknown as boolean },
+      { name: 'a', isPremium: undefined as unknown as boolean, uomId: 'unit-1' },
       { tiers: [], priceTiersEnabled: false },
     );
     expect(payload.isPremium).toBe(false);

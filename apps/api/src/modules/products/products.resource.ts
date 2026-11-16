@@ -1,5 +1,11 @@
 import { isQuotable } from './products.pricing';
-import { options, optionGroups, productPriceTiers, products } from '../../db/schema';
+import {
+  options,
+  optionGroups,
+  productPriceTiers,
+  products,
+  unitsOfMeasure,
+} from '../../db/schema';
 
 export const publicProductColumns = {
   id: products.id,
@@ -9,6 +15,16 @@ export const publicProductColumns = {
   isActive: products.isActive,
   sortOrder: products.sortOrder,
   price: products.price,
+  uomId: products.uomId,
+} as const;
+
+// What the web needs to write a quantity in the product's unit ("40 personas", "5 kg").
+export const unitRefColumns = {
+  id: unitsOfMeasure.id,
+  name: unitsOfMeasure.name,
+  pluralName: unitsOfMeasure.pluralName,
+  code: unitsOfMeasure.code,
+  dimension: unitsOfMeasure.dimension,
 } as const;
 
 export const publicTierColumns = {
@@ -39,6 +55,8 @@ export const publicOptionColumns = {
 } as const;
 
 export type PublicProduct = Pick<typeof products.$inferSelect, keyof typeof publicProductColumns>;
+export type UnitRef = Pick<typeof unitsOfMeasure.$inferSelect, keyof typeof unitRefColumns>;
+export type UnitsById = ReadonlyMap<string, UnitRef>;
 export type PublicTier = Pick<
   typeof productPriceTiers.$inferSelect,
   keyof typeof publicTierColumns
@@ -49,7 +67,15 @@ export type PublicOptionGroup = Pick<
 >;
 export type PublicOption = Pick<typeof options.$inferSelect, keyof typeof publicOptionColumns>;
 
-export const productResource = (row: PublicProduct, quotable: boolean) => ({
+const unitRefResource = (unit: UnitRef) => ({
+  id: unit.id,
+  name: unit.name,
+  pluralName: unit.pluralName,
+  code: unit.code,
+  dimension: unit.dimension,
+});
+
+export const productResource = (row: PublicProduct, quotable: boolean, unit: UnitRef) => ({
   id: row.id,
   name: row.name,
   description: row.description,
@@ -57,8 +83,18 @@ export const productResource = (row: PublicProduct, quotable: boolean) => ({
   isActive: row.isActive,
   sortOrder: row.sortOrder,
   price: row.price,
+  uomId: row.uomId,
+  unit: unitRefResource(unit),
   quotable,
 });
+
+// products.uom_id is NOT NULL with a foreign key, so a missing entry means the units were read
+// from another tenant or another snapshot: a bug, never user input.
+const unitOf = (product: PublicProduct, units: UnitsById): UnitRef => {
+  const unit = units.get(product.uomId);
+  if (!unit) throw new Error(`Unit ${product.uomId} of product ${product.id} was not loaded`);
+  return unit;
+};
 
 export const tierResource = (row: PublicTier) => ({
   id: row.id,
@@ -106,8 +142,13 @@ export const productWithTiersResource = (
   product: PublicProduct,
   tierRows: PublicTier[],
   priceTiersActive: boolean,
+  units: UnitsById,
 ): ProductWithTiers => ({
-  ...productResource(product, isQuotable(product, tierRows, priceTiersActive)),
+  ...productResource(
+    product,
+    isQuotable(product, tierRows, priceTiersActive),
+    unitOf(product, units),
+  ),
   priceTiers: tierRows.map(tierResource),
 });
 
@@ -117,11 +158,16 @@ export const buildProductTree = (
   groupRows: PublicOptionGroup[],
   optionRows: PublicOption[],
   priceTiersActive: boolean,
+  units: UnitsById,
 ): ProductWithGroups[] =>
   productRows.map((product) => {
     const productTiers = tierRows.filter((tier) => tier.productId === product.id);
     return {
-      ...productResource(product, isQuotable(product, productTiers, priceTiersActive)),
+      ...productResource(
+        product,
+        isQuotable(product, productTiers, priceTiersActive),
+        unitOf(product, units),
+      ),
       priceTiers: productTiers.map(tierResource),
       optionGroups: groupRows
         .filter((group) => group.productId === product.id)
@@ -138,12 +184,14 @@ export const buildPricesList = (
   productRows: PublicProduct[],
   tierRows: PublicTier[],
   priceTiersActive: boolean,
+  units: UnitsById,
 ): ProductWithTiers[] =>
   productRows.map((product) =>
     productWithTiersResource(
       product,
       tierRows.filter((tier) => tier.productId === product.id),
       priceTiersActive,
+      units,
     ),
   );
 

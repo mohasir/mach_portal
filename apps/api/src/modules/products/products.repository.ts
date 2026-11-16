@@ -15,12 +15,15 @@ import {
   productPriceTiers,
   products,
   quoteLineOptions,
+  unitsOfMeasure,
 } from '../../db/schema';
 import {
   publicOptionColumns,
   publicOptionGroupColumns,
   publicProductColumns,
   publicTierColumns,
+  unitRefColumns,
+  type UnitsById,
 } from './products.resource';
 
 // `tiers` left undefined keeps the stored tiers; an array (even empty) replaces them.
@@ -48,7 +51,7 @@ export class ProductsRepository {
       activeOnly(eq(options.isActive, true)),
     );
 
-    const [productRows, tierRows, groupRows, optionRows] = await Promise.all([
+    const [productRows, tierRows, groupRows, optionRows, units] = await Promise.all([
       this.db
         .select(publicProductColumns)
         .from(products)
@@ -69,9 +72,28 @@ export class ProductsRepository {
         .from(options)
         .where(optionWhere)
         .orderBy(asc(options.sortOrder)),
+      this.findUnits(),
     ]);
 
-    return { productRows, tierRows, groupRows, optionRows };
+    return { productRows, tierRows, groupRows, optionRows, units };
+  }
+
+  // Every unit of the tenant, inactive ones included: a product may keep a unit disabled later.
+  async findUnits(): Promise<UnitsById> {
+    const rows = await this.db
+      .select(unitRefColumns)
+      .from(unitsOfMeasure)
+      .where(tenantEq(unitsOfMeasure, this.tenantId));
+    return new Map(rows.map((row) => [row.id, row]));
+  }
+
+  findUnit(id: string) {
+    return this.db
+      .select({ ...unitRefColumns, isActive: unitsOfMeasure.isActive })
+      .from(unitsOfMeasure)
+      .where(and(eq(unitsOfMeasure.id, id), tenantEq(unitsOfMeasure, this.tenantId)))
+      .limit(1)
+      .then((r) => r[0]);
   }
 
   // Catalog rows that a quote line already references; they can only be deactivated.
@@ -91,7 +113,7 @@ export class ProductsRepository {
   }
 
   async findPricesTree() {
-    const [productRows, tierRows] = await Promise.all([
+    const [productRows, tierRows, units] = await Promise.all([
       this.db
         .select(publicProductColumns)
         .from(products)
@@ -102,9 +124,10 @@ export class ProductsRepository {
         .from(productPriceTiers)
         .where(tenantEq(productPriceTiers, this.tenantId))
         .orderBy(asc(productPriceTiers.sortOrder)),
+      this.findUnits(),
     ]);
 
-    return { productRows, tierRows };
+    return { productRows, tierRows, units };
   }
 
   findProductByName(name: string) {
@@ -118,7 +141,7 @@ export class ProductsRepository {
 
   findProductById(id: string) {
     return this.db
-      .select({ id: products.id, name: products.name })
+      .select({ id: products.id, name: products.name, uomId: products.uomId })
       .from(products)
       .where(and(eq(products.id, id), tenantEq(products, this.tenantId)))
       .limit(1)
@@ -153,6 +176,7 @@ export class ProductsRepository {
           description: data.description ?? null,
           isPremium: data.isPremium,
           price: data.price ?? null,
+          uomId: data.uomId,
           tenantId: this.tenantId,
         })
         .returning(publicProductColumns);
@@ -180,6 +204,7 @@ export class ProductsRepository {
           description: source.description,
           isPremium: source.isPremium,
           price: source.price,
+          uomId: source.uomId,
           isActive: true,
           sortOrder: (last?.value ?? -1) + 1,
           tenantId: this.tenantId,
@@ -251,6 +276,7 @@ export class ProductsRepository {
           name: data.name,
           description: data.description ?? null,
           isPremium: data.isPremium,
+          uomId: data.uomId,
           // Omitted keeps the stored price; an explicit null clears it.
           ...(data.price !== undefined && { price: data.price }),
         })

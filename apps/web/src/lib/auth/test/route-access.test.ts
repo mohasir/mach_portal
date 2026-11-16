@@ -21,6 +21,12 @@ describe('resolveRouteAccess', () => {
     });
   });
 
+  it('requires UNIT_OF_MEASURE:READ on the units catalog', () => {
+    expect(resolveRouteAccess('/admin/units-of-measure')).toEqual({
+      [RESOURCES.UNIT_OF_MEASURE]: [ACTIONS.READ],
+    });
+  });
+
   it('requires ROLE:READ on the roles editor', () => {
     expect(resolveRouteAccess('/admin/roles')).toEqual({
       [RESOURCES.ROLE]: [ACTIONS.READ],
@@ -64,6 +70,7 @@ describe('resolveRouteFeature', () => {
       '/admin/clients',
       '/admin/users',
       '/admin/settings',
+      '/admin/units-of-measure',
       '/nowhere',
     ]) {
       expect(resolveRouteFeature(path)).toBeUndefined();

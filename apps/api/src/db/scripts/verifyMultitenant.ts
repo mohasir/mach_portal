@@ -84,12 +84,14 @@ export const TENANT_TABLES = [
   'staff',
   'state_settings',
   'templates',
+  'units_of_measure',
   'user_preferences',
 ] as const;
 
 // [child table, child column, parent table]: the child's tenant must equal the parent's.
 const PARENT_LINKS: [string, string, string][] = [
   ['product_price_tiers', 'product_id', 'products'],
+  ['products', 'uom_id', 'units_of_measure'],
   ['option_groups', 'product_id', 'products'],
   ['options', 'option_group_id', 'option_groups'],
   ['quotes', 'client_id', 'clients'],
@@ -527,6 +529,8 @@ export async function verifyMultitenant(
     }
 
     for (const [child, column, parent] of PARENT_LINKS) {
+      // A database short of a later migration lacks the link; its missing table is reported above.
+      if (!tables.has(child) || !tables.has(parent) || !hasColumn(child, column)) continue;
       const n = await count(
         `SELECT count(*)::int AS n FROM ${q(child)} c JOIN ${q(parent)} p ON p.id = c.${q(column)}
          WHERE c.tenant_id IS DISTINCT FROM p.tenant_id`,

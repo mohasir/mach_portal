@@ -1,8 +1,8 @@
 'use client';
 import { Typography } from 'antd';
-import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
 import { getStationIcon } from '@/features/quotes';
+import { formatQuantity } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 
 interface ProductSheetHeaderProps {
@@ -12,7 +12,6 @@ interface ProductSheetHeaderProps {
 }
 
 export function ProductSheetHeader({ product, quantity, subtotal }: ProductSheetHeaderProps) {
-  const { t } = useTranslation('quotes');
   const { money } = useMoneyFormatter();
   const Icon = getStationIcon(product.name);
 
@@ -26,9 +25,7 @@ export function ProductSheetHeader({ product, quantity, subtotal }: ProductSheet
           {product.name}
         </Typography.Text>
         <div className="flex flex-col mt-1">
-          <span className="text-sm text-gray-500">
-            {t('builder.lines.quantityCount', { count: quantity })}
-          </span>
+          <span className="text-sm text-gray-500">{formatQuantity(quantity, product.unit)}</span>
           <span className="text-lg font-semibold">{money(subtotal)}</span>
         </div>
       </div>

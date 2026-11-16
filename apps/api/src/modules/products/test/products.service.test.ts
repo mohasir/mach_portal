@@ -2,6 +2,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProductsRepository } from '../products.repository';
 import { ProductsService } from '../products.service';
 
+const unit = {
+  id: 'u1',
+  name: 'Persona',
+  pluralName: 'Personas',
+  code: 'pers',
+  dimension: 'quantity' as const,
+  isActive: true,
+};
+
 const copy = {
   id: 'new-id',
   name: 'Barra (copia)',
@@ -10,6 +19,7 @@ const copy = {
   isActive: true,
   sortOrder: 3,
   price: null,
+  uomId: 'u1',
 };
 
 function makeRepo() {
@@ -22,6 +32,7 @@ function makeRepo() {
     findProductByName: vi.fn().mockResolvedValue(undefined),
     duplicateProduct: vi.fn().mockResolvedValue(copy),
     countTiers: vi.fn().mockResolvedValue(0),
+    findUnit: vi.fn().mockResolvedValue(unit),
   };
 }
 
@@ -127,9 +138,10 @@ describe('ProductsService price and quotable', () => {
     isActive: true,
     sortOrder: 0,
     price: null as number | null,
+    uomId: 'u1',
   };
   const tier = { id: 't1', productId: 'p1', quantity: 30, price: 1000, sortOrder: 0 };
-  const emptyTree = { groupRows: [], optionRows: [] };
+  const emptyTree = { groupRows: [], optionRows: [], units: new Map([['u1', unit]]) };
 
   it('exposes price and quotable on the catalog, keeping stored tiers with the add-on off', async () => {
     const repo = {
@@ -163,8 +175,9 @@ describe('ProductsService price and quotable', () => {
       findProductByName: vi.fn().mockResolvedValue(undefined),
       createProduct: vi.fn().mockResolvedValue(row),
       countTiers: vi.fn().mockResolvedValue(2),
+      findUnit: vi.fn().mockResolvedValue(unit),
     };
-    const input = { name: 'Barra', isPremium: false, tiers: [] };
+    const input = { name: 'Barra', isPremium: false, tiers: [], uomId: 'u1' };
     const withTiers = new ProductsService(repo as unknown as ProductsRepository, true);
     await expect(withTiers.createProduct(input)).resolves.toMatchObject({
       price: null,

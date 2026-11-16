@@ -13,6 +13,7 @@
     "catalogProducts": "{{Items}}",
     "prices": "Precios",
     "eventTypes": "Tipos de evento",
+    "unitsOfMeasure": "Unidades de medida",
     "rescheduleReasons": "Motivos de reprogramación",
     "settings": "Configuración",
     "options": "Opciones",

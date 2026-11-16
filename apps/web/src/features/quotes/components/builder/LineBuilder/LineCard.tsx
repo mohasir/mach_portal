@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
+import { formatQuantity } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useLineConfig } from '../../../hooks/useLineConfig';
 import type { LineDraft } from '../../../hooks/useQuoteBuilder';
@@ -81,7 +82,7 @@ export function LineCard({
                       onChange={handleTierChange}
                       options={product.priceTiers.map((tier) => ({
                         value: tier.quantity,
-                        label: `${tier.quantity} — ${money(tier.price)}`,
+                        label: `${formatQuantity(tier.quantity, product.unit)} — ${money(tier.price)}`,
                       }))}
                     />
                   ) : (
@@ -93,6 +94,7 @@ export function LineCard({
                         precision={0}
                         value={line.quantity}
                         onChange={handleQuantityChange}
+                        suffix={product.unit.code}
                       />
                       {quantityLocked && !readOnly && (
                         <span className="text-muted text-xs">{t('builder.lines.notQuotable')}</span>

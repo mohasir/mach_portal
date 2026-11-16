@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
+import { DEFAULT_UNIT_CODE } from '@repo/schemas';
 import { db } from '../index';
-import { options, optionGroups, productPriceTiers, products } from '../schema';
+import { options, optionGroups, productPriceTiers, products, unitsOfMeasure } from '../schema';
 import type { Executor } from '../index';
 
 export interface SeedTier {
@@ -26,6 +27,8 @@ export interface SeedProduct {
   isPremium?: boolean;
   // Per-unit price in cents.
   price?: number;
+  // Code of a unit the tenant already has (seedUnitsOfMeasure runs first); defaults to 'pers'.
+  uomCode?: string;
   tiers: SeedTier[];
   groups: SeedGroup[];
 }
@@ -561,6 +564,14 @@ export async function seedCatalog(
       continue;
     }
 
+    const uomCode = p.uomCode ?? DEFAULT_UNIT_CODE;
+    const [unit] = await x
+      .select({ id: unitsOfMeasure.id })
+      .from(unitsOfMeasure)
+      .where(and(eq(unitsOfMeasure.tenantId, tenantId), eq(unitsOfMeasure.code, uomCode)))
+      .limit(1);
+    if (!unit) throw new Error(`Unit "${uomCode}" does not exist for tenant ${tenantId}`);
+
     const [product] = await x
       .insert(products)
       .values({
@@ -568,6 +579,7 @@ export async function seedCatalog(
         description: p.description,
         isPremium: p.isPremium ?? false,
         price: p.price ?? null,
+        uomId: unit.id,
         sortOrder: productIndex,
         tenantId,
       })

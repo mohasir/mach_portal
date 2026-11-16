@@ -56,6 +56,7 @@ const GROUP_BY_RESOURCE: Readonly<Record<string, MatrixGroupKey>> = {
   [RESOURCES.PRODUCT]: 'catalog',
   [RESOURCES.PRODUCT_OPTION]: 'catalog',
   [RESOURCES.PRICE_TIERS]: 'catalog',
+  [RESOURCES.UNIT_OF_MEASURE]: 'catalog',
   [RESOURCES.EVENT_TYPE]: 'catalog',
   [RESOURCES.RESCHEDULE_REASON]: 'catalog',
   [RESOURCES.TAX_RATES]: 'settings',

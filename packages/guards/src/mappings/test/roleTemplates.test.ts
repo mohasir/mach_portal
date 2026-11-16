@@ -45,6 +45,19 @@ describe('ROLE_TEMPLATES', () => {
       for (const p of t.permissions) expect(isCatalogPermission(p.resource, p.action)).toBe(true);
   });
 
+  it('gives units of measure to the roles that administer the catalog, at the product level', () => {
+    const actionsOf = (key: string) =>
+      template(key)
+        .permissions.filter((p) => p.resource === 'unit_of_measure')
+        .map((p) => p.action)
+        .sort();
+    expect(actionsOf(ROLES.ADMIN)).toEqual(['create', 'disable', 'read', 'update']);
+    expect(actionsOf(ROLES.OPERATOR)).toEqual(['read']);
+    expect(actionsOf(ROLES.MEMBER)).toEqual([]);
+    expect(isCatalogPermission('unit_of_measure', 'enable')).toBe(true);
+    expect(isCatalogPermission('unit_of_measure', 'delete')).toBe(false);
+  });
+
   it('gives admin a few hard-coded grants', () => {
     const perms = template(ROLES.ADMIN).permissions;
     expect(perms).toContainEqual({ resource: 'user', action: 'list', scope: 'all' });

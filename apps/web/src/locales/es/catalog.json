@@ -18,10 +18,11 @@
     "add": "Nuevo {{item}}",
     "notQuotable": {
       "tag": "No cotizable",
-      "hintFixedPrice": "Este {{item}} no se puede cotizar todavía. Definí un precio por persona para poder usarlo en cotizaciones.",
-      "hintPriceOrTiers": "Este {{item}} no se puede cotizar todavía. Definí un precio por persona o agregá paquetes de precio."
+      "hintFixedPrice": "Este {{item}} no se puede cotizar todavía. Definí un precio unitario para poder usarlo en cotizaciones.",
+      "hintPriceOrTiers": "Este {{item}} no se puede cotizar todavía. Definí un precio unitario o agregá paquetes de precio."
     },
     "premium": "Premium",
+    "pricePerUnit": "{{price}} por {{unit}}",
     "optionGroupsCount": "{{count}} secciones",
     "priceTiersCount": "{{count}} paquetes",
     "create": { "title": "Nuevo {{item}}" },
@@ -32,8 +33,11 @@
       "description": "Descripción",
       "descriptionPlaceholder": "Descripción breve (opcional)",
       "isPremium": "Premium",
-      "price": "Precio por persona",
-      "priceCaption": "Opcional. Se multiplica por la cantidad de personas de la cotización."
+      "price": "Precio unitario",
+      "priceCaption": "Opcional. Precio de una unidad del {{item}}; se multiplica por la cantidad de la cotización.",
+      "unit": "Unidad de medida",
+      "unitCaption": "En qué se cobra y se cuenta el {{item}} (personas, horas, kilos…).",
+      "unitPlaceholder": "Elegí una unidad"
     },
     "duplicateConfirm": {
       "title": "¿Duplicar este {{item}}?",
@@ -50,9 +54,8 @@
   },
   "prices": {
     "title": "Precios",
-    "tabDescription": "Definí los paquetes de precio de este {{item}} según la cantidad de personas.",
-    "autoSortNote": "Al guardar, los paquetes se reordenan automáticamente por cantidad de personas.",
-    "quantityShort": "Personas",
+    "tabDescription": "Definí los paquetes de precio de este {{item}} según la cantidad, en {{unit}}.",
+    "autoSortNote": "Al guardar, los paquetes se reordenan automáticamente por cantidad.",
     "addTier": "Agregar paquete",
     "removeTier": "Quitar paquete",
     "removeTierConfirm": {
@@ -128,7 +131,8 @@
     "labelRequired": "Nombre requerido",
     "quantityInvalid": "Cantidad inválida",
     "priceInvalid": "Precio inválido",
-    "tiersDuplicate": "Hay paquetes con la misma cantidad de personas",
+    "tiersDuplicate": "Hay paquetes con la misma cantidad",
+    "unitRequired": "Elegí una unidad de medida",
     "maxSelectInvalid": "Selección máxima inválida"
   }
 }

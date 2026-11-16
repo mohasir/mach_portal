@@ -15,3 +15,4 @@ export * from './platformAccessLog';
 export * from './roles';
 export * from './features';
 export * from './tenantProfile';
+export * from './unitsOfMeasure';

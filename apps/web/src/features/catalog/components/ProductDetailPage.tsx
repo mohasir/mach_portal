@@ -15,6 +15,7 @@ import { WrapperCard } from '@/components/shared/WrapperCard';
 import { Feature } from '@/lib/auth/Feature';
 import { useCan } from '@/lib/auth/useCan';
 import { useFeature } from '@/lib/auth/useFeature';
+import { unitNoun } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { getDetailTabs } from '../helpers';
 import { useProduct } from '../hooks/useCatalog';
@@ -153,13 +154,25 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                 </div>
               )}
 
+              <div>
+                <Typography.Text strong className="block text-sm">
+                  {t('product.form.unit')}
+                </Typography.Text>
+                <Typography.Text type="secondary" className="block text-sm">
+                  {product.unit.name} ({product.unit.code})
+                </Typography.Text>
+              </div>
+
               {product.price != null && (
                 <div>
                   <Typography.Text strong className="block text-sm">
                     {t('product.form.price')}
                   </Typography.Text>
                   <Typography.Text type="secondary" className="block text-sm">
-                    {money(product.price)}
+                    {t('product.pricePerUnit', {
+                      price: money(product.price),
+                      unit: unitNoun(product.unit, 1),
+                    })}
                   </Typography.Text>
                 </div>
               )}

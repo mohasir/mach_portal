@@ -18,10 +18,11 @@
     "add": "New {{item}}",
     "notQuotable": {
       "tag": "Not quotable",
-      "hintFixedPrice": "This {{item}} cannot be quoted yet. Set a price per person to use it in quotes.",
-      "hintPriceOrTiers": "This {{item}} cannot be quoted yet. Set a price per person or add price tiers."
+      "hintFixedPrice": "This {{item}} cannot be quoted yet. Set a unit price to use it in quotes.",
+      "hintPriceOrTiers": "This {{item}} cannot be quoted yet. Set a unit price or add price tiers."
     },
     "premium": "Premium",
+    "pricePerUnit": "{{price}} per {{unit}}",
     "optionGroupsCount": "{{count}} sections",
     "priceTiersCount": "{{count}} packages",
     "create": { "title": "New {{item}}" },
@@ -32,8 +33,11 @@
       "description": "Description",
       "descriptionPlaceholder": "Short description (optional)",
       "isPremium": "Premium",
-      "price": "Price per person",
-      "priceCaption": "Optional. Multiplied by the number of people on the quote."
+      "price": "Unit price",
+      "priceCaption": "Optional. Price of one unit of the {{item}}; multiplied by the quantity on the quote.",
+      "unit": "Unit of measure",
+      "unitCaption": "What the {{item}} is priced and counted in (people, hours, kilos…).",
+      "unitPlaceholder": "Choose a unit"
     },
     "duplicateConfirm": {
       "title": "Duplicate this {{item}}?",
@@ -50,9 +54,8 @@
   },
   "prices": {
     "title": "Prices",
-    "tabDescription": "Define this {{item}}'s price packages by number of people.",
-    "autoSortNote": "Packages are automatically reordered by number of people when you save.",
-    "quantityShort": "People",
+    "tabDescription": "Define this {{item}}'s price packages by quantity, in {{unit}}.",
+    "autoSortNote": "Packages are automatically reordered by quantity when you save.",
     "addTier": "Add package",
     "removeTier": "Remove package",
     "removeTierConfirm": {
@@ -128,7 +131,8 @@
     "labelRequired": "Name is required",
     "quantityInvalid": "Invalid quantity",
     "priceInvalid": "Invalid price",
-    "tiersDuplicate": "Some packages have the same number of people",
+    "tiersDuplicate": "Some packages have the same quantity",
+    "unitRequired": "Choose a unit of measure",
     "maxSelectInvalid": "Invalid max selection"
   }
 }

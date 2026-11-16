@@ -106,7 +106,7 @@
     },
     "crear-producto-y-precios": {
       "title": "Cómo crear un {{item}} y cargar sus precios",
-      "description": "Paquetes por cantidad de personas"
+      "description": "Paquetes por cantidad"
     },
     "armar-servicios-y-opciones": {
       "title": "Cómo armar las secciones y opciones de un {{item}}",

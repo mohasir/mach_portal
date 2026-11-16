@@ -1,0 +1,65 @@
+{
+  "title": "Units of measure",
+  "index": {
+    "add": "New unit"
+  },
+  "columns": {
+    "name": "Name",
+    "code": "Abbreviation",
+    "dimension": "Type",
+    "factor": "Equals",
+    "status": "Status"
+  },
+  "dimensions": {
+    "quantity": "Quantity",
+    "time": "Time",
+    "weight": "Weight",
+    "volume": "Volume",
+    "length": "Length"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "tags": {
+    "system": "System",
+    "base": "Base"
+  },
+  "actions": {
+    "activate": "Activate",
+    "deactivate": "Deactivate"
+  },
+  "deactivateConfirm": {
+    "title": "Deactivate “{{name}}”?",
+    "content": "It will no longer be offered when choosing a product's unit.",
+    "caption": "Inactive products that already use it keep it."
+  },
+  "form": {
+    "name": "Name (singular)",
+    "namePlaceholder": "E.g. Tray",
+    "pluralName": "Name (plural)",
+    "pluralNamePlaceholder": "E.g. Trays",
+    "code": "Abbreviation",
+    "codePlaceholder": "E.g. tray",
+    "dimension": "Type",
+    "factor": "Equals",
+    "factorCaption": "How many base units ({{base}}) make one of this unit.",
+    "systemLocked": "This is a system unit: only its name can change.",
+    "usedLocked": "Products use this unit: its type and equivalence cannot change.",
+    "save": "Save"
+  },
+  "create": {
+    "title": "New unit of measure"
+  },
+  "edit": {
+    "title": "Edit unit of measure"
+  },
+  "empty": "No units of measure",
+  "validation": {
+    "nameRequired": "Name is required",
+    "pluralNameRequired": "Plural is required",
+    "codeRequired": "Abbreviation is required",
+    "dimensionRequired": "Choose a type",
+    "factorInvalid": "Enter a number greater than 0, with up to 10 decimals"
+  }
+}

@@ -15,7 +15,8 @@ export interface QuoteLineItemGroup {
 interface QuoteLineItemProps {
   icon: LucideIcon;
   name: string;
-  quantity?: number;
+  /** Already formatted with its unit ("40 personas"). */
+  quantity?: string;
   total?: number;
   groups: QuoteLineItemGroup[];
   onRemove?: () => void;

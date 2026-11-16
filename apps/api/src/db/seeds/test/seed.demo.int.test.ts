@@ -268,8 +268,9 @@ describe('db:seed --demo=prod --tenant', () => {
   });
 
   it('seeds only the defaults (plus the global quote stages) into an existing tenant, idempotently', async () => {
-    const tenant = await createTestTenant('acme');
-    const other = await createTestTenant('other');
+    // Without the helper's units, so the counts below show what the prod seed itself writes.
+    const tenant = await createTestTenant('acme', 'acme', { units: false });
+    const other = await createTestTenant('other', 'other', { units: false });
     await seedProdTenant('acme');
     const once = await Promise.all(tenantTables.map(countAll));
     await seedProdTenant('ACME');
@@ -282,6 +283,7 @@ describe('db:seed --demo=prod --tenant', () => {
       'event_types',
       'products',
       'templates',
+      'units_of_measure',
     ]) {
       expect((await rowsByTenant(table)).get(tenant.id) ?? 0, table).toBeGreaterThan(0);
     }

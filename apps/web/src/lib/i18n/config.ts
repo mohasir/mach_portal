@@ -22,6 +22,7 @@ import esSupport from '@/locales/es/support.json';
 import esTenant from '@/locales/es/tenant.json';
 import esRoles from '@/locales/es/roles.json';
 import esVocabulary from '@/locales/es/vocabulary.json';
+import esUnitsOfMeasure from '@/locales/es/unitsOfMeasure.json';
 import enCommon from '@/locales/en/common.json';
 import enApi from '@/locales/en/api.json';
 import enAuth from '@/locales/en/auth.json';
@@ -42,6 +43,7 @@ import enSupport from '@/locales/en/support.json';
 import enTenant from '@/locales/en/tenant.json';
 import enRoles from '@/locales/en/roles.json';
 import enVocabulary from '@/locales/en/vocabulary.json';
+import enUnitsOfMeasure from '@/locales/en/unitsOfMeasure.json';
 
 export const locales = LOCALES;
 export type Locale = AppLocale;
@@ -70,6 +72,7 @@ i18n.use(initReactI18next).init({
       tenant: esTenant,
       roles: esRoles,
       vocabulary: esVocabulary,
+      unitsOfMeasure: esUnitsOfMeasure,
     },
     en: {
       common: enCommon,
@@ -92,6 +95,7 @@ i18n.use(initReactI18next).init({
       tenant: enTenant,
       roles: enRoles,
       vocabulary: enVocabulary,
+      unitsOfMeasure: enUnitsOfMeasure,
     },
   },
   lng: defaultLocale,
@@ -117,6 +121,7 @@ i18n.use(initReactI18next).init({
     'tenant',
     'roles',
     'vocabulary',
+    'unitsOfMeasure',
   ],
   defaultNS: 'common',
   interpolation: { escapeValue: false },

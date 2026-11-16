@@ -20,7 +20,7 @@ import {
   rescheduleReasons,
   staff,
 } from '../../db/schema';
-import { testDb, type TestTenant } from '../db';
+import { testDb, testUnitId, type TestTenant } from '../db';
 
 export const DATE = '2030-06-01';
 export const TIME = '18:00';
@@ -85,7 +85,7 @@ export async function seedEventsTenant(tenant: TestTenant, label: string): Promi
     .returning({ id: rescheduleReasons.id });
   const [product] = await testDb
     .insert(products)
-    .values({ tenantId: t, name: `Menu ${label}` })
+    .values({ tenantId: t, name: `Menu ${label}`, uomId: await testUnitId(t) })
     .returning({ id: products.id });
   await testDb
     .insert(productPriceTiers)
