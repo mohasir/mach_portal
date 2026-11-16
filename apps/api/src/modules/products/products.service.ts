@@ -226,6 +226,12 @@ export class ProductsService {
     const current = await this.repo.findProductById(id);
     if (!current) throw productNotFound();
     await this.assertUnit(input.uomId, current.uomId);
+    if (input.uomId !== current.uomId && (await this.repo.isProductQuoted(id))) {
+      throw new TRPCError({
+        code: 'CONFLICT',
+        cause: new AppError(ErrorCodes.product.UNIT_IN_USE),
+      });
+    }
     await this.assertCategory(input.categoryId, current.categoryId);
     await this.assertSkuFree(input.sku, id);
     const updated = await this.repo

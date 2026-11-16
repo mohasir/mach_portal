@@ -241,7 +241,6 @@ Table app_settings {
   id integer [pk, default: 1, note: 'fila única (check id = 1)']
   deposit_rate "numeric(4,3)" [not null, default: 0.5]
   quote_validity_months integer [not null, default: 3]
-  min_persons_per_line integer [not null, default: 30]
   quote_seq_start integer [not null, default: 1, note: 'no puede ser < último seq usado']
   updated_at timestamp [not null, default: `now()`]
 }

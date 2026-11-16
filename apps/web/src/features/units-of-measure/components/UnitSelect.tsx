@@ -18,10 +18,11 @@ interface UnitSelectProps {
   /** The unit the product has, offered even when it was deactivated afterwards. */
   current?: SelectableUnit;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 /** Active units grouped by dimension; a controlled field for an AntD `Form.Item`. */
-export function UnitSelect({ value, onChange, current, placeholder }: UnitSelectProps) {
+export function UnitSelect({ value, onChange, current, placeholder, disabled }: UnitSelectProps) {
   const { t } = useTranslation('unitsOfMeasure');
   const { data: units = [], isLoading } = useUnitOptions();
 
@@ -38,6 +39,7 @@ export function UnitSelect({ value, onChange, current, placeholder }: UnitSelect
       options={options}
       loading={isLoading}
       placeholder={placeholder}
+      disabled={disabled}
       showSearch={{ optionFilterProp: 'label' }}
     />
   );

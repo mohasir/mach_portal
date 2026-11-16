@@ -107,9 +107,9 @@ describe('createTenant', () => {
       expect(await getCatalogKind(testDb, tenantId)).toBe('services');
     });
 
-    it('writes no profile row when no kind is given, so the default applies', async () => {
+    it('writes the default kind explicitly when none is given, like migrated tenants', async () => {
       const { tenantId } = await createTenant(input('kind-default'), testDb);
-      expect(await rowsPerTenant('tenant_profile', tenantId)).toBe(0);
+      expect(await rowsPerTenant('tenant_profile', tenantId)).toBe(1);
       expect(await getCatalogKind(testDb, tenantId)).toBe('products');
     });
 

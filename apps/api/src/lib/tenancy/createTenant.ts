@@ -2,7 +2,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { and, eq, like, notExists, sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { ROLES } from '@repo/guards';
-import { CATALOG_KINDS, isCatalogKind } from '@repo/schemas';
+import { CATALOG_KINDS, DEFAULT_CATALOG_KIND, isCatalogKind } from '@repo/schemas';
 import type { Database } from '../../db';
 import { member, organization, tenantProfile, user, verification } from '../../db/schema';
 import { seedTenantDefaults } from '../../db/seeds/defaults';
@@ -123,9 +123,10 @@ export async function createTenant(
       const tenantId = randomUUID();
       await tx.insert(organization).values({ id: tenantId, name, slug, createdAt: new Date() });
       await seedTenantDefaults(tenantId, tx);
-      if (input.catalogKind !== undefined && isCatalogKind(input.catalogKind)) {
-        await tx.insert(tenantProfile).values({ tenantId, catalogKind: input.catalogKind });
-      }
+      await tx.insert(tenantProfile).values({
+        tenantId,
+        catalogKind: isCatalogKind(input.catalogKind) ? input.catalogKind : DEFAULT_CATALOG_KIND,
+      });
 
       const roleIds = await seedTenantRoles(tenantId, tx);
       await tx.insert(member).values({

@@ -165,7 +165,9 @@ describe('ProductsService price and quotable', () => {
         tierRows: [tier, { ...tier, id: 't2', productId: 'p3' }],
         ...emptyTree,
       }),
-      findUsage: vi.fn().mockResolvedValue({ optionIds: new Set(), groupIds: new Set() }),
+      findUsage: vi
+        .fn()
+        .mockResolvedValue({ optionIds: new Set(), groupIds: new Set(), productIds: new Set() }),
     };
     const off = await new ProductsService(repo as unknown as ProductsRepository, false).catalog(
       true,

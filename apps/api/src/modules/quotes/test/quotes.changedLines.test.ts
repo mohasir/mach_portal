@@ -15,7 +15,7 @@ describe('changedLines', () => {
     expect(changedLines([line()], [line()])).toEqual([]);
   });
 
-  it('flags a line whose product, persons, subtotal or selections differ', () => {
+  it('flags a line whose product, quantity, subtotal or selections differ', () => {
     const stored = [line({ selections: [{ optionGroupId: 'g', optionIds: ['a'] }] })];
     expect(changedLines([line({ productId: 'p2' })], stored)).toHaveLength(1);
     expect(changedLines([line({ quantity: 50 })], stored)).toHaveLength(1);

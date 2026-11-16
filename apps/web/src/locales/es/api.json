@@ -27,6 +27,7 @@
     "PRODUCT_NOT_FOUND": "El {{item}} no existe",
     "PRODUCT_ALREADY_EXISTS": "Ya existe un {{item}} con ese nombre",
     "PRODUCT_SKU_TAKEN": "Ya existe un {{item}} con ese SKU",
+    "PRODUCT_UNIT_IN_USE": "La unidad no se puede cambiar porque el {{item}} ya está en cotizaciones",
     "PRODUCT_COST_FORBIDDEN": "No tenés permiso para editar el costo de un {{item}}",
     "PRODUCT_IMAGE_NOT_FOUND": "La imagen no existe",
     "PRODUCT_IMAGE_LIMIT_REACHED": "Este {{item}} ya tiene el máximo de imágenes",

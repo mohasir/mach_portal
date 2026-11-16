@@ -553,7 +553,7 @@ export class QuotesService {
     if (!canManagePricing && line.quantity < product.minQuantity) throw belowMinQuantity();
 
     // Only MANAGE_LINE_PRICING (admin/superadmin) may set a subtotal that deviates from the
-    // catalog — everyone else's lines must land on an active price tier or on price × persons
+    // catalog — everyone else's lines must land on an active price tier or on price × quantity
     // (the builder UI only ever produces exact matches; this is the server-side boundary
     // against a hand-crafted payload).
     if (!canManagePricing) {

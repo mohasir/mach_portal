@@ -41,6 +41,7 @@
       "priceCaption": "Opcional. Precio de una unidad del {{item}}; se multiplica por la cantidad de la cotización.",
       "unit": "Unidad de medida",
       "unitCaption": "En qué se cobra y se cuenta el {{item}} (personas, horas, kilos…).",
+      "unitLocked": "La unidad no se puede cambiar: el {{item}} ya está en cotizaciones.",
       "unitPlaceholder": "Elegí una unidad",
       "sku": "SKU",
       "skuPlaceholder": "Código interno (opcional)",

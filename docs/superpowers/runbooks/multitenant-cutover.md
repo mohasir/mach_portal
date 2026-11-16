@@ -296,13 +296,13 @@ También se puede fijar al crear (`tenant:create --catalog-kind <kind>`). Un tip
 
 1. Backup con el dueño, como en la sección 3 (paso 1).
 2. `db:migrate` (`0007`–`0011`) y **después** desplegar API y web de la misma versión: el código nuevo necesita `quantity`, `uom_id`, `tenant_profile` y las tablas nuevas.
-3. `mt:verify` con exit 0 (incluye `product_categories` y `product_images` y los enlaces `products.uom_id` y `products.category_id`).
+3. `mt:verify` con exit 0. Para esta fase comprueba cuatro tablas: `units_of_measure`, `product_categories` y `product_images` (RLS habilitado y forzado y política de aislamiento) y `tenant_profile` (RLS forzado y una sola política de lectura); además los enlaces `products.uom_id`, `products.category_id` y `product_images.product_id`.
 4. Fijar el tipo de catálogo donde corresponda (9.2).
 
 ### 9.5 Cambios de comportamiento a tener presentes
 
 - El PDF de la cotización **ya no imprime las descripciones de ingredientes de las opciones**; cada grupo activo se muestra como un bloque normal.
-- Quien aplicó localmente la `0010` anterior (antes de su versión final) debe correr `db:fresh`: el SQL de la `0010` cambió y esa base queda inconsistente con el journal.
+- Solo en bases locales o de desarrollo: quien aplicó la `0010` anterior (antes de su versión final) debe correr `db:fresh`: el SQL de la `0010` cambió y esa base queda inconsistente con el journal.
 - La cantidad mínima por línea es ahora un campo de cada producto (`min_quantity`); el ajuste `min_persons_per_line` ya no existe.
 
 ### 9.6 Reversión

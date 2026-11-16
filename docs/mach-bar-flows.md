@@ -379,7 +379,7 @@ visible solo para admin/superadmin (recurso `config`).
 ### 5.1 Datos
 
 ```ts
-useConfig()        // trpc.config.get → { states: [{ state, taxRate }], app: { depositRate, quoteValidityMonths, minPersonsPerLine, quoteSeqStart } }
+useConfig()        // trpc.config.get → { states: [{ state, taxRate }], app: { depositRate, quoteValidityMonths, quoteSeqStart } }
 useUpdateConfig()  // trpc.config.update → guarda ambos buckets + invalida + useApiError
 ```
 

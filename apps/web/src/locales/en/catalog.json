@@ -41,6 +41,7 @@
       "priceCaption": "Optional. Price of one unit of the {{item}}; multiplied by the quantity on the quote.",
       "unit": "Unit of measure",
       "unitCaption": "What the {{item}} is priced and counted in (people, hours, kilos…).",
+      "unitLocked": "The unit cannot be changed: the {{item}} is already in quotes.",
       "unitPlaceholder": "Choose a unit",
       "sku": "SKU",
       "skuPlaceholder": "Internal code (optional)",

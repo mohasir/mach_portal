@@ -1,11 +1,43 @@
 import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { products, unitsOfMeasure } from '../../../db/schema';
+import {
+  clients,
+  products,
+  quoteLines,
+  quoteStages,
+  quotes,
+  unitsOfMeasure,
+} from '../../../db/schema';
 import { resetDb, seedTwoTenants, testDb, testUnitId, type TestTenant } from '../../../test/db';
 import { ProductsRepository } from '../products.repository';
 import { ProductsService } from '../products.service';
 
 const unitNotFound = { code: 'NOT_FOUND', cause: { code: 'UNIT_NOT_FOUND' } };
+const unitInUse = { code: 'CONFLICT', cause: { code: 'PRODUCT_UNIT_IN_USE' } };
+
+async function quoteLineFor(tenant: TestTenant, productId: string) {
+  await testDb
+    .insert(quoteStages)
+    .values({ id: 1, label: 'stage 1', color: '#000000', sortOrder: 1 })
+    .onConflictDoNothing();
+  const [client] = await testDb
+    .insert(clients)
+    .values({ tenantId: tenant.id, name: `client ${tenant.slug}` })
+    .returning({ id: clients.id });
+  const [quote] = await testDb
+    .insert(quotes)
+    .values({
+      tenantId: tenant.id,
+      seq: 1,
+      number: `Q-${tenant.slug}-1`,
+      clientId: client!.id,
+      taxRate: 0,
+    })
+    .returning({ id: quotes.id });
+  await testDb
+    .insert(quoteLines)
+    .values({ tenantId: tenant.id, quoteId: quote!.id, productId, quantity: 10, subtotal: 1000 });
+}
 
 describe('product unit of measure', () => {
   let a: TestTenant;
@@ -91,5 +123,33 @@ describe('product unit of measure', () => {
     const { id } = await service.createProduct(base(hourA));
     const copy = await service.duplicateProduct(id);
     expect(copy).toMatchObject({ uomId: hourA, unit: { code: 'h' } });
+  });
+
+  it('changes the unit freely while no quote line uses the product', async () => {
+    const { id } = await service.createProduct(base(persA));
+    const [catalog] = await service.catalog(true);
+    expect(catalog).toMatchObject({ unitLocked: false });
+    await expect(service.updateProduct(id, base(hourA))).resolves.toMatchObject({ uomId: hourA });
+  });
+
+  it('rejects a unit change once a quote line uses the product, but not the same unit', async () => {
+    const { id } = await service.createProduct(base(persA));
+    await quoteLineFor(a, id);
+    await expect(service.updateProduct(id, base(hourA))).rejects.toMatchObject(unitInUse);
+    const [row] = await testDb.select().from(products).where(eq(products.id, id));
+    expect(row!.uomId).toBe(persA);
+    await expect(
+      service.updateProduct(id, { ...base(persA), name: 'Bar 2' }),
+    ).resolves.toMatchObject({ name: 'Bar 2', uomId: persA });
+    const [catalog] = await service.catalog(true);
+    expect(catalog).toMatchObject({ unitLocked: true });
+  });
+
+  it('does not let the lines of another organization lock the unit', async () => {
+    const { id } = await service.createProduct(base(persA));
+    await quoteLineFor(b, id);
+    const [catalog] = await service.catalog(true);
+    expect(catalog).toMatchObject({ unitLocked: false });
+    await expect(service.updateProduct(id, base(hourA))).resolves.toMatchObject({ uomId: hourA });
   });
 });

@@ -11,7 +11,8 @@ export type TenantDefaultsOptions = { catalog?: SeedProduct[]; appSettings?: See
 
 // The data a tenant needs to be usable from its first request: config rows (config.get and quote
 // numbering read them), event types, reschedule reasons, the units of measure, the base catalog
-// (its products need a unit) and the quote PDF template. `quote_stages` is a global catalog and is seeded separately. Idempotent.
+// (its products need a unit) and the quote PDF template. `quote_stages` is a global catalog and
+// is seeded separately. Idempotent.
 export async function seedTenantDefaults(
   tenantId: string,
   x: Executor = db,

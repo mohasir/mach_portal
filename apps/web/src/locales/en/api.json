@@ -27,6 +27,7 @@
     "PRODUCT_NOT_FOUND": "The {{item}} does not exist",
     "PRODUCT_ALREADY_EXISTS": "A {{item}} with that name already exists",
     "PRODUCT_SKU_TAKEN": "A {{item}} with that SKU already exists",
+    "PRODUCT_UNIT_IN_USE": "The unit cannot be changed because the {{item}} is already in quotes",
     "PRODUCT_COST_FORBIDDEN": "You don't have permission to edit the cost of a {{item}}",
     "PRODUCT_IMAGE_NOT_FOUND": "The image does not exist",
     "PRODUCT_IMAGE_LIMIT_REACHED": "This {{item}} already has the maximum number of images",
