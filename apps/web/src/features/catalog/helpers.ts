@@ -6,7 +6,7 @@ export interface ProductFormValues {
   longDescription?: string;
   isPremium: boolean;
   price?: number | null;
-  uomId: string;
+  uomId?: string;
   sku?: string | null;
   categoryId?: string | null;
   cost?: number | null;
@@ -47,8 +47,14 @@ export function buildProductPayload(
   {
     tiers,
     priceTiersEnabled,
+    unitsEnabled = true,
     costMode = 'hidden',
-  }: { tiers: PriceTierInput[]; priceTiersEnabled: boolean; costMode?: CostFieldMode },
+  }: {
+    tiers: PriceTierInput[];
+    priceTiersEnabled: boolean;
+    unitsEnabled?: boolean;
+    costMode?: CostFieldMode;
+  },
 ): ProductPayload {
   return {
     name: values.name,
@@ -56,7 +62,8 @@ export function buildProductPayload(
     longDescription: blankToUndefined(values.longDescription),
     isPremium: values.isPremium ?? false,
     price: values.price ?? null,
-    uomId: values.uomId,
+    // Without the units add-on the API keeps the stored unit (or the default one on create).
+    ...(unitsEnabled ? { uomId: values.uomId } : {}),
     sku: values.sku ?? null,
     categoryId: values.categoryId ?? null,
     minQuantity: values.minQuantity,

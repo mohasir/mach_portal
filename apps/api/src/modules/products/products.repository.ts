@@ -7,6 +7,7 @@ import type {
   UpdateOptionGroupInput,
   UpdateOptionInput,
 } from '@repo/schemas';
+import { NEUTRAL_UNIT_CODE } from '@repo/schemas';
 import type { Executor, Tx } from '../../db';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import {
@@ -102,6 +103,18 @@ export class ProductsRepository {
   }
 
   // Every unit of the tenant, inactive ones included: a product may keep a unit disabled later.
+  // The unit new products take when the organization cannot choose one.
+  findDefaultUnit() {
+    return this.db
+      .select({ id: unitsOfMeasure.id })
+      .from(unitsOfMeasure)
+      .where(
+        and(eq(unitsOfMeasure.code, NEUTRAL_UNIT_CODE), tenantEq(unitsOfMeasure, this.tenantId)),
+      )
+      .limit(1)
+      .then((rows) => rows[0]);
+  }
+
   async findUnits(): Promise<UnitsById> {
     const rows = await this.db
       .select(unitRefColumns)
@@ -235,7 +248,7 @@ export class ProductsRepository {
     }
   }
 
-  createProduct(data: ProductWriteInput, withCost = false) {
+  createProduct(data: ProductWriteInput & { uomId: string }, withCost = false) {
     return this.db.transaction(async (tx) => {
       const [product] = await tx
         .insert(products)

@@ -14,6 +14,7 @@ export function productsModule(ctx: TenantCtx) {
       read: can(ctx.access, { [RESOURCES.PRODUCT_COST]: [ACTIONS.READ] }),
       update: can(ctx.access, { [RESOURCES.PRODUCT_COST]: [ACTIONS.UPDATE] }),
     },
+    ctx.features.has('unitsOfMeasure'),
   );
 }
 

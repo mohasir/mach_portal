@@ -55,6 +55,15 @@ describe('buildProductPayload', () => {
     expect(buildProductPayload(values, { tiers, priceTiersEnabled: false }).uomId).toBe('unit-1');
   });
 
+  it('omits the unit when the unitsOfMeasure add-on is off so the API keeps the stored one', () => {
+    const payload = buildProductPayload(values, {
+      tiers,
+      priceTiersEnabled: false,
+      unitsEnabled: false,
+    });
+    expect(payload).not.toHaveProperty('uomId');
+  });
+
   it('defaults isPremium to false', () => {
     const payload = buildProductPayload(
       { name: 'a', isPremium: undefined as unknown as boolean, uomId: 'unit-1', minQuantity: 1 },

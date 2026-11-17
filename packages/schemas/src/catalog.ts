@@ -35,8 +35,9 @@ const productMutationFields = {
   shortDescription: optionalText(SHORT_DESCRIPTION_MAX),
   longDescription: optionalText(LONG_DESCRIPTION_MAX),
   isPremium: z.boolean(),
-  // Unit the price and the quantity of the product are expressed in.
-  uomId: z.uuid('catalog.validation.unitRequired'),
+  // Unit the price and the quantity of the product are expressed in. Omitted: the default unit on
+  // create, the stored one on update. Choosing one needs the unitsOfMeasure add-on.
+  uomId: z.uuid('catalog.validation.unitRequired').optional(),
   tiers: productTiersSchema,
   // Per-unit price in cents; null clears it, omitted keeps the stored one on update.
   price: z

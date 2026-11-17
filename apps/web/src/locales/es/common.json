@@ -79,7 +79,8 @@
     "notifications": "Notificaciones",
     "priceTiers": "Precios por tramos",
     "configurableOptions": "Opciones configurables",
-    "productGallery": "Galería de imágenes"
+    "productGallery": "Galería de imágenes",
+    "unitsOfMeasure": "Unidades de medida"
   },
   "richText": {
     "toolbar": "Formato del texto",

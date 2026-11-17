@@ -62,6 +62,7 @@ export class ProductsService {
     private repo: ProductsRepository,
     private priceTiersActive: boolean,
     private cost: CostAccess = NO_COST_ACCESS,
+    private unitsActive = true,
   ) {}
 
   private get visibility() {
@@ -119,6 +120,18 @@ export class ProductsService {
   private async assertUnit(uomId: string, currentUomId?: string) {
     const unit = await this.repo.findUnit(uomId);
     if (!unit || (!unit.isActive && uomId !== currentUomId)) throw unitNotFound();
+  }
+
+  // Without the add-on products take the default unit and cannot pick or change it.
+  private async resolveCreateUnit(uomId: string | undefined) {
+    if (uomId !== undefined) {
+      if (!this.unitsActive) throw featureNotEnabled('unitsOfMeasure');
+      await this.assertUnit(uomId);
+      return uomId;
+    }
+    const fallback = await this.repo.findDefaultUnit();
+    if (!fallback) throw unitNotFound();
+    return fallback.id;
   }
 
   async list() {
@@ -188,7 +201,7 @@ export class ProductsService {
   async createProduct(input: CreateProductInput) {
     this.assertCostWritable(input);
     const data = this.withTiersRule(input);
-    await this.assertUnit(input.uomId);
+    const uomId = await this.resolveCreateUnit(input.uomId);
     await this.assertCategory(input.categoryId);
     const existing = await this.repo.findProductByName(input.name);
     if (existing)
@@ -198,7 +211,7 @@ export class ProductsService {
       });
     await this.assertSkuFree(input.sku);
     const created = await this.repo
-      .createProduct(data, this.cost.read)
+      .createProduct({ ...data, uomId }, this.cost.read)
       .catch(rethrowUniqueViolation);
     return this.withQuotable(created);
   }
@@ -225,7 +238,10 @@ export class ProductsService {
     this.assertCostWritable(input);
     const current = await this.repo.findProductById(id);
     if (!current) throw productNotFound();
-    await this.assertUnit(input.uomId, current.uomId);
+    if (input.uomId !== undefined && input.uomId !== current.uomId) {
+      if (!this.unitsActive) throw featureNotEnabled('unitsOfMeasure');
+      await this.assertUnit(input.uomId, current.uomId);
+    }
     await this.assertCategory(input.categoryId, current.categoryId);
     await this.assertSkuFree(input.sku, id);
     const updated = await this.repo

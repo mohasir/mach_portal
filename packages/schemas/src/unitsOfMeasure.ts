@@ -193,6 +193,9 @@ export const SYSTEM_UNITS: readonly SystemUnit[] = [
 // Unit existing products are assigned to when units are introduced.
 export const DEFAULT_UNIT_CODE = 'pers';
 
+// Unit a new product takes when the organization cannot choose one (no unitsOfMeasure add-on).
+export const NEUTRAL_UNIT_CODE = 'und';
+
 // numeric(24,10): at most 14 integer digits and 10 decimals.
 const FACTOR_RE = /^\d{1,14}(\.\d{1,10})?$/;
 

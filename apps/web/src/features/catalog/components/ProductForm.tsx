@@ -48,6 +48,7 @@ export function ProductForm({
   const { t } = useTranslation('catalog');
   const vocabulary = useCatalogVocabulary();
   const priceTiersEnabled = useFeature('priceTiers');
+  const unitsEnabled = useFeature('unitsOfMeasure');
   const can = useCan();
   const costMode = costFieldMode({
     canRead: can({ [RESOURCES.PRODUCT_COST]: [ACTIONS.READ] }),
@@ -59,7 +60,7 @@ export function ProductForm({
     units.find((u) => u.id === uomId) ?? (currentUnit?.id === uomId ? currentUnit : undefined);
 
   const handleFinish = (values: ProductFormValues) =>
-    onSubmit(buildProductPayload(values, { tiers, priceTiersEnabled, costMode }));
+    onSubmit(buildProductPayload(values, { tiers, priceTiersEnabled, unitsEnabled, costMode }));
 
   return (
     <Form
@@ -136,14 +137,16 @@ export function ProductForm({
         </Col>
       </Row>
 
-      <Form.Item
-        name="uomId"
-        label={<FieldLabel title={t('product.form.unit')} required />}
-        extra={t('product.form.unitCaption', vocabulary)}
-        rules={[{ required: true, message: t('validation.unitRequired') }]}
-      >
-        <UnitSelect current={currentUnit} placeholder={t('product.form.unitPlaceholder')} />
-      </Form.Item>
+      {unitsEnabled && (
+        <Form.Item
+          name="uomId"
+          label={<FieldLabel title={t('product.form.unit')} required />}
+          extra={t('product.form.unitCaption', vocabulary)}
+          rules={[{ required: true, message: t('validation.unitRequired') }]}
+        >
+          <UnitSelect current={currentUnit} placeholder={t('product.form.unitPlaceholder')} />
+        </Form.Item>
+      )}
 
       <Form.Item
         name="minQuantity"

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createUnitSchema, unitsOfMeasureListQuerySchema, updateUnitSchema } from '@repo/schemas';
 import { ACTIONS, RESOURCES } from '@repo/guards';
+import { requireFeature } from '../../core/trpc/requireFeature';
 import { guardedProcedure, guardedProcedureAnyOf, router } from '../../core/trpc/trpc';
 import { unitsOfMeasureModule } from './unitsOfMeasure.module';
 
@@ -19,18 +20,22 @@ export const unitsOfMeasureRouter = router({
   ).query(({ ctx }) => unitsOfMeasureModule(ctx).options()),
 
   create: guardedProcedure({ [RESOURCES.UNIT_OF_MEASURE]: [ACTIONS.CREATE] })
+    .use(requireFeature('unitsOfMeasure'))
     .input(createUnitSchema)
     .mutation(({ ctx, input }) => unitsOfMeasureModule(ctx).create(input)),
 
   update: guardedProcedure({ [RESOURCES.UNIT_OF_MEASURE]: [ACTIONS.UPDATE] })
+    .use(requireFeature('unitsOfMeasure'))
     .input(z.object({ id: z.uuid(), data: updateUnitSchema }))
     .mutation(({ ctx, input }) => unitsOfMeasureModule(ctx).update(input.id, input.data)),
 
   disable: guardedProcedure({ [RESOURCES.UNIT_OF_MEASURE]: [ACTIONS.DISABLE] })
+    .use(requireFeature('unitsOfMeasure'))
     .input(idInput)
     .mutation(({ ctx, input }) => unitsOfMeasureModule(ctx).disable(input.id)),
 
   enable: guardedProcedure({ [RESOURCES.UNIT_OF_MEASURE]: [ACTIONS.ENABLE] })
+    .use(requireFeature('unitsOfMeasure'))
     .input(idInput)
     .mutation(({ ctx, input }) => unitsOfMeasureModule(ctx).enable(input.id)),
 });

@@ -70,13 +70,16 @@ describe('resolveRouteFeature', () => {
     expect(resolveRouteFeature('/admin/notifications/')).toBe('notifications');
   });
 
+  it('requires the unitsOfMeasure add-on for the units page', () => {
+    expect(resolveRouteFeature('/admin/units-of-measure')).toBe('unitsOfMeasure');
+  });
+
   it('has no feature on core routes or unknown paths', () => {
     for (const path of [
       '/admin',
       '/admin/clients',
       '/admin/users',
       '/admin/settings',
-      '/admin/units-of-measure',
       '/admin/product-categories',
       '/nowhere',
     ]) {

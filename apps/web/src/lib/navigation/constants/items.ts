@@ -86,6 +86,7 @@ export const UNITS_OF_MEASURE_ITEM: NavItem = {
   label: 'nav.unitsOfMeasure',
   href: '/admin/units-of-measure',
   icon: 'unitsOfMeasure',
+  feature: 'unitsOfMeasure',
   guard: { [RESOURCES.UNIT_OF_MEASURE]: [READ] },
 };
 

@@ -79,7 +79,8 @@
     "notifications": "Notifications",
     "priceTiers": "Price tiers",
     "configurableOptions": "Configurable options",
-    "productGallery": "Image gallery"
+    "productGallery": "Image gallery",
+    "unitsOfMeasure": "Units of measure"
   },
   "richText": {
     "toolbar": "Text formatting",

@@ -12,11 +12,11 @@ const product = (price: number) => ({
 });
 
 describe('product unit', () => {
-  it('requires a unit id', () => {
+  it('allows omitting the unit but rejects one that is not an id', () => {
     const { uomId: _omitted, ...withoutUnit } = product(100);
-    const result = createProductSchema.safeParse(withoutUnit);
-    expect(result.error?.issues[0]?.message).toBe('catalog.validation.unitRequired');
-    expect(createProductSchema.safeParse({ ...withoutUnit, uomId: 'nope' }).success).toBe(false);
+    expect(createProductSchema.safeParse(withoutUnit).success).toBe(true);
+    const invalid = createProductSchema.safeParse({ ...withoutUnit, uomId: 'nope' });
+    expect(invalid.error?.issues[0]?.message).toBe('catalog.validation.unitRequired');
   });
 });
 

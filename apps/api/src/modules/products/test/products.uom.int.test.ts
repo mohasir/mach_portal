@@ -145,4 +145,39 @@ describe('product unit of measure', () => {
     const [catalog] = await service.catalog(true);
     expect(catalog).not.toHaveProperty('unitLocked');
   });
+
+  describe('without the unitsOfMeasure add-on', () => {
+    let off: ProductsService;
+    const notEnabled = { cause: { code: 'FEATURE_NOT_ENABLED' } };
+    const noUnit = { name: 'Bar', isPremium: false, tiers: [] };
+
+    beforeEach(() => {
+      off = new ProductsService(new ProductsRepository(testDb, a.id), true, undefined, false);
+    });
+
+    it('creates the product in the default unit', async () => {
+      const created = await off.createProduct(noUnit);
+      expect(created.unit).toMatchObject({ code: 'und' });
+    });
+
+    it('refuses to choose a unit on create, even a valid one, and writes nothing', async () => {
+      await expect(off.createProduct(base(hourA))).rejects.toMatchObject(notEnabled);
+      expect(await testDb.select().from(products).where(eq(products.tenantId, a.id))).toEqual([]);
+    });
+
+    it('keeps the stored unit when update omits it, and refuses to change it', async () => {
+      const { id } = await service.createProduct(base(hourA));
+      await expect(off.updateProduct(id, noUnit)).resolves.toMatchObject({ uomId: hourA });
+      await expect(off.updateProduct(id, base(persA))).rejects.toMatchObject(notEnabled);
+      await expect(off.updateProduct(id, base(hourA))).resolves.toMatchObject({ uomId: hourA });
+      const [row] = await testDb.select().from(products).where(eq(products.id, id));
+      expect(row!.uomId).toBe(hourA);
+    });
+
+    it('never takes the default unit of another organization', async () => {
+      const created = await off.createProduct(noUnit);
+      expect(created.uomId).toBe(await testUnitId(a.id, 'und'));
+      expect(created.uomId).not.toBe(await testUnitId(b.id, 'und'));
+    });
+  });
 });
