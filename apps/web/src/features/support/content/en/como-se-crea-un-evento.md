@@ -10,7 +10,8 @@ it → confirm it.
 
 ## What the event inherits from the quote
 
-When it's created, the event copies: client, event type, date, time, State, city, address and the
+When it's created, the event copies: client, event type, date, time, place (country,
+region and locality), address and the
 quote's **total amount** (as a snapshot of that moment).
 
 What's **not** copied separately are the {{items}} and their options — the event simply reads the

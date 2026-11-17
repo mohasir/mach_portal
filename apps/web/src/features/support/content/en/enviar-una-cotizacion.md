@@ -12,7 +12,7 @@ Sending a quote means moving it from **Pending** to **Sent**. You can do that tw
 
 ![Moving the quote to Sent from the status tag](/support/enviar-una-cotizacion/1.png)
 
-Before the quote moves to Sent, it's checked again for State, City, Address and at least one
+Before the quote moves to Sent, it's checked again for the place, the Address (if the organization asks for it) and at least one
 line. If something's missing, you'll see "Missing data to send the quote" — that can happen even
 after "Create quote", if something was removed in between.
 

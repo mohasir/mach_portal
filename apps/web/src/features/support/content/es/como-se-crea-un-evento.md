@@ -10,8 +10,8 @@ operación. Para agendar algo, el camino es siempre: armar una cotización → e
 
 ## Qué hereda el evento de la cotización
 
-Al momento de crearse, el evento copia: cliente, tipo de evento, fecha, hora, Estado, ciudad,
-dirección y el **monto total** de la cotización (como una foto de ese momento).
+Al momento de crearse, el evento copia: cliente, tipo de evento, fecha, hora, lugar (país,
+región y localidad), dirección y el **monto total** de la cotización (como una foto de ese momento).
 
 Lo que **no** se copia por separado son los {{items}} y sus opciones — el evento simplemente lee
 las líneas y selecciones de la cotización de origen a través del vínculo entre ambos.

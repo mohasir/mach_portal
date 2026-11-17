@@ -13,7 +13,7 @@ formas:
 
 ![Mover la cotización a Enviada desde el tag de estado](/support/enviar-una-cotizacion/1.png)
 
-Antes de pasar a Enviada, se vuelve a confirmar que estén cargados Estado, Ciudad, Dirección y al
+Antes de pasar a Enviada, se vuelve a confirmar que estén cargados el lugar, la Dirección (si la organización la pide) y al
 menos una línea. Si falta algo, aparece el mensaje "Faltan datos para enviar la cotización" —
 puede pasar incluso después de haber hecho "Crear cotización", si en el medio se borró algún dato.
 

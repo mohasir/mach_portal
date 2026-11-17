@@ -13,7 +13,7 @@ quantity of each line is set on each catalog item.
 
 ## Taxes
 
-Tax belongs to each {{item}}, not to the event's State. The **Taxes** card holds the **default tax
+Tax belongs to each {{item}}, not to the event's place. The **Taxes** card holds the **default tax
 rate**: the rate every new {{item}} starts with.
 
 - On each catalog {{item}} you can change its rate or mark it **tax exempt** (it's quoted at 0%,
