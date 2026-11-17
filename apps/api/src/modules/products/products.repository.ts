@@ -256,7 +256,8 @@ export class ProductsRepository {
         .insert(products)
         .values({
           name: data.name,
-          description: data.description ?? null,
+          shortDescription: data.shortDescription ?? null,
+          longDescription: data.longDescription ?? null,
           isPremium: data.isPremium,
           price: data.price ?? null,
           uomId: data.uomId,
@@ -289,7 +290,8 @@ export class ProductsRepository {
         .insert(products)
         .values({
           name,
-          description: source.description,
+          shortDescription: source.shortDescription,
+          longDescription: source.longDescription,
           isPremium: source.isPremium,
           price: source.price,
           uomId: source.uomId,
@@ -365,7 +367,8 @@ export class ProductsRepository {
         .update(products)
         .set({
           name: data.name,
-          description: data.description ?? null,
+          shortDescription: data.shortDescription ?? null,
+          longDescription: data.longDescription ?? null,
           isPremium: data.isPremium,
           uomId: data.uomId,
           // Omitted keeps the stored value; an explicit null clears it.

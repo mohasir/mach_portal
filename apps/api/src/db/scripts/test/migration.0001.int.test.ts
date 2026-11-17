@@ -202,11 +202,18 @@ describe('0001 on a legacy database with data', () => {
       ),
     };
     survivingPrints = await fingerprints(db.sql, survivingSets);
-    // 0007 renames num_persons to quantity; row content is what must survive.
+    // 0007 renames num_persons to quantity and 0012 products.description to short_description;
+    // row content is what must survive.
     renamedSets = Object.fromEntries(
       Object.entries(survivingSets).map(([t, cols]) => [
         t,
-        cols.map((c) => (c === 'num_persons' ? 'quantity' : c)),
+        cols.map((c) =>
+          c === 'num_persons'
+            ? 'quantity'
+            : t === 'products' && c === 'description'
+              ? 'short_description'
+              : c,
+        ),
       ]),
     );
   });

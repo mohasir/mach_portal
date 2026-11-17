@@ -14,7 +14,8 @@ const unit = {
 const copy = {
   id: 'new-id',
   name: 'Barra (copia)',
-  description: null,
+  shortDescription: null,
+  longDescription: null,
   isPremium: false,
   isActive: true,
   sortOrder: 3,
@@ -137,7 +138,8 @@ describe('ProductsService price and quotable', () => {
   const row = {
     id: 'p1',
     name: 'Barra',
-    description: null,
+    shortDescription: null,
+    longDescription: null,
     isPremium: false,
     isActive: true,
     sortOrder: 0,

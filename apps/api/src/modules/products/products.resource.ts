@@ -13,7 +13,8 @@ import {
 export const publicProductColumns = {
   id: products.id,
   name: products.name,
-  description: products.description,
+  shortDescription: products.shortDescription,
+  longDescription: products.longDescription,
   isPremium: products.isPremium,
   isActive: products.isActive,
   sortOrder: products.sortOrder,
@@ -147,7 +148,8 @@ export const productResource = (
 ) => ({
   id: row.id,
   name: row.name,
-  description: row.description,
+  shortDescription: row.shortDescription,
+  longDescription: row.longDescription,
   isPremium: row.isPremium,
   isActive: row.isActive,
   sortOrder: row.sortOrder,

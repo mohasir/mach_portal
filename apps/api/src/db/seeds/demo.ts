@@ -171,7 +171,7 @@ function shiftDate(iso: string | undefined, days: number) {
 const SUR_CATALOG: SeedProduct[] = SEED_CATALOG.map((p) => ({
   ...p,
   name: surProduct(p.name),
-  description: `${p.description} (Edición Sur)`,
+  shortDescription: `${p.shortDescription} (Edición Sur)`,
   tiers: p.tiers.map((t) => ({ ...t, price: surPrice(t.price) })),
 }));
 

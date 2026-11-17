@@ -34,7 +34,8 @@ const product = (
 ): ProductWithGroups => ({
   id: 'p1',
   name: 'Taco Bar',
-  description: null,
+  shortDescription: null,
+  longDescription: null,
   isPremium: false,
   isActive,
   sortOrder: 0,

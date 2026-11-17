@@ -63,3 +63,21 @@ describe('product SKU, cost, minimum quantity and category', () => {
     expect(createProductSchema.safeParse({ ...product(1), categoryId: 'x' }).success).toBe(false);
   });
 });
+
+describe('product descriptions', () => {
+  it('trims both, turns blanks into null and enforces 500 and 10000 characters', () => {
+    const parsed = createProductSchema.parse({
+      ...product(1),
+      shortDescription: '  hola ',
+      longDescription: '   ',
+    });
+    expect(parsed.shortDescription).toBe('hola');
+    expect(parsed.longDescription).toBeUndefined();
+    const ok = (extra: object) =>
+      createProductSchema.safeParse({ ...product(1), ...extra }).success;
+    expect(ok({ shortDescription: 'x'.repeat(500) })).toBe(true);
+    expect(ok({ shortDescription: 'x'.repeat(501) })).toBe(false);
+    expect(ok({ longDescription: 'x'.repeat(10000) })).toBe(true);
+    expect(ok({ longDescription: 'x'.repeat(10001) })).toBe(false);
+  });
+});

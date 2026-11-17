@@ -30,7 +30,9 @@ export interface SeedGroup {
 
 export interface SeedProduct {
   name: string;
-  description: string;
+  shortDescription: string;
+  // Markdown.
+  longDescription?: string;
   isPremium?: boolean;
   // Per-unit price in cents.
   price?: number;
@@ -89,7 +91,9 @@ export const SEED_CATALOG: SeedProduct[] = [
     name: 'Paquete Esencial',
     category: 'Paquetes',
     uomCode: 'pers',
-    description: 'Paquete base con acabados, colores y accesorios a elección.',
+    shortDescription: 'Paquete base con acabados, colores y accesorios a elección.',
+    longDescription:
+      '## Qué incluye\n\n- Acabados y colores a elección\n- Accesorios básicos\n- Entrega coordinada\n\n**Ideal** para proyectos de tamaño pequeño y mediano.',
     tiers: [
       { quantity: 30, price: 63000 },
       { quantity: 40, price: 67000 },
@@ -109,7 +113,7 @@ export const SEED_CATALOG: SeedProduct[] = [
     name: 'Paquete Plus',
     category: 'Paquetes',
     uomCode: 'pers',
-    description: 'Paquete ampliado con más acabados y accesorios incluidos.',
+    shortDescription: 'Paquete ampliado con más acabados y accesorios incluidos.',
     tiers: [
       { quantity: 30, price: 61000 },
       { quantity: 40, price: 65000 },
@@ -130,7 +134,7 @@ export const SEED_CATALOG: SeedProduct[] = [
     name: 'Paquete Compacto',
     category: 'Paquetes',
     uomCode: 'pers',
-    description: 'Versión compacta del paquete con las mismas opciones.',
+    shortDescription: 'Versión compacta del paquete con las mismas opciones.',
     tiers: [
       { quantity: 30, price: 48500 },
       { quantity: 40, price: 53000 },
@@ -151,7 +155,7 @@ export const SEED_CATALOG: SeedProduct[] = [
     name: 'Kit Básico',
     category: 'Kits',
     uomCode: 'und',
-    description: 'Kit con componentes incluidos y una variante a elección.',
+    shortDescription: 'Kit con componentes incluidos y una variante a elección.',
     tiers: [
       { quantity: 30, price: 41000 },
       { quantity: 40, price: 45000 },
@@ -208,7 +212,9 @@ export const SEED_CATALOG: SeedProduct[] = [
     name: 'Kit Completo',
     category: 'Kits',
     uomCode: 'und',
-    description: 'Kit con base a elección, componentes e instalación incluidos.',
+    shortDescription: 'Kit con base a elección, componentes e instalación incluidos.',
+    longDescription:
+      '## Contenido del kit\n\n- Base a elección\n- Componentes incluidos\n- Instalación\n\nIncluye **garantía** estándar.',
     tiers: [
       { quantity: 30, price: 50000 },
       { quantity: 40, price: 55000 },
@@ -259,7 +265,7 @@ export const SEED_CATALOG: SeedProduct[] = [
     name: 'Colección Natural',
     category: 'Colecciones',
     uomCode: 'caja',
-    description: 'Línea de materiales naturales con acabados y complementos incluidos.',
+    shortDescription: 'Línea de materiales naturales con acabados y complementos incluidos.',
     tiers: [
       { quantity: 30, price: 46000 },
       { quantity: 40, price: 51000 },
@@ -320,7 +326,7 @@ export const SEED_CATALOG: SeedProduct[] = [
     name: 'Colección Urbana',
     category: 'Colecciones',
     uomCode: 'caja',
-    description: 'Línea moderna con bases, detalles y materiales a elección.',
+    shortDescription: 'Línea moderna con bases, detalles y materiales a elección.',
     tiers: [
       { quantity: 30, price: 43500 },
       { quantity: 40, price: 48500 },
@@ -395,7 +401,7 @@ export const SEED_CATALOG: SeedProduct[] = [
     name: 'Colección Clásica',
     category: 'Colecciones',
     uomCode: 'caja',
-    description: 'Línea clásica con detalles y materiales a elección.',
+    shortDescription: 'Línea clásica con detalles y materiales a elección.',
     tiers: [
       { quantity: 30, price: 47000 },
       { quantity: 40, price: 52500 },
@@ -466,7 +472,9 @@ export const SEED_CATALOG: SeedProduct[] = [
     name: 'Servicio Estándar',
     category: 'Servicios',
     uomCode: 'serv',
-    description: 'Servicio profesional con complementos, entregables y modalidad a elección.',
+    shortDescription: 'Servicio profesional con complementos, entregables y modalidad a elección.',
+    longDescription:
+      '## Alcance\n\n1. Diagnóstico inicial\n2. Plan de trabajo\n3. Ejecución y seguimiento\n\n> Los entregables se acuerdan antes de comenzar.',
     tiers: [
       { quantity: 30, price: 42000 },
       { quantity: 40, price: 46000 },
@@ -527,7 +535,7 @@ export const SEED_CATALOG: SeedProduct[] = [
     name: 'Servicio Premium',
     category: 'Servicios',
     uomCode: 'serv',
-    description: 'Servicio de alto nivel con equipo dedicado y planificación personalizada.',
+    shortDescription: 'Servicio de alto nivel con equipo dedicado y planificación personalizada.',
     isPremium: true,
     tiers: [
       { quantity: 35, price: 93000 },
@@ -622,7 +630,8 @@ export async function seedCatalog(
       .insert(products)
       .values({
         name: p.name,
-        description: p.description,
+        shortDescription: p.shortDescription,
+        longDescription: p.longDescription ?? null,
         isPremium: p.isPremium ?? false,
         price: p.price ?? null,
         uomId: unit.id,

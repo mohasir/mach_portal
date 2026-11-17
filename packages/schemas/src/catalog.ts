@@ -27,9 +27,13 @@ export const productTiersSchema = z
     message: 'catalog.validation.tiersDuplicate',
   });
 
+export const SHORT_DESCRIPTION_MAX = 500;
+export const LONG_DESCRIPTION_MAX = 10000;
+
 const productMutationFields = {
   name: z.string().trim().min(1, 'catalog.validation.nameRequired').max(120),
-  description: optionalText(500),
+  shortDescription: optionalText(SHORT_DESCRIPTION_MAX),
+  longDescription: optionalText(LONG_DESCRIPTION_MAX),
   isPremium: z.boolean(),
   // Unit the price and the quantity of the product are expressed in.
   uomId: z.uuid('catalog.validation.unitRequired'),
