@@ -79,5 +79,21 @@
     "notifications": "Notificaciones",
     "priceTiers": "Precios por tramos",
     "configurableOptions": "Opciones configurables"
+  },
+  "richText": {
+    "toolbar": "Formato del texto",
+    "bold": "Negrita",
+    "italic": "Cursiva",
+    "heading2": "Título",
+    "heading3": "Subtítulo",
+    "bulletList": "Lista con viñetas",
+    "orderedList": "Lista numerada",
+    "blockquote": "Cita",
+    "link": "Enlace",
+    "linkPlaceholder": "https://ejemplo.com",
+    "linkApply": "Aplicar",
+    "linkRemove": "Quitar enlace",
+    "linkInvalid": "Ingresá una dirección web, de correo o de teléfono válida",
+    "counter": "{{count}}/{{max}}"
   }
 }

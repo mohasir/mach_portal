@@ -79,5 +79,21 @@
     "notifications": "Notifications",
     "priceTiers": "Price tiers",
     "configurableOptions": "Configurable options"
+  },
+  "richText": {
+    "toolbar": "Text formatting",
+    "bold": "Bold",
+    "italic": "Italic",
+    "heading2": "Heading",
+    "heading3": "Subheading",
+    "bulletList": "Bulleted list",
+    "orderedList": "Numbered list",
+    "blockquote": "Quote",
+    "link": "Link",
+    "linkPlaceholder": "https://example.com",
+    "linkApply": "Apply",
+    "linkRemove": "Remove link",
+    "linkInvalid": "Enter a valid web, email or phone address",
+    "counter": "{{count}}/{{max}}"
   }
 }

@@ -34,8 +34,10 @@
     "form": {
       "name": "Name",
       "namePlaceholder": "{{Item}} name",
-      "description": "Description",
-      "descriptionPlaceholder": "Short description (optional)",
+      "shortDescription": "Short description",
+      "shortDescriptionPlaceholder": "Summary shown in the list (optional)",
+      "longDescription": "Long description",
+      "longDescriptionPlaceholder": "Full details of the {{item}} (optional)",
       "isPremium": "Premium",
       "price": "Unit price",
       "priceCaption": "Optional. Price of one unit of the {{item}}; multiplied by the quantity on the quote.",
@@ -161,7 +163,9 @@
     "maxSelectInvalid": "Invalid max selection",
     "skuInvalid": "Invalid SKU (up to 64 characters)",
     "costInvalid": "Invalid cost",
-    "minQuantityInvalid": "The minimum quantity must be 1 or more"
+    "minQuantityInvalid": "The minimum quantity must be 1 or more",
+    "shortDescriptionTooLong": "The short description allows up to {{max}} characters",
+    "longDescriptionTooLong": "The long description allows up to {{max}} characters"
   },
   "gallery": {
     "title": "Images",

@@ -343,7 +343,7 @@ export type { X } from './types';
 ### 3.7 Tests (Vitest)
 
 Se prueban con **Vitest** (entorno `node`) las funciones puras: helpers de `lib/` (fechas, acceso por
-ruta) y `helpers.ts` de cada feature. Los componentes React no tienen tests (no hay jsdom ni
+ruta) y `helpers.ts` de cada feature. Los componentes React no tienen tests de interacción (no hay jsdom ni
 testing-library): toda decisión que valga la pena probar se **extrae a una función pura** y el
 componente o hook solo la llama (ej. `resolveGuardOutcome` de `RouteGuard`, `resolveGateState` de
 `TenantGate`, `toRoleOptions` del formulario de usuarios, `decidePermissionDenial` del provider de tRPC).
@@ -359,6 +359,7 @@ componente o hook solo la llama (ej. `resolveGuardOutcome` de `RouteGuard`, `res
 
 - Archivos `*.test.ts` en una subcarpeta `test/` del directorio del código que prueban (nunca sueltos junto al código). Correr con `pnpm --filter web test` (o `pnpm test` en la raíz).
 - Alias `@/` disponible (configurado en `apps/web/vitest.config.ts`).
+- Un componente de solo presentación puede probarse renderizándolo a HTML con `renderToStaticMarkup` (`react-dom/server`, sin DOM; ej. `components/shared/test/Markdown.test.ts`); el test sigue siendo `*.test.ts` y usa `createElement`.
 - Para lógica que depende de "ahora", fijar el reloj con `vi.useFakeTimers()` + `vi.setSystemTime(...)`.
 
 ---
@@ -688,6 +689,10 @@ El catálogo de features (`FEATURES`, `FeatureKey`, `isToggleable`) vive en `@re
 - **Tablas → siempre `DataTable`** (§4). Prohibido `<Table>` de AntD armado a mano en una feature y prohibido `@tanstack/react-table`.
 - **Estados de carga → `Skeleton` vs `Spin` según el caso** (ninguno prohibido; se elige por caso): usar **`Skeleton`** en la **primera carga** de contenido con forma conocida (páginas, detalles, tablas, cards, formularios que hidratan) — preserva el layout y baja la latencia percibida; usar **`Spin`** para **acciones/mutations** en vuelo (botón `loading`, guardado) y para **refetch sobre contenido ya renderizado** (overlay). Regla: _primera carga → `Skeleton`; acción o refresco de algo ya visible → `Spin`_.
 - **Componentes globales:** el shell (`AdminLayoutContainer`) en `components/Layouts/`; los providers en `components/providers/`; piezas propias del shell con carpeta propia (`NotificationMenu/`, `UserProfile/`); primitivas y reutilizables (`DataTable/`, `PageHeader`, `PlaceholderPage`, `Sidebar/`, `Topbar/`, `Logo`, …) en `components/shared/`. Un patrón repetido en 2+ features → se extrae a `components/shared/`.
+- **Texto enriquecido (descripciones de producto):** se guarda **siempre como Markdown**, nunca HTML.
+  - Edición: `RichTextEditor` (`components/shared/RichTextEditor`), controlado (`value`/`onChange` en Markdown, sirve directo dentro de un `Form.Item`), con `maxLength` y contador (mide el Markdown, como la API). Tiptap v3 cargado con `next/dynamic` (`ssr: false`) e `immediatelyRender: false`. Formatos: negrita, cursiva, títulos (H2/H3), listas, enlaces y citas; el resto (código, imágenes, tablas, tachado…) no existe en el schema, así que el pegado lo reduce a texto. La conversión Markdown ↔ documento y la lista de extensiones viven en `richText.ts` (puro, con tests).
+  - Lectura: `Markdown` (`components/shared/Markdown.tsx`, `react-markdown` + `remark-gfm`). **Prohibido `rehype-raw`**: el HTML crudo se muestra como texto; solo se renderizan los elementos que el editor produce y los enlaces pasan por `isSafeLinkHref` (`lib/format/markdown.ts`: http, https, mailto, tel) y abren con `target="_blank"` y `rel="noopener noreferrer"`.
+  - Vista previa de una línea (listas): `markdownToPlainText(markdown, maxLength)` (`lib/format/markdown.ts`).
 - **Navegación data-driven** (`lib/navigation/`): `constants/items.ts` (`NAV_ITEMS` con `label`/`href`/`icon`/`guard`), `constants/icons.tsx` (`IconMap` string→icono lucide), `config.ts` (`ADMIN_MENU`), `useNavigation()`. `SidebarNav` la renderiza y filtra por permisos.
 - **Shell responsive (mobile-first):** `AdminLayoutContainer` usa `useIsDesktop()` (lg=992px): desktop = `Sider` colapsable a rail de iconos; móvil = `Drawer` overlay con el mismo `SidebarContent`.
 

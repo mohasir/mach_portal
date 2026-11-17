@@ -14,7 +14,7 @@ import {
 const tiers = [{ quantity: 50, price: 10000 }];
 const values = {
   name: 'Taco bar',
-  description: 'x',
+  shortDescription: 'x',
   isPremium: true,
   uomId: 'unit-1',
   minQuantity: 1,
@@ -85,6 +85,33 @@ describe('buildProductPayload with SKU, category, minimum and cost', () => {
       expect(buildProductPayload(withCost, { ...off, costMode })).not.toHaveProperty('cost');
     }
     expect(buildProductPayload(withCost, off)).not.toHaveProperty('cost');
+  });
+});
+
+describe('buildProductPayload descriptions', () => {
+  const off = { tiers, priceTiersEnabled: false };
+
+  it('sends both descriptions as written', () => {
+    const payload = buildProductPayload(
+      { ...values, shortDescription: '**Short**', longDescription: '## Long\n\n- item' },
+      off,
+    );
+    expect(payload).toMatchObject({
+      shortDescription: '**Short**',
+      longDescription: '## Long\n\n- item',
+    });
+    expect(payload).not.toHaveProperty('description');
+  });
+
+  it('sends an empty or blank description as undefined', () => {
+    for (const blank of ['', '   ', '\n', undefined]) {
+      const payload = buildProductPayload(
+        { ...values, shortDescription: blank, longDescription: blank },
+        off,
+      );
+      expect(payload.shortDescription).toBeUndefined();
+      expect(payload.longDescription).toBeUndefined();
+    }
   });
 });
 

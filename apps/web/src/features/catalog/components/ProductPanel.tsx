@@ -5,6 +5,7 @@ import { ChevronRight, Layers, Star, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { Feature } from '@/lib/auth/Feature';
+import { markdownToPlainText } from '@/lib/format/markdown';
 import type { Product } from '../types';
 import { NotQuotableTag } from './NotQuotableTag';
 import { ProductThumb } from './ProductThumb';
@@ -39,6 +40,11 @@ export function ProductPanel({ product }: ProductPanelProps) {
               {!product.quotable && <NotQuotableTag />}
               {product.category && <Tag className="m-0">{product.category.name}</Tag>}
             </div>
+            {product.shortDescription && (
+              <div className="text-muted mb-1 truncate text-xs">
+                {markdownToPlainText(product.shortDescription, 120)}
+              </div>
+            )}
             <div className="text-muted flex items-center gap-2 text-xs">
               <Feature name="configurableOptions">
                 <span className="flex items-center gap-1">

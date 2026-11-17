@@ -2,6 +2,8 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // tsconfig keeps JSX as-is for Next; tests importing a component need it compiled.
+  oxc: { jsx: { runtime: 'automatic' } },
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },

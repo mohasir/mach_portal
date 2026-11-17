@@ -2,7 +2,8 @@ import type { PriceTierInput, UpdateProductInput } from '@repo/schemas';
 
 export interface ProductFormValues {
   name: string;
-  description?: string;
+  shortDescription?: string;
+  longDescription?: string;
   isPremium: boolean;
   price?: number | null;
   uomId: string;
@@ -37,6 +38,8 @@ export interface CatalogFeatures {
 /** Product mutation input; `tiers` may be omitted to leave stored tiers untouched. */
 export type ProductPayload = Omit<UpdateProductInput, 'tiers'> & { tiers?: PriceTierInput[] };
 
+const blankToUndefined = (value: string | undefined) => (value?.trim() ? value : undefined);
+
 export type DetailTab = 'details' | 'prices';
 
 export function buildProductPayload(
@@ -49,7 +52,8 @@ export function buildProductPayload(
 ): ProductPayload {
   return {
     name: values.name,
-    description: values.description,
+    shortDescription: blankToUndefined(values.shortDescription),
+    longDescription: blankToUndefined(values.longDescription),
     isPremium: values.isPremium ?? false,
     price: values.price ?? null,
     uomId: values.uomId,

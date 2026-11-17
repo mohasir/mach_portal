@@ -4,14 +4,21 @@ import { Col, Form, Input, InputNumber, Row, Switch, type FormInstance } from 'a
 import { useTranslation } from 'react-i18next';
 import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { ACTIONS, RESOURCES } from '@repo/guards';
-import { SKU_MAX, type PriceTierInput } from '@repo/schemas';
+import {
+  LONG_DESCRIPTION_MAX,
+  SHORT_DESCRIPTION_MAX,
+  SKU_MAX,
+  type PriceTierInput,
+} from '@repo/schemas';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
+import { RichTextEditor } from '@/components/shared/RichTextEditor';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
 import { CategorySelect } from '@/features/product-categories';
 import { UnitSelect, useUnitOptions } from '@/features/units-of-measure';
 import { useCan } from '@/lib/auth/useCan';
 import { useFeature } from '@/lib/auth/useFeature';
+import { maxLengthValidator } from '@/lib/format/markdown';
 import {
   buildProductPayload,
   costFieldMode,
@@ -74,13 +81,41 @@ export function ProductForm({
       </Form.Item>
 
       <Form.Item
-        name="description"
-        label={<FieldLabel title={t('product.form.description')} />}
-        rules={[{ max: 500 }]}
+        name="shortDescription"
+        label={<FieldLabel title={t('product.form.shortDescription')} />}
+        rules={[
+          {
+            validator: maxLengthValidator(
+              SHORT_DESCRIPTION_MAX,
+              t('validation.shortDescriptionTooLong', { max: SHORT_DESCRIPTION_MAX }),
+            ),
+          },
+        ]}
       >
-        <Input.TextArea
-          placeholder={t('product.form.descriptionPlaceholder')}
-          autoSize={{ minRows: 2, maxRows: 4 }}
+        <RichTextEditor
+          maxLength={SHORT_DESCRIPTION_MAX}
+          aria-label={t('product.form.shortDescription')}
+          placeholder={t('product.form.shortDescriptionPlaceholder')}
+        />
+      </Form.Item>
+
+      <Form.Item
+        name="longDescription"
+        label={<FieldLabel title={t('product.form.longDescription')} />}
+        rules={[
+          {
+            validator: maxLengthValidator(
+              LONG_DESCRIPTION_MAX,
+              t('validation.longDescriptionTooLong', { max: LONG_DESCRIPTION_MAX }),
+            ),
+          },
+        ]}
+      >
+        <RichTextEditor
+          size="tall"
+          maxLength={LONG_DESCRIPTION_MAX}
+          aria-label={t('product.form.longDescription')}
+          placeholder={t('product.form.longDescriptionPlaceholder', vocabulary)}
         />
       </Form.Item>
 

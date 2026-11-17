@@ -34,8 +34,10 @@
     "form": {
       "name": "Nombre",
       "namePlaceholder": "Nombre del {{item}}",
-      "description": "Descripción",
-      "descriptionPlaceholder": "Descripción breve (opcional)",
+      "shortDescription": "Descripción corta",
+      "shortDescriptionPlaceholder": "Resumen que se ve en la lista (opcional)",
+      "longDescription": "Descripción larga",
+      "longDescriptionPlaceholder": "Detalle completo del {{item}} (opcional)",
       "isPremium": "Premium",
       "price": "Precio unitario",
       "priceCaption": "Opcional. Precio de una unidad del {{item}}; se multiplica por la cantidad de la cotización.",
@@ -161,7 +163,9 @@
     "maxSelectInvalid": "Selección máxima inválida",
     "skuInvalid": "SKU inválido (hasta 64 caracteres)",
     "costInvalid": "Costo inválido",
-    "minQuantityInvalid": "La cantidad mínima debe ser 1 o más"
+    "minQuantityInvalid": "La cantidad mínima debe ser 1 o más",
+    "shortDescriptionTooLong": "La descripción corta admite hasta {{max}} caracteres",
+    "longDescriptionTooLong": "La descripción larga admite hasta {{max}} caracteres"
   },
   "gallery": {
     "title": "Imágenes",

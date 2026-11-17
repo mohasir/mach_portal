@@ -60,7 +60,8 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
               product
                 ? {
                     name: product.name,
-                    description: product.description ?? undefined,
+                    shortDescription: product.shortDescription ?? undefined,
+                    longDescription: product.longDescription ?? undefined,
                     isPremium: product.isPremium,
                     price: product.price,
                     uomId: product.uomId,

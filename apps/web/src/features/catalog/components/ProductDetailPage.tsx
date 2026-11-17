@@ -9,6 +9,7 @@ import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabula
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { useActionConfirm } from '@/components/shared/ConfirmDialogs';
 import { IconBadge } from '@/components/shared/IconBadge';
+import { Markdown } from '@/components/shared/Markdown';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { Feature } from '@/lib/auth/Feature';
@@ -141,14 +142,21 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
 
               {!product.quotable && <NotQuotableAlert />}
 
-              {product.description && (
+              {product.shortDescription && (
                 <div>
                   <Typography.Text strong className="block text-sm">
-                    {t('product.form.description')}
+                    {t('product.form.shortDescription')}
                   </Typography.Text>
-                  <Typography.Text type="secondary" className="block text-sm">
-                    {product.description}
+                  <Markdown className="text-muted text-sm">{product.shortDescription}</Markdown>
+                </div>
+              )}
+
+              {product.longDescription && (
+                <div>
+                  <Typography.Text strong className="block text-sm">
+                    {t('product.form.longDescription')}
                   </Typography.Text>
+                  <Markdown className="text-muted text-sm">{product.longDescription}</Markdown>
                 </div>
               )}
 
