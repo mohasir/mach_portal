@@ -167,5 +167,54 @@
     "currencyInvalid": "Moneda inválida",
     "optionsSelectionDeadlineDaysInvalid": "Cantidad de días inválida",
     "quoteStagesLabelInvalid": "Nombre requerido"
+  },
+  "location": {
+    "title": "Ubicación de operación",
+    "caption": "Dónde ofrece la organización sus productos o servicios y qué lugar debe pedir cada cotización.",
+    "enable": "Pedir ubicación en las cotizaciones",
+    "enableCaption": "Apagada, las cotizaciones no piden lugar; lo ya guardado se conserva y se sigue mostrando.",
+    "pendingHint": "Se activa al guardar, cuando el formulario esté completo.",
+    "country": "País",
+    "countryPlaceholder": "Seleccionar país",
+    "countries": {
+      "US": "Estados Unidos",
+      "NI": "Nicaragua"
+    },
+    "scope": {
+      "title": "Cobertura",
+      "caption": "Dónde ofrecés tus productos o servicios; las opciones de la cotización se limitan a esa cobertura.",
+      "country": "Todo el país",
+      "areas": "Solo ciertas zonas"
+    },
+    "areas": {
+      "title": "Zonas cubiertas",
+      "regionPlaceholder": "Seleccionar {{level}}",
+      "localityPlaceholder": "Toda la zona",
+      "add": "Agregar zona",
+      "empty": "Todavía no agregaste zonas."
+    },
+    "depth": {
+      "title": "Precisión",
+      "caption": "Hasta qué nivel debe llegar el lugar de cada cotización.",
+      "options": {
+        "0": "Solo el país",
+        "1": "Hasta {{level}}",
+        "2": "Hasta {{level}}"
+      }
+    },
+    "askAddress": {
+      "title": "Pedir dirección",
+      "caption": "La cotización pide la dirección del servicio."
+    },
+    "missing": {
+      "country": "el país",
+      "depth": "la precisión",
+      "scope": "la cobertura",
+      "areas": "al menos una zona",
+      "areasBeyondDepth": "zonas compatibles con la precisión elegida"
+    },
+    "incomplete": "No se aplicó. Falta completar: {{fields}}.",
+    "loadError": "No se pudo cargar la configuración de ubicación.",
+    "retry": "Reintentar"
   }
 }

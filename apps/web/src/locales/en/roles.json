@@ -182,6 +182,10 @@
         "label": "Tax rates",
         "caption": "Default tax rate for new products."
       },
+      "location_settings": {
+        "label": "Operating location",
+        "caption": "Where the organization operates and which place each quote asks for."
+      },
       "quote_defaults": {
         "label": "Quote defaults",
         "caption": "Deposit, validity and numbering for new quotes."

@@ -3,6 +3,7 @@ import { Feature } from '@/lib/auth/Feature';
 import { QuoteDefaultsCard } from './forms/QuoteDefaultsCard';
 import { TaxRatesCard } from './forms/TaxRatesCard';
 import { QuoteStagesCard } from './forms/QuoteStagesCard';
+import { LocationSettingsCard } from './forms/LocationSettingsCard';
 
 export function GeneralSettingsForm() {
   return (
@@ -11,6 +12,9 @@ export function GeneralSettingsForm() {
         <QuoteDefaultsCard />
       </Feature>
       <TaxRatesCard />
+      <Feature name="quotes">
+        <LocationSettingsCard />
+      </Feature>
       <Feature name="quotes">
         <QuoteStagesCard />
       </Feature>
