@@ -5,15 +5,17 @@ import { Copy, Layers, Star, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TbRestore, TbTrashFilled } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { ACTIONS, RESOURCES } from '@repo/guards';
-import { getStationIcon } from '@/features/quotes';
 import { useActionConfirm } from '@/components/shared/ConfirmDialogs';
 import { IconBadge } from '@/components/shared/IconBadge';
+import { Markdown } from '@/components/shared/Markdown';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { Feature } from '@/lib/auth/Feature';
 import { useCan } from '@/lib/auth/useCan';
 import { useFeature } from '@/lib/auth/useFeature';
+import { formatQuantity, unitNoun } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { getDetailTabs } from '../helpers';
 import { useProduct } from '../hooks/useCatalog';
@@ -23,6 +25,8 @@ import { NotQuotableTag } from './NotQuotableTag';
 import { OptionGroupList } from './OptionGroupList';
 import { ProductFormModal } from './ProductFormModal';
 import { PriceTiersForm } from './prices/PriceTiersForm';
+import { ProductGallery } from './ProductGallery';
+import { ProductThumb } from './ProductThumb';
 
 interface ProductDetailPageProps {
   productId: string;
@@ -30,11 +34,13 @@ interface ProductDetailPageProps {
 
 export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const { t } = useTranslation('catalog');
+  const vocabulary = useCatalogVocabulary();
   const can = useCan();
   const canEdit = can({ [RESOURCES.PRODUCT]: [ACTIONS.UPDATE] });
   const canDisable = can({ [RESOURCES.PRODUCT]: [ACTIONS.DISABLE] });
   const canEnable = can({ [RESOURCES.PRODUCT]: [ACTIONS.ENABLE] });
   const canDuplicate = can({ [RESOURCES.PRODUCT]: [ACTIONS.DUPLICATE] });
+  const canSeeCost = can({ [RESOURCES.PRODUCT_COST]: [ACTIONS.READ] });
   const router = useRouter();
   const priceTiers = useFeature('priceTiers');
   const configurableOptions = useFeature('configurableOptions');
@@ -48,7 +54,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const handleDisable = () =>
     product &&
     confirm({
-      title: t('product.disableConfirm.title'),
+      title: t('product.disableConfirm.title', vocabulary),
       content: t('product.disableConfirm.content'),
       danger: true,
       onOk: () => disableProduct(product.id),
@@ -57,7 +63,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const handleDuplicate = () =>
     product &&
     confirm({
-      title: t('product.duplicateConfirm.title'),
+      title: t('product.duplicateConfirm.title', vocabulary),
       content: t('product.duplicateConfirm.content'),
       onOk: async () => {
         const copy = await duplicateProduct(product.id);
@@ -68,29 +74,32 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const handleEnable = () =>
     product &&
     confirm({
-      title: t('product.enableConfirm.title'),
+      title: t('product.enableConfirm.title', vocabulary),
       content: t('product.enableConfirm.content'),
       onOk: () => enableProduct(product.id),
     });
 
-  const StationIcon = product && getStationIcon(product.name);
-
   return (
     <div>
-      <PageHeader title={product?.name ?? t('breadcrumbRoot')} backHref="/admin/products" />
+      <PageHeader
+        title={product?.name ?? t('breadcrumbRoot', vocabulary)}
+        backHref="/admin/products"
+      />
 
       {isLoading ? (
         <Skeleton active paragraph={{ rows: 8 }} />
       ) : !product ? (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('empty')} className="mt-16" />
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={t('empty', vocabulary)}
+          className="mt-16"
+        />
       ) : (
         <div className="flex flex-col gap-4">
           <WrapperCard>
             <div className="flex flex-col gap-3">
               <div className="flex items-start justify-between">
-                <div className="bg-mist text-navy flex size-16 shrink-0 items-center justify-center rounded-2xl">
-                  {StationIcon && <StationIcon size={32} />}
-                </div>
+                <ProductThumb product={product} size="lg" />
                 {product.isActive
                   ? canDisable && (
                       <Button
@@ -133,13 +142,60 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
 
               {!product.quotable && <NotQuotableAlert />}
 
-              {product.description && (
+              {product.shortDescription && (
                 <div>
                   <Typography.Text strong className="block text-sm">
-                    {t('product.form.description')}
+                    {t('product.form.shortDescription')}
+                  </Typography.Text>
+                  <Markdown className="text-muted text-sm">{product.shortDescription}</Markdown>
+                </div>
+              )}
+
+              {product.longDescription && (
+                <div>
+                  <Typography.Text strong className="block text-sm">
+                    {t('product.form.longDescription')}
+                  </Typography.Text>
+                  <Markdown className="text-muted text-sm">{product.longDescription}</Markdown>
+                </div>
+              )}
+
+              <div>
+                <Typography.Text strong className="block text-sm">
+                  {t('product.form.unit')}
+                </Typography.Text>
+                <Typography.Text type="secondary" className="block text-sm">
+                  {product.unit.name} ({product.unit.code})
+                </Typography.Text>
+              </div>
+
+              <div>
+                <Typography.Text strong className="block text-sm">
+                  {t('product.detailFields.minQuantity')}
+                </Typography.Text>
+                <Typography.Text type="secondary" className="block text-sm">
+                  {formatQuantity(product.minQuantity, product.unit)}
+                </Typography.Text>
+              </div>
+
+              {product.sku && (
+                <div>
+                  <Typography.Text strong className="block text-sm">
+                    {t('product.detailFields.sku')}
                   </Typography.Text>
                   <Typography.Text type="secondary" className="block text-sm">
-                    {product.description}
+                    {product.sku}
+                  </Typography.Text>
+                </div>
+              )}
+
+              {product.category && (
+                <div>
+                  <Typography.Text strong className="block text-sm">
+                    {t('product.detailFields.category')}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" className="block text-sm">
+                    {product.category.name}
                   </Typography.Text>
                 </div>
               )}
@@ -150,7 +206,21 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                     {t('product.form.price')}
                   </Typography.Text>
                   <Typography.Text type="secondary" className="block text-sm">
-                    {money(product.price)}
+                    {t('product.pricePerUnit', {
+                      price: money(product.price),
+                      unit: unitNoun(product.unit, 1),
+                    })}
+                  </Typography.Text>
+                </div>
+              )}
+
+              {canSeeCost && product.cost != null && (
+                <div>
+                  <Typography.Text strong className="block text-sm">
+                    {t('product.detailFields.cost')}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" className="block text-sm">
+                    {money(product.cost)}
                   </Typography.Text>
                 </div>
               )}
@@ -176,7 +246,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
 
               {canEdit && (
                 <Button type="primary" className="mt-2" onClick={() => setEditOpen(true)}>
-                  {t('product.edit.title')}
+                  {t('product.edit.title', vocabulary)}
                 </Button>
               )}
               {canDuplicate && (
@@ -186,6 +256,8 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
               )}
             </div>
           </WrapperCard>
+
+          <ProductGallery product={product} canEdit={canEdit} />
 
           {detailTabs.length > 0 && (
             <WrapperCard>

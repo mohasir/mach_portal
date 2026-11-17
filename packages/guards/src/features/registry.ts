@@ -20,6 +20,8 @@ const DEFINITIONS = {
   notifications: { kind: 'module', requires: [] },
   priceTiers: { kind: 'addon', requires: [] },
   configurableOptions: { kind: 'addon', requires: [] },
+  productGallery: { kind: 'addon', requires: [] },
+  unitsOfMeasure: { kind: 'addon', requires: [] },
 } as const satisfies Record<string, FeatureShape>;
 
 export type FeatureKey = keyof typeof DEFINITIONS;

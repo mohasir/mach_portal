@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
+import { DEFAULT_UNIT_CODE } from '@repo/schemas';
 import { resetPlatformAccessSessions } from '../core/trpc/platformAccess';
 import { FEATURE_KEYS, isToggleable, type FeatureKey, type RoleType } from '@repo/guards';
 import { db, type Database } from '../db';
-import { tenantFeatures } from '../db/schema';
+import { tenantFeatures, unitsOfMeasure } from '../db/schema';
+import { seedUnitsOfMeasure } from '../db/seeds/unitsOfMeasure';
 import { clearFeatureCache } from '../lib/features/cache';
 import { legacyMemberRole, seedTenantRoles } from '../lib/rbac/seedTenantRoles';
 import { invalidateTenantCache } from '../lib/tenancy/tenantResolver';
@@ -53,6 +55,8 @@ export const ALL_TOGGLEABLE_FEATURES: readonly FeatureKey[] = FEATURE_KEYS.filte
 export type TestTenantOptions = {
   // Toggleable features stored as permanent rows; every one by default, `[]` leaves the core only.
   features?: readonly FeatureKey[];
+  // Seeds the system units of measure (products cannot exist without one); true by default.
+  units?: boolean;
 };
 
 // Raw SQL keeps fixtures independent of the Drizzle schema objects and of the
@@ -61,7 +65,7 @@ export type TestTenantOptions = {
 export async function createTestTenant(
   slug: string,
   name: string = slug,
-  { features = ALL_TOGGLEABLE_FEATURES }: TestTenantOptions = {},
+  { features = ALL_TOGGLEABLE_FEATURES, units = true }: TestTenantOptions = {},
 ): Promise<{ id: string; slug: string }> {
   const id = randomUUID();
   await testDb.execute(sql`
@@ -73,7 +77,31 @@ export async function createTestTenant(
       .insert(tenantFeatures)
       .values(features.map((featureKey) => ({ tenantId: id, featureKey })));
   }
+  if (units) await quietly(() => seedUnitsOfMeasure(id, testDb));
   return { id, slug };
+}
+
+async function quietly<T>(fn: () => Promise<T>): Promise<T> {
+  const log = console.log;
+  console.log = () => {};
+  try {
+    return await fn();
+  } finally {
+    console.log = log;
+  }
+}
+
+// Id of a seeded unit, for tests that insert products directly.
+export async function testUnitId(
+  tenantId: string,
+  code: string = DEFAULT_UNIT_CODE,
+): Promise<string> {
+  const [row] = await testDb
+    .select({ id: unitsOfMeasure.id })
+    .from(unitsOfMeasure)
+    .where(and(eq(unitsOfMeasure.tenantId, tenantId), eq(unitsOfMeasure.code, code)));
+  if (!row) throw new Error(`No unit "${code}" for tenant ${tenantId}`);
+  return row.id;
 }
 
 export async function createTestUser(

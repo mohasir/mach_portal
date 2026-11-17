@@ -101,7 +101,7 @@ export const eventPayments = pgTable(
 ).enableRLS();
 
 // Generic append-only activity log for an event — one row per notable action (staff
-// assigned/removed, station selections updated, payment registered/removed, marked completed). `data` shape varies by `type` (mirrors the `notifications` table's own
+// assigned/removed, product selections updated, payment registered/removed, marked completed). `data` shape varies by `type` (mirrors the `notifications` table's own
 // type+jsonb pattern rather than a column per action).
 export const eventHistory = pgTable(
   'event_history',

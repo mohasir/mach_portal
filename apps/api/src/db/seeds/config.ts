@@ -15,7 +15,6 @@ export type SeedAppSettings = Partial<Omit<typeof appSettings.$inferInsert, 'ten
 const DEFAULT_APP_SETTINGS: SeedAppSettings = {
   depositRate: 0.5,
   quoteValidityMonths: 3,
-  minPersonsPerLine: 30,
   quoteSeqStart: 1,
   currency: 'USD',
   catalogSortable: false,

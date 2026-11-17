@@ -1,7 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Button, Typography } from 'antd';
-import { ChevronDown, ChevronRight, ListChecks, Trash2, type LucideIcon } from 'lucide-react';
+import { ChevronDown, ChevronRight, ListChecks, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 
@@ -13,9 +13,11 @@ export interface QuoteLineItemGroup {
 }
 
 interface QuoteLineItemProps {
-  icon: LucideIcon;
+  /** Shown before the name, e.g. the product thumbnail. */
+  media: ReactNode;
   name: string;
-  numPersons?: number;
+  /** Already formatted with its unit ("40 personas"). */
+  quantity?: string;
   total?: number;
   groups: QuoteLineItemGroup[];
   onRemove?: () => void;
@@ -23,9 +25,9 @@ interface QuoteLineItemProps {
 }
 
 export function QuoteLineItem({
-  icon: Icon,
+  media,
   name,
-  numPersons,
+  quantity,
   total,
   groups,
   onRemove,
@@ -50,21 +52,21 @@ export function QuoteLineItem({
             ) : (
               <ChevronRight size={14} className="shrink-0 text-gray-500" />
             )}
-            <Icon size={16} className="text-navy shrink-0" />
+            {media}
             <Typography.Text strong className="truncate text-base">
               {name}
             </Typography.Text>
           </button>
         ) : (
           <div className="flex min-w-0 flex-1 items-center gap-2 pl-5.5">
-            <Icon size={16} className="text-navy shrink-0" />
+            {media}
             <Typography.Text strong className="truncate text-base">
               {name}
             </Typography.Text>
           </div>
         )}
-        {numPersons !== undefined && (
-          <span className="shrink-0 text-right text-xs text-gray-500">{numPersons}</span>
+        {quantity !== undefined && (
+          <span className="shrink-0 text-right text-xs text-gray-500">{quantity}</span>
         )}
         {total !== undefined && (
           <span className="shrink-0 text-right text-base font-medium">{money(total)}</span>

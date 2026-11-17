@@ -7,8 +7,8 @@ import { useCan } from '@/lib/auth/useCan';
 import { useFeature } from '@/lib/auth/useFeature';
 import { QuickLineCard } from '@/features/quotes';
 import type { EventDetail } from '../../types';
-import { StationSelectionDetailSheet } from './StationSelectionDetailSheet';
-import { StationSelectionsSheet } from './StationSelectionsSheet';
+import { ProductSelectionDetailSheet } from './ProductSelectionDetailSheet';
+import { ProductSelectionsSheet } from './ProductSelectionsSheet';
 
 interface EventCompositionProps {
   event: EventDetail;
@@ -71,7 +71,7 @@ export function EventComposition({ event, lines, catalog }: EventCompositionProp
         </div>
       )}
       {editing && (
-        <StationSelectionsSheet
+        <ProductSelectionsSheet
           eventId={event.id}
           line={editing.line}
           product={editing.product}
@@ -80,7 +80,7 @@ export function EventComposition({ event, lines, catalog }: EventCompositionProp
         />
       )}
       {viewing && (
-        <StationSelectionDetailSheet
+        <ProductSelectionDetailSheet
           line={viewing.line}
           product={viewing.product}
           open={viewingOpen}

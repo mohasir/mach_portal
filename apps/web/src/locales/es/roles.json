@@ -104,7 +104,7 @@
       "view_archived": "Ver archivadas",
       "view_summary": "Ver métricas del mes",
       "view_quotes_chart": "Ver gráfica de cotizaciones",
-      "view_top_products": "Ver estaciones más pedidas",
+      "view_top_products": "Ver {{items}} más pedidos",
       "reschedule": "Reprogramar",
       "view_reschedules": "Ver reprogramaciones",
       "list": "Ver listado",
@@ -140,16 +140,28 @@
         "caption": "Miembros del staff y sus asignaciones."
       },
       "product": {
-        "label": "Estaciones",
-        "caption": "Estaciones del catálogo y sus opciones."
+        "label": "{{Items}}",
+        "caption": "{{Items}} del catálogo y sus opciones."
       },
       "product_option": {
-        "label": "Ítems de estación",
-        "caption": "Ítems y secciones dentro de cada estación."
+        "label": "Ítems de {{item}}",
+        "caption": "Ítems y secciones dentro de cada {{item}}."
       },
       "price_tiers": {
         "label": "Tarifas de precio",
-        "caption": "Precios por cantidad de personas de cada estación."
+        "caption": "Precios por cantidad de cada {{item}}, en su unidad."
+      },
+      "unit_of_measure": {
+        "label": "Unidades de medida",
+        "caption": "Unidades en que se cobra y se cuenta cada {{item}}."
+      },
+      "product_category": {
+        "label": "Categorías",
+        "caption": "Categorías para agrupar y filtrar los {{items}} del catálogo."
+      },
+      "product_cost": {
+        "label": "Costo de {{items}}",
+        "caption": "Ver y editar el costo interno de cada {{item}}; nunca se muestra en cotizaciones ni eventos."
       },
       "event_type": {
         "label": "Tipos de evento",
@@ -168,7 +180,7 @@
       },
       "quote_defaults": {
         "label": "Valores por defecto",
-        "caption": "Depósito, validez, mínimo de personas y consecutivo de cotizaciones nuevas."
+        "caption": "Depósito, validez y consecutivo de cotizaciones nuevas."
       },
       "quote_stages": {
         "label": "Estados de cotización",
@@ -176,7 +188,7 @@
       },
       "catalog_preferences": {
         "label": "Preferencias de catálogo",
-        "caption": "Orden del catálogo de estaciones."
+        "caption": "Orden del catálogo de {{items}}."
       },
       "quote_pdf_template": {
         "label": "Plantilla de PDF",

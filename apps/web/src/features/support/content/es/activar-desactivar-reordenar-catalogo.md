@@ -2,7 +2,7 @@ Dos cosas a tener en cuenta que no son obvias a primera vista en el catálogo.
 
 ## No hay "eliminar" — solo desactivar
 
-Ni las estaciones, ni las secciones, ni los ítems se pueden eliminar de verdad. El ícono de tacho
+Ni los {{items}}, ni las secciones, ni los ítems se pueden eliminar de verdad. El ícono de tacho
 en estos 3 niveles en realidad **desactiva** (con confirmación: "Dejará de estar disponible para
 nuevas cotizaciones"). Un elemento desactivado muestra la etiqueta "Inactivo" y, en vez del tacho,
 un ícono para reactivarlo.
@@ -17,7 +17,7 @@ desactivar algo no les afecta — solo deja de estar disponible para cotizacione
 
 ## Reordenar con drag & drop
 
-Estaciones, secciones e ítems se pueden reordenar arrastrando desde el ícono de 6 puntos. Esto se
+{{Items}}, secciones e ítems se pueden reordenar arrastrando desde el ícono de 6 puntos. Esto se
 puede **apagar globalmente**, a pedido, por el equipo de soporte de OraviCloud. Si se apaga, el
 ícono de arrastre desaparece de toda la app y el orden queda fijo tal cual esté guardado.
 

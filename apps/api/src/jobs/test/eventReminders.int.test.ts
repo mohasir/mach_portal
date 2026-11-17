@@ -17,7 +17,7 @@ import {
 import * as schema from '../../db/schema';
 import type { Database } from '../../db';
 import { addDays, todayInBusinessTimezone } from '../../lib/utils/date';
-import { resetDb, seedTwoTenants, testDb, type TestTenant } from '../../test/db';
+import { resetDb, seedTwoTenants, testDb, testUnitId, type TestTenant } from '../../test/db';
 import { seedQuoteStages } from '../../test/fixtures/events';
 import { TEST_APP_ROLE, testAppDatabaseUrl } from '../../test/roles';
 import {
@@ -41,7 +41,7 @@ async function seedPendingEvent(
     .returning({ id: clients.id });
   const [product] = await testDb
     .insert(products)
-    .values({ tenantId: t, name: `Menu ${label}` })
+    .values({ tenantId: t, name: `Menu ${label}`, uomId: await testUnitId(t) })
     .returning({ id: products.id });
   await testDb
     .insert(optionGroups)
@@ -66,7 +66,8 @@ async function seedPendingEvent(
     tenantId: t,
     quoteId: quote!.id,
     productId: product!.id,
-    numPersons: 10,
+    uomId: await testUnitId(t),
+    quantity: 10,
     subtotal: 1000,
   });
   const [event] = await testDb

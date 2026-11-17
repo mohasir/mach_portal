@@ -46,7 +46,8 @@ import {
 } from '../../db/schema';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
-import { publicQuoteLineColumns, publicQuoteLineOptionColumns } from '../quotes/quotes.resource';
+import { selectLinesWithUnit } from '../quotes/quotes.repository';
+import { publicQuoteLineOptionColumns } from '../quotes/quotes.resource';
 import { staffBusyOnDate } from '../staff/staff.availability';
 import {
   publicEventColumns,
@@ -65,7 +66,7 @@ const sortColumns = {
 const assignedToUser = alias(user, 'assigned_to_user');
 
 // Single source of truth for "selections pending": some line of the event's quote has an
-// active `select` group with no option chosen. Matches the per-station count shown in the UI.
+// active `select` group with no option chosen. Matches the per-product count shown in the UI.
 // Only valid in a WHERE clause (see findById).
 const selectionsIncomplete = (tenantId: string) => sql<boolean>`exists (
   select 1 from ${quoteLines}
@@ -246,10 +247,7 @@ export class EventsRepository {
       .limit(1);
     if (!eventRow) return undefined;
 
-    const lineRows = await this.db
-      .select(publicQuoteLineColumns)
-      .from(quoteLines)
-      .where(and(eq(quoteLines.quoteId, eventRow.quoteId), tenantEq(quoteLines, this.tenantId)));
+    const lineRows = await selectLinesWithUnit(this.db, this.tenantId, eventRow.quoteId);
 
     const lineIds = lineRows.map((l) => l.id);
     const optionRows = lineIds.length

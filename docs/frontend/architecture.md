@@ -343,7 +343,7 @@ export type { X } from './types';
 ### 3.7 Tests (Vitest)
 
 Se prueban con **Vitest** (entorno `node`) las funciones puras: helpers de `lib/` (fechas, acceso por
-ruta) y `helpers.ts` de cada feature. Los componentes React no tienen tests (no hay jsdom ni
+ruta) y `helpers.ts` de cada feature. Los componentes React no tienen tests de interacción (no hay jsdom ni
 testing-library): toda decisión que valga la pena probar se **extrae a una función pura** y el
 componente o hook solo la llama (ej. `resolveGuardOutcome` de `RouteGuard`, `resolveGateState` de
 `TenantGate`, `toRoleOptions` del formulario de usuarios, `decidePermissionDenial` del provider de tRPC).
@@ -359,6 +359,7 @@ componente o hook solo la llama (ej. `resolveGuardOutcome` de `RouteGuard`, `res
 
 - Archivos `*.test.ts` en una subcarpeta `test/` del directorio del código que prueban (nunca sueltos junto al código). Correr con `pnpm --filter web test` (o `pnpm test` en la raíz).
 - Alias `@/` disponible (configurado en `apps/web/vitest.config.ts`).
+- Un componente de solo presentación puede probarse renderizándolo a HTML con `renderToStaticMarkup` (`react-dom/server`, sin DOM; ej. `components/shared/test/Markdown.test.ts`); el test sigue siendo `*.test.ts` y usa `createElement`.
 - Para lógica que depende de "ahora", fijar el reloj con `vi.useFakeTimers()` + `vi.setSystemTime(...)`.
 
 ---
@@ -653,7 +654,7 @@ El catálogo de features (`FEATURES`, `FeatureKey`, `isToggleable`) vive en `@re
 - **`<Feature name fallback>`** (`lib/auth/Feature.tsx`): como `<Can>`, renderiza `children` solo con la feature activa.
 - **Navegación:** `NavItem` (`lib/navigation/types.ts`) admite `feature` además de `guard`; con la feature inactiva el ítem no aparece. Ejemplo en `lib/navigation/constants/items.ts`: `feature: 'quotes'`.
 - **Acceso por URL:** `resolveRouteFeature(pathname)` (`lib/auth/route-access.ts`) toma la feature del ítem de navegación o de `ROUTE_PATTERNS` (campo `feature`). Si está inactiva, `resolveGuardOutcome` (`lib/auth/routeGuardOutcome.ts`) devuelve `'notFound'` y el `RouteGuard` muestra `NotFound` (`components/shared/NotFound.tsx`, la misma pantalla "Página no encontrada" de las rutas inexistentes), dentro del layout. No se revela que el módulo existe; sus datos se conservan y vuelven al reactivar.
-- **Controles de add-ons:** `priceTiers` (pestaña de tiers del producto y selector de tier del cotizador) y `configurableOptions` (grupos y opciones, y los ajustes de opciones en Configuración) se ocultan con `<Feature>` o `useFeature` (`features/catalog`, `features/quotes`, `features/settings`, `features/options`). El campo de precio fijo del producto siempre está; un producto sin precio ni tiers activos se marca "no cotizable" (`NotQuotableAlert`).
+- **Controles de add-ons:** `unitsOfMeasure` (sin él se oculta el selector de unidad del producto y el ítem de navegación; el formulario no envía `uomId`), `productGallery` (sin él, `ProductGallery` muestra solo la imagen principal con "Reemplazar imagen"; con él, la galería de hasta 5), `priceTiers` (pestaña de tiers del producto y selector de tier del cotizador) y `configurableOptions` (grupos y opciones, y los ajustes de opciones en Configuración) se ocultan con `<Feature>` o `useFeature` (`features/catalog`, `features/quotes`, `features/settings`, `features/options`). El campo de precio fijo del producto siempre está; un producto sin precio ni tiers activos se marca "no cotizable" (`NotQuotableAlert`).
 - **Áreas gateadas por módulo:** las secciones de Configuración de recursos de cotización (plantilla PDF, valores por defecto, etapas, preferencias del cotizador y del pipeline) se ocultan sin `quotes`; las pestañas del detalle de cliente (`quotes`, `events`) y el botón de nueva cotización, y las tarjetas del dashboard (derivadas de cotizaciones o de eventos), siguen la misma regla. Qué se muestra con cada conjunto activo vive en helpers puros con tests (`features/settings/helpers.ts`, `features/clients/helpers.ts`, `features/dashboard/helpers.ts`).
 - **La web no es la barrera:** ocultar es UX; la API rechaza las mutaciones con `FEATURE_NOT_ENABLED` (regla "ocultar y conservar", backend §13.4).
 - Los nombres de las features salen de `features.<key>` en `locales/{es,en}/common.json`.
@@ -666,8 +667,18 @@ El catálogo de features (`FEATURES`, `FeatureKey`, `isToggleable`) vive en `@re
 - Recursos en `locales/{es,en}/<namespace>.json`.
 - **Todo** texto visible usa `t('clave')` con `useTranslation('<feature>')`.
 - Namespaces transversales: **`common`** (acciones y tabla: `save`, `cancel`, `edit`, `delete`, `yes`/`no`, `table.actions/copyId/copied/search/total`, `confirm.*`); **`admin`** (shell/navegación); **`auth`** (login + estados de sesión del `AuthProvider`); **`api`** (errores).
+- **Namespaces del catálogo genérico:** `vocabulary` (palabras por tipo de catálogo), `unitsOfMeasure` y `productCategories`, registrados en `lib/i18n/config.ts`; es/en deben tener las mismas claves (hay tests de paridad).
 - Fechas: **nunca** `toLocaleDateString`; usar `useDateFormatter()` (dayjs, locale-aware).
 - **Convenciones de claves:** validación `<feature>.validation.<regla>`; UI `<feature>.<seccion>.<clave>` (ej. `<feature>.columns.name`, `<feature>.index.add`); errores `errors.<CODE>` en `api`.
+
+### 10.1 Vocabulario del catálogo, cantidades con unidad y galería
+
+- **Vocabulario por organización:** el texto que nombra lo que se vende (producto, servicio…) **no se escribe a mano**. `useCatalogVocabulary()` (`features/tenant/hooks/useCatalogVocabulary.ts`) devuelve `{ item, items, Item, Items }` según el `catalogKind` de la organización (`useTenantProfile`, que lee `tenant.profile`) y las claves se interpolan: `t('clave', vocabulary)` con `{{item}}`, `{{items}}`, `{{Item}}`, `{{Items}}`. Mientras el perfil carga se usan palabras neutras (grupo `neutral`). Las palabras viven en `locales/{es,en}/vocabulary.json`; un test impide que contengan términos de un cliente.
+- **Cantidades con unidad:** siempre `formatQuantity(quantity, unit, mode?)` y `unitNoun(unit, quantity?)` (`lib/format/quantity.ts`); nunca `"{{n}} personas"` a mano. Singular solo para exactamente 1; `mode: 'code'` imprime la abreviatura (`5 kg`).
+- **Unidad por línea:** la cantidad de una línea de cotización/evento se formatea con la unidad **de la línea** (`line.unit`; `lineUnit(line, product)` en `features/quotes/lineHelpers.ts`), nunca con `product.unit`: cambiar la unidad de un producto no altera cotizaciones ya hechas. Las líneas cargadas de una cotización guardada conservan `uomId`/`unit` en el estado del cotizador y reenvían `uomId` al guardar; las líneas nuevas no lo envían (el servidor usa la unidad actual del producto). Tramos y cantidad mínima del selector siguen usando la unidad actual del producto. Cambiar la cantidad o el tramo de una línea que está en una unidad distinta de la actual del producto hace que adopte la unidad actual (`withCurrentUnitOnRepricing`); editar solo el precio o solo las opciones la conserva. El servidor lo hace cumplir para quien no tiene permiso de precio de línea (`QUOTE_INVALID_LINE_UNIT`).
+- **Selector de unidad y categoría:** `UnitSelect` (`features/units-of-measure`) y `CategorySelect` (`features/product-categories`) se alimentan de `unitsOfMeasure.options` y `productCategories.options`, y conservan el valor actual aunque esté inactivo.
+- **Imágenes del producto:** `ProductGallery` (`features/catalog/components/ProductGallery.tsx`, subida, destacada, reordenar y borrar con los hooks de `features/catalog/hooks/useProductImages.ts`; helpers puros en `features/catalog/gallery.ts`) y `ProductThumb` (miniatura o icono de marcador de posición; se reutiliza desde cotizaciones y eventos). La subida va al endpoint de Express (`/api/uploads/products/:id/images`), no a tRPC; permisos: `product.update`.
+- **Costo:** el campo del formulario del producto depende de `product_cost` (`edit`, `read` o `hidden`); sin `product_cost.read` el costo no viaja.
 
 ---
 
@@ -679,6 +690,10 @@ El catálogo de features (`FEATURES`, `FeatureKey`, `isToggleable`) vive en `@re
 - **Tablas → siempre `DataTable`** (§4). Prohibido `<Table>` de AntD armado a mano en una feature y prohibido `@tanstack/react-table`.
 - **Estados de carga → `Skeleton` vs `Spin` según el caso** (ninguno prohibido; se elige por caso): usar **`Skeleton`** en la **primera carga** de contenido con forma conocida (páginas, detalles, tablas, cards, formularios que hidratan) — preserva el layout y baja la latencia percibida; usar **`Spin`** para **acciones/mutations** en vuelo (botón `loading`, guardado) y para **refetch sobre contenido ya renderizado** (overlay). Regla: _primera carga → `Skeleton`; acción o refresco de algo ya visible → `Spin`_.
 - **Componentes globales:** el shell (`AdminLayoutContainer`) en `components/Layouts/`; los providers en `components/providers/`; piezas propias del shell con carpeta propia (`NotificationMenu/`, `UserProfile/`); primitivas y reutilizables (`DataTable/`, `PageHeader`, `PlaceholderPage`, `Sidebar/`, `Topbar/`, `Logo`, …) en `components/shared/`. Un patrón repetido en 2+ features → se extrae a `components/shared/`.
+- **Texto enriquecido (descripciones de producto):** se guarda **siempre como Markdown**, nunca HTML.
+  - Edición: `RichTextEditor` (`components/shared/RichTextEditor`), controlado (`value`/`onChange` en Markdown, sirve directo dentro de un `Form.Item`), con `maxLength` y contador (mide el Markdown, como la API). Tiptap v3 cargado con `next/dynamic` (`ssr: false`) e `immediatelyRender: false`. Formatos: negrita, cursiva, títulos (H2/H3), listas, enlaces y citas; el resto (código, imágenes, tablas, tachado…) no existe en el schema, así que el pegado lo reduce a texto. La conversión Markdown ↔ documento y la lista de extensiones viven en `richText.ts` (puro, con tests).
+  - Lectura: `Markdown` (`components/shared/Markdown.tsx`, `react-markdown` + `remark-gfm`). **Prohibido `rehype-raw`**: el HTML crudo se muestra como texto; solo se renderizan los elementos que el editor produce y los enlaces pasan por `isSafeLinkHref` (`lib/format/markdown.ts`: http, https, mailto, tel) y abren con `target="_blank"` y `rel="noopener noreferrer"`.
+  - Vista previa de una línea (listas): `markdownToPlainText(markdown, maxLength)` (`lib/format/markdown.ts`).
 - **Navegación data-driven** (`lib/navigation/`): `constants/items.ts` (`NAV_ITEMS` con `label`/`href`/`icon`/`guard`), `constants/icons.tsx` (`IconMap` string→icono lucide), `config.ts` (`ADMIN_MENU`), `useNavigation()`. `SidebarNav` la renderiza y filtra por permisos.
 - **Shell responsive (mobile-first):** `AdminLayoutContainer` usa `useIsDesktop()` (lg=992px): desktop = `Sider` colapsable a rail de iconos; móvil = `Drawer` overlay con el mismo `SidebarContent`.
 

@@ -31,7 +31,6 @@ export function toTaxRatesUpdateInput(
 export interface QuoteDefaultsFormValues {
   depositRatePercent: number;
   quoteValidityMonths: number;
-  minPersonsPerLine: number;
   quoteSeqStart: number;
   currency: string;
   optionsSelectionDeadlineDays: number;
@@ -41,7 +40,6 @@ export function toQuoteDefaultsFormValues(config: Config): QuoteDefaultsFormValu
   return {
     depositRatePercent: toPercent(config.appSettings.depositRate),
     quoteValidityMonths: config.appSettings.quoteValidityMonths,
-    minPersonsPerLine: config.appSettings.minPersonsPerLine,
     quoteSeqStart: Math.max(config.appSettings.quoteSeqStart, config.lastUsedSeq + 1),
     currency: config.appSettings.currency,
     optionsSelectionDeadlineDays: config.appSettings.optionsSelectionDeadlineDays,
@@ -54,7 +52,6 @@ export function toQuoteDefaultsUpdateInput(
   return {
     depositRate: fromPercent(values.depositRatePercent),
     quoteValidityMonths: values.quoteValidityMonths,
-    minPersonsPerLine: values.minPersonsPerLine,
     quoteSeqStart: values.quoteSeqStart,
     currency: values.currency,
     optionsSelectionDeadlineDays: values.optionsSelectionDeadlineDays,

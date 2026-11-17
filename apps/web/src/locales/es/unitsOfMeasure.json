@@ -1,0 +1,65 @@
+{
+  "title": "Unidades de medida",
+  "index": {
+    "add": "Nueva unidad"
+  },
+  "columns": {
+    "name": "Nombre",
+    "code": "Abreviatura",
+    "dimension": "Tipo",
+    "factor": "Equivale a",
+    "status": "Estado"
+  },
+  "dimensions": {
+    "quantity": "Cantidad",
+    "time": "Tiempo",
+    "weight": "Peso",
+    "volume": "Volumen",
+    "length": "Longitud"
+  },
+  "status": {
+    "active": "Activa",
+    "inactive": "Inactiva"
+  },
+  "tags": {
+    "system": "Del sistema",
+    "base": "Base"
+  },
+  "actions": {
+    "activate": "Activar",
+    "deactivate": "Desactivar"
+  },
+  "deactivateConfirm": {
+    "title": "¿Desactivar «{{name}}»?",
+    "content": "Dejará de aparecer al elegir la unidad de un producto.",
+    "caption": "Los productos inactivos que ya la usan la conservan."
+  },
+  "form": {
+    "name": "Nombre (singular)",
+    "namePlaceholder": "Ej. Bandeja",
+    "pluralName": "Nombre (plural)",
+    "pluralNamePlaceholder": "Ej. Bandejas",
+    "code": "Abreviatura",
+    "codePlaceholder": "Ej. bdj",
+    "dimension": "Tipo",
+    "factor": "Equivale a",
+    "factorCaption": "Cuántas unidades base ({{base}}) hay en una de esta unidad.",
+    "systemLocked": "Es una unidad del sistema: solo se puede cambiar el nombre.",
+    "usedLocked": "Hay productos o cotizaciones con esta unidad: el tipo y la equivalencia no se pueden cambiar.",
+    "save": "Guardar"
+  },
+  "create": {
+    "title": "Nueva unidad de medida"
+  },
+  "edit": {
+    "title": "Editar unidad de medida"
+  },
+  "empty": "No hay unidades de medida",
+  "validation": {
+    "nameRequired": "Nombre requerido",
+    "pluralNameRequired": "Plural requerido",
+    "codeRequired": "Abreviatura requerida",
+    "dimensionRequired": "Elegí un tipo",
+    "factorInvalid": "Ingresá un número mayor que 0, con hasta 10 decimales"
+  }
+}

@@ -1,10 +1,10 @@
-When a quote is approved, the event is born with each station's options (ingredients, flavors,
+When a quote is approved, the event is born with each {{item}}'s options (ingredients, flavors,
 extras) unresolved — they're chosen only at this point, not when quoting.
 
 ## Where to complete them
 
 On the event's page, "Services included" tab, "edit selection" button on each line. It opens a
-sheet with that station's options to pick from, and a "Save" button.
+sheet with that {{item}}'s options to pick from, and a "Save" button.
 
 ![The "edit selection" button on an event line](/support/completar-opciones-pendientes/1.png)
 
@@ -20,10 +20,10 @@ it's just an internal reminder for staff, not a restriction.
 ## An important detail that can be confusing
 
 When you save the selection for **a single line**, the system marks the **entire event** as
-"selections confirmed" — without checking whether other stations on the same event still have
-pending options. In other words: if an event has 2 stations with options to choose and you only
+"selections confirmed" — without checking whether other {{items}} on the same event still have
+pending options. In other words: if an event has 2 {{items}} with options to choose and you only
 complete one, the "Options still need to be chosen" warning **will disappear anyway**, even though
-the second station is still unresolved.
+the second {{item}} is still unresolved.
 
-Because of this: if an event has more than one station with pending options, complete all of them
+Because of this: if an event has more than one {{item}} with pending options, complete all of them
 before saving the first one, or check each line by hand even if the warning is already gone.

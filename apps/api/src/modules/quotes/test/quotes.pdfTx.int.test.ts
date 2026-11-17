@@ -143,7 +143,7 @@ describe('quote PDF generation outside the request transaction (app role)', () =
       clientId: a.seed.clientId,
       isDraft: false,
       selectOptionsAtQuote: false,
-      lines: [{ productId: tier!.product_id, numPersons: 10, subtotal: 1000, selections: [] }],
+      lines: [{ productId: tier!.product_id, quantity: 10, subtotal: 1000, selections: [] }],
     });
     await settleBackgroundTasks();
 

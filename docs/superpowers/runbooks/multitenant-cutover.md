@@ -211,7 +211,7 @@ Spec: `docs/superpowers/specs/2026-11-13-multitenant-fase4a-features-design.md`.
 
 - Crea `tenant_features` (con su política `tenant_features_tenant_read`, solo `SELECT`) y `tenant_feature_events` (RLS sin política); las dos con `ENABLE` y `FORCE ROW LEVEL SECURITY`.
 - Añade la columna `products.price` (centavos por unidad, nullable).
-- **Relleno de las organizaciones existentes:** inserta, para cada `organization`, 5 filas **permanentes** (`expires_at` `NULL`) y sin precio: `quotes`, `events`, `notifications`, `priceTiers` y `configurableOptions`. Así no se quita funcionalidad a nadie. El relleno corre antes del `FORCE`, porque después el propio dueño que migra quedaría sujeto a la política de solo lectura.
+- **Relleno de las organizaciones existentes:** inserta, para cada `organization`, 5 filas **permanentes** (`expires_at` `NULL`) y sin precio: `quotes`, `events`, `notifications`, `priceTiers` y `configurableOptions`. Así no se quita funcionalidad a nadie. El add-on `productGallery` no se rellena: las imágenes de producto son nuevas en esta línea, y se activa por organización con `feature:set` cuando se contrate. El relleno corre antes del `FORCE`, porque después el propio dueño que migra quedaría sujeto a la política de solo lectura.
 
 ### 8.2 Organizaciones nuevas
 
@@ -255,4 +255,62 @@ DELETE FROM drizzle.__drizzle_migrations WHERE created_at = 1794598857324;
 - El último `DELETE` es obligatorio: `db:migrate` guarda cada migración aplicada en `drizzle.__drizzle_migrations` (el valor de `created_at` es el `when` de la `0006` en `apps/api/drizzle/meta/_journal.json`). Si esa fila queda, un `db:migrate` posterior da la `0006` por aplicada y no recrea las tablas ni la columna.
 - Se pierden con las tablas todas las filas cargadas en ellas, incluido el backfill de las 5 features a las organizaciones existentes (se vuelve a generar al re-aplicar la `0006`, pero los cambios hechos con `feature:set`/`feature:unset` y el historial de `tenant_feature_events` no).
 - Eliminar `products.price` descarta los precios fijos cargados desde la fase.
+
+---
+
+## 9. Catálogo genérico, fase 1 (migraciones `0007`–`0013`)
+
+Spec: `docs/superpowers/specs/2026-11-14-catalogo-generico-fase1-design.md`. Arquitectura: `docs/backend/architecture.md` §14. **Nada de esta sección se ejecuta contra producción sin la aprobación del dueño del proyecto.**
+
+### 9.1 Qué hacen las migraciones
+
+Se aplican en orden con `db:migrate` (`DATABASE_OWNER_URL`):
+
+| Migración | Efecto |
+| --- | --- |
+| `0007_quantity_rename` | Renombra `quote_lines.num_persons` y `product_price_tiers.num_persons` a `quantity` (y sus restricciones). Sin pérdida de datos. |
+| `0008_tenant_profile` | Crea `tenant_profile` (RLS solo lectura, `FORCE`) y rellena una fila `products` por organización existente. |
+| `0009_units_of_measure` | Crea `units_of_measure`, siembra las 23 unidades de sistema por organización, asigna "Persona" a todo producto existente y deja `products.uom_id` `NOT NULL`. Otorga `unit_of_measure` a los roles que ya administran `product` y sube `role.version`. |
+| `0010_product_fields` | Crea `product_categories`; agrega `products.category_id`, `sku`, `cost` y `min_quantity`; copia `app_settings.min_persons_per_line` a `products.min_quantity` y **elimina** esa columna; otorga `product_category` y `product_cost` a los roles correspondientes. |
+| `0011_product_images` | Crea `product_images` (RLS con `FORCE`). |
+| `0012_product_descriptions` | Renombra `products.description` a `short_description` (sin pérdida: el texto existente queda tal cual, es Markdown válido) y agrega `long_description` (nullable). Spec: `docs/superpowers/specs/2026-11-16-descripciones-producto-design.md`. |
+| `0013_quote_line_units` | Agrega `quote_lines.uom_id` (`NOT NULL`, FK `RESTRICT` a `units_of_measure`, índice `(tenant_id, uom_id)`). Rellena cada línea existente con la unidad actual de su producto antes de exigir `NOT NULL`, así que ninguna cotización cambia. Spec: `docs/superpowers/specs/2026-11-16-unidad-por-linea-design.md`. |
+
+Efecto para las organizaciones existentes: todo sigue funcionando con unidad "Persona" y tipo de catálogo `products`; el cotizador exige ahora el mínimo de cada producto en lugar del ajuste global.
+
+### 9.2 Tipo de catálogo por organización
+
+Con el rol `platform` (`DATABASE_PLATFORM_URL`):
+
+```bash
+pnpm --filter api tenant:set-catalog-kind --tenant <slug> --kind <products|services>
+```
+
+También se puede fijar al crear (`tenant:create --catalog-kind <kind>`). Un tipo desconocido falla con `TENANT_UNKNOWN_CATALOG_KIND`. La web lo toma en hasta 30 s.
+
+### 9.3 `sharp` en el despliegue
+
+- Las imágenes de producto se procesan con `sharp` (binario nativo, `--external:sharp` en el `build`). En el host/imagen de la API hay que ejecutar `pnpm install` **en la plataforma de destino**; no copiar un `node_modules` de otro sistema operativo o arquitectura.
+- Si el binario falta, la API arranca y solo fallan las subidas de imágenes (carga dinámica).
+- Las claves en R2 siguen el prefijo `t/{tenantId}/products/{productId}/{uuid}.webp` (y `…-thumb.webp`). El bucket y las credenciales de R2 son los mismos que usan los adjuntos de pagos.
+
+### 9.4 Orden de despliegue y verificación
+
+1. Backup con el dueño, como en la sección 3 (paso 1).
+2. `db:migrate` (`0007`–`0013`) y **después** desplegar API y web de la misma versión: el código nuevo necesita `quantity`, `uom_id`, `tenant_profile`, `short_description`, `quote_lines.uom_id` y las tablas nuevas.
+3. `mt:verify` con exit 0. Para esta fase comprueba cuatro tablas: `units_of_measure`, `product_categories` y `product_images` (RLS habilitado y forzado y política de aislamiento) y `tenant_profile` (RLS forzado y una sola política de lectura); además los enlaces `products.uom_id`, `quote_lines.uom_id`, `products.category_id` y `product_images.product_id`.
+4. Fijar el tipo de catálogo donde corresponda (9.2).
+
+### 9.5 Cambios de comportamiento a tener presentes
+
+- El PDF de la cotización **ya no imprime las descripciones de ingredientes de las opciones**; cada grupo activo se muestra como un bloque normal.
+- Solo en bases locales o de desarrollo: quien aplicó la `0010` anterior (antes de su versión final) debe correr `db:fresh`: el SQL de la `0010` cambió y esa base queda inconsistente con el journal.
+- La cantidad mínima por línea es ahora un campo de cada producto (`min_quantity`); el ajuste `min_persons_per_line` ya no existe.
+- Cada producto tiene descripción corta (≤ 500) y larga (≤ 10 000), guardadas como Markdown y editadas con texto enriquecido. La corta aparece también en la lista del catálogo, en texto plano y truncada. El PDF no cambia.
+- Las descripciones se guardan como **Markdown** (la salida del editor es Markdown escapado: `&` → `&amp;`, `*` → `\*`…); todo consumidor de la API que las muestre debe renderizarlas como Markdown, no como texto plano ni HTML.
+- La unidad de un producto ya no se bloquea al cotizarlo: cada línea de cotización guarda la unidad con la que se cotizó (`quote_lines.uom_id`). Una unidad usada por cualquier línea de cotización no se puede desactivar ni cambiar de tipo o equivalencia.
+
+### 9.6 Reversión
+
+No hay migraciones inversas. **Recomendado: restaurar el backup previo y desplegar la versión anterior de API y web.** La reversión manual no es trivial: `0010` elimina `app_settings.min_persons_per_line` y `0007` y `0012` renombran columnas que el código anterior usa; deshacerlas implica recrear la columna, devolver los nombres y borrar de `drizzle.__drizzle_migrations` las filas con `created_at` igual al `when` de cada migración en `apps/api/drizzle/meta/_journal.json`. Los archivos ya subidos a R2 bajo `t/{tenantId}/products/` quedan huérfanos si se descarta `product_images`. `0013` agrega `quote_lines.uom_id`: revertirla es quitar esa columna y la fila de su `when` en `drizzle.__drizzle_migrations`; tras eso el código anterior mostraría las líneas viejas en la unidad actual de cada producto.
 

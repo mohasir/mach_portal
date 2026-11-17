@@ -96,12 +96,12 @@
     },
     "selectionsMode": {
       "label": "Elegir opciones ahora",
-      "hint": "Apagado: solo se agregan las estaciones; los ingredientes se eligen después desde el evento. Encendido: elegí las opciones de cada estación acá."
+      "hint": "Apagado: solo se agregan los {{items}}; los ingredientes se eligen después desde el evento. Encendido: elegí las opciones de cada {{item}} acá."
     },
     "lines": {
-      "title": "Estaciones",
-      "empty": "Todavía no agregaste ninguna estación",
-      "addPlaceholder": "+ Agregar estación",
+      "title": "{{Items}}",
+      "empty": "Todavía no agregaste ningún {{item}}",
+      "addPlaceholder": "+ Agregar {{item}}",
       "remove": "Quitar línea",
       "show": "Ver selección",
       "editSelections": "Elegir opciones",
@@ -110,9 +110,7 @@
       "editDone": "Listo",
       "decrease": "Disminuir cantidad",
       "increase": "Aumentar cantidad",
-      "numPersons": "Personas",
-      "numPersonsCount_one": "{{count}} persona",
-      "numPersonsCount_other": "{{count}} personas",
+      "quantity": "Cantidad",
       "notQuotable": "No cotizable: falta definir su precio en el catálogo",
       "price": "Precio",
       "included": "Incluido",

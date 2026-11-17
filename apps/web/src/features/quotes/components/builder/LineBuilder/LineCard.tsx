@@ -4,10 +4,18 @@ import { Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
+import { formatQuantity } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useLineConfig } from '../../../hooks/useLineConfig';
 import type { LineDraft } from '../../../hooks/useQuoteBuilder';
-import { isQuantityLocked, lineSubtotalForQuantity, usesTierPicker } from '../../../lineHelpers';
+import {
+  isQuantityLocked,
+  lineMinQuantity,
+  lineUnit,
+  lineSubtotalForQuantity,
+  selectableTiers,
+  usesTierPicker,
+} from '../../../lineHelpers';
 import { OptionGroupChips } from './OptionGroupChips';
 
 interface LineCardProps {
@@ -16,7 +24,7 @@ interface LineCardProps {
   readOnly?: boolean;
   canEditPricing: boolean;
   onRemove: () => void;
-  onChange: (payload: Partial<Pick<LineDraft, 'numPersons' | 'subtotal'>>) => void;
+  onChange: (payload: Partial<Pick<LineDraft, 'quantity' | 'subtotal'>>) => void;
   onSelectionChange: (optionGroupId: string, optionIds: string[]) => void;
 }
 
@@ -31,20 +39,21 @@ export function LineCard({
 }: LineCardProps) {
   const { t } = useTranslation('quotes');
   const { money } = useMoneyFormatter();
-  const { priceTiersEnabled, configurableOptions, minPersons } = useLineConfig();
+  const { priceTiersEnabled, configurableOptions } = useLineConfig();
+  const minQuantity = lineMinQuantity(product, canEditPricing);
   const tierPicker = usesTierPicker(product, priceTiersEnabled);
   const quantityLocked = isQuantityLocked(product, priceTiersEnabled);
 
-  const handleTierChange = (numPersons: number) => {
-    const tier = product.priceTiers.find((pt) => pt.numPersons === numPersons);
-    onChange({ numPersons, subtotal: tier ? tier.price : line.subtotal });
+  const handleTierChange = (quantity: number) => {
+    const tier = product.priceTiers.find((pt) => pt.quantity === quantity);
+    onChange({ quantity, subtotal: tier ? tier.price : line.subtotal });
   };
 
   const handleQuantityChange = (value: number | null) => {
-    const numPersons = value ?? minPersons;
+    const quantity = value ?? minQuantity;
     onChange({
-      numPersons,
-      subtotal: lineSubtotalForQuantity(product.price, numPersons, line.subtotal),
+      quantity,
+      subtotal: lineSubtotalForQuantity(product.price, quantity, line.subtotal),
     });
   };
 
@@ -73,15 +82,15 @@ export function LineCard({
             <>
               <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs text-gray-500">{t('builder.lines.numPersons')}</span>
+                  <span className="text-xs text-gray-500">{t('builder.lines.quantity')}</span>
                   {tierPicker ? (
                     <Select
                       disabled={readOnly}
-                      value={line.numPersons}
+                      value={line.quantity}
                       onChange={handleTierChange}
-                      options={product.priceTiers.map((tier) => ({
-                        value: tier.numPersons,
-                        label: `${tier.numPersons} — ${money(tier.price)}`,
+                      options={selectableTiers(product).map((tier) => ({
+                        value: tier.quantity,
+                        label: `${formatQuantity(tier.quantity, product.unit)} — ${money(tier.price)}`,
                       }))}
                     />
                   ) : (
@@ -89,10 +98,11 @@ export function LineCard({
                       <InputNumber
                         disabled={readOnly || quantityLocked}
                         className="w-full"
-                        min={minPersons}
+                        min={minQuantity}
                         precision={0}
-                        value={line.numPersons}
+                        value={line.quantity}
                         onChange={handleQuantityChange}
+                        suffix={lineUnit(line, product).code}
                       />
                       {quantityLocked && !readOnly && (
                         <span className="text-muted text-xs">{t('builder.lines.notQuotable')}</span>

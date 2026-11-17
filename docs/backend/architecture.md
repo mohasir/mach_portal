@@ -526,7 +526,7 @@ shortTxProcedure / guardedShortTxProcedure → mismas comprobaciones sin transac
 - **Admin de plataforma** sin membresía: recibe `OWNER_ACCESS` (acceso de dueño sintético, sin rol: `roleId` nulo, versión `owner:0`) y su acceso se audita (abajo).
 - **Cabecera `x-permissions-version`** (`core/express/const/headers.ts`): toda respuesta de un procedure con tenant lleva `<roleId>:<roleVersion>` (`permissionsVersion(access)`); `cors.ts` la expone (`exposedHeaders`). Cada edición de un rol incrementa su `version`, y un cambio de rol del miembro cambia el `roleId`: la web compara la cabecera con lo que tiene cargado y recarga sus permisos (`docs/frontend/architecture.md` §9.2). `tenant.permissions` (permisos completos + nombre del rol) y `tenant.permissionsVersion` usan `protectedProcedure`: cualquier miembro puede leer los suyos.
 - **Alcance "solo los suyos"** (`own`/`all`): una acción de `SCOPED_ACTIONS` (`@repo/guards`) puede otorgarse con alcance `own`. El procedure gateado por esa acción calcula el dueño a filtrar con `ownerIdFor(ctx.access, ctx.user.id, [recurso, acción])` (`lib/rbac/ownerScope.ts`; en cotizaciones el helper `ownerScope` del router, en eventos `eventOwnerId`, que suma siempre `event.read`) y lo pasa al service; el repository filtra por creador o asignado (eventos y pagos, por la cotización de la que cuelgan). Solo con alcance `all` en todos los checks se levanta el filtro; un permiso ausente también restringe. **Regla:** cada procedure combina el alcance de `read` del recurso con el **de la acción que lo gatea** y gana el más estricto (así `quote.read=own` + `quote.update=all` no modifica cotizaciones que no puede ver), y el tipo `ScopedCheck` rechaza en compilación un par que no esté en `SCOPED_ACTIONS`. El test `lib/rbac/test/scopedActions.test.ts` cubre la otra dirección: falla si un par de `SCOPED_ACTIONS` (que el editor ofrece como own/all) no lo filtra ningún procedure. Una acción entre dueños por naturaleza (ej. `quote.manage_assignment`, reasignar) **no** va en `SCOPED_ACTIONS` ni se filtra.
-- Las rutas de Express fuera de tRPC (hoy `/api/uploads/event-payments`) usan el middleware `guardTenantSession` (`core/express/middleware/`), que replica la cadena `shortTxProcedure` check por check y en el mismo orden (`evaluateTenantAccess` + `resolveAccess` en una transacción corta + `can`) y deja el acceso en `res.locals.access` y el ejecutor de transacciones cortas en `res.locals.runInTenant` (§12.5). Una ruta nueva fuera de tRPC **debe** usarlo.
+- Las rutas de Express fuera de tRPC (hoy `/api/uploads/event-payments` y `/api/uploads/products`) usan el middleware `guardTenantSession` (`core/express/middleware/`), que replica la cadena `shortTxProcedure` check por check y en el mismo orden (`evaluateTenantAccess` + `resolveAccess` en una transacción corta + `can`) y deja el acceso en `res.locals.access` y el ejecutor de transacciones cortas en `res.locals.runInTenant` (§12.5). Una ruta nueva fuera de tRPC **debe** usarlo.
 - La superficie HTTP de Better Auth está recortada: `/sign-up/email` y los endpoints de los plugins `organization` y `admin` se bloquean por HTTP; las llamadas internas (`auth.api.*`) siguen funcionando. El alta de usuarios y organizaciones pasa por `users.create` y `tenant:create`.
 - **Login:** global (email + contraseña). Un gancho de sesión fija la organización activa: con una membresía se activa sola; con varias queda sin activa hasta `tenant.select`; sin ninguna se rechaza con `USER_NO_ORGANIZATION` (el admin de plataforma sin membresías sí entra). La web nunca lee la organización activa de `useSession`: usa `tenant.active`.
 - **Admin de plataforma** (`user.isPlatformAdmin`, la única marca de plataforma; `user.role` no cuenta): puede seleccionar cualquier organización y, si no es miembro, entra con `OWNER_ACCESS`. Todo acceso sin membresía queda en `platform_access_log` (la primera query de cada sesión y tenant, y **todas** las mutaciones); la web muestra el aviso "modo plataforma". Un admin de plataforma que además es miembro no se audita, por eso `createTenant` rechaza (`USER_IS_PLATFORM_ADMIN`) un admin inicial que lo sea.
@@ -620,7 +620,7 @@ Las FK entre tablas de negocio **no** son compuestas con `tenant_id`, así que l
   - `users.create` con un email que ya existe: si ya es miembro de este tenant, `USER_ALREADY_EXISTS`; si existe globalmente sin membresía aquí, solo un admin de plataforma puede adjuntarlo (los admins de tenant reciben `USER_ALREADY_EXISTS`, para no permitir tomar cuentas ajenas pre-registradas); no se toca su contraseña. Un email nuevo crea la cuenta con enlace de contraseña (`WEB_APP_URL`).
   - Las preferencias (`user_preferences`) son por `(tenant_id, user_id)`.
   - **Columnas heredadas:** `user.role` y `member.role` (texto) no autorizan. `user.role` solo lo escribe el plugin `admin` de Better Auth al registrarse una cuenta (`defaultRole`); `member.role` se sigue escribiendo con la clave del rol base equivalente (`legacyMemberRoleOf`, `member` para roles propios) porque la columna es `NOT NULL` y el plugin `organization` la lee. Se eliminarán en una fase posterior.
-- Subidas a R2 con prefijo por tenant: `t/<tenantId>/event-payments/…`.
+- Subidas a R2 con prefijo por tenant: `t/<tenantId>/event-payments/…` y `t/<tenantId>/products/<productId>/…` (imágenes de producto).
 
 ### 11.7 Seeds y alta de tenants
 
@@ -686,12 +686,12 @@ El contexto que recibe el procedure añade:
 
 ### 12.4 Operaciones lentas: `shortTxProcedure` y patrón de tres fases
 
-Cada petición con tenant retiene una conexión de principio a fin, así que una llamada externa lenta (servicio de PDF, subida a R2) no puede ocurrir dentro de esa transacción. Hoy: `quotes.generatePdf`, `quotes.regeneratePdf` y la subida de adjuntos de pago.
+Cada petición con tenant retiene una conexión de principio a fin, así que una llamada externa lenta (servicio de PDF, subida a R2) no puede ocurrir dentro de esa transacción. Hoy: `quotes.generatePdf`, `quotes.regeneratePdf`, la subida de adjuntos de pago y la de imágenes de producto (que además procesa la imagen con `sharp` fuera de toda transacción).
 
 - Usar **`guardedShortTxProcedure(permiso)`** (o `shortTxProcedure`): hace las mismas comprobaciones, pero no abre la transacción larga; `ctx.db` **no existe** y el service recibe `ctx.runInTenant`. `protectedProcedure` lanza un error si el procedure declara `shortTx`.
 - Patrón de tres fases: (1) transacción corta que lee y valida (`runInTenant`); (2) llamada externa **sin** transacción abierta; (3) otra transacción corta que guarda el resultado. Si el guardado de la fase 3 falla tras haber subido un archivo, se borra el archivo (mejor esfuerzo) y se relanza el error original.
 - Los repositories de esas rutas se construyen dentro de cada fase con el `tx` recibido (`(tx) => new XRepository(tx, tenantId)`); nunca capturar el `tx` de una fase en otra.
-- Ver `modules/quotes/quotes.module.ts` (`quotesPdfModule`) y `PaymentAttachmentUploader` en `modules/events/`.
+- Ver `modules/quotes/quotes.module.ts` (`quotesPdfModule`), `PaymentAttachmentUploader` en `modules/events/` y `ProductImageUploader` en `modules/products/`.
 
 ### 12.5 Rutas de Express
 
@@ -724,7 +724,7 @@ Spec: `docs/superpowers/specs/2026-11-13-multitenant-fase4a-features-design.md`.
 ### 13.1 Catálogo (`@repo/guards`)
 
 - `packages/guards/src/features/registry.ts`: `FEATURES` (`Record<FeatureKey, { kind, requires }>`), con `kind` `core` | `module` | `add-on` (`'addon'` en el código). `FEATURE_KEYS`, `isFeatureKey(value)` e `isToggleable(key)` (`false` para las `core`).
-- Claves: `core` = `auth`, `users`, `roles`, `settings`, `clients`, `catalog`, `dashboard`, `support`; `module` = `quotes`, `events`, `notifications`; `addon` = `priceTiers`, `configurableOptions`. **`events` requiere `quotes`** (un evento nace de una cotización aceptada: `events.quote_id` es `NOT NULL`).
+- Claves: `core` = `auth`, `users`, `roles`, `settings`, `clients`, `catalog`, `dashboard`, `support`; `module` = `quotes`, `events`, `notifications`; `addon` = `priceTiers`, `configurableOptions`, `productGallery`, `unitsOfMeasure`. **`events` requiere `quotes`** (un evento nace de una cotización aceptada: `events.quote_id` es `NOT NULL`).
 - Las `core` están siempre activas, no tienen fila en la base y no se pueden modificar.
 - `resolveFeatures(rows, now)` (`resolve.ts`, pura): una feature está activa si `enabled`, no venció (`expires_at` `NULL` o posterior a `now`) y todas las que requiere están activas. Devuelve el conjunto de `FeatureKey` activas, núcleo incluido.
 - `resourceModules.ts`: `RESOURCE_MODULE` asocia recursos de permisos a un módulo (`quote`, `pipeline` y los de configuración de cotizaciones → `quotes`; `event`, `payment`, `staff`, `event_type`, `reschedule_reason` → `events`) y `moduleOfResource(resource)` lo consulta. Es lo que hace automático el guard de módulos (§13.4).
@@ -751,7 +751,7 @@ Spec: `docs/superpowers/specs/2026-11-13-multitenant-fase4a-features-design.md`.
 ### 13.4 Bloqueo: módulos automáticos, add-ons explícitos
 
 - **Módulos, automático (solo mutaciones).** `guardedProcedure`, `guardedShortTxProcedure` y `guardedProcedureAnyOf` (`core/trpc/trpc.ts`) validan el permiso del rol y además que el módulo del recurso (`moduleOfResource`) esté activo. En `guardedProcedureAnyOf` el error nombra el módulo solo si **todos** los checks que el rol cumple caen sobre módulos inactivos. Un procedure nuevo con `guardedProcedure({ [RESOURCES.QUOTE]: [...] })` queda gateado sin código extra.
-- **Add-ons y otros casos, explícito.** `requireFeature(key)` (`core/trpc/requireFeature.ts`) es un middleware que se encadena con `.use(...)`. Hoy gatea `priceTiers` y `configurableOptions` en `modules/products/products.router.ts` y `modules/events/events.router.ts`, y `notifications` en `modules/notifications/notifications.router.ts` (procedures sin recurso de permiso propio).
+- **Add-ons y otros casos, explícito.** `requireFeature(key)` (`core/trpc/requireFeature.ts`) es un middleware que se encadena con `.use(...)`. Hoy gatea `priceTiers`, `configurableOptions`, `productGallery` y `unitsOfMeasure` en `modules/products/products.router.ts` y `modules/events/events.router.ts`, y `notifications` en `modules/notifications/notifications.router.ts` (procedures sin recurso de permiso propio). `productGallery` gatea reordenar y destacar imágenes (sin el add-on un producto admite una imagen y subir otra la reemplaza; borrar siempre se permite). `unitsOfMeasure` gatea crear, editar y activar/desactivar unidades (`modules/unitsOfMeasure/unitsOfMeasure.router.ts`) y elegir o cambiar la unidad de un producto (`ProductsService`); sin el add-on un producto nuevo toma la unidad neutra `und` (`NEUTRAL_UNIT_CODE`) y las unidades siguen legibles.
 - **Regla "ocultar y conservar": solo mutaciones.** Las mutaciones sobre un módulo apagado se rechazan; las consultas pasan, así que los datos ya guardados se conservan y siguen legibles, y vuelven a operar al reactivar. La web impide el acceso a la pantalla (docs/frontend/architecture.md §9.4).
 - **Excepciones conscientes** a la regla (decididas, no omisiones):
   1. Los servicios insertan notificaciones como efecto secundario aunque `notifications` esté apagado.
@@ -761,7 +761,7 @@ Spec: `docs/superpowers/specs/2026-11-13-multitenant-fase4a-features-design.md`.
 - **Por qué `requireFeature` usa una segunda instancia de `initTRPC`:** el middleware se construye con su propio `initTRPC.context<{ features }>()` porque `trpc.ts` importa `requireFeature.ts` (para `featureNotEnabled` e `inactiveModuleOf`); importar de vuelta la instancia de `trpc.ts` crearía un ciclo de imports. El contexto que declara es solo `{ features }`, que es lo que la cadena tenant ya aporta.
 - **Reglas de dominio ligadas a features:**
   - Productos: con `priceTiers` apagado, un `create`/`update` con tiers no vacíos responde `FEATURE_NOT_ENABLED`; una lista vacía no falla y deja lo guardado intacto (`products.service.ts`).
-  - Cotizaciones: sin tiers, el subtotal de una línea se valida contra `products.price × numPersons`; un producto sin precio ni tiers activos responde `PRODUCT_NOT_QUOTABLE` (`ErrorCodes.product.NOT_QUOTABLE`, `quotes.service.ts`). Solo se revalidan las líneas nuevas o modificadas (`changedLines`, `quotes.validation.ts`): las cotizaciones existentes conservan su precio congelado.
+  - Cotizaciones: sin tiers, el subtotal de una línea se valida contra `products.price × quantity`; un producto sin precio ni tiers activos responde `PRODUCT_NOT_QUOTABLE` (`ErrorCodes.product.NOT_QUOTABLE`, `quotes.service.ts`). Solo se revalidan las líneas nuevas o modificadas (`changedLines`, `quotes.validation.ts`): las cotizaciones existentes conservan su precio congelado.
   - Con `configurableOptions` apagado, los ajustes de opciones se ignoran en la lógica pero conservan su valor.
   - Cotizaciones: sin `events` activo, `quotes.approve` confirma la cotización y no crea el evento derivado; activar `events` después no lo crea retroactivamente (`QuotesService.approve`, `QuotesRepository.approve` con `eventData` nulo).
 
@@ -801,3 +801,46 @@ pnpm --filter api feature:unset --tenant <slug> --key <key>
 4. **i18n es/en:** el nombre en `features.<key>` de `locales/{es,en}/common.json`.
 5. **Tests:** catálogo (dependencias), guard o `requireFeature` (mutación bloqueada, consulta no), y web si hay gating de UI. Si la feature añade datos nuevos por organización, aplicar §11 como siempre.
 6. **Organizaciones existentes:** una feature nueva no tiene fila en ninguna, así que nace apagada. Para darla a organizaciones que ya la usaban, activarla con `feature:set` o con una migración de datos.
+
+---
+
+## 14. Catálogo genérico
+
+El catálogo no asume un tipo de negocio. Spec: `docs/superpowers/specs/2026-11-14-catalogo-generico-fase1-design.md`.
+
+### 14.1 Regla: nunca atar nombres al cliente
+
+- Ningún código, texto, seed ni plantilla puede depender del nombre de un producto, grupo u opción de un cliente (p. ej. ramas por `name === '...'` en el PDF). El comportamiento sale de **datos** (unidad, categoría, tipo de selección), nunca de un nombre.
+- Los seeds usan productos neutros (`db/seeds/catalog.ts`) y todos los textos de dominio en la web salen del vocabulario por organización (frontend §10.1).
+
+### 14.2 Unidades de medida (`modules/unitsOfMeasure`)
+
+- Tabla `units_of_measure` por organización (`name`, `plural_name`, `code`, `dimension`, `factor` decimal, `is_base`, `is_system`). Las 23 unidades de sistema salen de `SYSTEM_UNITS` (`@repo/schemas`) y las siembra `seedUnitsOfMeasure` (dentro de `seedTenantDefaults`, **antes** del catálogo). `products.uom_id` es `NOT NULL` con FK `RESTRICT`; `DEFAULT_UNIT_CODE` es `pers`.
+- Router `unitsOfMeasure`: `list`, `options` (`guardedProcedureAnyOf`: `unit_of_measure.read` o `product.create`/`product.update`), `create`, `update`, `disable`, `enable`. Sin borrado.
+- Reglas: código único por organización sin distinguir mayúsculas (`UNIT_CODE_TAKEN`); factor > 0 y la base vale 1 (`UNIT_INVALID_FACTOR`); una unidad de sistema no cambia código, dimensión ni factor (`UNIT_SYSTEM_IMMUTABLE`); una unidad en uso no cambia dimensión ni factor y no se desactiva si la usa un producto activo o cualquier línea de cotización (`UNIT_IN_USE`); id ajeno o inexistente (`UNIT_NOT_FOUND`).
+- **La unidad de la línea es una copia al cotizar:** `quote_lines.uom_id` (`NOT NULL`) guarda la unidad con la que se cotizó y las lecturas de cotización y evento devuelven `unit` desde la línea, nunca desde el producto, así que cambiar la unidad del producto no altera lo ya cotizado (no hay bloqueo de unidad en el producto). `QuoteLineInput.uomId` es opcional: omitido toma la unidad actual del producto; distinto de ella solo se acepta si la misma cotización ya tiene una línea de ese producto con esa unidad (`replaceLines` borra y reinserta, y así conserva la unidad congelada); si no, `QUOTE_INVALID_LINE_UNIT`. La resolución es con lecturas del tenant, antes de escribir nada.
+
+### 14.3 Categorías y campos del producto (`modules/productCategories`)
+
+- Tabla `product_categories` (nombre único sin distinguir mayúsculas por organización). Router `productCategories`: `list`, `options`, `create`, `update`, `disable`, `enable`, `delete` (solo sin productos; con productos solo se desactiva: `PRODUCT_CATEGORY_IN_USE`). Otros códigos: `PRODUCT_CATEGORY_NOT_FOUND`, `PRODUCT_CATEGORY_NAME_TAKEN`.
+- `products` suma `category_id`, `sku` (único por organización sin distinguir mayúsculas cuando existe: `PRODUCT_SKU_TAKEN`), `cost` y `min_quantity` (≥ 1, reemplaza al ajuste `min_persons_per_line`). Las cotizaciones rechazan una línea por debajo del mínimo (`QUOTE_BELOW_MIN_QUANTITY`).
+- **`cost` es un dato sensible:** solo lo ve y edita quien tiene `product_cost.read` / `product_cost.update`. `publicProductColumns` no lo incluye; solo `productCostColumns` lo selecciona, y el PDF y las lecturas internas nunca lo devuelven (`PRODUCT_COST_FORBIDDEN` si se intenta escribir sin permiso).
+- Cantidades: en BD y API el campo se llama `quantity` (antes `num_persons`; migración `0007`).
+
+### 14.4 Perfil de la organización (`tenant_profile`)
+
+- Tabla `tenant_profile` (PK `tenant_id`, `catalog_kind`). Es **platform-managed** (`PLATFORM_MANAGED_TABLES` en `db/rls/policy.ts`): la app solo la lee (política de solo `SELECT`, `FORCE ROW LEVEL SECURITY`) y la escribe el rol `platform`. Sin fila se aplica `DEFAULT_CATALOG_KIND` (`products`).
+- `CATALOG_KINDS` (`@repo/schemas`, hoy `products` y `services`) decide qué palabras usa la web para los ítems del catálogo. Agregar un tipo es una entrada en esa lista más sus palabras en el namespace `vocabulary` de la web; la columna es texto, sin migración.
+- Lectura: `tenant.profile` (`protectedProcedure`, `getCatalogKind`). Escritura: `setCatalogKind` (`lib/tenancy/profile.ts`), expuesta solo por scripts: `pnpm --filter api tenant:set-catalog-kind --tenant <slug> --kind <products|services>` y `tenant:create --catalog-kind <kind>`. Un tipo desconocido falla con `TENANT_UNKNOWN_CATALOG_KIND`.
+- El seed de demo asigna un tipo a cada tenant (`demo-norte` `products`, `demo-sur` `services`).
+
+### 14.5 Imágenes de producto y `sharp`
+
+- Tabla `product_images` (hasta `PRODUCT_IMAGES_MAX` = 5 por producto; una sola destacada, índice único parcial). Las claves de R2 nunca salen del servidor; el recurso expone `{ id, imageUrl, thumbUrl, isFeatured, sortOrder }`.
+- Subida: `POST /api/uploads/products/:productId/images` (`modules/products/products.express.ts`, `guardTenantSession({ product: [update] })`, multer en memoria, 5 MB, jpeg/png/webp). El servicio `ProductImageUploader` usa el patrón de tres fases (§12.4): comprobar en una transacción corta, procesar y subir **sin** transacción, insertar en otra corta; si algo falla tras subir, borra los archivos.
+- `lib/images/processImage.ts` usa **`sharp`** (carga dinámica): valida el formato por contenido, límite de 50 MP, corrige la orientación, quita EXIF y genera WebP de hasta 1600 px y una miniatura de hasta 400 px.
+- Claves en R2: `t/<tenantId>/products/<productId>/<uuid>.webp` y `…-thumb.webp`.
+- Mutaciones por tRPC (`products.images.setFeatured`, `reorder`, `delete`) con `product.update`; cada una bloquea la fila del producto (`FOR UPDATE`). Duplicar un producto **no** copia imágenes.
+- Errores: `PRODUCT_IMAGE_NOT_FOUND`, `PRODUCT_IMAGE_LIMIT_REACHED`, `PRODUCT_IMAGE_INVALID_IMAGE`, `PRODUCT_IMAGE_TOO_LARGE`, `PRODUCT_IMAGE_UPLOAD_FAILED`.
+- **Despliegue:** `sharp` es un binario nativo y está como `--external:sharp` en el `build` de esbuild; hay que ejecutar `pnpm install` en la plataforma de destino (no copiar `node_modules` de otra). Si falta, solo fallan las subidas.
+

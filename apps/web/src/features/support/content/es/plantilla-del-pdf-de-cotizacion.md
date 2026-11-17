@@ -5,7 +5,7 @@ cualquier cotización.
 
 ## Qué se configura
 
-- **Duración de servicios**: pares "Estación: Duración" (ej. "Snack Station" / "Hasta 2 horas de
+- **Duración de servicios**: pares "{{Item}}: Duración" (ej. "Paquete premium" / "Hasta 2 horas de
   servicio") que se imprimen en la sección de duración del PDF.
 - **Términos y condiciones**: un texto donde cada línea es un término — se muestran como viñetas
   en el PDF. **Sin ninguno cargado, esa sección directamente no aparece** en el PDF.

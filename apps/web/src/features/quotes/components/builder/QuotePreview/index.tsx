@@ -1,13 +1,15 @@
 'use client';
 import { Divider, Empty, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import type { QuoteTotals } from '@repo/schemas';
-import type { Product } from '@/features/catalog';
+import { ProductThumb, type Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
 import { AddressLines } from '@/components/shared/AddressLines';
+import { formatQuantity } from '@/lib/format/quantity';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
-import { getStationIcon } from '../../../helpers';
 import { useQuoteBuilder } from '../../../hooks/useQuoteBuilder';
+import { lineUnit } from '../../../lineHelpers';
 import { QuoteLineItem } from '../../QuoteLineItem';
 import { QuoteSummary } from '../../QuoteSummary';
 import { WrapperCard } from '@/components/shared/WrapperCard';
@@ -21,6 +23,7 @@ interface QuotePreviewProps {
 
 export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePreviewProps) {
   const { t } = useTranslation('quotes');
+  const vocabulary = useCatalogVocabulary();
   const { date } = useDateFormatter();
   const { state, removeLine, setFields } = useQuoteBuilder();
 
@@ -57,7 +60,10 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
       <Divider className="my-3 shrink-0" />
 
       {state.lines.length === 0 ? (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('builder.lines.empty')} />
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={t('builder.lines.empty', vocabulary)}
+        />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
           {[...state.lines]
@@ -87,9 +93,9 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
               return (
                 <QuoteLineItem
                   key={line.key}
-                  icon={getStationIcon(product.name)}
+                  media={<ProductThumb product={product} size="xs" />}
                   name={product.name}
-                  numPersons={line.numPersons}
+                  quantity={formatQuantity(line.quantity, lineUnit(line, product))}
                   total={line.subtotal}
                   groups={groups}
                   onRemove={readOnly ? undefined : () => removeLine(line.key)}

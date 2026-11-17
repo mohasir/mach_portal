@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { products } from '../../../db/schema';
-import { createTestTenant, resetDb, testDb } from '../../../test/db';
+import { createTestTenant, resetDb, testDb, testUnitId } from '../../../test/db';
 import { ProductsRepository } from '../products.repository';
 import { ProductsService } from '../products.service';
 
@@ -9,11 +9,12 @@ describe('product price', () => {
   let tenantId: string;
   const serviceFor = (priceTiersActive: boolean) =>
     new ProductsService(new ProductsRepository(testDb, tenantId), priceTiersActive);
-  const base = { name: 'Bar', isPremium: false, tiers: [] };
+  let base: { name: string; isPremium: boolean; tiers: never[]; uomId: string };
 
   beforeEach(async () => {
     await resetDb();
     tenantId = (await createTestTenant('price')).id;
+    base = { name: 'Bar', isPremium: false, tiers: [], uomId: await testUnitId(tenantId) };
   });
 
   it('creates with a price and reports it quotable without tiers or add-on', async () => {
@@ -43,7 +44,7 @@ describe('product price', () => {
   });
 
   it('is quotable through stored tiers only while the add-on is active', async () => {
-    const tiers = [{ numPersons: 10, price: 1000 }];
+    const tiers = [{ quantity: 10, price: 1000 }];
     const { id } = await serviceFor(true).createProduct({ ...base, tiers });
     expect(await serviceFor(true).updateProduct(id, { ...base, tiers })).toMatchObject({
       quotable: true,

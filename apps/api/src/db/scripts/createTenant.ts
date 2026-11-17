@@ -1,11 +1,12 @@
 import { TRPCError } from '@trpc/server';
+import { CATALOG_KINDS } from '@repo/schemas';
 import { authQueryClient, queryClient } from '../index';
 import { closePlatformDb, platformDb } from '../platform';
 import { createTenant } from '../../lib/tenancy/createTenant';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import type { CreateTenantInput } from '../../lib/tenancy/createTenant';
 
-const HELP = `Usage: pnpm tenant:create --slug=<slug> --name=<name> --admin-email=<email> --admin-name=<name>
+const HELP = `Usage: pnpm tenant:create --slug=<slug> --name=<name> --admin-email=<email> --admin-name=<name> [--catalog-kind=<kind>]
 
 Creates an organization (tenant), seeds its defaults (config, event types, reschedule reasons,
 base catalog, quote PDF template) and adds the first admin as a member with role "admin".
@@ -18,6 +19,7 @@ Flags:
                          (printed below); an existing account is attached as admin and keeps
                          its current password (no link).
   --admin-name=<name>    Name for a new admin account.
+  --catalog-kind=<kind>  What the organization sells: products (default) or services.
   --help                 Show this help.
 
 The global quote stages must already exist (pnpm db:seed seeds them).
@@ -42,6 +44,7 @@ async function main() {
   const name = flag('name');
   const adminEmail = flag('admin-email');
   const adminName = flag('admin-name');
+  const catalogKind = flag('catalog-kind');
   if (!slug || !name || !adminEmail || !adminName) {
     const missing = [
       ['--slug', slug],
@@ -54,7 +57,13 @@ async function main() {
     console.error(`Missing required flags: ${missing.join(', ')}. Run with --help.`);
     return 1;
   }
-  const input: CreateTenantInput = { slug, name, adminEmail, adminName };
+  const input: CreateTenantInput = {
+    slug,
+    name,
+    adminEmail,
+    adminName,
+    ...(catalogKind !== undefined && { catalogKind }),
+  };
   const database = platformDb();
 
   try {
@@ -73,6 +82,8 @@ async function main() {
       [ErrorCodes.tenant.INVALID_SLUG]:
         'Invalid --slug: use 3-32 lowercase letters, digits or "-", not starting or ending with "-".',
       [ErrorCodes.tenant.INVALID_INPUT]: 'Invalid --name, --admin-name or --admin-email.',
+      [ErrorCodes.tenant.UNKNOWN_CATALOG_KIND]:
+        `Invalid --catalog-kind: use ${CATALOG_KINDS.join(' or ')}.`,
       [ErrorCodes.tenant.SLUG_TAKEN]:
         `A tenant with slug "${slug.trim().toLowerCase()}" already exists.`,
     };

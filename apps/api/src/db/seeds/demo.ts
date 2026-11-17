@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { FEATURE_KEYS, isToggleable } from '@repo/guards';
-import { QUOTE_STAGE, type UserPreferences } from '@repo/schemas';
+import { QUOTE_STAGE, type CatalogKind, type UserPreferences } from '@repo/schemas';
 import { db as defaultDb, type Executor } from '../index';
 import { organization } from '../schema';
 import { listFeatures, setFeature } from '../../lib/features/admin';
+import { setCatalogKind } from '../../lib/tenancy/profile';
 import { TenancyRepository } from '../../lib/tenancy/tenancy.repository';
 import { seedEventActivity, seedQuoteStageSettings, type SeedStageOverride } from './activity';
 import { SEED_CATALOG, type SeedProduct } from './catalog';
@@ -27,6 +28,7 @@ export interface DemoProfile {
   sharedUserRole: SeedUser['role'];
   clients: SeedClient[];
   staff: SeedStaff[];
+  catalogKind: CatalogKind;
   catalog: SeedProduct[];
   quotes: SeedQuote[];
   appSettings: SeedAppSettings;
@@ -143,16 +145,16 @@ const SUR_STAFF: SeedStaff[] = [
 ];
 
 const SUR_PRODUCT_NAMES: Record<string, string> = {
-  Crepes: 'Waffles Belgas',
-  'Mini Pancakes': 'Churros Rellenos',
-  Crepaletas: 'Paletas de Waffle',
-  Esquites: 'Elotes Asados',
-  Nachos: 'Tacos al Pastor',
-  'Fruit Station': 'Barra de Frutas',
-  'Snack Station': 'Barra de Botanas',
-  Popsicles: 'Raspados',
-  'Hot Chocolate': 'Café de Olla',
-  'Craft Bar': 'Barra de Mezcal',
+  'Paquete Esencial': 'Paquete Inicial',
+  'Paquete Plus': 'Paquete Avanzado',
+  'Paquete Compacto': 'Paquete Mini',
+  'Kit Básico': 'Kit Inicial',
+  'Kit Completo': 'Kit Integral',
+  'Colección Natural': 'Línea Natural',
+  'Colección Urbana': 'Línea Urbana',
+  'Colección Clásica': 'Línea Clásica',
+  'Servicio Estándar': 'Servicio Regular',
+  'Servicio Premium': 'Servicio Exclusivo',
 };
 
 const surProduct = (name: string) => SUR_PRODUCT_NAMES[name] ?? `${name} Sur`;
@@ -169,7 +171,7 @@ function shiftDate(iso: string | undefined, days: number) {
 const SUR_CATALOG: SeedProduct[] = SEED_CATALOG.map((p) => ({
   ...p,
   name: surProduct(p.name),
-  description: `${p.description} (Edición Sur)`,
+  shortDescription: `${p.shortDescription} (Edición Sur)`,
   tiers: p.tiers.map((t) => ({ ...t, price: surPrice(t.price) })),
 }));
 
@@ -192,6 +194,7 @@ export const DEMO_TENANTS: DemoProfile[] = [
     sharedUserRole: 'operator',
     clients: SEED_CLIENTS,
     staff: SEED_STAFF,
+    catalogKind: 'products',
     catalog: SEED_CATALOG,
     quotes: SEED_QUOTES,
     appSettings: {},
@@ -205,6 +208,7 @@ export const DEMO_TENANTS: DemoProfile[] = [
     sharedUserRole: 'member',
     clients: SUR_CLIENTS,
     staff: SUR_STAFF,
+    catalogKind: 'services',
     catalog: SUR_CATALOG,
     quotes: SUR_QUOTES,
     appSettings: { depositRate: 0.4, quoteSeqStart: 1001 },
@@ -287,6 +291,7 @@ export async function seedDemoLocal(db: Executor = defaultDb) {
     const tenantId = await ensureOrganization(profile.slug, profile.name, db);
     await seedDemoTenant(tenantId, profile, db);
     await seedDemoFeatures(profile.slug, db);
+    await setCatalogKind(db, { tenantSlug: profile.slug, kind: profile.catalogKind });
   }
 
   await ensureAccount(
@@ -327,4 +332,5 @@ export async function seedDemoIntoTenant(slug: string, db: Executor = defaultDb)
     db,
   );
   await seedDemoFeatures(org.slug, db);
+  await setCatalogKind(db, { tenantSlug: org.slug, kind: profile.catalogKind });
 }

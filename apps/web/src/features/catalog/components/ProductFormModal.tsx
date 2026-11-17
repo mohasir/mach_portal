@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { Button, Form } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { useProductMutations } from '../hooks/useProductMutations';
 import type { ProductFormValues, ProductPayload } from '../helpers';
@@ -17,6 +18,7 @@ interface ProductFormModalProps {
 
 export function ProductFormModal({ product, open, onClose }: ProductFormModalProps) {
   const { t } = useTranslation('catalog');
+  const vocabulary = useCatalogVocabulary();
   const { createProduct, updateProduct, isPending } = useProductMutations();
   const [form] = Form.useForm<ProductFormValues>();
 
@@ -38,7 +40,7 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={t(product ? 'product.edit.title' : 'product.create.title')}
+      title={t(product ? 'product.edit.title' : 'product.create.title', vocabulary)}
       footerClassName="shadow-[0_-4px_8px_-2px_rgba(0,0,0,0.08)]"
       footer={
         <div className="py-2 pt-4">
@@ -58,14 +60,22 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
               product
                 ? {
                     name: product.name,
-                    description: product.description ?? undefined,
+                    shortDescription: product.shortDescription ?? undefined,
+                    longDescription: product.longDescription ?? undefined,
                     isPremium: product.isPremium,
                     price: product.price,
+                    uomId: product.uomId,
+                    sku: product.sku,
+                    categoryId: product.categoryId,
+                    cost: product.cost,
+                    minQuantity: product.minQuantity,
                   }
                 : undefined
             }
+            currentUnit={product?.unit}
+            currentCategory={product?.category}
             tiers={product?.priceTiers.map((tier) => ({
-              numPersons: tier.numPersons,
+              quantity: tier.quantity,
               price: tier.price,
             }))}
             onSubmit={onSubmit}

@@ -1,7 +1,7 @@
 {
-  "breadcrumbRoot": "Productos",
-  "title": "Estaciones",
-  "empty": "No hay estaciones",
+  "breadcrumbRoot": "{{Items}}",
+  "title": "{{Items}}",
+  "empty": "No hay {{items}}",
   "status": {
     "inactive": "Inactivo"
   },
@@ -15,55 +15,84 @@
     "save": "Guardar"
   },
   "product": {
-    "add": "Nueva estación",
+    "add": "Nuevo {{item}}",
     "notQuotable": {
       "tag": "No cotizable",
-      "hintFixedPrice": "Esta estación no se puede cotizar todavía. Definí un precio por persona para poder usarla en cotizaciones.",
-      "hintPriceOrTiers": "Esta estación no se puede cotizar todavía. Definí un precio por persona o agregá paquetes de precio."
+      "hintFixedPrice": "Este {{item}} no se puede cotizar todavía. Definí un precio unitario para poder usarlo en cotizaciones.",
+      "hintPriceOrTiers": "Este {{item}} no se puede cotizar todavía. Definí un precio unitario o agregá paquetes de precio."
     },
     "premium": "Premium",
-    "optionGroupsCount": "{{count}} servicios",
+    "pricePerUnit": "{{price}} por {{unit}}",
+    "optionGroupsCount": "{{count}} secciones",
     "priceTiersCount": "{{count}} paquetes",
-    "create": { "title": "Nueva estación" },
-    "edit": { "title": "Editar estación" },
+    "create": {
+      "title": "Nuevo {{item}}"
+    },
+    "edit": {
+      "title": "Editar {{item}}"
+    },
     "form": {
       "name": "Nombre",
-      "namePlaceholder": "Nombre de la estación",
-      "description": "Descripción",
-      "descriptionPlaceholder": "Descripción breve (opcional)",
+      "namePlaceholder": "Nombre del {{item}}",
+      "shortDescription": "Descripción corta",
+      "shortDescriptionPlaceholder": "Resumen que se ve en la lista (opcional)",
+      "longDescription": "Descripción larga",
+      "longDescriptionPlaceholder": "Detalle completo del {{item}} (opcional)",
       "isPremium": "Premium",
-      "price": "Precio por persona",
-      "priceCaption": "Opcional. Se multiplica por la cantidad de personas de la cotización."
+      "price": "Precio unitario",
+      "priceCaption": "Opcional. Precio de una unidad del {{item}}; se multiplica por la cantidad de la cotización.",
+      "unit": "Unidad de medida",
+      "unitCaption": "En qué se cobra y se cuenta el {{item}} (personas, horas, kilos…).",
+      "unitPlaceholder": "Elegí una unidad",
+      "sku": "SKU",
+      "skuPlaceholder": "Código interno (opcional)",
+      "category": "Categoría",
+      "categoryPlaceholder": "Sin categoría",
+      "cost": "Costo",
+      "costCaption": "Interno: solo lo ven quienes tienen permiso. Nunca aparece en cotizaciones ni eventos.",
+      "minQuantity": "Cantidad mínima",
+      "minQuantityCaption": "Menor cantidad que puede tener una línea de cotización de este {{item}}, en su unidad."
     },
     "duplicateConfirm": {
-      "title": "¿Duplicar esta estación?",
-      "content": "Se creará una copia con sus servicios, ítems y paquetes de precios."
+      "title": "¿Duplicar este {{item}}?",
+      "content": "Se creará una copia con sus secciones, ítems y paquetes de precios."
     },
     "disableConfirm": {
-      "title": "¿Desactivar esta estación?",
+      "title": "¿Desactivar este {{item}}?",
       "content": "Dejará de estar disponible para nuevas cotizaciones."
     },
     "enableConfirm": {
-      "title": "¿Activar esta estación?",
+      "title": "¿Activar este {{item}}?",
       "content": "Volverá a estar disponible para nuevas cotizaciones."
+    },
+    "detailFields": {
+      "sku": "SKU",
+      "category": "Categoría",
+      "cost": "Costo",
+      "minQuantity": "Cantidad mínima"
+    },
+    "filter": {
+      "category": "Categoría",
+      "allCategories": "Todas las categorías",
+      "noCategory": "Sin categoría",
+      "emptyFiltered": "No hay {{items}} en esta categoría"
     }
   },
   "prices": {
     "title": "Precios",
-    "tabDescription": "Definí los paquetes de precio de esta estación según la cantidad de personas.",
-    "autoSortNote": "Al guardar, los paquetes se reordenan automáticamente por cantidad de personas.",
-    "numPersonsShort": "Personas",
+    "tabDescription": "Definí los paquetes de precio de este {{item}} según la cantidad, en {{unit}}.",
+    "autoSortNote": "Al guardar, los paquetes se reordenan automáticamente por cantidad.",
     "addTier": "Agregar paquete",
     "removeTier": "Quitar paquete",
     "removeTierConfirm": {
       "title": "¿Quitar este paquete?",
-      "content": "Se eliminará este paquete de precio de la estación."
+      "content": "Se eliminará este paquete de precio del {{item}}."
     }
   },
   "detail": {
     "tabs": {
-      "details": "Servicios",
-      "detailsDescription": "Organizá los servicios de esta estación en secciones y agregá los ítems disponibles dentro de cada una.",
+      "details": "Secciones",
+      "detailsDescription": "Organizá las secciones de este {{item}} y agregá los ítems disponibles dentro de cada una.",
       "prices": "Precios"
     }
   },
@@ -126,9 +155,36 @@
   "validation": {
     "nameRequired": "Nombre requerido",
     "labelRequired": "Nombre requerido",
-    "numPersonsInvalid": "Cantidad inválida",
+    "quantityInvalid": "Cantidad inválida",
     "priceInvalid": "Precio inválido",
-    "tiersDuplicate": "Hay paquetes con la misma cantidad de personas",
-    "maxSelectInvalid": "Selección máxima inválida"
+    "tiersDuplicate": "Hay paquetes con la misma cantidad",
+    "unitRequired": "Elegí una unidad de medida",
+    "maxSelectInvalid": "Selección máxima inválida",
+    "skuInvalid": "SKU inválido (hasta 64 caracteres)",
+    "costInvalid": "Costo inválido",
+    "minQuantityInvalid": "La cantidad mínima debe ser 1 o más",
+    "shortDescriptionTooLong": "La descripción corta admite hasta {{max}} caracteres",
+    "longDescriptionTooLong": "La descripción larga admite hasta {{max}} caracteres"
+  },
+  "gallery": {
+    "title": "Imágenes",
+    "counter": "{{count}}/{{max}}",
+    "empty": "Sin imágenes",
+    "featured": "Destacada",
+    "add": "Agregar imagen",
+    "replace": "Reemplazar imagen",
+    "hint": "JPG, PNG o WebP, hasta {{size}} MB",
+    "uploaded": "Imagen subida",
+    "invalidType": "El archivo no es una imagen permitida. Usá un JPG, PNG o WebP",
+    "tooLarge": "La imagen supera el tamaño máximo permitido ({{size}} MB)",
+    "limitReached": "Un {{item}} puede tener hasta {{max}} imágenes",
+    "setFeatured": "Destacar",
+    "moveLeft": "Mover antes",
+    "moveRight": "Mover después",
+    "delete": "Eliminar imagen",
+    "deleteConfirm": {
+      "title": "¿Eliminar la imagen?",
+      "content": "La imagen se borra definitivamente."
+    }
   }
 }

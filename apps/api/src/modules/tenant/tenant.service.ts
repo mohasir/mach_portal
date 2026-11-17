@@ -8,8 +8,9 @@ import {
   organizationCollectionResource,
   organizationResource,
   permissionsResource,
+  tenantProfileResource,
 } from './tenant.resource';
-import type { TenantRepository } from './tenant.repository';
+import type { TenantProfileRepository, TenantRepository } from './tenant.repository';
 
 type Caller = { id: string; isPlatformAdmin?: boolean | null };
 
@@ -73,5 +74,13 @@ export class TenantService {
     await this.repo.setSessionActiveOrganization(sessionId, target.id);
 
     return { ...organizationResource(target), isPlatformAccess: access.platformAccess };
+  }
+}
+
+export class TenantProfileService {
+  constructor(private repo: TenantProfileRepository) {}
+
+  async profile() {
+    return tenantProfileResource(await this.repo.catalogKind());
   }
 }

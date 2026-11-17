@@ -8,27 +8,36 @@ export type OptionGroupType = z.infer<typeof optionGroupTypeSchema>;
 // Prices are stored in Postgres integer columns; larger values would fail at insert time.
 const PG_INT_MAX = 2_147_483_647;
 
+export const SKU_MAX = 64;
+
 export const priceTierSchema = z.object({
-  numPersons: z.number().int().min(1, 'catalog.validation.numPersonsInvalid'),
+  quantity: z.number().int().min(1, 'catalog.validation.quantityInvalid'),
   price: z
     .number()
     .int()
     .min(0, 'catalog.validation.priceInvalid')
-    .max(PG_INT_MAX, 'catalog.validation.priceInvalid'), // cents, total for numPersons
+    .max(PG_INT_MAX, 'catalog.validation.priceInvalid'), // cents, total for quantity
 });
 export type PriceTierInput = z.infer<typeof priceTierSchema>;
 
 export const productTiersSchema = z
   .array(priceTierSchema)
   .default([])
-  .refine((tiers) => new Set(tiers.map((t) => t.numPersons)).size === tiers.length, {
+  .refine((tiers) => new Set(tiers.map((t) => t.quantity)).size === tiers.length, {
     message: 'catalog.validation.tiersDuplicate',
   });
 
+export const SHORT_DESCRIPTION_MAX = 500;
+export const LONG_DESCRIPTION_MAX = 10000;
+
 const productMutationFields = {
   name: z.string().trim().min(1, 'catalog.validation.nameRequired').max(120),
-  description: optionalText(500),
+  shortDescription: optionalText(SHORT_DESCRIPTION_MAX),
+  longDescription: optionalText(LONG_DESCRIPTION_MAX),
   isPremium: z.boolean(),
+  // Unit the price and the quantity of the product are expressed in. Omitted: the default unit on
+  // create, the stored one on update. Choosing one needs the unitsOfMeasure add-on.
+  uomId: z.uuid('catalog.validation.unitRequired').optional(),
   tiers: productTiersSchema,
   // Per-unit price in cents; null clears it, omitted keeps the stored one on update.
   price: z
@@ -38,6 +47,30 @@ const productMutationFields = {
     .max(PG_INT_MAX, 'catalog.validation.priceInvalid')
     .nullable()
     .optional(),
+  // A blank SKU clears it (null) instead of keeping the stored one (undefined).
+  sku: z.preprocess(
+    (v) => (typeof v === 'string' ? v.trim() || null : v),
+    z.string().max(SKU_MAX, 'catalog.validation.skuInvalid').nullable().optional(),
+  ),
+  // Internal cost in cents, written only with the product_cost update permission. Null clears it,
+  // omitted keeps the stored one on update.
+  cost: z
+    .number()
+    .int()
+    .min(0, 'catalog.validation.costInvalid')
+    .max(PG_INT_MAX, 'catalog.validation.costInvalid')
+    .nullable()
+    .optional(),
+  // Smallest quantity a quote line of the product may have, in the product's unit. Omitted keeps
+  // the stored one on update (1 on create).
+  minQuantity: z
+    .number()
+    .int()
+    .min(1, 'catalog.validation.minQuantityInvalid')
+    .max(PG_INT_MAX, 'catalog.validation.minQuantityInvalid')
+    .optional(),
+  // Null leaves the product without a category; omitted keeps the stored one on update.
+  categoryId: z.uuid().nullable().optional(),
 } as const;
 
 export const createProductSchema = z.object(productMutationFields);

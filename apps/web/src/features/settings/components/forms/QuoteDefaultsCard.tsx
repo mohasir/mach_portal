@@ -74,20 +74,6 @@ export function QuoteDefaultsCard() {
         </FieldRow>
 
         <FieldRow
-          title={t('quoteDefaults.minPersonsPerLine')}
-          caption={t('quoteDefaults.minPersonsPerLineCaption')}
-          required
-        >
-          <Form.Item
-            name="minPersonsPerLine"
-            className="mb-0"
-            rules={[{ required: true, message: t('validation.minPersonsInvalid') }]}
-          >
-            <InputNumber min={1} className="w-full" />
-          </Form.Item>
-        </FieldRow>
-
-        <FieldRow
           title={t('quoteDefaults.quoteSeqStart')}
           caption={t('quoteDefaults.quoteSeqStartCaption')}
           required

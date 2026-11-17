@@ -1,6 +1,7 @@
 'use client';
 import { Button, Divider, Form, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import type { QuotePdfTemplateContent, ServiceInfo } from '@repo/schemas';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
@@ -35,6 +36,7 @@ const toContent = (values: QuotePdfTemplateFormValues): QuotePdfTemplateContent 
 
 export function QuotePdfTemplateForm() {
   const { t } = useTranslation('settings');
+  const vocabulary = useCatalogVocabulary();
   const can = useCan();
   const { data, isLoading } = useQuotePdfTemplate();
   const { updateQuotePdfTemplate, isPending } = useUpdateQuotePdfTemplate();
@@ -64,7 +66,7 @@ export function QuotePdfTemplateForm() {
         label={
           <FieldLabel
             title={t('quotePdfTemplate.services')}
-            caption={t('quotePdfTemplate.servicesCaption')}
+            caption={t('quotePdfTemplate.servicesCaption', vocabulary)}
           />
         }
         className="mb-0"

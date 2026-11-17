@@ -18,3 +18,7 @@ export * from './storage';
 export * from './templates';
 export * from './notifications';
 export * from './features';
+export * from './catalogKinds';
+export * from './unitsOfMeasure';
+export * from './productCategories';
+export * from './productImages';

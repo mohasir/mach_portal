@@ -118,7 +118,7 @@ export const HELP_CATEGORIES: HelpCategoryEntry[] = [
     icon: Package,
     articles: [
       {
-        slug: 'crear-estacion-y-precios',
+        slug: 'crear-producto-y-precios',
         guard: { [RESOURCES.PRODUCT]: [CREATE] },
         updatedAt: LAST_CONTENT_PASS,
       },

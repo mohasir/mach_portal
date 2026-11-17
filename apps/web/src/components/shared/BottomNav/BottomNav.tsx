@@ -4,12 +4,14 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { useFeatures } from '@/features/tenant/hooks/useFeatures';
 import { useCan } from '@/lib/auth/useCan';
 import { IconMap, isNavItemAvailable, NAV_BOTTOM_MENU, type NavItem } from '@/lib/navigation';
 
 export function BottomNav() {
   const { t } = useTranslation('admin');
+  const vocabulary = useCatalogVocabulary();
   const can = useCan();
   const { keys } = useFeatures();
   const pathname = usePathname() ?? '';
@@ -31,7 +33,7 @@ export function BottomNav() {
         className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-4 ${active ? 'text-navy font-semibold' : 'text-muted'}`}
       >
         {IconMap[item.icon!]}
-        <span className="text-xs">{t(item.label)}</span>
+        <span className="text-xs">{t(item.label, vocabulary)}</span>
       </button>
     );
   };

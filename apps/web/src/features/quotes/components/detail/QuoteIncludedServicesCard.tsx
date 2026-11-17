@@ -1,8 +1,7 @@
 'use client';
 import { useTranslation } from 'react-i18next';
-import type { Product } from '@/features/catalog';
+import { ProductThumb, type Product } from '@/features/catalog';
 import { WrapperCard } from '@/components/shared/WrapperCard';
-import { getStationIcon } from '../../helpers';
 import type { QuoteDetail } from '../../types';
 import { QuoteLineItem } from '../QuoteLineItem';
 
@@ -39,7 +38,7 @@ export function QuoteIncludedServicesCard({ detail, catalog }: QuoteIncludedServ
           return (
             <QuoteLineItem
               key={line.id}
-              icon={getStationIcon(product.name)}
+              media={<ProductThumb product={product} size="xs" />}
               name={product.name}
               groups={groups}
             />

@@ -10,7 +10,7 @@ aparecen "Marcar realizado" y "Cancelar evento".
 
 ## Servicios incluidos
 
-Las estaciones y sus opciones, tal como quedaron en la cotización. Con permiso para gestionar
+Los {{items}} y sus opciones, tal como quedaron en la cotización. Con permiso para gestionar
 selecciones, cada línea tiene botones para ver/editar su selección; sin ese permiso, es de solo
 lectura.
 

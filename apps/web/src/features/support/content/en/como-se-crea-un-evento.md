@@ -13,7 +13,7 @@ it → confirm it.
 When it's created, the event copies: client, event type, date, time, State, city, address and the
 quote's **total amount** (as a snapshot of that moment).
 
-What's **not** copied separately are the stations and their options — the event simply reads the
+What's **not** copied separately are the {{items}} and their options — the event simply reads the
 lines and selections from the original quote through the link between them.
 
 ## What can't be edited from the event

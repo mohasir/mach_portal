@@ -1,6 +1,7 @@
 'use client';
 import { Empty, Timeline } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
@@ -16,6 +17,7 @@ interface EventHistoryCardProps {
 
 export function EventHistoryCard({ history }: EventHistoryCardProps) {
   const { t } = useTranslation('events');
+  const vocabulary = useCatalogVocabulary();
   const { date, dateTime, time } = useDateFormatter();
   const { money } = useMoneyFormatter();
   const unknownUser = t('detail.history.unknownUser');
@@ -31,7 +33,7 @@ export function EventHistoryCard({ history }: EventHistoryCardProps) {
       case 'staff_removed':
         return t('detail.history.staffRemoved', { staffName: data.staffName ?? '—' });
       case 'selections_updated':
-        return t('detail.history.selectionsUpdated');
+        return t('detail.history.selectionsUpdated', vocabulary);
       case 'payment_registered':
         return t('detail.history.paymentRegistered', { amount: money(Number(data.amount) || 0) });
       case 'payment_removed':

@@ -2,7 +2,7 @@ Two things about the catalog that aren't obvious at first glance.
 
 ## There's no "delete" — only deactivate
 
-Stations, sections and items can't actually be deleted. The trash icon at these 3 levels actually
+{{Items}}, sections and items can't actually be deleted. The trash icon at these 3 levels actually
 **deactivates** them (with confirmation: "It will no longer be available for new quotes"). A
 deactivated item shows an "Inactive" tag and, instead of the trash icon, a restore icon to
 reactivate it.
@@ -17,7 +17,7 @@ something doesn't affect them — it just stops being available for new quotes.
 
 ## Reordering with drag & drop
 
-Stations, sections and items can be reordered by dragging from the 6-dot icon. This can be
+{{Items}}, sections and items can be reordered by dragging from the 6-dot icon. This can be
 **turned off globally**, on request, by OraviCloud's support team — if it's off, the drag icon
 disappears everywhere in the app and the order stays fixed as saved.
 

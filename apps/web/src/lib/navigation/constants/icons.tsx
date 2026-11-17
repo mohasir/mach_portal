@@ -12,6 +12,8 @@ import {
   LayoutGrid,
   LogOut,
   Package,
+  Ruler,
+  Tags,
   ReceiptText,
   Settings,
   ShieldCheck,
@@ -24,7 +26,6 @@ import { TbCalendarTime } from 'react-icons/tb';
 import optionCalendarIcon from '@/assets/icons/option_calendar_icon.svg';
 import optionPaymentIcon from '@/assets/icons/option_payment_icon.svg';
 import optionGenericIcon from '@/assets/icons/option_generic_icon.svg';
-import optionStationIcon from '@/assets/icons/option_station_icon.svg';
 
 const iconSize = 18;
 
@@ -39,6 +40,8 @@ export const IconMap: Record<string, ReactNode> = {
   staff: <ChefHat size={iconSize} />,
   catalog: <Package size={iconSize} />,
   prices: <DollarSign size={iconSize} />,
+  unitsOfMeasure: <Ruler size={iconSize} />,
+  productCategories: <Tags size={iconSize} />,
   eventTypes: <CalendarCog size={iconSize} />,
   rescheduleReasons: <TbCalendarTime size={iconSize} />,
   settings: <Settings size={iconSize} />,
@@ -55,7 +58,9 @@ export const IconCardOptionsMap: Record<string, StaticImageData> = {
   clients: optionGenericIcon,
   payments: optionPaymentIcon,
   staff: optionGenericIcon,
-  catalog: optionStationIcon,
+  catalog: optionGenericIcon,
+  unitsOfMeasure: optionGenericIcon,
+  productCategories: optionGenericIcon,
   eventTypes: optionGenericIcon,
   rescheduleReasons: optionGenericIcon,
   settings: optionGenericIcon,

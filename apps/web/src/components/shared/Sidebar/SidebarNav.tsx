@@ -2,6 +2,7 @@
 import { Menu, Skeleton } from 'antd';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { useCan } from '@/lib/auth/useCan';
 import { useNavigation } from '@/lib/navigation';
 import { buildMenuItems, findActiveKey } from './helpers';
@@ -14,6 +15,7 @@ interface SidebarNavProps {
 
 export function SidebarNav({ collapsed = false, onNavigate }: SidebarNavProps) {
   const { t } = useTranslation('admin');
+  const vocabulary = useCatalogVocabulary();
   const can = useCan();
   const pathname = usePathname();
   const router = useRouter();
@@ -29,7 +31,7 @@ export function SidebarNav({ collapsed = false, onNavigate }: SidebarNavProps) {
     );
   }
 
-  const items = buildMenuItems(menu, can, t, collapsed) ?? [];
+  const items = buildMenuItems(menu, can, t, vocabulary, collapsed) ?? [];
   const activeKey = findActiveKey(menu, pathname ?? '');
 
   const onClick = ({ key }: { key: string }) => {

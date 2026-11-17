@@ -1,7 +1,7 @@
 {
-  "breadcrumbRoot": "Products",
-  "title": "Stations",
-  "empty": "No stations",
+  "breadcrumbRoot": "{{Items}}",
+  "title": "{{Items}}",
+  "empty": "No {{items}}",
   "status": {
     "inactive": "Inactive"
   },
@@ -15,55 +15,84 @@
     "save": "Save"
   },
   "product": {
-    "add": "New station",
+    "add": "New {{item}}",
     "notQuotable": {
       "tag": "Not quotable",
-      "hintFixedPrice": "This station cannot be quoted yet. Set a price per person to use it in quotes.",
-      "hintPriceOrTiers": "This station cannot be quoted yet. Set a price per person or add price tiers."
+      "hintFixedPrice": "This {{item}} cannot be quoted yet. Set a unit price to use it in quotes.",
+      "hintPriceOrTiers": "This {{item}} cannot be quoted yet. Set a unit price or add price tiers."
     },
     "premium": "Premium",
-    "optionGroupsCount": "{{count}} services",
+    "pricePerUnit": "{{price}} per {{unit}}",
+    "optionGroupsCount": "{{count}} sections",
     "priceTiersCount": "{{count}} packages",
-    "create": { "title": "New station" },
-    "edit": { "title": "Edit station" },
+    "create": {
+      "title": "New {{item}}"
+    },
+    "edit": {
+      "title": "Edit {{item}}"
+    },
     "form": {
       "name": "Name",
-      "namePlaceholder": "Station name",
-      "description": "Description",
-      "descriptionPlaceholder": "Short description (optional)",
+      "namePlaceholder": "{{Item}} name",
+      "shortDescription": "Short description",
+      "shortDescriptionPlaceholder": "Summary shown in the list (optional)",
+      "longDescription": "Long description",
+      "longDescriptionPlaceholder": "Full details of the {{item}} (optional)",
       "isPremium": "Premium",
-      "price": "Price per person",
-      "priceCaption": "Optional. Multiplied by the number of people on the quote."
+      "price": "Unit price",
+      "priceCaption": "Optional. Price of one unit of the {{item}}; multiplied by the quantity on the quote.",
+      "unit": "Unit of measure",
+      "unitCaption": "What the {{item}} is priced and counted in (people, hours, kilos…).",
+      "unitPlaceholder": "Choose a unit",
+      "sku": "SKU",
+      "skuPlaceholder": "Internal code (optional)",
+      "category": "Category",
+      "categoryPlaceholder": "No category",
+      "cost": "Cost",
+      "costCaption": "Internal: only people with permission see it. Never shown on quotes or events.",
+      "minQuantity": "Minimum quantity",
+      "minQuantityCaption": "Smallest quantity a quote line of this {{item}} may have, in its unit."
     },
     "duplicateConfirm": {
-      "title": "Duplicate this station?",
-      "content": "A copy will be created with its services, items and price packages."
+      "title": "Duplicate this {{item}}?",
+      "content": "A copy will be created with its sections, items and price packages."
     },
     "disableConfirm": {
-      "title": "Deactivate this station?",
+      "title": "Deactivate this {{item}}?",
       "content": "It will no longer be available for new quotes."
     },
     "enableConfirm": {
-      "title": "Activate this station?",
+      "title": "Activate this {{item}}?",
       "content": "It will be available for new quotes again."
+    },
+    "detailFields": {
+      "sku": "SKU",
+      "category": "Category",
+      "cost": "Cost",
+      "minQuantity": "Minimum quantity"
+    },
+    "filter": {
+      "category": "Category",
+      "allCategories": "All categories",
+      "noCategory": "No category",
+      "emptyFiltered": "There are no {{items}} in this category"
     }
   },
   "prices": {
     "title": "Prices",
-    "tabDescription": "Define this station's price packages by number of people.",
-    "autoSortNote": "Packages are automatically reordered by number of people when you save.",
-    "numPersonsShort": "People",
+    "tabDescription": "Define this {{item}}'s price packages by quantity, in {{unit}}.",
+    "autoSortNote": "Packages are automatically reordered by quantity when you save.",
     "addTier": "Add package",
     "removeTier": "Remove package",
     "removeTierConfirm": {
       "title": "Remove this package?",
-      "content": "This price package will be removed from the station."
+      "content": "This price package will be removed from the {{item}}."
     }
   },
   "detail": {
     "tabs": {
-      "details": "Services",
-      "detailsDescription": "Organize this station's services into sections and add the available items within each one.",
+      "details": "Sections",
+      "detailsDescription": "Organize this {{item}}'s sections and add the available items within each one.",
       "prices": "Prices"
     }
   },
@@ -126,9 +155,36 @@
   "validation": {
     "nameRequired": "Name is required",
     "labelRequired": "Name is required",
-    "numPersonsInvalid": "Invalid quantity",
+    "quantityInvalid": "Invalid quantity",
     "priceInvalid": "Invalid price",
-    "tiersDuplicate": "Some packages have the same number of people",
-    "maxSelectInvalid": "Invalid max selection"
+    "tiersDuplicate": "Some packages have the same quantity",
+    "unitRequired": "Choose a unit of measure",
+    "maxSelectInvalid": "Invalid max selection",
+    "skuInvalid": "Invalid SKU (up to 64 characters)",
+    "costInvalid": "Invalid cost",
+    "minQuantityInvalid": "The minimum quantity must be 1 or more",
+    "shortDescriptionTooLong": "The short description allows up to {{max}} characters",
+    "longDescriptionTooLong": "The long description allows up to {{max}} characters"
+  },
+  "gallery": {
+    "title": "Images",
+    "counter": "{{count}}/{{max}}",
+    "empty": "No images",
+    "featured": "Featured",
+    "add": "Add image",
+    "replace": "Replace image",
+    "hint": "JPG, PNG or WebP, up to {{size}} MB",
+    "uploaded": "Image uploaded",
+    "invalidType": "The file isn't an allowed image. Use a JPG, PNG or WebP",
+    "tooLarge": "The image exceeds the maximum allowed size ({{size}} MB)",
+    "limitReached": "A {{item}} can have up to {{max}} images",
+    "setFeatured": "Feature",
+    "moveLeft": "Move earlier",
+    "moveRight": "Move later",
+    "delete": "Delete image",
+    "deleteConfirm": {
+      "title": "Delete the image?",
+      "content": "The image is permanently deleted."
+    }
   }
 }

@@ -1,0 +1,47 @@
+{
+  "title": "Categorías",
+  "index": {
+    "add": "Nueva categoría"
+  },
+  "columns": {
+    "name": "Nombre",
+    "products": "{{Items}}",
+    "status": "Estado"
+  },
+  "productCount_one": "{{count}} {{item}}",
+  "productCount_other": "{{count}} {{items}}",
+  "status": {
+    "active": "Activa",
+    "inactive": "Inactiva"
+  },
+  "actions": {
+    "activate": "Activar",
+    "deactivate": "Desactivar",
+    "delete": "Eliminar"
+  },
+  "deactivateConfirm": {
+    "title": "¿Desactivar «{{name}}»?",
+    "content": "Dejará de aparecer al elegir la categoría de un {{item}}.",
+    "caption": "Los {{items}} que ya la tienen la conservan."
+  },
+  "deleteConfirm": {
+    "title": "¿Eliminar «{{name}}»?",
+    "content": "Esta acción no se puede deshacer.",
+    "caption": "Una categoría con {{items}} no se puede eliminar: desactivala."
+  },
+  "form": {
+    "name": "Nombre",
+    "namePlaceholder": "Ej. Bebidas",
+    "save": "Guardar"
+  },
+  "create": {
+    "title": "Nueva categoría"
+  },
+  "edit": {
+    "title": "Editar categoría"
+  },
+  "empty": "No hay categorías",
+  "validation": {
+    "nameRequired": "Nombre requerido"
+  }
+}

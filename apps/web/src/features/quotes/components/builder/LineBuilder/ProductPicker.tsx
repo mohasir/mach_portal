@@ -1,7 +1,8 @@
 'use client';
 import { Select } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { Product } from '@/features/catalog';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
+import { ProductThumb, type Product } from '@/features/catalog';
 import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 import { getPickerState } from '../../../lineHelpers';
 
@@ -12,6 +13,7 @@ interface ProductPickerProps {
 
 export function ProductPicker({ catalog, onAdd }: ProductPickerProps) {
   const { t } = useTranslation('quotes');
+  const vocabulary = useCatalogVocabulary();
 
   return (
     <div className="sticky top-4 z-10">
@@ -19,7 +21,7 @@ export function ProductPicker({ catalog, onAdd }: ProductPickerProps) {
         showSearch={{ optionFilterProp: 'label' }}
         value={null}
         size="large"
-        placeholder={t('builder.lines.addPlaceholder')}
+        placeholder={t('builder.lines.addPlaceholder', vocabulary)}
         className="w-full"
         options={catalog.map((p) => ({
           value: p.id,
@@ -30,11 +32,15 @@ export function ProductPicker({ catalog, onAdd }: ProductPickerProps) {
           const product = catalog.find((p) => p.id === option.value);
           const state = product && getPickerState(product);
           return (
-            <div className="flex flex-col">
-              <span>{option.label}</span>
-              {state && !state.selectable && (
-                <span className="text-muted text-xs whitespace-normal">{t(state.reasonKey)}</span>
-              )}
+            <div className="flex items-center gap-2">
+              {product && <ProductThumb product={product} size="sm" />}
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate">{option.label}</span>
+                {product && <span className="text-muted text-xs">{product.unit.pluralName}</span>}
+                {state && !state.selectable && (
+                  <span className="text-muted text-xs whitespace-normal">{t(state.reasonKey)}</span>
+                )}
+              </div>
             </div>
           );
         }}

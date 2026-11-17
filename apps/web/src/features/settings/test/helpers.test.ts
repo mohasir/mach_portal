@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { visibleSettingsSections, withStoredValues } from '../helpers';
+import {
+  toQuoteDefaultsFormValues,
+  toQuoteDefaultsUpdateInput,
+  visibleSettingsSections,
+  withStoredValues,
+} from '../helpers';
+import type { Config } from '../types';
 
 describe('withStoredValues', () => {
   it('fills fields whose controls were not rendered with the stored value', () => {
@@ -63,5 +69,26 @@ describe('visibleSettingsSections', () => {
     expect(visibleSettingsSections({ ...all, canCatalogPreferences: false }).preferences).toBe(
       false,
     );
+  });
+});
+
+// The minimum quantity per quote line is a field of each product now.
+describe('quote defaults', () => {
+  const config = {
+    appSettings: {
+      depositRate: 0.5,
+      quoteValidityMonths: 3,
+      quoteSeqStart: 1,
+      currency: 'USD',
+      optionsSelectionDeadlineDays: 7,
+    },
+    lastUsedSeq: 4,
+  } as unknown as Config;
+
+  it('neither reads nor sends a global minimum per line', () => {
+    const values = toQuoteDefaultsFormValues(config);
+    expect(values).not.toHaveProperty('minPersonsPerLine');
+    expect(values.quoteSeqStart).toBe(5);
+    expect(toQuoteDefaultsUpdateInput(values)).not.toHaveProperty('minPersonsPerLine');
   });
 });

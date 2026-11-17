@@ -35,17 +35,17 @@ Tipo de evento, fecha, hora, Estado (NY, NJ o CT), Ciudad y Dirección.
 - **Recargo tarjeta/cheque**: switch on/off que suma el porcentaje configurado en Ajustes sobre el
   total ya con impuesto.
 
-## Paso 4: Agregar estaciones
+## Paso 4: Agregar {{items}}
 
-Se busca la estación en el catálogo y se agrega como línea, eligiendo el **paquete** según la
-cantidad de personas — de una lista ya definida para esa estación, no se puede escribir una
+Se busca el {{item}} en el catálogo y se agrega como línea, eligiendo el **paquete** según la
+cantidad de personas — de una lista ya definida para ese {{item}}, no se puede escribir una
 cantidad libre. El precio se precarga con el del paquete elegido, pero es editable a mano.
 
-Las opciones de cada estación (ingredientes, sabores, etc.) no se eligen acá — se completan
+Las opciones de cada {{item}} (ingredientes, sabores, etc.) no se eligen acá — se completan
 después, desde la ficha del evento ya aprobado. Ver
 [Completar las opciones pendientes de un evento](/admin/settings/support/completar-opciones-pendientes).
 
-![Agregar una estación y elegir su paquete](/support/crear-una-cotizacion/3.png)
+![Agregar un {{item}} y elegir su paquete](/support/crear-una-cotizacion/3.png)
 
 ## Paso 5: Descuento y depósito
 

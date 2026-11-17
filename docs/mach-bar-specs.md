@@ -179,7 +179,7 @@ export const quoteStations = pgTable('quote_stations', {
               .references(() => quotes.id, { onDelete: 'cascade' }),
   stationId:  uuid('station_id').notNull()
               .references(() => stations.id),
-  numPersons: integer('num_persons').notNull(),
+  quantity: integer('quantity').notNull(),
   // mínimo 30
   pricePerPerson: numeric('price_per_person', { precision: 10, scale: 2 }).notNull(),
   subtotal:   numeric('subtotal', { precision: 10, scale: 2 }).notNull(),
@@ -236,7 +236,7 @@ export const eventStations = pgTable('event_stations', {
                   .references(() => events.id, { onDelete: 'cascade' }),
   stationId:      uuid('station_id').notNull()
                   .references(() => stations.id),
-  numPersons:     integer('num_persons').notNull(),
+  quantity:     integer('quantity').notNull(),
   pricePerPerson: numeric('price_per_person', { precision: 10, scale: 2 }).notNull(),
   subtotal:       numeric('subtotal', { precision: 10, scale: 2 }).notNull(),
 });
@@ -421,7 +421,7 @@ export const protectedProcedure = t.procedure.use(/* auth middleware */);
 ```ts
 export const QuoteStationInput = z.object({
   stationId:      z.string().uuid(),
-  numPersons:     z.number().int().min(30, 'Mínimo 30 personas'),
+  quantity:     z.number().int().min(30, 'Mínimo 30 personas'),
   pricePerPerson: z.number().positive(),
   selections:     z.array(z.object({
     sectionId:     z.string().uuid(),
@@ -449,7 +449,7 @@ export const QuoteCreateInput = z.object({
 // Calcular totales al crear/actualizar
 export function calculateQuoteTotals(stations: QuoteStationInput[]) {
   const subtotal = stations.reduce(
-    (acc, s) => acc + s.numPersons * s.pricePerPerson, 0
+    (acc, s) => acc + s.quantity * s.pricePerPerson, 0
   );
   const deposit = subtotal * 0.5;       // 50% depósito
   const validUntil = addMonths(new Date(), 3); // válido 3 meses

@@ -11,5 +11,4 @@ export { QuickLineCard } from './components/builder/QuickLineBuilder/QuickLineCa
 export { OptionGroupChips } from './components/builder/LineBuilder/OptionGroupChips';
 export { OptionGroupSelectList } from './components/builder/LineBuilder/OptionGroupSelectList';
 export { useCancelQuote, useQuote, useQuotesList } from './hooks/useQuotes';
-export { getStationIcon } from './helpers';
 export type { Quote, QuoteDetail, QuoteBoard, QuoteCard } from './types';

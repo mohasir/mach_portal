@@ -2,9 +2,9 @@
 
 ## Quote defaults
 
-Default deposit (%), Quote validity (months — the expiration date depends on this), Minimum
-people per line, Quote sequence start, Currency and Options selection deadline (days before the
-event).
+Default deposit (%), Quote validity (months — the expiration date depends on this), Quote
+sequence start, Currency and Options selection deadline (days before the event). The minimum
+quantity of each line is set on each catalog item.
 
 > The sequence start **can't be lowered** below the last number already used — the system rejects
 > it if you try.

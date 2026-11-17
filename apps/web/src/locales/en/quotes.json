@@ -96,12 +96,12 @@
     },
     "selectionsMode": {
       "label": "Choose options now",
-      "hint": "Off: only stations are added; ingredients get picked later from the event. On: pick each station's options here."
+      "hint": "Off: only {{items}} are added; ingredients get picked later from the event. On: pick each {{item}}'s options here."
     },
     "lines": {
-      "title": "Stations",
-      "empty": "No stations added yet",
-      "addPlaceholder": "+ Add station",
+      "title": "{{Items}}",
+      "empty": "No {{items}} added yet",
+      "addPlaceholder": "+ Add {{item}}",
       "remove": "Remove line",
       "show": "View selection",
       "editSelections": "Choose options",
@@ -110,9 +110,7 @@
       "editDone": "Done",
       "decrease": "Decrease quantity",
       "increase": "Increase quantity",
-      "numPersons": "Guests",
-      "numPersonsCount_one": "{{count}} guest",
-      "numPersonsCount_other": "{{count}} guests",
+      "quantity": "Quantity",
       "notQuotable": "Not quotable: its price is not set in the catalog",
       "price": "Price",
       "included": "Included",

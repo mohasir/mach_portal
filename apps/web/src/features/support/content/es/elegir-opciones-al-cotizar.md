@@ -1,14 +1,14 @@
-Cada estación puede tener secciones de opciones (ingredientes, sabores, extras). Hay dos momentos
+Cada {{item}} puede tener secciones de opciones (ingredientes, sabores, extras). Hay dos momentos
 posibles para elegirlas, y cuál se usa depende de un switch global.
 
 ## Los dos modos
 
-- **Elegir después (por defecto)**: al armar la cotización solo se elige la estación y el paquete
+- **Elegir después (por defecto)**: al armar la cotización solo se elige el {{item}} y el paquete
   según la cantidad de personas. Las opciones de cada sección quedan pendientes y se completan más adelante, desde la
   ficha del evento ya aprobado.
 - **Elegir ahora**: si el equipo de soporte activó el switch "Permitir elegir opciones al cotizar"
   en Configuración → Preferencias, aparece un switch **"Elegir opciones ahora"** en el armador.
-  Activándolo, las opciones de cada estación se eligen ahí mismo, al momento de cotizar.
+  Activándolo, las opciones de cada {{item}} se eligen ahí mismo, al momento de cotizar.
 
 Si el switch global está apagado, esta opción no aparece en el armador — todas las cotizaciones
 nuevas quedan en modo "elegir después" sin poder cambiarlo.

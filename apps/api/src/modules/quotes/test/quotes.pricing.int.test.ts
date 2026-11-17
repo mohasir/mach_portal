@@ -11,7 +11,14 @@ import {
   quoteStages,
   quotes,
 } from '../../../db/schema';
-import { createTestUser, createTestTenant, addMember, resetDb, testDb } from '../../../test/db';
+import {
+  createTestUser,
+  createTestTenant,
+  addMember,
+  resetDb,
+  testDb,
+  testUnitId,
+} from '../../../test/db';
 import { ConfigRepository } from '../../config/config.repository';
 import type { NotificationsRepository } from '../../notifications/notifications.repository';
 import { ProductsRepository } from '../../products/products.repository';
@@ -71,18 +78,18 @@ describe('quote prices are frozen once a line is saved', () => {
       .returning({ id: clients.id })) as [{ id: string }];
     [{ id: productId }] = (await testDb
       .insert(products)
-      .values({ tenantId, name: 'Bar' })
+      .values({ tenantId, name: 'Bar', uomId: await testUnitId(tenantId) })
       .returning({ id: products.id })) as [{ id: string }];
     await testDb
       .insert(productPriceTiers)
-      .values({ tenantId, productId, numPersons: 40, price: 150000 });
+      .values({ tenantId, productId, quantity: 40, price: 150000 });
 
     const created = await serviceFor(tenantId, true).create(
       {
         isDraft: false,
         selectOptionsAtQuote: false,
         clientId,
-        lines: [{ productId, numPersons: 40, subtotal: 150000, selections: [] }],
+        lines: [{ productId, quantity: 40, subtotal: 150000, selections: [] }],
       },
       userId,
       false,
@@ -138,7 +145,7 @@ describe('quote prices are frozen once a line is saved', () => {
     );
   const tierLine: QuoteLineInput = {
     productId: '',
-    numPersons: 40,
+    quantity: 40,
     subtotal: 150000,
     selections: [],
   };
@@ -154,7 +161,7 @@ describe('quote prices are frozen once a line is saved', () => {
   it('validates a modified line as before', async () => {
     await loseTiersAndPrice();
     const service = serviceFor(tenantId, false);
-    for (const change of [{ numPersons: 50 }, { subtotal: 140000 }]) {
+    for (const change of [{ quantity: 50 }, { subtotal: 140000 }]) {
       await expect(save(service, [{ ...tierLine, productId, ...change }])).rejects.toMatchObject({
         cause: { code: 'PRODUCT_NOT_QUOTABLE' },
       });
@@ -164,7 +171,7 @@ describe('quote prices are frozen once a line is saved', () => {
   it('rejects a new line for a product that is not quotable', async () => {
     const [other] = await testDb
       .insert(products)
-      .values({ tenantId, name: 'No price' })
+      .values({ tenantId, name: 'No price', uomId: await testUnitId(tenantId) })
       .returning({ id: products.id });
     await expect(
       save(serviceFor(tenantId, true), [
@@ -179,6 +186,26 @@ describe('quote prices are frozen once a line is saved', () => {
     const line = { ...tierLine, productId };
     await expect(save(serviceFor(tenantId, false), [line, line])).rejects.toMatchObject({
       cause: { code: 'PRODUCT_NOT_QUOTABLE' },
+    });
+  });
+
+  it('re-saves an unchanged line below a minimum quantity raised afterwards', async () => {
+    await testDb.update(products).set({ minQuantity: 50 }).where(eq(products.id, productId));
+    const updated = await save(serviceFor(tenantId, true), [{ ...tierLine, productId }]);
+    expect(updated).toMatchObject({ notes: 'edited' });
+  });
+
+  it('rejects a new or modified line below the product minimum quantity', async () => {
+    await testDb
+      .insert(productPriceTiers)
+      .values({ tenantId, productId, quantity: 30, price: 120000 });
+    await testDb.update(products).set({ minQuantity: 35 }).where(eq(products.id, productId));
+    const belowMin = { ...tierLine, productId, quantity: 30, subtotal: 120000 };
+    await expect(
+      save(serviceFor(tenantId, true), [{ ...tierLine, productId }, belowMin]),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST', cause: { code: 'QUOTE_BELOW_MIN_QUANTITY' } });
+    await expect(save(serviceFor(tenantId, true), [belowMin])).rejects.toMatchObject({
+      cause: { code: 'QUOTE_BELOW_MIN_QUANTITY' },
     });
   });
 });

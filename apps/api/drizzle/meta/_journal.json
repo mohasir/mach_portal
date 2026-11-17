@@ -50,6 +50,55 @@
       "when": 1794598857324,
       "tag": "0006_tenant_features",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794660000000,
+      "tag": "0007_quantity_rename",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794660334177,
+      "tag": "0008_tenant_profile",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794662000000,
+      "tag": "0009_units_of_measure",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794680916542,
+      "tag": "0010_product_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794851272927,
+      "tag": "0011_product_images",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794869187414,
+      "tag": "0012_product_descriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794885197919,
+      "tag": "0013_quote_line_units",
+      "breakpoints": true
     }
   ]
 }

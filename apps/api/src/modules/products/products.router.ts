@@ -5,6 +5,8 @@ import {
   createOptionGroupSchema,
   createOptionSchema,
   createProductSchema,
+  productImageIdSchema,
+  reorderProductImagesSchema,
   updateOptionGroupSchema,
   updateOptionSchema,
   updateProductSchema,
@@ -13,7 +15,7 @@ import {
 import { RESOURCES, ACTIONS } from '@repo/guards';
 import { requireFeature } from '../../core/trpc/requireFeature';
 import { router, guardedProcedure } from '../../core/trpc/trpc';
-import { productsModule } from './products.module';
+import { productImagesModule, productsModule } from './products.module';
 
 const read = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.READ] });
 const create = guardedProcedure({ [RESOURCES.PRODUCT]: [ACTIONS.CREATE] });
@@ -92,6 +94,24 @@ const pricesRouter = router({
     ),
 });
 
+// Reordering and featuring only mean something with several images; deleting stays open so a
+// product can always be cleaned up.
+const galleryUpdate = update.use(requireFeature('productGallery'));
+
+const imagesRouter = router({
+  setFeatured: galleryUpdate
+    .input(productImageIdSchema)
+    .mutation(({ ctx, input }) =>
+      productImagesModule(ctx).setFeatured(input.productId, input.imageId),
+    ),
+  reorder: galleryUpdate
+    .input(reorderProductImagesSchema)
+    .mutation(({ ctx, input }) => productImagesModule(ctx).reorder(input.productId, input.ids)),
+  delete: update
+    .input(productImageIdSchema)
+    .mutation(({ ctx, input }) => productImagesModule(ctx).delete(input.productId, input.imageId)),
+});
+
 export const productsRouter = router({
   list: read.query(({ ctx }) => productsModule(ctx).list()),
   catalog: read
@@ -120,4 +140,5 @@ export const productsRouter = router({
   groups: groupsRouter,
   options: optionsRouter,
   prices: pricesRouter,
+  images: imagesRouter,
 });

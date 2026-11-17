@@ -24,7 +24,7 @@
     },
     "catalogo": {
       "label": "Catálogo",
-      "caption": "Estaciones, servicios, opciones y precios"
+      "caption": "{{Items}}, secciones, opciones y precios"
     },
     "tipos-de-evento": {
       "label": "Tipos de evento",
@@ -54,7 +54,7 @@
   "articles": {
     "crear-una-cotizacion": {
       "title": "Cómo crear una cotización paso a paso",
-      "description": "Cliente, datos del evento, estaciones, cargos, descuento y depósito"
+      "description": "Cliente, datos del evento, {{items}}, cargos, descuento y depósito"
     },
     "estados-de-una-cotizacion": {
       "title": "Estados de una cotización",
@@ -104,12 +104,12 @@
       "title": "El calendario de eventos",
       "description": "Vista mes, semana y los colores por tipo de evento"
     },
-    "crear-estacion-y-precios": {
-      "title": "Cómo crear una estación y cargar sus precios",
-      "description": "Paquetes por cantidad de personas"
+    "crear-producto-y-precios": {
+      "title": "Cómo crear un {{item}} y cargar sus precios",
+      "description": "Paquetes por cantidad"
     },
     "armar-servicios-y-opciones": {
-      "title": "Cómo armar los servicios y opciones de una estación",
+      "title": "Cómo armar las secciones y opciones de un {{item}}",
       "description": "Secciones seleccionables e incluidas"
     },
     "activar-desactivar-reordenar-catalogo": {

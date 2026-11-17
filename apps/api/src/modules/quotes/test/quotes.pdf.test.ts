@@ -7,7 +7,7 @@ const option = (id: string, name: string, isActive = true) => ({
   id,
   optionGroupId: 'g',
   name,
-  description: null,
+  description: null as string | null,
   isActive,
   sortOrder: 0,
 });
@@ -34,11 +34,19 @@ const product = (
 ): ProductWithGroups => ({
   id: 'p1',
   name: 'Taco Bar',
-  description: null,
+  shortDescription: null,
+  longDescription: null,
   isPremium: false,
   isActive,
   sortOrder: 0,
   price: null,
+  uomId: 'u1',
+  unit: { id: 'u1', name: 'Persona', pluralName: 'Personas', code: 'pers', dimension: 'quantity' },
+  categoryId: null,
+  category: null,
+  sku: null,
+  minQuantity: 1,
+  images: [],
   quotable: false,
   priceTiers: [],
   optionGroups,
@@ -53,9 +61,7 @@ const quoteRow = {
   depositAmount: 0,
 } as unknown as QuoteDetailRow;
 
-const lines = [
-  { productId: 'p1', numPersons: 20, subtotal: 100000 },
-] as unknown as QuoteLineDetail[];
+const lines = [{ productId: 'p1', quantity: 20, subtotal: 100000 }] as unknown as QuoteLineDetail[];
 
 const detailsOf = (catalog: ProductWithGroups[]) =>
   buildQuotePdfPayload(quoteRow, lines, catalog, undefined).items[0]?.details;
@@ -79,7 +85,7 @@ describe('buildQuotePdfPayload menu', () => {
     expect(details?.[0]?.title).toBe('Proteins');
   });
 
-  it('still lists an inactive station so existing quotes keep their line', () => {
+  it('still lists an inactive product so existing quotes keep their line', () => {
     const items = buildQuotePdfPayload(
       quoteRow,
       lines,
@@ -88,5 +94,26 @@ describe('buildQuotePdfPayload menu', () => {
     ).items;
     expect(items).toHaveLength(1);
     expect(items[0]?.details).toEqual([expect.objectContaining({ options: ['Chicken'] })]);
+  });
+
+  it('picks no icon from the product or group name', () => {
+    const details = detailsOf([
+      product([
+        group('g1', 'Fresh Fruits', [option('o1', 'Mango')]),
+        group('g2', 'Warm Cheese Sauce', [option('o2', 'Cheddar')]),
+      ]),
+    ]);
+    expect(details).toEqual([
+      { title: 'Fresh Fruits', options: ['Mango'] },
+      { title: 'Warm Cheese Sauce', options: ['Cheddar'] },
+    ]);
+  });
+
+  it('lays out a group the same way whatever the product and group are called', () => {
+    const cocktail = { ...option('o1', 'Paloma'), description: 'Tequila • Grapefruit' };
+    const details = detailsOf([
+      { ...product([group('g1', 'Signature Cocktails', [cocktail])]), name: 'Craft Bar' },
+    ]);
+    expect(details).toEqual([{ title: 'Signature Cocktails', options: ['Paloma'] }]);
   });
 });

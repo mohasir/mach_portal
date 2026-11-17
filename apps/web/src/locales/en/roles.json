@@ -104,7 +104,7 @@
       "view_archived": "View archived",
       "view_summary": "View monthly metrics",
       "view_quotes_chart": "View quotes chart",
-      "view_top_products": "View top requested stations",
+      "view_top_products": "View top requested {{items}}",
       "reschedule": "Reschedule",
       "view_reschedules": "View reschedules",
       "list": "View list",
@@ -140,16 +140,28 @@
         "caption": "Staff members and their assignments."
       },
       "product": {
-        "label": "Stations",
-        "caption": "Catalog stations and their options."
+        "label": "{{Items}}",
+        "caption": "Catalog {{items}} and their options."
       },
       "product_option": {
-        "label": "Station items",
-        "caption": "Items and sections inside each station."
+        "label": "{{Item}} items",
+        "caption": "Items and sections inside each {{item}}."
       },
       "price_tiers": {
         "label": "Price tiers",
-        "caption": "Prices by number of guests for each station."
+        "caption": "Prices by quantity for each {{item}}, in its unit."
+      },
+      "unit_of_measure": {
+        "label": "Units of measure",
+        "caption": "Units each {{item}} is priced and counted in."
+      },
+      "product_category": {
+        "label": "Categories",
+        "caption": "Categories to group and filter the catalog {{items}}."
+      },
+      "product_cost": {
+        "label": "{{Item}} cost",
+        "caption": "See and edit the internal cost of each {{item}}; never shown on quotes or events."
       },
       "event_type": {
         "label": "Event types",
@@ -168,7 +180,7 @@
       },
       "quote_defaults": {
         "label": "Quote defaults",
-        "caption": "Deposit, validity, minimum guests and numbering for new quotes."
+        "caption": "Deposit, validity and numbering for new quotes."
       },
       "quote_stages": {
         "label": "Quote stages",
@@ -176,7 +188,7 @@
       },
       "catalog_preferences": {
         "label": "Catalog preferences",
-        "caption": "Ordering of the station catalog."
+        "caption": "Ordering of the {{item}} catalog."
       },
       "quote_pdf_template": {
         "label": "Quote PDF template",

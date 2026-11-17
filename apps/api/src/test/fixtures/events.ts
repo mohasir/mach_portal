@@ -20,7 +20,7 @@ import {
   rescheduleReasons,
   staff,
 } from '../../db/schema';
-import { testDb, type TestTenant } from '../db';
+import { testDb, testUnitId, type TestTenant } from '../db';
 
 export const DATE = '2030-06-01';
 export const TIME = '18:00';
@@ -85,11 +85,11 @@ export async function seedEventsTenant(tenant: TestTenant, label: string): Promi
     .returning({ id: rescheduleReasons.id });
   const [product] = await testDb
     .insert(products)
-    .values({ tenantId: t, name: `Menu ${label}` })
+    .values({ tenantId: t, name: `Menu ${label}`, uomId: await testUnitId(t) })
     .returning({ id: products.id });
   await testDb
     .insert(productPriceTiers)
-    .values({ tenantId: t, productId: product!.id, numPersons: 10, price: 1000 });
+    .values({ tenantId: t, productId: product!.id, quantity: 10, price: 1000 });
   const [group] = await testDb
     .insert(optionGroups)
     .values({ tenantId: t, productId: product!.id, label: `Group ${label}` })
@@ -124,7 +124,8 @@ export async function seedEventsTenant(tenant: TestTenant, label: string): Promi
       tenantId: t,
       quoteId: quote!.id,
       productId: product!.id,
-      numPersons: 10,
+      uomId: await testUnitId(t),
+      quantity: 10,
       subtotal: 1000,
     })
     .returning({ id: quoteLines.id });

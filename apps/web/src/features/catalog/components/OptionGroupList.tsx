@@ -3,6 +3,7 @@ import { Fragment, useState } from 'react';
 import { Divider, Typography } from 'antd';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { useCan } from '@/lib/auth/useCan';
 import { useOptionGroupMutations } from '../hooks/useOptionGroupMutations';
@@ -18,6 +19,7 @@ interface OptionGroupListProps {
 
 export function OptionGroupList({ productId, groups }: OptionGroupListProps) {
   const { t } = useTranslation('catalog');
+  const vocabulary = useCatalogVocabulary();
   const can = useCan();
   const canCreate = can({ [RESOURCES.PRODUCT]: [ACTIONS.CREATE] });
   const { reorderOptionGroups } = useOptionGroupMutations();
@@ -29,7 +31,7 @@ export function OptionGroupList({ productId, groups }: OptionGroupListProps) {
   return (
     <div>
       <Typography.Text type="secondary" className="text-sm">
-        {t('detail.tabs.detailsDescription')}
+        {t('detail.tabs.detailsDescription', vocabulary)}
       </Typography.Text>
 
       {canCreate && (

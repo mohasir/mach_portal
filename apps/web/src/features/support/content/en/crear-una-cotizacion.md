@@ -34,17 +34,17 @@ Event type, date, time, State (NY, NJ or CT), City and Address.
 - **Card/check surcharge**: an on/off switch that adds the configured percentage on top of the
   total after tax.
 
-## Step 4: Adding stations
+## Step 4: Adding {{items}}
 
-Search the station in the catalog and add it as a line. Pick the **package** for the headcount —
-from a list already defined for that station, you can't type a free amount. The price is
+Search the {{item}} in the catalog and add it as a line. Pick the **package** for the headcount —
+from a list already defined for that {{item}}, you can't type a free amount. The price is
 pre-filled from the chosen package, but you can edit it by hand.
 
-Each station's options (ingredients, flavors, etc.) aren't chosen here — they're completed later,
+Each {{item}}'s options (ingredients, flavors, etc.) aren't chosen here — they're completed later,
 from the already-approved event's page. See
 [Completing an event's pending options](/admin/settings/support/completar-opciones-pendientes).
 
-![Adding a station and picking its package](/support/crear-una-cotizacion/3.png)
+![Adding a {{item}} and picking its package](/support/crear-una-cotizacion/3.png)
 
 ## Step 5: Discount and deposit
 

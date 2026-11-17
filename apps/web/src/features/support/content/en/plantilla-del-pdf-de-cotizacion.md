@@ -4,7 +4,7 @@
 
 ## What's configurable
 
-- **Service duration**: "Station: Duration" pairs (e.g. "Snack Station" / "Up to 2 hours of
+- **Service duration**: "{{Item}}: Duration" pairs (e.g. "Premium package" / "Up to 2 hours of
   service") printed in the PDF's duration section.
 - **Terms and conditions**: text where each line is a term — they show up as bullet points on the
   PDF. **If you don't enter any, that section simply doesn't appear** on the PDF.

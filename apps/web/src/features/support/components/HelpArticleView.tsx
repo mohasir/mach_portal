@@ -9,8 +9,10 @@ import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { findArticle } from '../content/categories';
 import { useHelpCategories } from '../hooks/useHelpCategories';
+import { fillVocabulary } from '../helpers';
 import { HelpArticleRow } from './HelpArticleRow';
 
 const MAX_RELATED_ARTICLES = 5;
@@ -46,7 +48,9 @@ export function HelpArticleView({
 }: HelpArticleViewProps) {
   const { t, i18n } = useTranslation('support');
   const { date } = useDateFormatter();
-  const body = i18n.language === 'en' && bodyEn ? bodyEn : bodyEs;
+  const vocabulary = useCatalogVocabulary();
+  const rawBody = i18n.language === 'en' && bodyEn ? bodyEn : bodyEs;
+  const body = useMemo(() => fillVocabulary(rawBody, vocabulary), [rawBody, vocabulary]);
   const headings = useMemo(
     () =>
       [...body.matchAll(/^## (.+)$/gm)].map((m) => {
@@ -79,10 +83,10 @@ export function HelpArticleView({
       />
       <div className="flex flex-col gap-1">
         <Typography.Title level={1} className="text-black text-2xl! m-0!">
-          {t(`articles.${articleSlug}.title`)}
+          {t(`articles.${articleSlug}.title`, vocabulary)}
         </Typography.Title>
         <Typography.Text type="secondary" className="text-base">
-          {t(`articles.${articleSlug}.description`)}
+          {t(`articles.${articleSlug}.description`, vocabulary)}
         </Typography.Text>
         {updatedAt && (
           <Typography.Text className="text-muted text-xs mt-2">
@@ -139,7 +143,12 @@ export function HelpArticleView({
                   {children}
                 </Link>
               ) : (
-                <a href={href} target="_blank" rel="noopener noreferrer" className="text-navy underline">
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-navy underline"
+                >
                   {children}
                 </a>
               ),

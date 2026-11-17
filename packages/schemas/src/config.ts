@@ -24,7 +24,6 @@ const currencyCodeSchema = z.string().regex(/^[A-Z]{3}$/, 'config.validation.cur
 export const updateQuoteDefaultsSchema = z.object({
   depositRate: rateSchema('config.validation.depositRateInvalid'),
   quoteValidityMonths: z.number().int().min(1, 'config.validation.quoteValidityInvalid'),
-  minPersonsPerLine: z.number().int().min(1, 'config.validation.minPersonsInvalid'),
   quoteSeqStart: z.number().int().min(1, 'config.validation.quoteSeqStartInvalid'),
   currency: currencyCodeSchema,
   optionsSelectionDeadlineDays: z

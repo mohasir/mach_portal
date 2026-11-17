@@ -16,7 +16,7 @@ import {
 } from '../../../db/schema';
 import { settleBackgroundTasks } from '../../../lib/background';
 import type { StorageProvider } from '../../../lib/storage';
-import { resetDb, seedTwoTenants, testDb, type TestTenant } from '../../../test/db';
+import { resetDb, seedTwoTenants, testDb, testUnitId, type TestTenant } from '../../../test/db';
 import { ConfigRepository } from '../../config/config.repository';
 import { NotificationsRepository } from '../../notifications/notifications.repository';
 import { QuotesRepository } from '../../quotes/quotes.repository';
@@ -371,7 +371,8 @@ describe('events tenant isolation', () => {
         tenantId: a.id,
         quoteId: sa.freeQuoteId,
         productId: sa.productId,
-        numPersons: 1,
+        uomId: await testUnitId(a.id),
+        quantity: 1,
         subtotal: 1,
       });
       const list = await repoA.findPaginated(
@@ -436,7 +437,8 @@ describe('events tenant isolation', () => {
         tenantId: a.id,
         quoteId: sb.freeQuoteId,
         productId: sa.productId,
-        numPersons: 1,
+        uomId: await testUnitId(a.id),
+        quantity: 1,
         subtotal: 1,
       });
       const list = await repoA.findPaginated(
@@ -771,7 +773,8 @@ describe('events tenant isolation', () => {
         tenantId: b.id,
         quoteId: sa.quoteId,
         productId: sb.productId,
-        numPersons: 1,
+        uomId: await testUnitId(b.id),
+        quantity: 1,
         subtotal: 1,
       });
       await testDb.insert(quoteLineOptions).values({
@@ -790,7 +793,8 @@ describe('events tenant isolation', () => {
         tenantId: b.id,
         quoteId: sa.quote2Id,
         productId: sa.productId,
-        numPersons: 1,
+        uomId: await testUnitId(b.id),
+        quantity: 1,
         subtotal: 1,
       });
       expect((await repoA.findById(sa.event2Id))?.selectionsIncomplete).toBe(false);

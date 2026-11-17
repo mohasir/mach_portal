@@ -1,11 +1,11 @@
-Inside each station there are two more levels: **sections** (or services) and **items** within
+Inside each {{item}} there are two more levels: **sections** and **items** within
 each section.
 
-![A station's services](/support/armar-servicios-y-opciones/1.png)
+![A {{item}}'s sections](/support/armar-servicios-y-opciones/1.png)
 
 ## Creating a section
 
-From the station's detail page, "Services" tab, "New section" button. It asks for:
+From the {{item}}'s detail page, "Sections" tab, "New section" button. It asks for:
 
 - **Name** (required).
 - **Type**: **Selectable** (the client chooses which ones they want) or **Included** (they all
@@ -26,5 +26,5 @@ Description (optional, meant for ingredient details).
 - **Selectable** ones let you pick up to the defined maximum (or no limit if you didn't set one).
 
 If you change a section from Included to Selectable (or the other way around) after quotes with
-that station already exist, those quotes **don't update automatically** — they keep whatever they
+that {{item}} already exist, those quotes **don't update automatically** — they keep whatever they
 had at the time they were quoted.

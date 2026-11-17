@@ -1,0 +1,20 @@
+{
+  "products": {
+    "item": "producto",
+    "items": "productos",
+    "Item": "Producto",
+    "Items": "Productos"
+  },
+  "services": {
+    "item": "servicio",
+    "items": "servicios",
+    "Item": "Servicio",
+    "Items": "Servicios"
+  },
+  "neutral": {
+    "item": "elemento",
+    "items": "elementos",
+    "Item": "Elemento",
+    "Items": "Elementos"
+  }
+}

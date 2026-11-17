@@ -1,6 +1,8 @@
+import { tenantProfileSchema } from '@repo/schemas';
 import { z } from 'zod';
 import { authedProcedure, protectedProcedure, router } from '../../core/trpc/trpc';
 import { db } from '../../db';
+import { tenantProfileModule } from './tenant.module';
 import { TenantRepository } from './tenant.repository';
 import { TenantService } from './tenant.service';
 
@@ -16,6 +18,11 @@ export const tenantRouter = router({
   permissions: protectedProcedure.query(({ ctx }) => service.permissions(ctx.access)),
 
   permissionsVersion: protectedProcedure.query(({ ctx }) => service.permissionsVersion(ctx.access)),
+
+  // Any member of the organization: the web needs it to word the catalog.
+  profile: protectedProcedure
+    .output(tenantProfileSchema)
+    .query(({ ctx }) => tenantProfileModule(ctx).profile()),
 
   memberships: authedProcedure.query(({ ctx }) => service.memberships(ctx.session.user.id)),
 

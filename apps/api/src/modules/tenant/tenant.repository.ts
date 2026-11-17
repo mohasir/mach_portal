@@ -1,6 +1,8 @@
 import { eq } from 'drizzle-orm';
-import type { Database } from '../../db';
+import type { CatalogKind } from '@repo/schemas';
+import type { Database, Executor } from '../../db';
 import { member, organization, session } from '../../db/schema';
+import { getCatalogKind } from '../../lib/tenancy/profile';
 import { publicOrganizationColumns } from './tenant.resource';
 
 // organization, member and session are global (not tenant-scoped) tables, so none of these
@@ -35,5 +37,18 @@ export class TenantRepository {
       .update(session)
       .set({ activeOrganizationId: organizationId })
       .where(eq(session.id, sessionId));
+  }
+}
+
+// Unlike TenantRepository this one is built per request: tenant_profile has RLS, so it must run on
+// the request transaction.
+export class TenantProfileRepository {
+  constructor(
+    private db: Executor,
+    private tenantId: string,
+  ) {}
+
+  catalogKind(): Promise<CatalogKind> {
+    return getCatalogKind(this.db, this.tenantId);
   }
 }

@@ -1,0 +1,47 @@
+{
+  "title": "Categories",
+  "index": {
+    "add": "New category"
+  },
+  "columns": {
+    "name": "Name",
+    "products": "{{Items}}",
+    "status": "Status"
+  },
+  "productCount_one": "{{count}} {{item}}",
+  "productCount_other": "{{count}} {{items}}",
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "actions": {
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "delete": "Delete"
+  },
+  "deactivateConfirm": {
+    "title": "Deactivate “{{name}}”?",
+    "content": "It will no longer be offered when choosing the category of a {{item}}.",
+    "caption": "{{Items}} that already have it keep it."
+  },
+  "deleteConfirm": {
+    "title": "Delete “{{name}}”?",
+    "content": "This action cannot be undone.",
+    "caption": "A category with {{items}} cannot be deleted: deactivate it instead."
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "E.g. Drinks",
+    "save": "Save"
+  },
+  "create": {
+    "title": "New category"
+  },
+  "edit": {
+    "title": "Edit category"
+  },
+  "empty": "There are no categories",
+  "validation": {
+    "nameRequired": "Name is required"
+  }
+}

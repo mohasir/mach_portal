@@ -6,7 +6,17 @@ import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
 import { FEATURE_KEYS, isToggleable } from '@repo/guards';
 import { QUOTE_STAGE } from '@repo/schemas';
 import * as schema from '../../schema';
-import { account, clients, member, organization, products, quotes, role, user } from '../../schema';
+import {
+  account,
+  clients,
+  member,
+  organization,
+  products,
+  quotes,
+  role,
+  tenantProfile,
+  user,
+} from '../../schema';
 import { PLATFORM_MANAGED_TABLES } from '../../rls/policy';
 import { TENANT_EXEMPT_TABLES } from '../../schema/tenantColumn';
 import { createTestTenant, createTestUser, resetDb, testDb } from '../../../test/db';
@@ -23,8 +33,9 @@ import { PROD_SUPERADMIN_EMAIL, seedProdTenant } from '../prod';
 const allTables = (Object.values(schema).filter((v) => is(v, PgTable)) as unknown as PgTable[]).map(
   (t) => getTableConfig(t).name,
 );
-// The audit log only fills when roles are edited, which the seed never does.
-const UNSEEDED_TABLES = ['role_audit_log'];
+// The audit log only fills when roles are edited, which the seed never does; product images need
+// their files in object storage, so the seed leaves every product with the placeholder.
+const UNSEEDED_TABLES = ['role_audit_log', 'product_images'];
 // Feature tables hold platform-managed state, not tenant business data, so these checks skip them.
 const tenantTables = allTables.filter(
   (name) =>
@@ -217,6 +228,22 @@ describe('db:seed --demo=local', () => {
     }
   });
 
+  it('assigns the catalog kind and a unit and category to every product of each demo tenant', async () => {
+    const kinds = await testDb.select().from(tenantProfile);
+    expect(Object.fromEntries(kinds.map((k) => [k.tenantId, k.catalogKind]))).toEqual({
+      [norte]: 'products',
+      [sur]: 'services',
+    });
+    for (const tenantId of [norte, sur]) {
+      const rows = await testDb
+        .select({ uomId: products.uomId, categoryId: products.categoryId })
+        .from(products)
+        .where(eq(products.tenantId, tenantId));
+      expect(rows.length).toBeGreaterThan(0);
+      expect(rows.every((r) => r.uomId && r.categoryId)).toBe(true);
+    }
+  });
+
   it('the platform admin has the flag and no membership', async () => {
     const [platform] = await testDb
       .select()
@@ -268,8 +295,9 @@ describe('db:seed --demo=prod --tenant', () => {
   });
 
   it('seeds only the defaults (plus the global quote stages) into an existing tenant, idempotently', async () => {
-    const tenant = await createTestTenant('acme');
-    const other = await createTestTenant('other');
+    // Without the helper's units, so the counts below show what the prod seed itself writes.
+    const tenant = await createTestTenant('acme', 'acme', { units: false });
+    const other = await createTestTenant('other', 'other', { units: false });
     await seedProdTenant('acme');
     const once = await Promise.all(tenantTables.map(countAll));
     await seedProdTenant('ACME');
@@ -282,6 +310,7 @@ describe('db:seed --demo=prod --tenant', () => {
       'event_types',
       'products',
       'templates',
+      'units_of_measure',
     ]) {
       expect((await rowsByTenant(table)).get(tenant.id) ?? 0, table).toBeGreaterThan(0);
     }

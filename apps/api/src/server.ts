@@ -13,6 +13,7 @@ import { queryClient } from './db';
 import { assertAppRoleRestricted } from './db/rls/roleGuard';
 import { env } from './env';
 import { eventAttachmentsRouter } from './modules/events/events.express';
+import { productImagesRouter } from './modules/products/products.express';
 
 const app = express();
 app.disable('x-powered-by');
@@ -31,6 +32,7 @@ app.use(['/api/auth', '/trpc'], (_req, res, next) => {
 app.all('/api/auth/*path', toNodeHandler(auth));
 
 app.use('/api/uploads/event-payments', eventAttachmentsRouter);
+app.use('/api/uploads/products', productImagesRouter);
 
 // 2) JSON parser for everything else
 app.use(express.json());

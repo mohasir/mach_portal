@@ -10,7 +10,7 @@
     "empty": "No hay cotizaciones registradas este año"
   },
   "topProducts": {
-    "title": "Estaciones más pedidas",
+    "title": "{{Items}} más pedidos",
     "empty": "No hay eventos confirmados este mes",
     "other": "Otras"
   }

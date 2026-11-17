@@ -34,7 +34,6 @@ export const appSettings = pgTable(
       .notNull()
       .default(0.5),
     quoteValidityMonths: integer('quote_validity_months').notNull().default(3),
-    minPersonsPerLine: integer('min_persons_per_line').notNull().default(30),
     quoteSeqStart: integer('quote_seq_start').notNull().default(1),
     currency: text('currency').notNull().default('USD'), // ISO 4217 currency code
     catalogSortable: boolean('catalog_sortable').notNull().default(true),

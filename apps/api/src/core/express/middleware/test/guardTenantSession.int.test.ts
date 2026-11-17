@@ -25,6 +25,7 @@ import {
   role,
   rolePermission,
   tenantFeatures,
+  unitsOfMeasure,
   user,
 } from '../../../../db/schema';
 import { auth } from '../../../../lib/auth';
@@ -136,6 +137,7 @@ describe('guardTenantSession', () => {
     await db.delete(member);
     await db.delete(role).where(eq(role.tenantId, a.id));
     await db.delete(tenantFeatures).where(eq(tenantFeatures.tenantId, a.id));
+    await db.delete(unitsOfMeasure).where(eq(unitsOfMeasure.tenantId, a.id));
     await db.delete(organization).where(eq(organization.id, a.id));
     invalidateTenantCache();
     const r = await run(guard, { cookie });
@@ -239,7 +241,9 @@ describe('guardTenantSession', () => {
       const id = await createUserWithPassword('root@test.local', { isPlatformAdmin: true });
       const cookie = await signInWithActiveOrg('root@test.local', id, a.id);
       // The audit row is written in a transaction of its own.
-      vi.spyOn(db, 'transaction').mockRejectedValueOnce(new Error('audit insert failed secret-detail'));
+      vi.spyOn(db, 'transaction').mockRejectedValueOnce(
+        new Error('audit insert failed secret-detail'),
+      );
       const r = await run(guard, { cookie, method: 'POST' });
       expect(r.status).toBe(500);
       expect(r.body).toEqual({ errorCode: 'INTERNAL_ERROR' });
@@ -387,6 +391,7 @@ describe('parity with the tRPC chain', () => {
       await db.delete(member);
       await db.delete(role).where(eq(role.tenantId, a.id));
       await db.delete(tenantFeatures).where(eq(tenantFeatures.tenantId, a.id));
+      await db.delete(unitsOfMeasure).where(eq(unitsOfMeasure.tenantId, a.id));
       await db.delete(organization).where(eq(organization.id, a.id));
       invalidateTenantCache();
     }

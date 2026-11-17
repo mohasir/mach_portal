@@ -16,6 +16,9 @@ export {
   type PermissionsFilters,
 } from './permissions';
 export { broadcastSessionChange } from './sync';
+export { useTenantProfile } from './hooks/useTenantProfile';
+export { useCatalogVocabulary } from './hooks/useCatalogVocabulary';
+export type { CatalogVocabulary } from './vocabulary';
 export { useSignOut } from './hooks/useSignOut';
 export { useTenantSync } from './hooks/useTenantSync';
 export type { ActiveTenant, Organization } from './types';

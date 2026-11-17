@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { Checkbox, Collapse, Grid, Segmented, Tag, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import type { AccessGrants } from '@repo/guards';
 import type { PermissionScope } from '@repo/schemas';
 import {
@@ -33,18 +34,19 @@ export function PermissionMatrix({
   readOnly = false,
 }: PermissionMatrixProps) {
   const { t } = useTranslation('roles');
+  const vocabulary = useCatalogVocabulary();
   const screens = Grid.useBreakpoint();
   const groups = useMemo(() => buildMatrix(), []);
   // Without an actor every cell is disabled, which is exactly the read-only view.
   const actor = readOnly ? null : actorAccess;
 
   const resourceLabel = (resource: string) =>
-    t(`matrix.resources.${resource}.label`, { defaultValue: resource });
+    t(`matrix.resources.${resource}.label`, { defaultValue: resource, ...vocabulary });
   const resourceCaption = (resource: string) =>
-    t(`matrix.resources.${resource}.caption`, { defaultValue: '' });
+    t(`matrix.resources.${resource}.caption`, { defaultValue: '', ...vocabulary });
   const actionLabel = (resource: string, action: string) =>
     t(`matrix.resources.${resource}.actions.${action}`, {
-      defaultValue: t(`matrix.actions.${action}`, { defaultValue: action }),
+      defaultValue: t(`matrix.actions.${action}`, { defaultValue: action, ...vocabulary }),
     });
 
   const emit = (next: PermissionValue) => {

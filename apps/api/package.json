@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "esbuild src/server.ts --bundle --platform=node --format=esm --outfile=dist/server.js --external:@aws-sdk/client-s3 --external:@trpc/server --external:better-auth --external:cors --external:dotenv --external:drizzle-orm --external:express --external:multer --external:postgres --external:zod",
+    "build": "esbuild src/server.ts --bundle --platform=node --format=esm --outfile=dist/server.js --external:@aws-sdk/client-s3 --external:@trpc/server --external:better-auth --external:cors --external:dotenv --external:drizzle-orm --external:express --external:multer --external:postgres --external:sharp --external:zod",
     "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/scripts/migrate.ts",
@@ -20,6 +20,7 @@
     "db:fresh": "pnpm db:preflight && pnpm db:reset && pnpm db:roles && pnpm db:migrate && pnpm db:seed --demo=local",
     "mt:verify": "tsx src/db/scripts/verifyMultitenant.ts",
     "tenant:create": "tsx src/db/scripts/createTenant.ts",
+    "tenant:set-catalog-kind": "tsx src/db/scripts/tenantProfile.ts",
     "feature:list": "tsx src/db/scripts/feature.ts list",
     "feature:set": "tsx src/db/scripts/feature.ts set",
     "feature:unset": "tsx src/db/scripts/feature.ts unset",
@@ -43,6 +44,7 @@
     "multer": "^2.2.0",
     "node-cron": "^4.6.0",
     "postgres": "^3",
+    "sharp": "^0.35.5",
     "zod": "^4"
   },
   "devDependencies": {

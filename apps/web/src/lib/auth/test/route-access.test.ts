@@ -21,6 +21,18 @@ describe('resolveRouteAccess', () => {
     });
   });
 
+  it('requires UNIT_OF_MEASURE:READ on the units catalog', () => {
+    expect(resolveRouteAccess('/admin/units-of-measure')).toEqual({
+      [RESOURCES.UNIT_OF_MEASURE]: [ACTIONS.READ],
+    });
+  });
+
+  it('requires PRODUCT_CATEGORY:READ on the categories catalog', () => {
+    expect(resolveRouteAccess('/admin/product-categories')).toEqual({
+      [RESOURCES.PRODUCT_CATEGORY]: [ACTIONS.READ],
+    });
+  });
+
   it('requires ROLE:READ on the roles editor', () => {
     expect(resolveRouteAccess('/admin/roles')).toEqual({
       [RESOURCES.ROLE]: [ACTIONS.READ],
@@ -58,12 +70,17 @@ describe('resolveRouteFeature', () => {
     expect(resolveRouteFeature('/admin/notifications/')).toBe('notifications');
   });
 
+  it('requires the unitsOfMeasure add-on for the units page', () => {
+    expect(resolveRouteFeature('/admin/units-of-measure')).toBe('unitsOfMeasure');
+  });
+
   it('has no feature on core routes or unknown paths', () => {
     for (const path of [
       '/admin',
       '/admin/clients',
       '/admin/users',
       '/admin/settings',
+      '/admin/product-categories',
       '/nowhere',
     ]) {
       expect(resolveRouteFeature(path)).toBeUndefined();

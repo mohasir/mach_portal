@@ -98,7 +98,13 @@ async function restoreFeatureRls() {
     `CREATE POLICY "tenant_features_tenant_read" ON "tenant_features" AS PERMISSIVE FOR SELECT
      TO public USING (${SAME_TENANT})`,
   );
-  for (const table of ['tenant_features', 'tenant_feature_events']) {
+  await admin.unsafe(`DROP POLICY IF EXISTS "tenant_profile_write" ON "tenant_profile"`);
+  await admin.unsafe(`DROP POLICY IF EXISTS "tenant_profile_tenant_read" ON "tenant_profile"`);
+  await admin.unsafe(
+    `CREATE POLICY "tenant_profile_tenant_read" ON "tenant_profile" AS PERMISSIVE FOR SELECT
+     TO public USING (${SAME_TENANT})`,
+  );
+  for (const table of ['tenant_features', 'tenant_feature_events', 'tenant_profile']) {
     await admin.unsafe(`ALTER TABLE "${table}" ENABLE ROW LEVEL SECURITY`);
     await admin.unsafe(`ALTER TABLE "${table}" FORCE ROW LEVEL SECURITY`);
   }
@@ -127,6 +133,31 @@ describe('verifyMultitenant checks of the platform-managed feature tables', () =
     ]);
   });
 
+  it('reports a write policy on tenant_profile', async () => {
+    await admin.unsafe(
+      `CREATE POLICY "tenant_profile_write" ON "tenant_profile" FOR INSERT
+       WITH CHECK (${SAME_TENANT})`,
+    );
+    expect(await problemsOf()).toEqual([
+      'tenant_profile: expected exactly the SELECT policy tenant_profile_tenant_read, found tenant_profile_tenant_read (SELECT), tenant_profile_write (INSERT)',
+    ]);
+  });
+
+  it('reports a tenant_profile read policy that does not compare tenant_id', async () => {
+    await admin.unsafe(`DROP POLICY "tenant_profile_tenant_read" ON "tenant_profile"`);
+    await admin.unsafe(
+      `CREATE POLICY "tenant_profile_tenant_read" ON "tenant_profile" FOR SELECT USING (true)`,
+    );
+    expect(await problemsOf()).toEqual([
+      'tenant_profile: policy tenant_profile_tenant_read does not restrict rows to app.tenant_id',
+    ]);
+  });
+
+  it('reports a tenant_profile whose RLS is not forced', async () => {
+    await admin.unsafe(`ALTER TABLE "tenant_profile" NO FORCE ROW LEVEL SECURITY`);
+    expect(await problemsOf()).toEqual(['tenant_profile: row level security is not forced']);
+  });
+
   it('reports any policy on tenant_feature_events', async () => {
     await admin.unsafe(
       `CREATE POLICY "tenant_feature_events_read" ON "tenant_feature_events" FOR SELECT
@@ -150,7 +181,7 @@ describe('verifyMultitenant checks of the platform-managed feature tables', () =
 describe('verifyMultitenant with a feature table missing', () => {
   // A rename keeps the table's RLS settings, so putting it back restores the migrated state; the
   // renamed copy shows up as an unexpected tenant table, hence `toContain`.
-  it.each(['tenant_features', 'tenant_feature_events'])(
+  it.each(['tenant_features', 'tenant_feature_events', 'tenant_profile'])(
     'reports a missing %s table instead of skipping it',
     async (table) => {
       await admin.unsafe(`ALTER TABLE "${table}" RENAME TO "${table}_hidden"`);

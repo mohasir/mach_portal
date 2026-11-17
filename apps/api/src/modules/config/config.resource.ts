@@ -17,7 +17,6 @@ export const publicQuoteStageColumns = {
 export const publicAppSettingsColumns = {
   depositRate: appSettings.depositRate,
   quoteValidityMonths: appSettings.quoteValidityMonths,
-  minPersonsPerLine: appSettings.minPersonsPerLine,
   quoteSeqStart: appSettings.quoteSeqStart,
   currency: appSettings.currency,
   catalogSortable: appSettings.catalogSortable,
@@ -52,7 +51,6 @@ export const stateSettingResource = (row: PublicStateSetting) => ({
 export const appSettingsResource = (row: PublicAppSettings) => ({
   depositRate: row.depositRate,
   quoteValidityMonths: row.quoteValidityMonths,
-  minPersonsPerLine: row.minPersonsPerLine,
   quoteSeqStart: row.quoteSeqStart,
   currency: row.currency,
   catalogSortable: row.catalogSortable,

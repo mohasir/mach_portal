@@ -99,7 +99,7 @@ Table quote_lines {
   id uuid [pk]
   quote_id uuid [not null, ref: > quotes.id, note: 'onDelete cascade']
   product_id uuid [not null, ref: > products.id]
-  num_persons integer [not null, note: 'tramo elegido; existe en product_price_tiers (D16)']
+  quantity integer [not null, note: 'tramo elegido; existe en product_price_tiers (D16)']
   subtotal integer [not null, note: 'cents, total de la línea; pre-carga del tramo, EDITABLE (D16)']
   sort_order integer [default: 0]
 
@@ -187,12 +187,12 @@ Table products {
 Table product_price_tiers {
   id uuid [pk]
   product_id uuid [not null, ref: > products.id, note: 'onDelete cascade']
-  num_persons integer [not null, note: '30, 40, 50, ...']
+  quantity integer [not null, note: '30, 40, 50, ...']
   price integer [not null, note: 'cents, total para esa cantidad']
   sort_order integer [default: 0]
 
   indexes {
-    (product_id, num_persons) [unique]
+    (product_id, quantity) [unique]
   }
 }
 
@@ -241,7 +241,6 @@ Table app_settings {
   id integer [pk, default: 1, note: 'fila única (check id = 1)']
   deposit_rate "numeric(4,3)" [not null, default: 0.5]
   quote_validity_months integer [not null, default: 3]
-  min_persons_per_line integer [not null, default: 30]
   quote_seq_start integer [not null, default: 1, note: 'no puede ser < último seq usado']
   updated_at timestamp [not null, default: `now()`]
 }
