@@ -1,4 +1,4 @@
-import type { QuotePdfTemplateContent } from '@repo/schemas';
+import { summarizeLineTaxes, type QuotePdfTemplateContent } from '@repo/schemas';
 import type {
   QuotePdfDetailBlock,
   QuotePdfFee,
@@ -6,7 +6,7 @@ import type {
   QuotePdfRequest,
 } from '../../lib/pdfService/types';
 import type { ProductWithGroups } from '../products/products.resource';
-import type { QuoteDetailRow, QuoteLineDetail } from './quotes.resource';
+import type { QuoteChargeDetail, QuoteDetailRow, QuoteLineDetail } from './quotes.resource';
 
 function formatGroupTitle(group: ProductWithGroups['optionGroups'][number]): string {
   if (group.selectionType === 'included') return `${group.label} (Included)`;
@@ -45,30 +45,29 @@ function buildItems(lines: QuoteLineDetail[], catalog: ProductWithGroups[]): Quo
   });
 }
 
-function buildFees(quoteRow: QuoteDetailRow): QuotePdfFee[] | undefined {
+const percentLabel = (rate: number) => `${Math.round(rate * 10000) / 100}%`;
+
+function buildFees(
+  quoteRow: QuoteDetailRow,
+  lines: QuoteLineDetail[],
+  charges: QuoteChargeDetail[],
+): QuotePdfFee[] | undefined {
   const fees: QuotePdfFee[] = [];
 
-  if (quoteRow.longDistanceAmount > 0) {
-    fees.push({
-      description: 'Long Distance Travel Fee',
-      amount: quoteRow.longDistanceAmount / 100,
-    });
+  for (const { taxRate, taxAmount } of summarizeLineTaxes(lines, quoteRow.taxAmount)) {
+    if (taxRate === null) {
+      if (taxAmount !== 0) fees.push({ description: 'Tax', amount: taxAmount / 100 });
+      continue;
+    }
+    if (taxAmount <= 0) continue;
+    fees.push({ description: `Tax (${percentLabel(taxRate)})`, amount: taxAmount / 100 });
   }
 
-  if (quoteRow.taxAmount > 0) {
-    const rate = Math.round(quoteRow.taxRate * 10000) / 100;
-    fees.push({
-      description: `Tax (${rate}%)`,
-      amount: quoteRow.taxAmount / 100,
-    });
-  }
-
-  if (quoteRow.cardSurchargeAmount > 0) {
-    const rate = Math.round(quoteRow.cardSurchargeRate * 100);
-    fees.push({
-      description: `Card/Check Surcharge (${rate}%)`,
-      amount: quoteRow.cardSurchargeAmount / 100,
-    });
+  for (const charge of charges) {
+    if (charge.amount <= 0) continue;
+    const description =
+      charge.kind === 'percent' ? `${charge.name} (${percentLabel(charge.value)})` : charge.name;
+    fees.push({ description, amount: charge.amount / 100 });
   }
 
   return fees.length > 0 ? fees : undefined;
@@ -77,6 +76,7 @@ function buildFees(quoteRow: QuoteDetailRow): QuotePdfFee[] | undefined {
 export function buildQuotePdfPayload(
   quoteRow: QuoteDetailRow,
   lines: QuoteLineDetail[],
+  charges: QuoteChargeDetail[],
   catalog: ProductWithGroups[],
   template: QuotePdfTemplateContent | undefined,
 ): QuotePdfRequest {
@@ -102,7 +102,7 @@ export function buildQuotePdfPayload(
       : undefined,
     services: template?.services.length ? template.services : undefined,
     items: buildItems(lines, catalog),
-    fees: buildFees(quoteRow),
+    fees: buildFees(quoteRow, lines, charges),
     deposit: quoteRow.depositAmount / 100,
     terms_and_conditions: template?.termsAndConditions.length
       ? template.termsAndConditions

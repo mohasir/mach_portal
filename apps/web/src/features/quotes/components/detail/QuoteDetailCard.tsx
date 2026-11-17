@@ -16,6 +16,7 @@ import { useCanRegeneratePdf } from '@/lib/auth/useCan';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { copyToClipboard } from '@/lib/utils/clipboard';
+import { taxSummaryRows } from '../../builderTotals';
 import { isQuotePastDue, withPdfCacheBuster } from '../../helpers';
 import { useRegenerateQuotePdf } from '../../hooks/useQuotes';
 import type { QuoteDetail } from '../../types';
@@ -84,10 +85,8 @@ export function QuoteDetailCard({
     <QuoteSummary
       subtotal={detail.subtotal}
       discountAmount={detail.discountAmount}
-      longDistanceAmount={detail.longDistanceAmount}
-      taxAmount={detail.taxAmount}
-      cardSurchargeRate={detail.cardSurchargeRate}
-      cardSurchargeAmount={detail.cardSurchargeAmount}
+      taxRows={taxSummaryRows(detail.taxBreakdown)}
+      charges={detail.charges}
       total={detail.total}
       depositRate={detail.depositRate}
       depositAmount={detail.depositAmount}

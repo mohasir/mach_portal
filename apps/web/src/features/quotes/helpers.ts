@@ -5,6 +5,7 @@ import {
   type QuotesFilters,
 } from '@repo/schemas';
 import { isPastDate, type DateInput } from '@/lib/date';
+import { chargesToSend } from './chargeHelpers';
 import type { LineDraft, QuoteBuilderState } from './hooks/useQuoteBuilder';
 import type { QuoteDetail } from './types';
 
@@ -72,8 +73,7 @@ export function toCreateInput(state: QuoteBuilderState, isDraft: boolean): Creat
     clientNotes: state.clientNotes.trim() || undefined,
     discountType: state.discountType ?? undefined,
     discountValue: state.discountValue ?? undefined,
-    longDistanceAmount: state.longDistanceAmount,
-    applyCardSurcharge: state.applyCardSurcharge,
+    charges: chargesToSend(state.charges),
     depositRate: state.depositRate,
     lines: toQuoteLineInputs(state.lines),
     selectOptionsAtQuote: state.selectOptionsAtQuote,
@@ -95,8 +95,12 @@ export function toBuilderState(detail: QuoteDetail): QuoteBuilderState {
     clientNotes: detail.clientNotes ?? '',
     discountType: detail.discountType,
     discountValue: detail.discountValue,
-    longDistanceAmount: detail.longDistanceAmount,
-    applyCardSurcharge: detail.applyCardSurcharge,
+    charges: detail.charges.map((charge) => ({
+      chargeTypeId: charge.chargeTypeId,
+      name: charge.name,
+      kind: charge.kind,
+      value: charge.value,
+    })),
     depositRate: detail.depositRate,
     selectOptionsAtQuote: detail.selectOptionsAtQuote,
     lines: detail.lines.map((line) => ({
@@ -106,6 +110,7 @@ export function toBuilderState(detail: QuoteDetail): QuoteBuilderState {
       subtotal: line.subtotal,
       uomId: line.uomId,
       unit: line.unit,
+      taxRate: line.taxRate,
       selections: Object.fromEntries(line.selections.map((s) => [s.optionGroupId, s.optionIds])),
     })),
   };

@@ -1,11 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import {
-  QUOTE_STAGE,
-  quotesBoardQuerySchema,
-  quotesListQuerySchema,
-  type QuoteLineInput,
-} from '@repo/schemas';
+import { QUOTE_STAGE, quotesBoardQuerySchema, quotesListQuerySchema } from '@repo/schemas';
 import {
   appSettings,
   clients,
@@ -35,7 +30,7 @@ import { ConfigRepository } from '../../config/config.repository';
 import type { NotificationsRepository } from '../../notifications/notifications.repository';
 import { ProductsRepository } from '../../products/products.repository';
 import { TemplatesRepository } from '../../templates/templates.repository';
-import { QuotesRepository } from '../quotes.repository';
+import { QuotesRepository, type PricedQuoteLine } from '../quotes.repository';
 import { QuotePdfGenerator, QuotesService } from '../quotes.service';
 
 const DATE = '2030-06-01';
@@ -67,7 +62,12 @@ async function seedTenant(tenant: TestTenant, label: string): Promise<Seeded> {
     .returning({ id: eventTypes.id });
   const [product] = await testDb
     .insert(products)
-    .values({ tenantId: tenant.id, name: `Menu ${label}`, uomId: await testUnitId(tenant.id) })
+    .values({
+      tenantId: tenant.id,
+      name: `Menu ${label}`,
+      taxRate: 0,
+      uomId: await testUnitId(tenant.id),
+    })
     .returning({ id: products.id });
   await testDb
     .insert(productPriceTiers)
@@ -87,7 +87,6 @@ async function seedTenant(tenant: TestTenant, label: string): Promise<Seeded> {
     eventTypeId: eventType!.id,
     eventDate: DATE,
     eventTime: TIME,
-    taxRate: 0.08,
     createdById: tenant.userId,
     assignedToId: tenant.userId,
   };
@@ -110,6 +109,8 @@ async function seedTenant(tenant: TestTenant, label: string): Promise<Seeded> {
       uomId: await testUnitId(tenant.id),
       quantity: 10,
       subtotal: 1000,
+      taxRate: 0,
+      taxAmount: 0,
     })
     .returning({ id: quoteLines.id });
   await testDb.insert(quoteLineOptions).values({
@@ -162,17 +163,19 @@ async function seedTenant(tenant: TestTenant, label: string): Promise<Seeded> {
   };
 }
 
-function lineFor(s: Seeded): QuoteLineInput {
+function lineFor(s: Seeded): PricedQuoteLine {
   return {
     productId: s.productId,
     quantity: 10,
     subtotal: 1000,
+    taxRate: 0,
+    taxAmount: 0,
     selections: [{ optionGroupId: s.groupId, optionIds: [s.optionId] }],
   };
 }
 
 function quoteData(tenant: TestTenant, clientId?: string, eventTypeId?: string | null) {
-  return { clientId, eventTypeId: eventTypeId ?? null, taxRate: 0.08, createdById: tenant.userId };
+  return { clientId, eventTypeId: eventTypeId ?? null, createdById: tenant.userId };
 }
 
 const numberFor = (seq: number) => `QUO-${String(seq).padStart(6, '0')}`;
@@ -301,6 +304,8 @@ describe('quotes tenant isolation', () => {
           uomId: await testUnitId(b.id),
           quantity: 1,
           subtotal: 1,
+          taxRate: 0,
+          taxAmount: 0,
         })
         .returning({ id: quoteLines.id });
       await testDb.insert(quoteLineOptions).values([
@@ -422,7 +427,6 @@ describe('quotes tenant isolation', () => {
           clientId: sa.clientId,
           eventDate: DATE,
           eventTime: TIME,
-          taxRate: 0.08,
         })
         .returning({ id: quotes.id });
       const list = await repoA.findPaginated(
@@ -488,13 +492,10 @@ describe('quotes tenant isolation', () => {
       expect((await repoA.setPdfInfo(sa.quoteId, { url: 'u', key: 'k' }))?.pdfUrl).toBe('u');
     });
 
-    it('updateRates cannot touch another tenant quote', async () => {
-      const expected = { taxRate: 0.08, cardSurchargeRate: 0.09 };
-      expect(await repoA.updateRates(sb.quoteId, expected, { declinedRates: null, total: 1 })).toBe(
-        undefined,
-      );
-      expect((await quoteRow(sb.quoteId)).total).toBe(0);
-      expect((await repoA.updateRates(sa.quoteId, expected, { total: 7 }))?.total).toBe(7);
+    it('findProductTaxRates never reads another tenant product', async () => {
+      await testDb.update(products).set({ taxRate: 0.07 }).where(eq(products.id, sb.productId));
+      const rates = await repoA.findProductTaxRates([sa.productId, sb.productId]);
+      expect([...rates]).toEqual([[sa.productId, 0]]);
     });
 
     it('archiveById cannot archive another tenant quote', async () => {
@@ -627,7 +628,7 @@ describe('quotes tenant isolation', () => {
     it('replaceLines cannot touch another tenant quote nor its lines', async () => {
       const res = await repoA.replaceLines(
         sb.quoteId,
-        { ...quoteData(a, sb.clientId), taxRate: 0.5 },
+        { ...quoteData(a, sb.clientId), total: 999 },
         [lineFor(sa), lineFor(sa)],
       );
       expect(res).toBeUndefined();
@@ -636,7 +637,7 @@ describe('quotes tenant isolation', () => {
         .from(quoteLines)
         .where(eq(quoteLines.quoteId, sb.quoteId));
       expect(lines.map((l) => l.tenantId)).toEqual([b.id]);
-      expect((await quoteRow(sb.quoteId)).taxRate).toBe(0.08);
+      expect((await quoteRow(sb.quoteId)).total).toBe(0);
     });
 
     it('replaceLines rejects another tenant client or event type and changes nothing', async () => {
@@ -661,6 +662,8 @@ describe('quotes tenant isolation', () => {
         uomId: await testUnitId(b.id),
         quantity: 1,
         subtotal: 1,
+        taxRate: 0,
+        taxAmount: 0,
       });
       const res = await repoA.replaceLines(sa.quoteId, quoteData(a, sa.clientId), [
         lineFor(sa),
@@ -694,6 +697,7 @@ describe('quotes tenant isolation', () => {
         {} as NotificationsRepository,
         pdf,
         () => undefined,
+        true,
         true,
         true,
       );

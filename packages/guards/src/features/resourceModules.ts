@@ -9,6 +9,8 @@ export const RESOURCE_MODULE: Partial<Record<ResourceType, FeatureKey>> = {
   [RESOURCES.QUOTE_PDF_TEMPLATE]: 'quotes',
   [RESOURCES.QUOTE_BUILDER_PREFERENCES]: 'quotes',
   [RESOURCES.PIPELINE_PREFERENCES]: 'quotes',
+  // Charges only exist on quotes; the extraCharges add-on is checked on top of it.
+  [RESOURCES.CHARGE_TYPE]: 'quotes',
   [RESOURCES.EVENT]: 'events',
   [RESOURCES.PAYMENT]: 'events',
   [RESOURCES.STAFF]: 'events',

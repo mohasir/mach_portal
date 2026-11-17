@@ -37,7 +37,7 @@ calculan localmente para el preview, pero **el servidor recalcula y es la autori
 ```ts
 useProductCatalog()  // trpc.products.list    → products + option_groups + options (armado y prefill de precio)
 useEventTypes()      // trpc.eventTypes.list  → lookup del <Select> de tipo de evento
-useConfig()          // trpc.config.get       → taxRate por estado, depositRate default, minPersons, validityMonths
+useConfig()          // trpc.config.get       → defaultTaxRate, depositRate default, validityMonths
 ```
 
 ### 2.2 Estado del builder (cliente, efímero)
@@ -73,7 +73,8 @@ La cascada de precio (`mach-bar-domain.md §7`) vive en **una función pura en p
 (`@repo/schemas` o un `@repo/pricing`):
 
 ```ts
-computeQuoteTotals(input, config) → { subtotal, discountAmount, taxRate, taxAmount, total, depositAmount } // cents
+computeQuoteTotals({ lines: [{ subtotal, taxRate }], discount…, depositRate })
+  → { subtotal, discountAmount, taxAmount, total, depositAmount, lines: [{ discountShare, taxAmount }], taxBreakdown } // cents
 ```
 
 La usan **el preview, el `quotes.create/update` del backend y el payload del PDF**. Garantiza que
@@ -136,7 +137,8 @@ sin salir del builder.
   `maxSelect = null` → sin tope. Los grupos `'included'` se muestran **read-only** (informativos, sin chips).
 - **Editar tramo/precio** → cambiar el tramo re-carga `price`; el `price` es editable y recalcula el
   total global al instante.
-- **Cambiar `state`** → recarga el `taxRate` de config y recomputa el impuesto en vivo.
+- **Impuesto por línea** → cada línea usa la tasa de su producto (0 si es exento); una línea ya
+  guardada conserva la suya. El `state` del evento no afecta el impuesto.
 
 ### 2.8 Validación (`isValid`)
 
@@ -147,7 +149,7 @@ de AntD son solo UX, el backend es el límite real. "Guardar borrador" es más l
 ### 2.9 Guardar
 
 El FE manda **inputs** (personas, precio, selecciones, descuento) — **nunca** los montos. El server
-corre `computeQuoteTotals`, **snapshotea** `taxRate`/`depositRate`/`validUntil`, asigna `seq`/`number`
+corre `computeQuoteTotals`, **snapshotea** la tasa e impuesto de cada línea, `depositRate` y `validUntil`, asigna `seq`/`number`
 e inserta `quotes + quote_lines + quote_line_options`.
 
 ### 2.10 Móvil (mobile-first)
@@ -368,8 +370,8 @@ resto (crear/editar/desactivar) por el menú `⋮`.
 
 ## 5. Configuración — `/admin/settings`
 
-Donde el admin ajusta los **parámetros de negocio** que alimentan las cotizaciones: impuestos por
-estado, depósito por defecto, validez, mínimo de personas por línea e inicio del consecutivo. **No es
+Donde el admin ajusta los **parámetros de negocio** que alimentan las cotizaciones: tasa de impuesto
+por defecto de los productos nuevos, depósito por defecto, validez, mínimo de personas por línea e inicio del consecutivo. **No es
 lista** (DataTable) → es una **página de form**. Ítem propio del sidebar (no en el grupo Catálogo),
 visible solo para admin/superadmin (recurso `config`).
 
@@ -379,7 +381,7 @@ visible solo para admin/superadmin (recurso `config`).
 ### 5.1 Datos
 
 ```ts
-useConfig()        // trpc.config.get → { states: [{ state, taxRate }], app: { depositRate, quoteValidityMonths, quoteSeqStart } }
+useConfig()        // trpc.config.get → { appSettings: { defaultTaxRate, depositRate, quoteValidityMonths, quoteSeqStart, … } }
 useUpdateConfig()  // trpc.config.update → guarda ambos buckets + invalida + useApiError
 ```
 
@@ -390,11 +392,9 @@ useUpdateConfig()  // trpc.config.update → guarda ambos buckets + invalida + u
 ```
 Configuración
 
-┌─ Impuestos por estado ──────────────┐   → state_settings (una fila por estado)
-│  NY   [ 8.875 ] %                    │
-│  NJ   [ 6.625 ] %                    │
-│  CT   [ 6.350 ] %                    │
-└──────────────────────────────────────┘
+┌─ Impuestos ─────────────────────────┐   → app_settings.default_tax_rate
+│  Tasa por defecto   [ 8.875 ] %      │   (la toma cada producto nuevo; la
+└──────────────────────────────────────┘    tasa vive en el producto y la línea)
 
 ┌─ Cotizaciones ──────────────────────┐   → app_settings (singleton)
 │  Depósito por defecto   [ 50 ] %     │
@@ -426,7 +426,7 @@ que los centavos con el dinero (§`mach-bar-domain.md §3`). Input con sufijo `%
 - **Snapshot** (hint en la UI): "los cambios afectan solo cotizaciones nuevas".
 - **`quoteSeqStart`**: no puede ser **< último `seq` usado**. El server valida (`AppError
   SEQUENCE_BELOW_LAST` → `useApiError`); la UI muestra el último usado como hint y lo pone de `min`.
-- **Sin `travelFee`** todavía (columna futura en `state_settings`, `mach-bar-domain.md §D10`).
+- **Sin impuesto por estado**: se eliminó con la migración 0014 (`docs/backend/architecture.md` §14.6).
 - **`event_types` NO se gestiona acá**: vive en el grupo Catálogo (§4.7).
 
 ### 5.5 Componentes (feature `settings`)
@@ -434,7 +434,7 @@ que los centavos con el dinero (§`mach-bar-domain.md §3`). Input con sufijo `%
 ```
 features/settings/components/
   SettingsPage.tsx       // orquesta; cards en un Form + Guardar
-  TaxRatesCard.tsx       // fila por estado (NY/NJ/CT) con input %
+  TaxRatesCard.tsx       // tasa por defecto (input %)
   QuoteDefaultsCard.tsx  // depósito %, validez, min personas/línea, inicio de consecutivo
   QuoteStagesCard.tsx    // label + color por stage (4 filas fijas, D18)
 hooks/

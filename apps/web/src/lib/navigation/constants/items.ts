@@ -90,6 +90,14 @@ export const UNITS_OF_MEASURE_ITEM: NavItem = {
   guard: { [RESOURCES.UNIT_OF_MEASURE]: [READ] },
 };
 
+export const CHARGE_TYPES_ITEM: NavItem = {
+  label: 'nav.chargeTypes',
+  href: '/admin/charge-types',
+  icon: 'chargeTypes',
+  feature: 'extraCharges',
+  guard: { [RESOURCES.CHARGE_TYPE]: [READ] },
+};
+
 export const PRODUCT_CATEGORIES_ITEM: NavItem = {
   label: 'nav.productCategories',
   href: '/admin/product-categories',
@@ -165,6 +173,7 @@ export const NAV_ITEMS = {
   STAFF: STAFF_ITEM,
   CATALOG_PRODUCTS: CATALOG_PRODUCTS_ITEM,
   UNITS_OF_MEASURE: UNITS_OF_MEASURE_ITEM,
+  CHARGE_TYPES: CHARGE_TYPES_ITEM,
   PRODUCT_CATEGORIES: PRODUCT_CATEGORIES_ITEM,
   EVENT_TYPES: EVENT_TYPES_ITEM,
   RESCHEDULE_REASONS: RESCHEDULE_REASONS_ITEM,

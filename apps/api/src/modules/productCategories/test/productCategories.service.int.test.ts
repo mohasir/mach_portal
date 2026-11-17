@@ -20,6 +20,7 @@ describe('product categories', () => {
     testDb.insert(products).values({
       tenantId: a.id,
       name: `P ${Math.random()}`,
+      taxRate: 0,
       uomId: await testUnitId(a.id),
       categoryId,
       isActive,

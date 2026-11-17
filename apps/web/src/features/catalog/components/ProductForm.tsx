@@ -16,12 +16,14 @@ import { RichTextEditor } from '@/components/shared/RichTextEditor';
 import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
 import { CategorySelect } from '@/features/product-categories';
 import { UnitSelect, useUnitOptions } from '@/features/units-of-measure';
+import { useConfig } from '@/features/settings';
 import { useCan } from '@/lib/auth/useCan';
 import { useFeature } from '@/lib/auth/useFeature';
 import { maxLengthValidator } from '@/lib/format/markdown';
 import {
   buildProductPayload,
   costFieldMode,
+  taxFormValues,
   type ProductFormValues,
   type ProductPayload,
 } from '../helpers';
@@ -55,6 +57,8 @@ export function ProductForm({
     canUpdate: can({ [RESOURCES.PRODUCT_COST]: [ACTIONS.UPDATE] }),
   });
   const { data: units = [] } = useUnitOptions();
+  const { data: config } = useConfig();
+  const taxExempt = Form.useWatch('taxExempt', form) ?? initialValues?.taxExempt ?? false;
   const uomId = Form.useWatch('uomId', form) ?? initialValues?.uomId;
   const unit =
     units.find((u) => u.id === uomId) ?? (currentUnit?.id === uomId ? currentUnit : undefined);
@@ -64,9 +68,16 @@ export function ProductForm({
 
   return (
     <Form
+      // The organization rate prefills a new product, so the form waits for it.
+      key={config ? 'ready' : 'loading'}
       form={form}
       layout="vertical"
-      initialValues={{ isPremium: false, minQuantity: 1, ...initialValues }}
+      initialValues={{
+        isPremium: false,
+        minQuantity: 1,
+        ...taxFormValues(undefined, config?.appSettings.defaultTaxRate),
+        ...initialValues,
+      }}
       onFinish={handleFinish}
       requiredMark={false}
     >
@@ -190,6 +201,34 @@ export function ProductForm({
           </Col>
         )}
       </Row>
+
+      <Form.Item
+        name="taxRatePercent"
+        label={<FieldLabel title={t('product.form.taxRate')} />}
+        extra={t('product.form.taxRateCaption', vocabulary)}
+        rules={[{ type: 'number', min: 0, max: 100, message: t('validation.taxRateInvalid') }]}
+      >
+        <InputNumber
+          min={0}
+          max={100}
+          step={0.001}
+          precision={3}
+          suffix="%"
+          disabled={taxExempt}
+          className="w-full"
+        />
+      </Form.Item>
+
+      <SwitchRow
+        className="mb-4"
+        title={t('product.form.taxExempt')}
+        caption={t('product.form.taxExemptCaption')}
+        control={
+          <Form.Item name="taxExempt" valuePropName="checked" noStyle>
+            <Switch />
+          </Form.Item>
+        }
+      />
 
       <SwitchRow
         title={t('product.form.isPremium')}

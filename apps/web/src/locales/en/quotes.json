@@ -28,7 +28,9 @@
     "blockedContent": "This quote's event already has payments recorded. Cancel the quote instead."
   },
   "validation": {
-    "clientRequired": "Client is required"
+    "clientRequired": "Client is required",
+    "chargeValueInvalid": "The charge value is not valid",
+    "chargeDuplicated": "A charge cannot appear twice on a quote"
   },
   "form": {
     "save": "Save"
@@ -48,7 +50,8 @@
       "cancel": "Keep editing"
     },
     "errors": {
-      "clientRequired": "Pick a client to save the draft"
+      "clientRequired": "Pick a client to save the draft",
+      "chargeInvalid": "Check the value of the extra charges"
     },
     "client": {
       "label": "Client",
@@ -72,7 +75,6 @@
       "typePlaceholder": "Pick a type",
       "eventDetailsGroupTitle": "Event details",
       "addressGroupTitle": "Address",
-      "taxesGroupTitle": "Extra charges",
       "state": "State",
       "statePlaceholder": "NY / NJ / CT",
       "city": "City",
@@ -83,10 +85,6 @@
       "availabilityConflictDescription": "There are already quotes for this date and time:",
       "address": "Address",
       "addressPlaceholder": "Event address",
-      "longDistance": "Long distance fee",
-      "longDistanceHint": "Suggested from the state's tax rate ({{rate}}%) — override as needed",
-      "cardSurcharge": "Card/check surcharge",
-      "cardSurchargeHint": "Adds {{rate}}% to the quote total when the client pays by card or check.",
       "notes": "Notes",
       "internalNotesLabel": "Internal notes",
       "internalNotesPlaceholder": "Only visible to your team",
@@ -128,10 +126,8 @@
       "depositRate": "Deposit",
       "subtotal": "Subtotal",
       "discount": "Discount",
-      "longDistance": "Long Distance Fee",
       "tax": "Tax ({{rate}}%)",
       "taxShort": "Tax",
-      "cardSurcharge": "Card/check surcharge ({{rate}}%)",
       "total": "Total",
       "deposit": "Deposit ({{rate}}%)",
       "editDeposit": "Edit deposit",
@@ -145,6 +141,15 @@
       "eventType": "Event type",
       "eventDate": "Date",
       "address": "Address"
+    },
+    "charges": {
+      "title": "Extra charges",
+      "empty": "There are no active extra charges. Create one from Extra charges.",
+      "lockedCaption": "Extra charges are turned off for your organization: these charges stay on the quote as they are.",
+      "inactiveType": "No longer available",
+      "valueLabel": "Value of {{name}}",
+      "percentHint": "Calculated on the total with tax.",
+      "fixedHint": "Fixed amount, not taxed."
     }
   },
   "stages": {
@@ -238,25 +243,5 @@
     "hideStaleNote": "They still show up in search.",
     "includeArchived": "Include archived",
     "includeArchivedCaption": "Shows them in the table and in a separate pipeline column."
-  },
-  "rateDrift": {
-    "cardSurchargeRate": {
-      "title": "The card payment fee changed",
-      "up": "You originally quoted with a <bold>{{saved}}%</bold> surcharge, but the current fee went up to <bold>{{current}}%</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit.",
-      "down": "You originally quoted with a <bold>{{saved}}%</bold> surcharge, but the current fee went down to <bold>{{current}}%</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit."
-    },
-    "taxRate": {
-      "title": "The state tax changed",
-      "up": "You originally quoted with a <bold>{{saved}}%</bold> tax, but the current rate went up to <bold>{{current}}%</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit.",
-      "down": "You originally quoted with a <bold>{{saved}}%</bold> tax, but the current rate went down to <bold>{{current}}%</bold>. Do you want to apply the new percentage? This will adjust the total cost and the required deposit."
-    },
-    "both": {
-      "title": "The tax and card payment fee changed",
-      "body": "You originally quoted with a <bold>{{savedTax}}%</bold> tax and a <bold>{{savedSurcharge}}%</bold> surcharge, but they are now <bold>{{currentTax}}%</bold> and <bold>{{currentSurcharge}}%</bold>. Do you want to apply the new percentages? This will adjust the total cost and the required deposit.",
-      "keep": "Leave as is",
-      "apply": "Apply new ones"
-    },
-    "keep": "Leave at {{rate}}%",
-    "apply": "Apply {{rate}}%"
   }
 }

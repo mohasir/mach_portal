@@ -1,0 +1,51 @@
+{
+  "title": "Cargos adicionales",
+  "index": {
+    "add": "Nuevo cargo"
+  },
+  "columns": {
+    "name": "Nombre",
+    "kind": "Tipo",
+    "defaultValue": "Valor por defecto",
+    "status": "Estado"
+  },
+  "kinds": {
+    "fixed": "Monto fijo",
+    "percent": "Porcentaje"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "actions": {
+    "activate": "Activar",
+    "deactivate": "Desactivar"
+  },
+  "deactivateConfirm": {
+    "title": "¿Desactivar «{{name}}»?",
+    "content": "Dejará de ofrecerse al armar una cotización.",
+    "caption": "Las cotizaciones que ya lo tienen aplicado lo conservan."
+  },
+  "form": {
+    "name": "Nombre",
+    "namePlaceholder": "Ej. Traslado",
+    "kind": "Tipo de cargo",
+    "fixedValue": "Monto por defecto",
+    "percentValue": "Porcentaje por defecto",
+    "percentValueCaption": "Se calcula sobre el total con impuesto, sin sumar otros cargos.",
+    "save": "Guardar"
+  },
+  "create": {
+    "title": "Nuevo cargo adicional"
+  },
+  "edit": {
+    "title": "Editar cargo adicional"
+  },
+  "empty": "No hay cargos adicionales",
+  "validation": {
+    "nameRequired": "Nombre requerido",
+    "valueInvalid": "El valor no es válido para este tipo de cargo",
+    "percentInvalid": "Ingresá un porcentaje mayor que 0 y hasta 100",
+    "fixedInvalid": "Ingresá un monto de 0 o más"
+  }
+}

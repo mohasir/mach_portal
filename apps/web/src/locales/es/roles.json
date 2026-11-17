@@ -155,6 +155,10 @@
         "label": "Unidades de medida",
         "caption": "Unidades en que se cobra y se cuenta cada {{item}}."
       },
+      "charge_type": {
+        "label": "Cargos adicionales",
+        "caption": "Cargos fijos o en porcentaje que se pueden sumar a una cotización."
+      },
       "product_category": {
         "label": "Categorías",
         "caption": "Categorías para agrupar y filtrar los {{items}} del catálogo."
@@ -176,7 +180,7 @@
       },
       "tax_rates": {
         "label": "Impuestos",
-        "caption": "Tasas de impuesto por estado."
+        "caption": "Tasa de impuesto por defecto de los productos nuevos."
       },
       "quote_defaults": {
         "label": "Valores por defecto",

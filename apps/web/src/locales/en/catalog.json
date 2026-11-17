@@ -51,7 +51,11 @@
       "cost": "Cost",
       "costCaption": "Internal: only people with permission see it. Never shown on quotes or events.",
       "minQuantity": "Minimum quantity",
-      "minQuantityCaption": "Smallest quantity a quote line of this {{item}} may have, in its unit."
+      "minQuantityCaption": "Smallest quantity a quote line of this {{item}} may have, in its unit.",
+      "taxRate": "Tax",
+      "taxRateCaption": "Applied to new lines of this {{item}}. Lines that were already quoted keep their rate.",
+      "taxExempt": "Tax exempt",
+      "taxExemptCaption": "Quoted without tax, whatever the rate."
     },
     "duplicateConfirm": {
       "title": "Duplicate this {{item}}?",
@@ -69,7 +73,9 @@
       "sku": "SKU",
       "category": "Category",
       "cost": "Cost",
-      "minQuantity": "Minimum quantity"
+      "minQuantity": "Minimum quantity",
+      "taxRate": "Tax",
+      "taxExempt": "Tax exempt"
     },
     "filter": {
       "category": "Category",
@@ -163,6 +169,7 @@
     "skuInvalid": "Invalid SKU (up to 64 characters)",
     "costInvalid": "Invalid cost",
     "minQuantityInvalid": "The minimum quantity must be 1 or more",
+    "taxRateInvalid": "Enter a rate from 0% to 100%",
     "shortDescriptionTooLong": "The short description allows up to {{max}} characters",
     "longDescriptionTooLong": "The long description allows up to {{max}} characters"
   },

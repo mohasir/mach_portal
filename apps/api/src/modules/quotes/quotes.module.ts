@@ -31,6 +31,7 @@ export function quotesModule(ctx: TenantCtx) {
     ctx.afterCommit,
     ctx.features.has('priceTiers'),
     ctx.features.has('events'),
+    ctx.features.has('extraCharges'),
   );
 }
 

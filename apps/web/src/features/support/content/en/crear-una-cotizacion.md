@@ -28,11 +28,18 @@ Event type, date, time, State (NY, NJ or CT), City and Address.
 
 ## Step 3: Extra charges
 
-- **Long-distance charge**: a free amount. Picking or changing the event's State
-  **automatically overwrites this field** with a suggested value — if you had already entered an
-  amount by hand, it gets replaced. Set it (or fix it) after confirming the State, not before.
-- **Card/check surcharge**: an on/off switch that adds the configured percentage on top of the
-  total after tax.
+This section only shows up if your organization has the **extra charges** add-on. It lists the
+active charges of the catalog (**Extra charges** in the menu): switch on each one that applies and
+adjust its value for this quote if needed.
+
+- A **fixed** charge adds its amount.
+- A **percentage** charge is calculated on the total with tax. With several of them, each one uses
+  that same total (they don't add up on each other).
+- Charges are **not taxed**.
+
+A charge that was already on the quote and whose type was deactivated later is kept as it is: it
+can only be removed. Without the add-on, the quote keeps the charges it already had, but they can't
+be added or changed.
 
 ## Step 4: Adding {{items}}
 
@@ -60,14 +67,16 @@ staff use only.
 
 ```text
 Subtotal (lines)
-− Discount
-+ Long-distance charge
-= Base
-+ Tax (based on the State, if enabled in Settings)
+− Discount (spread over the lines)
++ Tax (per rate: each line at its {{item}}'s rate)
 = Total with tax
-+ Card/check surcharge (if enabled)
++ Extra charges (fixed, and percentage on the total with tax; not taxed)
 = TOTAL
 ```
+
+Each line takes its {{item}}'s tax rate when it's added (0% if the {{item}} is tax exempt) and
+keeps it even if the {{item}}'s rate changes later. The event's State doesn't affect tax. The
+summary shows one tax row per rate.
 The deposit and balance are calculated on that final TOTAL.
 
 ## "Save draft" vs "Create quote"

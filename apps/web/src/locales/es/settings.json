@@ -73,9 +73,7 @@
     "quoteBuilder": {
       "title": "Armador de cotizaciones",
       "allowSelectOptionsAtQuote": "Seleccionar opciones al cotizar",
-      "allowSelectOptionsAtQuoteCaption": "Permite elegir las opciones de los ítems al crear la cotización. Si se desactiva, esta selección se pospone hasta el evento. (Las cotizaciones previas no cambian).",
-      "promptRateChanges": "Sugerir actualización de tasas",
-      "promptRateChangesCaption": "Pregunta si deseas aplicar los nuevos porcentajes al abrir una cotización pendiente cuando los impuestos o recargos han cambiado. Si se desactiva, se conservarán los valores originales."
+      "allowSelectOptionsAtQuoteCaption": "Permite elegir las opciones de los ítems al crear la cotización. Si se desactiva, esta selección se pospone hasta el evento. (Las cotizaciones previas no cambian)."
     },
     "pipeline": {
       "title": "Pipeline",
@@ -85,10 +83,8 @@
   },
   "taxRates": {
     "title": "Impuestos",
-    "applyByState": "Aplicar impuesto por estado",
-    "applyByStateCaption": "Impuesto aplicado a las cotizaciones según el estado.",
-    "cardSurchargeRate": "Recargo tarjeta/cheque",
-    "cardSurchargeRateCaption": "Porcentaje que se suma al total de la cotización cuando el switch de recargo está activado."
+    "defaultRate": "Tasa de impuesto por defecto",
+    "defaultRateCaption": "Se copia a cada producto nuevo y se puede cambiar en el producto. Cambiarla no modifica los productos existentes ni las líneas ya cotizadas."
   },
   "quotePdfTemplate": {
     "title": "Plantilla de PDF",
@@ -165,13 +161,11 @@
   },
   "validation": {
     "taxRateInvalid": "Tasa inválida",
-    "taxRatesAllZeroInvalid": "Al menos una tasa debe ser mayor a 0",
     "depositRateInvalid": "Depósito inválido",
     "quoteValidityInvalid": "Validez inválida",
     "quoteSeqStartInvalid": "Inicio de consecutivo inválido",
     "currencyInvalid": "Moneda inválida",
     "optionsSelectionDeadlineDaysInvalid": "Cantidad de días inválida",
-    "cardSurchargeRateInvalid": "Tasa inválida",
     "quoteStagesLabelInvalid": "Nombre requerido"
   }
 }

@@ -60,7 +60,7 @@ describe('unitsOfMeasure tenant isolation', () => {
   it('isUsed only counts products of the tenant', async () => {
     await testDb
       .insert(products)
-      .values({ tenantId: b.id, name: 'Usa pers', uomId: await testUnitId(b.id) });
+      .values({ tenantId: b.id, name: 'Usa pers', taxRate: 0, uomId: await testUnitId(b.id) });
     const { items } = await serviceA.list(listAll);
     expect(items.find((u) => u.code === 'pers')?.isUsed).toBe(false);
   });
@@ -68,7 +68,9 @@ describe('unitsOfMeasure tenant isolation', () => {
   it('findById, findByCode and the usage checks do not see other tenant rows', async () => {
     expect(await repoA.findById(unitB)).toBeUndefined();
     expect(await repoA.findByCode('bdj')).toBeUndefined();
-    await testDb.insert(products).values({ tenantId: b.id, name: 'Usa bdj', uomId: unitB });
+    await testDb
+      .insert(products)
+      .values({ tenantId: b.id, name: 'Usa bdj', taxRate: 0, uomId: unitB });
     expect(await repoA.isUsed(unitB)).toBe(false);
     expect(await repoA.blocksDeactivation(unitB)).toBe(false);
   });
@@ -77,7 +79,7 @@ describe('unitsOfMeasure tenant isolation', () => {
     const unitA = await testUnitId(a.id, 'pers');
     const [product] = await testDb
       .insert(products)
-      .values({ tenantId: b.id, name: 'Menu B', uomId: await testUnitId(b.id) })
+      .values({ tenantId: b.id, name: 'Menu B', taxRate: 0, uomId: await testUnitId(b.id) })
       .returning({ id: products.id });
     await testDb
       .insert(quoteStages)
@@ -89,7 +91,7 @@ describe('unitsOfMeasure tenant isolation', () => {
       .returning({ id: clients.id });
     const [quote] = await testDb
       .insert(quotes)
-      .values({ tenantId: b.id, seq: 1, number: 'Q-B-1', clientId: client!.id, taxRate: 0 })
+      .values({ tenantId: b.id, seq: 1, number: 'Q-B-1', clientId: client!.id })
       .returning({ id: quotes.id });
     await testDb.insert(quoteLines).values({
       tenantId: b.id,
@@ -98,6 +100,8 @@ describe('unitsOfMeasure tenant isolation', () => {
       uomId: unitA,
       quantity: 1,
       subtotal: 100,
+      taxRate: 0,
+      taxAmount: 0,
     });
     expect(await repoA.isUsed(unitA)).toBe(false);
     expect(await repoA.blocksDeactivation(unitA)).toBe(false);

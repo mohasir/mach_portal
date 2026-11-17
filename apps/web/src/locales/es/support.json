@@ -145,8 +145,8 @@
       "description": "Editar tu cuenta y cerrar sesión en otros dispositivos"
     },
     "impuestos-y-valores-por-defecto": {
-      "title": "Impuestos por Estado y valores por defecto",
-      "description": "Tasas, depósito, validez y consecutivo de cotización"
+      "title": "Impuestos, cargos adicionales y valores por defecto",
+      "description": "Tasa por defecto, {{items}} exentos, cargos, depósito, validez y consecutivo"
     },
     "personalizar-estados-del-pipeline": {
       "title": "Personalizar los estados del pipeline",

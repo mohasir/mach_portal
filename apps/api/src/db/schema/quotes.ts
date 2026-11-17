@@ -8,12 +8,10 @@ import {
   pgEnum,
   timestamp,
   boolean,
-  jsonb,
   unique,
   index,
   primaryKey,
 } from 'drizzle-orm/pg-core';
-import type { QuoteRates } from '@repo/schemas';
 import { stateEnum } from './enums';
 import { clients } from './clients';
 import { eventTypes } from './eventTypes';
@@ -80,22 +78,12 @@ export const quotes = pgTable(
     discountType: discountTypeEnum('discount_type'),
     discountValue: numeric('discount_value', { mode: 'number', precision: 10, scale: 5 }),
     discountAmount: integer('discount_amount').notNull().default(0),
-    longDistanceAmount: integer('long_distance_amount').notNull().default(0),
-    taxRate: numeric('tax_rate', { mode: 'number', precision: 6, scale: 5 }).notNull(),
     taxAmount: integer('tax_amount').notNull().default(0),
     total: integer('total').notNull().default(0),
-    applyCardSurcharge: boolean('apply_card_surcharge').notNull().default(false),
-    cardSurchargeRate: numeric('card_surcharge_rate', { mode: 'number', precision: 4, scale: 3 })
-      .notNull()
-      .default(0.09),
-    cardSurchargeAmount: integer('card_surcharge_amount').notNull().default(0),
     depositRate: numeric('deposit_rate', { mode: 'number', precision: 4, scale: 3 })
       .notNull()
       .default(0.5),
     depositAmount: integer('deposit_amount').notNull().default(0),
-    // Config rates the user chose not to apply to this pending quote (quoteRateDrift), so the same
-    // difference isn't offered again until config changes once more.
-    declinedRates: jsonb('declined_rates').$type<QuoteRates>(),
     stageId: integer('stage_id')
       .notNull()
       .default(1) // QUOTE_STAGE.PENDING
@@ -140,6 +128,10 @@ export const quoteLines = pgTable(
       .references(() => unitsOfMeasure.id, { onDelete: 'restrict' }),
     quantity: integer('quantity').notNull(),
     subtotal: integer('subtotal').notNull(),
+    // Copied from the product when the line is quoted (0 when exempt); later changes to the
+    // product's rate do not reach it.
+    taxRate: numeric('tax_rate', { mode: 'number', precision: 6, scale: 5 }).notNull(),
+    taxAmount: integer('tax_amount').notNull(),
     sortOrder: integer('sort_order').default(0).notNull(),
   },
   (t) => [

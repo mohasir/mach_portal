@@ -60,6 +60,8 @@ export const permissionsMatrix = [
   { resource: RESOURCES.PRODUCT_CATEGORY, actions: [...CRUD, DISABLE, ENABLE] },
   // Internal cost of a product: hidden from API responses and rejected on write without it.
   { resource: RESOURCES.PRODUCT_COST, actions: [READ, UPDATE] },
+  // No delete: a quote keeps a copy of each charge, and a type no longer offered is deactivated.
+  { resource: RESOURCES.CHARGE_TYPE, actions: [CREATE, READ, UPDATE, DISABLE, ENABLE] },
   { resource: RESOURCES.EVENT_TYPE, actions: CRUD },
   { resource: RESOURCES.RESCHEDULE_REASON, actions: [VIEW, ...CRUD] },
   { resource: RESOURCES.TAX_RATES, actions: VIEW_UPDATE },

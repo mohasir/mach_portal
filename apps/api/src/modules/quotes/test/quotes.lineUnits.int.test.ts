@@ -46,6 +46,7 @@ function serviceFor(tenantId: string) {
     () => undefined,
     false,
     true,
+    true,
   );
 }
 
@@ -111,7 +112,7 @@ describe('quote lines keep the unit they were quoted in', () => {
     galId = await testUnitId(tenantId, 'gal');
     [{ id: productId }] = (await testDb
       .insert(products)
-      .values({ tenantId, name: 'Bar', uomId: persId, price: 1000 })
+      .values({ tenantId, name: 'Bar', taxRate: 0, uomId: persId, price: 1000 })
       .returning({ id: products.id })) as [{ id: string }];
 
     service = serviceFor(tenantId);
@@ -274,7 +275,7 @@ describe('quote lines keep the unit they were quoted in', () => {
     it('a unit backed only by a line of a different product', async () => {
       const [other] = await testDb
         .insert(products)
-        .values({ tenantId, name: 'Hour product', uomId: hourId, price: 1000 })
+        .values({ tenantId, name: 'Hour product', taxRate: 0, uomId: hourId, price: 1000 })
         .returning({ id: products.id });
       await save([line(), line({ productId: other!.id })], 'first');
       const before = await unitsOfQuote();

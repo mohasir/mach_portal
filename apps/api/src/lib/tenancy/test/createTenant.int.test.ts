@@ -17,7 +17,6 @@ import {
   productPriceTiers,
   products,
   role,
-  stateSettings,
   user,
   verification,
 } from '../../../db/schema';
@@ -186,14 +185,12 @@ describe('createTenant', () => {
       expect(roles.filter((r) => r.isOwner).map((r) => r.name)).toEqual(['Superadmin']);
     });
 
-    it('has app_settings and state_settings, and config.get responds', async () => {
+    it('has app_settings with a neutral default tax rate, and config.get responds', async () => {
       const { tenantId } = await createTenant(input('acme'), testDb);
       expect(await rowsPerTenant('app_settings', tenantId)).toBe(1);
-      expect(await rowsPerTenant('state_settings', tenantId)).toBe(3);
 
       const config = await configModule(ctxFor(tenantId)).get();
-      expect(config.appSettings).toMatchObject({ quoteSeqStart: 1 });
-      expect(config.stateSettings).toHaveLength(3);
+      expect(config.appSettings).toMatchObject({ quoteSeqStart: 1, defaultTaxRate: 0 });
       expect(config.quoteStages).toHaveLength(4);
     });
 
@@ -379,8 +376,6 @@ describe('createTenant', () => {
 
     const appRows = await testDb.select().from(appSettings);
     expect(appRows.map((r) => r.tenantId).sort()).toEqual([t1.tenantId, t2.tenantId].sort());
-    const stateRows = await testDb.select().from(stateSettings);
-    expect(stateRows).toHaveLength(6);
 
     const admins = await testDb
       .select({ org: member.organizationId })

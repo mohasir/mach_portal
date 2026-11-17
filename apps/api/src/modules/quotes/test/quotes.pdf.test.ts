@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ProductWithGroups } from '../../products/products.resource';
 import { buildQuotePdfPayload } from '../quotes.pdf';
-import type { QuoteDetailRow, QuoteLineDetail } from '../quotes.resource';
+import type { QuoteChargeDetail, QuoteDetailRow, QuoteLineDetail } from '../quotes.resource';
 
 const option = (id: string, name: string, isActive = true) => ({
   id,
@@ -46,6 +46,8 @@ const product = (
   category: null,
   sku: null,
   minQuantity: 1,
+  taxRate: 0,
+  taxExempt: false,
   images: [],
   quotable: false,
   priceTiers: [],
@@ -55,16 +57,14 @@ const product = (
 const quoteRow = {
   number: 'Q-1',
   clientName: 'Client',
-  longDistanceAmount: 0,
   taxAmount: 0,
-  cardSurchargeAmount: 0,
   depositAmount: 0,
 } as unknown as QuoteDetailRow;
 
 const lines = [{ productId: 'p1', quantity: 20, subtotal: 100000 }] as unknown as QuoteLineDetail[];
 
 const detailsOf = (catalog: ProductWithGroups[]) =>
-  buildQuotePdfPayload(quoteRow, lines, catalog, undefined).items[0]?.details;
+  buildQuotePdfPayload(quoteRow, lines, [], catalog, undefined).items[0]?.details;
 
 describe('buildQuotePdfPayload menu', () => {
   it('omits inactive options from a group', () => {
@@ -89,6 +89,7 @@ describe('buildQuotePdfPayload menu', () => {
     const items = buildQuotePdfPayload(
       quoteRow,
       lines,
+      [],
       [product([group('g1', 'Proteins', [option('o1', 'Chicken')])], false)],
       undefined,
     ).items;
@@ -115,5 +116,60 @@ describe('buildQuotePdfPayload menu', () => {
       { ...product([group('g1', 'Signature Cocktails', [cocktail])]), name: 'Craft Bar' },
     ]);
     expect(details).toEqual([{ title: 'Signature Cocktails', options: ['Paloma'] }]);
+  });
+});
+
+describe('buildQuotePdfPayload fees', () => {
+  it('lists one tax per rate from the lines and skips untaxed rates', () => {
+    const taxed = [
+      { productId: 'p1', quantity: 1, subtotal: 10000, taxRate: 0.08875, taxAmount: 888 },
+      { productId: 'p1', quantity: 1, subtotal: 5000, taxRate: 0, taxAmount: 0 },
+      { productId: 'p1', quantity: 1, subtotal: 2000, taxRate: 0.08875, taxAmount: 177 },
+      { productId: 'p1', quantity: 1, subtotal: 1000, taxRate: 0.16, taxAmount: 160 },
+    ] as unknown as QuoteLineDetail[];
+    const { fees } = buildQuotePdfPayload(
+      { ...quoteRow, taxAmount: 1225 } as QuoteDetailRow,
+      taxed,
+      [],
+      [product([])],
+      undefined,
+    );
+    expect(fees).toEqual([
+      { description: 'Tax (8.88%)', amount: 10.65 },
+      { description: 'Tax (16%)', amount: 1.6 },
+    ]);
+  });
+
+  it('still lists the stored tax of a quote whose lines carry none of it', () => {
+    const { fees } = buildQuotePdfPayload(
+      { ...quoteRow, taxAmount: 900 } as QuoteDetailRow,
+      [],
+      [],
+      [product([])],
+      undefined,
+    );
+    expect(fees).toEqual([{ description: 'Tax', amount: 9 }]);
+  });
+
+  it('lists every applied charge after the tax, with its rate when it is a percent', () => {
+    const charges = [
+      { name: 'Flete', kind: 'fixed', value: 2500, amount: 2500 },
+      { name: 'Recargo por tarjeta', kind: 'percent', value: 0.045, amount: 495 },
+      { name: 'Sin monto', kind: 'fixed', value: 0, amount: 0 },
+    ] as unknown as QuoteChargeDetail[];
+    const { fees } = buildQuotePdfPayload(
+      { ...quoteRow, taxAmount: 1000 } as QuoteDetailRow,
+      [
+        { productId: 'p1', quantity: 1, subtotal: 10000, taxRate: 0.1, taxAmount: 1000 },
+      ] as unknown as QuoteLineDetail[],
+      charges,
+      [product([])],
+      undefined,
+    );
+    expect(fees).toEqual([
+      { description: 'Tax (10%)', amount: 10 },
+      { description: 'Flete', amount: 25 },
+      { description: 'Recargo por tarjeta (4.5%)', amount: 4.95 },
+    ]);
   });
 });

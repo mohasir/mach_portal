@@ -22,6 +22,7 @@ const DEFINITIONS = {
   configurableOptions: { kind: 'addon', requires: [] },
   productGallery: { kind: 'addon', requires: [] },
   unitsOfMeasure: { kind: 'addon', requires: [] },
+  extraCharges: { kind: 'addon', requires: [] },
 } as const satisfies Record<string, FeatureShape>;
 
 export type FeatureKey = keyof typeof DEFINITIONS;
@@ -30,7 +31,6 @@ export interface FeatureDefinition {
   readonly kind: FeatureKind;
   readonly requires: readonly FeatureKey[];
 }
-
 
 export const FEATURES: Readonly<Record<FeatureKey, FeatureDefinition>> = DEFINITIONS;
 

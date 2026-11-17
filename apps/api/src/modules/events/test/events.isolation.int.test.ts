@@ -374,6 +374,8 @@ describe('events tenant isolation', () => {
         uomId: await testUnitId(a.id),
         quantity: 1,
         subtotal: 1,
+        taxRate: 0,
+        taxAmount: 0,
       });
       const list = await repoA.findPaginated(
         eventsListQuerySchema.parse({ segment: 'all', page: 1, pageSize: 10 }),
@@ -440,6 +442,8 @@ describe('events tenant isolation', () => {
         uomId: await testUnitId(a.id),
         quantity: 1,
         subtotal: 1,
+        taxRate: 0,
+        taxAmount: 0,
       });
       const list = await repoA.findPaginated(
         eventsListQuerySchema.parse({ segment: 'all', page: 1, pageSize: 10 }),
@@ -776,6 +780,8 @@ describe('events tenant isolation', () => {
         uomId: await testUnitId(b.id),
         quantity: 1,
         subtotal: 1,
+        taxRate: 0,
+        taxAmount: 0,
       });
       await testDb.insert(quoteLineOptions).values({
         tenantId: b.id,
@@ -796,6 +802,8 @@ describe('events tenant isolation', () => {
         uomId: await testUnitId(b.id),
         quantity: 1,
         subtotal: 1,
+        taxRate: 0,
+        taxAmount: 0,
       });
       expect((await repoA.findById(sa.event2Id))?.selectionsIncomplete).toBe(false);
       expect((await repoA.findPendingSelectionsCandidates()).map((r) => r.id)).toEqual([

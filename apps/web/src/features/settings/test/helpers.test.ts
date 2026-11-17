@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { updateTaxPreferencesSchema } from '@repo/schemas';
 import {
+  toDefaultTaxFormValues,
+  toDefaultTaxUpdateInput,
   toQuoteDefaultsFormValues,
   toQuoteDefaultsUpdateInput,
   visibleSettingsSections,
@@ -9,10 +12,10 @@ import type { Config } from '../types';
 
 describe('withStoredValues', () => {
   it('fills fields whose controls were not rendered with the stored value', () => {
-    const stored = { allowSelectOptionsAtQuote: true, promptRateChanges: false };
-    expect(withStoredValues(stored, { promptRateChanges: true } as typeof stored)).toEqual({
+    const stored = { allowSelectOptionsAtQuote: true, hideStaleQuotes: false };
+    expect(withStoredValues(stored, { hideStaleQuotes: true } as typeof stored)).toEqual({
       allowSelectOptionsAtQuote: true,
-      promptRateChanges: true,
+      hideStaleQuotes: true,
     });
   });
 
@@ -90,5 +93,25 @@ describe('quote defaults', () => {
     expect(values).not.toHaveProperty('minPersonsPerLine');
     expect(values.quoteSeqStart).toBe(5);
     expect(toQuoteDefaultsUpdateInput(values)).not.toHaveProperty('minPersonsPerLine');
+  });
+});
+
+describe('default tax rate', () => {
+  const config = { appSettings: { defaultTaxRate: 0.08875 } } as unknown as Config;
+
+  it('shows the stored rate as a percentage', () => {
+    expect(toDefaultTaxFormValues(config)).toEqual({ defaultTaxRatePercent: 8.875 });
+  });
+
+  it('sends the rate back as a decimal without float noise', () => {
+    expect(toDefaultTaxUpdateInput({ defaultTaxRatePercent: 8.875 })).toEqual({
+      defaultTaxRate: 0.08875,
+    });
+    expect(toDefaultTaxUpdateInput({ defaultTaxRatePercent: 7 })).toEqual({ defaultTaxRate: 0.07 });
+  });
+
+  it('produces an input the API schema accepts', () => {
+    const input = toDefaultTaxUpdateInput(toDefaultTaxFormValues(config));
+    expect(updateTaxPreferencesSchema.safeParse(input).success).toBe(true);
   });
 });

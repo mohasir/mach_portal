@@ -73,9 +73,7 @@
     "quoteBuilder": {
       "title": "Quote builder",
       "allowSelectOptionsAtQuote": "Select options when quoting",
-      "allowSelectOptionsAtQuoteCaption": "Lets you choose item options while creating the quote. When off, this choice is deferred to the event. (Existing quotes don't change.)",
-      "promptRateChanges": "Suggest rate updates",
-      "promptRateChangesCaption": "Asks whether to apply the new percentages when opening a pending quote after taxes or surcharges have changed. When off, the original values are kept."
+      "allowSelectOptionsAtQuoteCaption": "Lets you choose item options while creating the quote. When off, this choice is deferred to the event. (Existing quotes don't change.)"
     },
     "pipeline": {
       "title": "Pipeline",
@@ -85,10 +83,8 @@
   },
   "taxRates": {
     "title": "Taxes",
-    "applyByState": "Apply tax by state",
-    "applyByStateCaption": "Tax applied to quotes based on state.",
-    "cardSurchargeRate": "Card/check surcharge",
-    "cardSurchargeRateCaption": "Percentage added to the quote total when the surcharge switch is on."
+    "defaultRate": "Default tax rate",
+    "defaultRateCaption": "Copied to each new product and editable on the product. Changing it does not change existing products or lines that were already quoted."
   },
   "quotePdfTemplate": {
     "title": "PDF template",
@@ -165,13 +161,11 @@
   },
   "validation": {
     "taxRateInvalid": "Invalid rate",
-    "taxRatesAllZeroInvalid": "At least one rate must be greater than 0",
     "depositRateInvalid": "Invalid deposit",
     "quoteValidityInvalid": "Invalid validity",
     "quoteSeqStartInvalid": "Invalid sequence start",
     "currencyInvalid": "Invalid currency",
     "optionsSelectionDeadlineDaysInvalid": "Invalid number of days",
-    "cardSurchargeRateInvalid": "Invalid rate",
     "quoteStagesLabelInvalid": "Label required"
   }
 }

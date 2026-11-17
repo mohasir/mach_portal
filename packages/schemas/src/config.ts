@@ -1,20 +1,11 @@
 import { z } from 'zod';
-import { stateSchema } from './enums';
 
 const rateSchema = (message: string) => z.number().min(0, message).max(1, message);
 
-export const stateSettingSchema = z.object({
-  state: stateSchema,
-  taxRate: rateSchema('config.validation.taxRateInvalid'),
-});
-export type StateSettingInput = z.infer<typeof stateSettingSchema>;
-
-export const updateTaxRatesSchema = z.array(stateSettingSchema).min(1);
-export type UpdateTaxRatesInput = z.infer<typeof updateTaxRatesSchema>;
+export const taxRateSchema = rateSchema('config.validation.taxRateInvalid');
 
 export const updateTaxPreferencesSchema = z.object({
-  applyTaxByState: z.boolean(),
-  cardSurchargeRate: rateSchema('config.validation.cardSurchargeRateInvalid'),
+  defaultTaxRate: taxRateSchema,
 });
 export type UpdateTaxPreferencesInput = z.infer<typeof updateTaxPreferencesSchema>;
 
@@ -40,7 +31,6 @@ export type UpdateCatalogPreferencesInput = z.infer<typeof updateCatalogPreferen
 
 export const updateQuoteBuilderPreferencesSchema = z.object({
   allowSelectOptionsAtQuote: z.boolean(),
-  promptRateChanges: z.boolean(),
 });
 export type UpdateQuoteBuilderPreferencesInput = z.infer<
   typeof updateQuoteBuilderPreferencesSchema

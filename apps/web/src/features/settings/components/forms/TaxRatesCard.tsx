@@ -1,63 +1,35 @@
 'use client';
-import { App, Button, Divider, Form, InputNumber, Skeleton, Switch } from 'antd';
+import { App, Button, Form, InputNumber, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
-import { STATE_NAMES } from '@repo/schemas';
 import { FieldRow } from '@/components/shared/Inputs/FieldRow';
-import { SwitchRow } from '@/components/shared/Inputs/SwitchRow';
+import { WrapperCard } from '@/components/shared/WrapperCard';
 import { useCan } from '@/lib/auth/useCan';
-import { fromPercent, toPercent } from '@/lib/utils/percent';
 import { useIsFormUnchanged } from '@/lib/hooks/useIsFormUnchanged';
 import { useConfig } from '../../hooks/useConfig';
 import { useUpdateTaxPreferences } from '../../hooks/useUpdateTaxPreferences';
-import { useUpdateTaxRates } from '../../hooks/useUpdateTaxRates';
 import {
-  toTaxRatesFormValues,
-  toTaxRatesUpdateInput,
-  type TaxRatesFormValues,
+  toDefaultTaxFormValues,
+  toDefaultTaxUpdateInput,
+  type DefaultTaxFormValues,
 } from '../../helpers';
-import { WrapperCard } from '@/components/shared/WrapperCard';
-
-interface TaxRatesCardFormValues extends TaxRatesFormValues {
-  applyTaxByState: boolean;
-  cardSurchargeRatePercent: number;
-}
 
 export function TaxRatesCard() {
   const { t } = useTranslation('settings');
   const { message } = App.useApp();
   const can = useCan();
   const { data, isLoading } = useConfig();
-  const { updateTaxRates, isPending: isUpdatingRates } = useUpdateTaxRates();
-  const { updateTaxPreferences, isPending: isUpdatingPreferences } = useUpdateTaxPreferences();
-  const [form] = Form.useForm<TaxRatesCardFormValues>();
-  const applyTaxByState = Form.useWatch('applyTaxByState', form);
-  const rates = Form.useWatch('rates', form);
-  const initialValues = data
-    ? {
-        applyTaxByState: data.appSettings.applyTaxByState,
-        cardSurchargeRatePercent: toPercent(data.appSettings.cardSurchargeRate),
-        ...toTaxRatesFormValues(data),
-      }
-    : undefined;
+  const { updateTaxPreferences, isPending } = useUpdateTaxPreferences();
+  const [form] = Form.useForm<DefaultTaxFormValues>();
+  const initialValues = data ? toDefaultTaxFormValues(data) : undefined;
   const unchanged = useIsFormUnchanged(form, initialValues);
-  const hasPositiveRate = (rates ?? []).some((r) => (r?.taxRatePercent ?? 0) > 0);
-  const ratesInvalid = !!applyTaxByState && !hasPositiveRate;
 
   if (!can({ [RESOURCES.TAX_RATES]: [ACTIONS.VIEW] })) return null;
-  if (isLoading || !data) return <Skeleton active paragraph={{ rows: 3 }} />;
+  if (isLoading || !data) return <Skeleton active paragraph={{ rows: 2 }} />;
 
   const canEdit = can({ [RESOURCES.TAX_RATES]: [ACTIONS.UPDATE] });
-  const onFinish = async (values: TaxRatesCardFormValues) => {
-    const tasks = [
-      updateTaxPreferences({
-        applyTaxByState: values.applyTaxByState,
-        cardSurchargeRate: fromPercent(values.cardSurchargeRatePercent),
-      }),
-    ];
-    // The rate fields never register while hidden (switch off) — nothing to save for them then.
-    if (values.rates) tasks.push(updateTaxRates(toTaxRatesUpdateInput(values, data)));
-    await Promise.all(tasks);
+  const onFinish = async (values: DefaultTaxFormValues) => {
+    await updateTaxPreferences(toDefaultTaxUpdateInput(values));
     message.success(t('saveSuccess'));
   };
 
@@ -71,58 +43,24 @@ export function TaxRatesCard() {
         onFinish={onFinish}
         disabled={!canEdit}
       >
-        <SwitchRow
-          className="mb-4"
-          title={t('taxRates.applyByState')}
-          caption={t('taxRates.applyByStateCaption')}
-          control={
-            <Form.Item name="applyTaxByState" valuePropName="checked" noStyle>
-              <Switch />
-            </Form.Item>
-          }
-        />
-
-        {applyTaxByState && (
-          <>
-            {data.stateSettings.map((s, index) => (
-              <FieldRow key={s.state} title={STATE_NAMES[s.state]} required>
-                <Form.Item
-                  name={['rates', index, 'taxRatePercent']}
-                  className="mb-0"
-                  rules={[{ required: true, message: t('validation.taxRateInvalid') }]}
-                >
-                  <InputNumber
-                    min={0}
-                    max={100}
-                    step={0.001}
-                    precision={3}
-                    suffix="%"
-                    className="w-full"
-                  />
-                </Form.Item>
-              </FieldRow>
-            ))}
-            {ratesInvalid && (
-              <span className="text-error mt-1 block text-xs">
-                {t('validation.taxRatesAllZeroInvalid')}
-              </span>
-            )}
-          </>
-        )}
-
-        <Divider className="my-6" />
-
         <FieldRow
-          title={t('taxRates.cardSurchargeRate')}
-          caption={t('taxRates.cardSurchargeRateCaption')}
+          title={t('taxRates.defaultRate')}
+          caption={t('taxRates.defaultRateCaption')}
           required
         >
           <Form.Item
-            name="cardSurchargeRatePercent"
+            name="defaultTaxRatePercent"
             className="mb-0"
-            rules={[{ required: true, message: t('validation.cardSurchargeRateInvalid') }]}
+            rules={[{ required: true, message: t('validation.taxRateInvalid') }]}
           >
-            <InputNumber min={0} max={100} step={1} precision={0} suffix="%" className="w-full" />
+            <InputNumber
+              min={0}
+              max={100}
+              step={0.001}
+              precision={3}
+              suffix="%"
+              className="w-full"
+            />
           </Form.Item>
         </FieldRow>
 
@@ -130,9 +68,9 @@ export function TaxRatesCard() {
           <Button
             type="primary"
             htmlType="submit"
-            loading={isUpdatingRates || isUpdatingPreferences}
-            disabled={unchanged || ratesInvalid}
-            className="mt-6"
+            loading={isPending}
+            disabled={unchanged}
+            className="mt-2"
           >
             {t('save')}
           </Button>

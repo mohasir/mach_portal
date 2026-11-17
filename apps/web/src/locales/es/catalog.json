@@ -51,7 +51,11 @@
       "cost": "Costo",
       "costCaption": "Interno: solo lo ven quienes tienen permiso. Nunca aparece en cotizaciones ni eventos.",
       "minQuantity": "Cantidad mínima",
-      "minQuantityCaption": "Menor cantidad que puede tener una línea de cotización de este {{item}}, en su unidad."
+      "minQuantityCaption": "Menor cantidad que puede tener una línea de cotización de este {{item}}, en su unidad.",
+      "taxRate": "Impuesto",
+      "taxRateCaption": "Se aplica a las líneas nuevas de este {{item}}. Las líneas ya cotizadas conservan su tasa.",
+      "taxExempt": "Exento de impuesto",
+      "taxExemptCaption": "Se cotiza sin impuesto, sin importar la tasa."
     },
     "duplicateConfirm": {
       "title": "¿Duplicar este {{item}}?",
@@ -69,7 +73,9 @@
       "sku": "SKU",
       "category": "Categoría",
       "cost": "Costo",
-      "minQuantity": "Cantidad mínima"
+      "minQuantity": "Cantidad mínima",
+      "taxRate": "Impuesto",
+      "taxExempt": "Exento de impuesto"
     },
     "filter": {
       "category": "Categoría",
@@ -163,6 +169,7 @@
     "skuInvalid": "SKU inválido (hasta 64 caracteres)",
     "costInvalid": "Costo inválido",
     "minQuantityInvalid": "La cantidad mínima debe ser 1 o más",
+    "taxRateInvalid": "Ingresá una tasa de 0% a 100%",
     "shortDescriptionTooLong": "La descripción corta admite hasta {{max}} caracteres",
     "longDescriptionTooLong": "La descripción larga admite hasta {{max}} caracteres"
   },

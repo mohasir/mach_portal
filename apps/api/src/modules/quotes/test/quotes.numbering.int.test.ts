@@ -17,12 +17,10 @@ async function seedTenant(tenant: TestTenant, quoteSeqStart = 1) {
 }
 
 function create(repo: QuotesRepository, tenant: TestTenant, clientId: string) {
-  return repo
-    .insertFull({ clientId, taxRate: 0.08, createdById: tenant.userId }, numberFor, [])
-    .then((r) => {
-      if (!('id' in r)) throw new Error(`unexpected result ${JSON.stringify(r)}`);
-      return r;
-    });
+  return repo.insertFull({ clientId, createdById: tenant.userId }, numberFor, []).then((r) => {
+    if (!('id' in r)) throw new Error(`unexpected result ${JSON.stringify(r)}`);
+    return r;
+  });
 }
 
 async function seqsOf(tenant: TestTenant) {

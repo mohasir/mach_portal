@@ -118,6 +118,8 @@ describe('db:seed --demo=local', () => {
       ['quote_line_options', 'options', 'option_id'],
       ['quote_stage_history', 'quotes', 'quote_id'],
       ['quote_assignment_history', 'quotes', 'quote_id'],
+      ['quote_charges', 'quotes', 'quote_id'],
+      ['quote_charges', 'charge_types', 'charge_type_id'],
       ['events', 'quotes', 'quote_id'],
       ['event_staff', 'events', 'event_id'],
       ['event_staff', 'staff', 'staff_id'],
@@ -306,7 +308,6 @@ describe('db:seed --demo=prod --tenant', () => {
     expect(await countAll('quote_stages')).toBe(4);
     for (const table of [
       'app_settings',
-      'state_settings',
       'event_types',
       'products',
       'templates',

@@ -8,7 +8,6 @@ import { useEventTypesList } from '@/features/event-types';
 import { useConfig } from '@/features/settings';
 import { toBuilderState } from '../../helpers';
 import { emptyBuilderState, QuoteBuilderProvider } from '../../hooks/useQuoteBuilder';
-import { useQuoteRatesCheckOnOpen } from '../../hooks/useQuoteRatesPrompt';
 import { useQuote } from '../../hooks/useQuotes';
 import { QuoteBuilderContent } from './QuoteBuilderContent';
 
@@ -31,7 +30,6 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
     sortDir: 'asc',
   });
   const { data: detail, isLoading: quoteLoading } = useQuote(quoteId);
-  const ratesContextHolder = useQuoteRatesCheckOnOpen(quoteId, detail);
 
   const stageId = detail?.stageId as QuoteStageId | undefined;
   const isEditable =
@@ -75,15 +73,12 @@ export function QuoteBuilderPage({ quoteId }: QuoteBuilderPageProps) {
         number={detail?.number}
         stageId={stageId}
         isDraft={detail?.isDraft}
-        config={config}
-        savedRates={detail}
         createdByName={detail?.createdByName}
         assignedToId={detail?.assignedToId}
         assignedToName={detail?.assignedToName}
         catalog={catalog}
         eventTypes={eventTypesData.items}
       />
-      {ratesContextHolder}
     </QuoteBuilderProvider>
   );
 }

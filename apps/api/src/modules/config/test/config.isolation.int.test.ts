@@ -1,13 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { QUOTE_STAGE } from '@repo/schemas';
-import {
-  appSettings,
-  clients,
-  quoteStages,
-  quoteStageSettings,
-  quotes,
-  stateSettings,
-} from '../../../db/schema';
+import { appSettings, clients, quoteStages, quoteStageSettings, quotes } from '../../../db/schema';
 import { seedTwoTenants, resetDb, testDb, type TestTenant } from '../../../test/db';
 import { ConfigRepository } from '../config.repository';
 
@@ -22,7 +15,6 @@ async function insertQuote(tenantId: string, seq: number) {
     number: `QUO-${tenantId.slice(0, 4)}-${seq}`,
     clientId: client!.id,
     stageId: QUOTE_STAGE.CONFIRMED,
-    taxRate: 0.08,
   });
 }
 
@@ -52,11 +44,6 @@ describe('config tenant isolation', () => {
       { tenantId: a.id, currency: 'USD', quoteSeqStart: 1 },
       { tenantId: b.id, currency: 'EUR', quoteSeqStart: 500 },
     ]);
-    await testDb.insert(stateSettings).values([
-      { tenantId: a.id, state: 'NY', taxRate: 0.06 },
-      { tenantId: b.id, state: 'NY', taxRate: 0.09 },
-      { tenantId: b.id, state: 'NJ', taxRate: 0.0625 },
-    ]);
     repoA = new ConfigRepository(testDb, a.id);
     repoB = new ConfigRepository(testDb, b.id);
   });
@@ -70,26 +57,6 @@ describe('config tenant isolation', () => {
     await testDb.delete(appSettings);
     await testDb.insert(appSettings).values({ tenantId: b.id });
     expect(await repoA.findAppSettings()).toBeUndefined();
-  });
-
-  it('findStateSettings lists only the tenant rows', async () => {
-    const rowsA = await repoA.findStateSettings();
-    expect(rowsA.map((r) => [r.state, r.taxRate])).toEqual([['NY', 0.06]]);
-    expect(await repoB.findStateSettings()).toHaveLength(2);
-  });
-
-  it('upsertStateSettings writes only the tenant rows, even on the same state key', async () => {
-    await repoA.upsertStateSettings([
-      { state: 'NY', taxRate: 0.07 },
-      { state: 'CT', taxRate: 0.0725 },
-    ]);
-    const all = await testDb.select().from(stateSettings);
-    const byKey = (t: TestTenant, s: string) =>
-      all.find((r) => r.tenantId === t.id && r.state === s)?.taxRate;
-    expect(byKey(a, 'NY')).toBe(0.07);
-    expect(byKey(a, 'CT')).toBe(0.0725);
-    expect(byKey(b, 'NY')).toBe(0.09);
-    expect(all.filter((r) => r.tenantId === b.id)).toHaveLength(2);
   });
 
   const updaters: [string, (r: ConfigRepository) => Promise<unknown>, string, unknown][] = [
@@ -117,10 +84,9 @@ describe('config tenant isolation', () => {
       (r) =>
         r.updateQuoteBuilderPreferences({
           allowSelectOptionsAtQuote: false,
-          promptRateChanges: true,
         }),
-      'promptRateChanges',
-      true,
+      'allowSelectOptionsAtQuote',
+      false,
     ],
     [
       'updatePipelinePreferences',
@@ -130,9 +96,9 @@ describe('config tenant isolation', () => {
     ],
     [
       'updateTaxPreferences',
-      (r) => r.updateTaxPreferences({ applyTaxByState: true, cardSurchargeRate: 0.123 }),
-      'applyTaxByState',
-      true,
+      (r) => r.updateTaxPreferences({ defaultTaxRate: 0.08875 }),
+      'defaultTaxRate',
+      0.08875,
     ],
   ];
 

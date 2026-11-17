@@ -1,4 +1,5 @@
-import { quotes, quoteLines, quoteLineOptions } from '../../db/schema';
+import { summarizeLineTaxes } from '@repo/schemas';
+import { quotes, quoteCharges, quoteLines, quoteLineOptions } from '../../db/schema';
 import { unitRefColumns, unitRefResource, type UnitRef } from '../products/products.resource';
 
 export const publicQuoteColumns = {
@@ -18,16 +19,10 @@ export const publicQuoteColumns = {
   discountType: quotes.discountType,
   discountValue: quotes.discountValue,
   discountAmount: quotes.discountAmount,
-  longDistanceAmount: quotes.longDistanceAmount,
-  taxRate: quotes.taxRate,
   taxAmount: quotes.taxAmount,
   total: quotes.total,
-  applyCardSurcharge: quotes.applyCardSurcharge,
-  cardSurchargeRate: quotes.cardSurchargeRate,
-  cardSurchargeAmount: quotes.cardSurchargeAmount,
   depositRate: quotes.depositRate,
   depositAmount: quotes.depositAmount,
-  declinedRates: quotes.declinedRates,
   stageId: quotes.stageId,
   isDraft: quotes.isDraft,
   selectOptionsAtQuote: quotes.selectOptionsAtQuote,
@@ -48,6 +43,8 @@ export const publicQuoteLineColumns = {
   uomId: quoteLines.uomId,
   quantity: quoteLines.quantity,
   subtotal: quoteLines.subtotal,
+  taxRate: quoteLines.taxRate,
+  taxAmount: quoteLines.taxAmount,
   sortOrder: quoteLines.sortOrder,
 } as const;
 
@@ -63,6 +60,38 @@ export const publicQuoteLineOptionColumns = {
   optionId: quoteLineOptions.optionId,
   optionGroupId: quoteLineOptions.optionGroupId,
 } as const;
+
+// The charge as it was applied: a copy of its type's name and kind, the value used (cents or a rate)
+// and the amount it added. `chargeTypeId` only points back at the catalog.
+export const publicQuoteChargeColumns = {
+  id: quoteCharges.id,
+  chargeTypeId: quoteCharges.chargeTypeId,
+  name: quoteCharges.name,
+  kind: quoteCharges.kind,
+  value: quoteCharges.value,
+  amount: quoteCharges.amount,
+  sortOrder: quoteCharges.sortOrder,
+} as const;
+
+export type PublicQuoteCharge = Pick<
+  typeof quoteCharges.$inferSelect,
+  keyof typeof publicQuoteChargeColumns
+>;
+
+export const quoteChargeResource = (row: PublicQuoteCharge) => ({
+  id: row.id,
+  chargeTypeId: row.chargeTypeId,
+  name: row.name,
+  kind: row.kind,
+  value: row.value,
+  amount: row.amount,
+  sortOrder: row.sortOrder,
+});
+
+export type QuoteChargeDetail = ReturnType<typeof quoteChargeResource>;
+
+export const buildQuoteChargeDetails = (rows: PublicQuoteCharge[]): QuoteChargeDetail[] =>
+  [...rows].sort((a, b) => a.sortOrder - b.sortOrder).map(quoteChargeResource);
 
 export type PublicQuote = Pick<typeof quotes.$inferSelect, keyof typeof publicQuoteColumns>;
 export type PublicQuoteLine = Pick<
@@ -91,13 +120,8 @@ export const quoteResource = (row: PublicQuote) => ({
   discountType: row.discountType,
   discountValue: row.discountValue,
   discountAmount: row.discountAmount,
-  longDistanceAmount: row.longDistanceAmount,
-  taxRate: row.taxRate,
   taxAmount: row.taxAmount,
   total: row.total,
-  applyCardSurcharge: row.applyCardSurcharge,
-  cardSurchargeRate: row.cardSurchargeRate,
-  cardSurchargeAmount: row.cardSurchargeAmount,
   depositRate: row.depositRate,
   depositAmount: row.depositAmount,
   stageId: row.stageId,
@@ -179,6 +203,8 @@ export type QuoteLineDetail = {
   unit: ReturnType<typeof unitRefResource>;
   quantity: number;
   subtotal: number;
+  taxRate: number;
+  taxAmount: number;
   sortOrder: number;
   selections: QuoteLineSelection[];
 };
@@ -219,6 +245,8 @@ export const buildQuoteLineDetails = (
         unit: unitRefResource(line.unit),
         quantity: line.quantity,
         subtotal: line.subtotal,
+        taxRate: line.taxRate,
+        taxAmount: line.taxAmount,
         sortOrder: line.sortOrder,
         selections: groupIds.map((optionGroupId) => ({
           optionGroupId,
@@ -235,19 +263,25 @@ export const buildQuoteDetail = (
   optionRows: PublicQuoteLineOption[],
   historyRows: StageHistoryRow[],
   assignmentHistoryRows: AssignmentHistoryRow[],
-) => ({
-  ...quoteResource(quoteRow),
-  clientName: quoteRow.clientName,
-  eventTypeName: quoteRow.eventTypeName,
-  createdByName: quoteRow.createdByName,
-  assignedToName: quoteRow.assignedToName,
-  eventId: quoteRow.eventId,
-  isArchived: !!quoteRow.archivedAt,
-  isComplete: isQuoteComplete(quoteRow, lineRows.length),
-  stageHistory: historyRows,
-  assignmentHistory: assignmentHistoryRows,
-  lines: buildQuoteLineDetails(lineRows, optionRows),
-});
+  chargeRows: PublicQuoteCharge[],
+) => {
+  const lines = buildQuoteLineDetails(lineRows, optionRows);
+  return {
+    ...quoteResource(quoteRow),
+    clientName: quoteRow.clientName,
+    eventTypeName: quoteRow.eventTypeName,
+    createdByName: quoteRow.createdByName,
+    assignedToName: quoteRow.assignedToName,
+    eventId: quoteRow.eventId,
+    isArchived: !!quoteRow.archivedAt,
+    isComplete: isQuoteComplete(quoteRow, lineRows.length),
+    stageHistory: historyRows,
+    assignmentHistory: assignmentHistoryRows,
+    lines,
+    taxBreakdown: summarizeLineTaxes(lines, quoteRow.taxAmount),
+    charges: buildQuoteChargeDetails(chargeRows),
+  };
+};
 
 export type QuoteDetailResource = ReturnType<typeof buildQuoteDetail>;
 

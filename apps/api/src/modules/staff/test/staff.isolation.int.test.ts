@@ -35,7 +35,6 @@ async function assign(
       number: `Q-${seq}`,
       clientId: client!.id,
       stageId: QUOTE_STAGE.CONFIRMED,
-      taxRate: 0.08,
     })
     .returning({ id: quotes.id });
   const [event] = await testDb

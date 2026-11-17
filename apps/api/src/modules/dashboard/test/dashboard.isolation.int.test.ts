@@ -70,7 +70,6 @@ async function insertQuote(
       clientId,
       stageId: values.stageId,
       eventDate: values.eventDate ?? null,
-      taxRate: 0.08,
       createdAt: created(values.createdMonth),
     })
     .returning({ id: quotes.id });
@@ -88,7 +87,7 @@ async function seedTenant(tenant: TestTenant, label: string, spec: Spec): Promis
   for (const [name] of spec.productLines) {
     const [p] = await testDb
       .insert(products)
-      .values({ tenantId: tenant.id, name, uomId: await testUnitId(tenant.id) })
+      .values({ tenantId: tenant.id, name, taxRate: 0, uomId: await testUnitId(tenant.id) })
       .returning({ id: products.id });
     productIds[name] = p!.id;
   }
@@ -129,6 +128,8 @@ async function seedTenant(tenant: TestTenant, label: string, spec: Spec): Promis
         uomId,
         quantity: 10,
         subtotal: 1000,
+        taxRate: 0,
+        taxAmount: 0,
       })),
     );
   }
@@ -258,6 +259,8 @@ describe('dashboard tenant isolation', () => {
         uomId: await testUnitId(b.id),
         quantity: 10,
         subtotal: 1000,
+        taxRate: 0,
+        taxAmount: 0,
       });
       const res = await svcA.topProducts(topQ);
       expect(res.total).toBe(4);
@@ -272,6 +275,8 @@ describe('dashboard tenant isolation', () => {
         uomId: await testUnitId(a.id),
         quantity: 10,
         subtotal: 1000,
+        taxRate: 0,
+        taxAmount: 0,
       });
       const res = await svcA.topProducts(topQ);
       expect(res.total).toBe(4);
@@ -286,6 +291,8 @@ describe('dashboard tenant isolation', () => {
         uomId: await testUnitId(a.id),
         quantity: 10,
         subtotal: 1000,
+        taxRate: 0,
+        taxAmount: 0,
       });
       const res = await svcA.topProducts(topQ);
       expect(res.items.map((i) => i.productName)).toEqual(['Menu A1', 'Menu A2']);

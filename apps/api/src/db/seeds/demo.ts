@@ -8,6 +8,7 @@ import { setCatalogKind } from '../../lib/tenancy/profile';
 import { TenancyRepository } from '../../lib/tenancy/tenancy.repository';
 import { seedEventActivity, seedQuoteStageSettings, type SeedStageOverride } from './activity';
 import { SEED_CATALOG, type SeedProduct } from './catalog';
+import { seedChargeTypes } from './chargeTypes';
 import { SEED_CLIENTS, seedClients, type SeedClient } from './clients';
 import type { SeedAppSettings } from './config';
 import { seedTenantDefaults } from './defaults';
@@ -197,7 +198,7 @@ export const DEMO_TENANTS: DemoProfile[] = [
     catalogKind: 'products',
     catalog: SEED_CATALOG,
     quotes: SEED_QUOTES,
-    appSettings: {},
+    appSettings: { defaultTaxRate: 0.08875 },
     stageOverrides: [{ stageId: QUOTE_STAGE.QUOTED, label: 'Enviada al cliente' }],
     preferences: { timeFormat: '12h' },
   },
@@ -211,7 +212,7 @@ export const DEMO_TENANTS: DemoProfile[] = [
     catalogKind: 'services',
     catalog: SUR_CATALOG,
     quotes: SUR_QUOTES,
-    appSettings: { depositRate: 0.4, quoteSeqStart: 1001 },
+    appSettings: { depositRate: 0.4, quoteSeqStart: 1001, defaultTaxRate: 0.16 },
     stageOverrides: [
       { stageId: QUOTE_STAGE.PENDING, label: 'Borrador', color: '#13c2c2' },
       { stageId: QUOTE_STAGE.CANCELLED, label: 'Perdida' },
@@ -248,6 +249,7 @@ export async function seedDemoTenant(
   await seedUsers(tenantId, profile.users, db);
   await seedClients(tenantId, profile.clients, db);
   await seedStaff(tenantId, profile.staff, db);
+  await seedChargeTypes(tenantId, db);
   await seedQuotes(
     tenantId,
     {

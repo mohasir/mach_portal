@@ -13,7 +13,6 @@ import { WrapperCard } from '@/components/shared/WrapperCard';
 
 interface QuoteBuilderPreferencesFormValues {
   allowSelectOptionsAtQuote: boolean;
-  promptRateChanges: boolean;
 }
 
 export function QuoteBuilderPreferencesCard() {
@@ -24,7 +23,6 @@ export function QuoteBuilderPreferencesCard() {
   const [form] = Form.useForm<QuoteBuilderPreferencesFormValues>();
   const initialValues: QuoteBuilderPreferencesFormValues | undefined = data && {
     allowSelectOptionsAtQuote: data.appSettings.allowSelectOptionsAtQuote,
-    promptRateChanges: data.appSettings.promptRateChanges,
   };
   const unchanged = useIsFormUnchanged(form, initialValues);
 
@@ -48,7 +46,6 @@ export function QuoteBuilderPreferencesCard() {
       >
         <Feature name="configurableOptions">
           <SwitchRow
-            className="mb-4"
             title={t('preferences.quoteBuilder.allowSelectOptionsAtQuote')}
             caption={t('preferences.quoteBuilder.allowSelectOptionsAtQuoteCaption')}
             control={
@@ -58,15 +55,6 @@ export function QuoteBuilderPreferencesCard() {
             }
           />
         </Feature>
-        <SwitchRow
-          title={t('preferences.quoteBuilder.promptRateChanges')}
-          caption={t('preferences.quoteBuilder.promptRateChangesCaption')}
-          control={
-            <Form.Item name="promptRateChanges" valuePropName="checked" noStyle>
-              <Switch />
-            </Form.Item>
-          }
-        />
 
         {canEdit && (
           <Button

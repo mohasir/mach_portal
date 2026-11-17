@@ -74,7 +74,9 @@ describe('product SKU, category and minimum quantity', () => {
     it('rejects a duplicate at the database too', async () => {
       await service.createProduct(base('Bar', { sku: 'AB-1' }));
       await expect(
-        testDb.insert(products).values({ tenantId: a.id, name: 'Raw', uomId: unitA, sku: 'ab-1' }),
+        testDb
+          .insert(products)
+          .values({ tenantId: a.id, name: 'Raw', taxRate: 0, uomId: unitA, sku: 'ab-1' }),
       ).rejects.toThrow();
     });
 
@@ -210,7 +212,7 @@ describe('product SKU, category and minimum quantity', () => {
       await expect(
         testDb
           .insert(products)
-          .values({ tenantId: a.id, name: 'Raw', uomId: unitA, minQuantity: 0 }),
+          .values({ tenantId: a.id, name: 'Raw', taxRate: 0, uomId: unitA, minQuantity: 0 }),
       ).rejects.toThrow();
     });
   });

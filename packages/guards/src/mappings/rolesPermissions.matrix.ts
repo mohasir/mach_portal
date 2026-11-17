@@ -67,6 +67,9 @@ const UNIT_ADMIN = [CREATE, READ, UPDATE, DISABLE];
 const CATEGORY_FULL = [...CRUD, DISABLE, ENABLE];
 const CATEGORY_ADMIN = [...CRUD, DISABLE];
 const COST_FULL = [READ, UPDATE];
+// Charge types are priced like the tax rates, so they go to the roles that manage those.
+const CHARGE_TYPE_FULL = [CREATE, READ, UPDATE, DISABLE, ENABLE];
+const CHARGE_TYPE_ADMIN = [CREATE, READ, UPDATE, DISABLE];
 const READ_ONLY = [READ];
 const VIEW_UPDATE = [VIEW, UPDATE];
 
@@ -104,6 +107,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.UNIT_OF_MEASURE]: UNIT_FULL,
       [RESOURCES.PRODUCT_CATEGORY]: CATEGORY_FULL,
       [RESOURCES.PRODUCT_COST]: COST_FULL,
+      [RESOURCES.CHARGE_TYPE]: CHARGE_TYPE_FULL,
       [RESOURCES.EVENT_TYPE]: CRUD,
       [RESOURCES.RESCHEDULE_REASON]: [VIEW, ...CRUD],
       [RESOURCES.TAX_RATES]: VIEW_UPDATE,
@@ -135,6 +139,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.UNIT_OF_MEASURE]: UNIT_ADMIN,
       [RESOURCES.PRODUCT_CATEGORY]: CATEGORY_ADMIN,
       [RESOURCES.PRODUCT_COST]: COST_FULL,
+      [RESOURCES.CHARGE_TYPE]: CHARGE_TYPE_ADMIN,
       [RESOURCES.EVENT_TYPE]: CRUD,
       // Only to populate the reason picker when rescheduling; the catalog page needs VIEW.
       [RESOURCES.RESCHEDULE_REASON]: READ_ONLY,
@@ -160,6 +165,7 @@ export const rolesPermissionsMatrix = [
       [RESOURCES.PRODUCT]: READ_ONLY,
       [RESOURCES.UNIT_OF_MEASURE]: READ_ONLY,
       [RESOURCES.PRODUCT_CATEGORY]: READ_ONLY,
+      [RESOURCES.CHARGE_TYPE]: READ_ONLY,
       [RESOURCES.EVENT_TYPE]: READ_ONLY,
       [RESOURCES.STAFF]: READ_ONLY,
     },

@@ -6,7 +6,6 @@ import type {
   UpdateQuoteDefaultsInput,
   UpdateQuoteStagesInput,
   UpdateTaxPreferencesInput,
-  UpdateTaxRatesInput,
 } from '@repo/schemas';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import { ConfigRepository } from './config.repository';
@@ -16,20 +15,14 @@ export class ConfigService {
   constructor(private repo: ConfigRepository) {}
 
   async get() {
-    const [stateRows, appRow, lastUsedSeq, quoteStageRows] = await Promise.all([
-      this.repo.findStateSettings(),
+    const [appRow, lastUsedSeq, quoteStageRows] = await Promise.all([
       this.repo.findAppSettings(),
       this.repo.getLastUsedSeq(),
       this.repo.findQuoteStages(),
     ]);
     if (!appRow)
       throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.config.NOT_FOUND) });
-    return configResource(stateRows, appRow, lastUsedSeq, quoteStageRows);
-  }
-
-  async updateTaxRates(input: UpdateTaxRatesInput) {
-    await this.repo.upsertStateSettings(input);
-    return this.get();
+    return configResource(appRow, lastUsedSeq, quoteStageRows);
   }
 
   async updateTaxPreferences(input: UpdateTaxPreferencesInput) {

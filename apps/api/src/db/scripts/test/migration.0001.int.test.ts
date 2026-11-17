@@ -179,10 +179,14 @@ describe('0001 on a legacy database with data', () => {
   let db: { url: string; sql: postgres.Sql };
   let legacyTables: string[];
   let legacyCounts: Record<string, number>;
+  // Legacy tables that still exist after the migrations (0014 drops state_settings).
+  let survivingCounts: Record<string, number>;
   let legacySets: Record<string, string[]>;
   let legacyPrints: Fingerprints;
-  // Legacy columns that still exist after the migrations (app_settings.id and
-  // app_settings.min_persons_per_line are dropped).
+  // Legacy columns that still exist after the migrations (0010 drops
+  // app_settings.min_persons_per_line; 0014 drops state_settings, the tax by state and rate drift
+  // columns of app_settings and the quote's own tax rate and declined rates; 0015 drops long distance
+  // and the card surcharge columns).
   let survivingSets: Record<string, string[]>;
   let survivingPrints: Fingerprints;
   let renamedSets: Record<string, string[]>;
@@ -192,15 +196,34 @@ describe('0001 on a legacy database with data', () => {
     db = await legacyDb({ withData: true });
     legacyTables = await publicTables(db.sql);
     legacyCounts = await countRows(db.sql, legacyTables);
+    const { state_settings: _dropped, ...kept } = legacyCounts;
+    survivingCounts = kept;
     legacySets = await legacyColumnSets(db.sql);
     legacyPrints = await fingerprints(db.sql, legacySets);
-    // 0010 moves min_persons_per_line into products.min_quantity and drops it.
-    survivingSets = {
-      ...legacySets,
-      app_settings: legacySets['app_settings']!.filter(
-        (c) => c !== 'id' && c !== 'min_persons_per_line',
-      ),
+    const { state_settings: _droppedTable, ...keptSets } = legacySets;
+    const droppedColumns: Record<string, string[]> = {
+      app_settings: [
+        'id',
+        'min_persons_per_line',
+        'prompt_rate_changes',
+        'apply_tax_by_state',
+        'card_surcharge_rate',
+      ],
+      quotes: [
+        'tax_rate',
+        'declined_rates',
+        'long_distance_amount',
+        'apply_card_surcharge',
+        'card_surcharge_rate',
+        'card_surcharge_amount',
+      ],
     };
+    survivingSets = Object.fromEntries(
+      Object.entries(keptSets).map(([t, cols]) => [
+        t,
+        cols.filter((c) => !droppedColumns[t]?.includes(c)),
+      ]),
+    );
     survivingPrints = await fingerprints(db.sql, survivingSets);
     // 0007 renames num_persons to quantity and 0012 products.description to short_description;
     // row content is what must survive.
@@ -276,7 +299,7 @@ describe('0001 on a legacy database with data', () => {
   it('keeps every legacy row and adds only the organization and its members', async () => {
     const counts = await countRows(db.sql, await publicTables(db.sql));
     expect(counts).toEqual({
-      ...legacyCounts,
+      ...survivingCounts,
       organization: 1,
       member: LEGACY_USERS.length,
       invitation: 0,
@@ -291,6 +314,8 @@ describe('0001 on a legacy database with data', () => {
       units_of_measure: SYSTEM_UNITS.length,
       product_categories: 0,
       product_images: 0,
+      charge_types: 0,
+      quote_charges: 0,
     });
   });
 
@@ -373,11 +398,16 @@ describe('0001 on a legacy database with data', () => {
     const [row] = await db.sql`
       SELECT tenant_id, deposit_rate::text, quote_validity_months,
              quote_seq_start, currency, catalog_sortable, options_selection_deadline_days,
-             allow_select_options_at_quote, prompt_rate_changes, hide_stale_quotes,
-             apply_tax_by_state, card_surcharge_rate::text,
+             allow_select_options_at_quote, hide_stale_quotes,
              to_char(updated_at, 'YYYY-MM-DD HH24:MI:SS') AS updated_at
       FROM app_settings`;
-    const { min_persons_per_line: minPerLine, ...kept } = LEGACY_APP_SETTINGS;
+    const {
+      min_persons_per_line: minPerLine,
+      prompt_rate_changes: _prompt,
+      apply_tax_by_state: _byState,
+      card_surcharge_rate: _surcharge,
+      ...kept
+    } = LEGACY_APP_SETTINGS;
     expect(row).toEqual({ tenant_id: orgId, ...kept });
     expect(await columnsOf(db.sql, 'app_settings')).not.toContain('id');
     expect(await columnsOf(db.sql, 'app_settings')).not.toContain('min_persons_per_line');
@@ -393,8 +423,8 @@ describe('0001 on a legacy database with data', () => {
       /quotes_tenant_seq_unique/,
     );
     await expect(
-      db.sql`INSERT INTO products (tenant_id, name, uom_id)
-             SELECT ${orgId}, 'Tacos', id FROM units_of_measure WHERE tenant_id = ${orgId} LIMIT 1`,
+      db.sql`INSERT INTO products (tenant_id, name, uom_id, tax_rate)
+             SELECT ${orgId}, 'Tacos', id, 0 FROM units_of_measure WHERE tenant_id = ${orgId} LIMIT 1`,
     ).rejects.toThrow(/products_tenant_name_unique/);
     await expect(
       db.sql`INSERT INTO member (id, organization_id, user_id, role, role_id, created_at)
@@ -406,7 +436,7 @@ describe('0001 on a legacy database with data', () => {
   it('passes the post-migration verification with the same counts', async () => {
     const report = await verifyMultitenant(db.url);
     expect(report.problems).toEqual([]);
-    expect(report.counts).toMatchObject(legacyCounts);
+    expect(report.counts).toMatchObject(survivingCounts);
   });
 
   it('changes nothing when run again', async () => {
@@ -496,10 +526,10 @@ describe('0001 backfill edge cases', () => {
     ]);
     const post = await verifyMultitenant(db.url);
     // Migrated only up to 0003, so the RLS checks (0005), the feature tables (0006) and the
-    // later tables (units_of_measure, 0009; product_categories, 0010; product_images, 0011)
-    // legitimately fail here.
+    // later tables (units_of_measure, 0009; product_categories, 0010; product_images, 0011;
+    // charge_types and quote_charges, 0015) legitimately fail here.
     const rlsProblem =
-      /row level security|policy|^tenant_(features?|profile)\w*: missing table$|^(units_of_measure|product_categories|product_images): missing table/;
+      /row level security|policy|^tenant_(features?|profile)\w*: missing table$|^(units_of_measure|product_categories|product_images|charge_types|quote_charges): missing table/;
     expect(post.problems.filter((p) => !rlsProblem.test(p))).toEqual([
       'member: 2 row(s) without role_id',
       `organization: 1 without an owner role that has a member (${SLUG})`,
@@ -588,8 +618,8 @@ describe('verifyMultitenant on corrupted data', () => {
     await db.sql`INSERT INTO clients (name) VALUES ('orphan')`;
     await db.sql`INSERT INTO "user" (id, name, email) VALUES ('u_lost', 'l', 'lost@x.test')`;
     await db.sql`ALTER TABLE products DROP CONSTRAINT products_tenant_name_unique`;
-    await db.sql`INSERT INTO products (tenant_id, name, uom_id)
-                 SELECT ${org!.id}, 'Tacos', id FROM units_of_measure WHERE tenant_id = ${org!.id} LIMIT 1`;
+    await db.sql`INSERT INTO products (tenant_id, name, uom_id, tax_rate)
+                 SELECT ${org!.id}, 'Tacos', id, 0 FROM units_of_measure WHERE tenant_id = ${org!.id} LIMIT 1`;
 
     const { problems } = await verifyMultitenant(db.url);
     expect(problems).toEqual(

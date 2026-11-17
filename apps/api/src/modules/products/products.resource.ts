@@ -23,6 +23,8 @@ export const publicProductColumns = {
   categoryId: products.categoryId,
   sku: products.sku,
   minQuantity: products.minQuantity,
+  taxRate: products.taxRate,
+  taxExempt: products.taxExempt,
 } as const;
 
 // Added to the selection only for callers holding product_cost.read.
@@ -160,6 +162,8 @@ export const productResource = (
   category: category ? categoryRefResource(category) : null,
   sku: row.sku,
   minQuantity: row.minQuantity,
+  taxRate: row.taxRate,
+  taxExempt: row.taxExempt,
   images: images.map(productImageResource),
   quotable,
   ...(canSeeCost ? { cost: row.cost ?? null } : {}),

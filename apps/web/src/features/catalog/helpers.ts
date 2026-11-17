@@ -1,4 +1,5 @@
 import type { PriceTierInput, UpdateProductInput } from '@repo/schemas';
+import { fromPercent, toDisplayPercent } from '@/lib/utils/percent';
 
 export interface ProductFormValues {
   name: string;
@@ -11,6 +12,8 @@ export interface ProductFormValues {
   categoryId?: string | null;
   cost?: number | null;
   minQuantity: number;
+  taxRatePercent?: number | null;
+  taxExempt?: boolean;
 }
 
 /**
@@ -37,6 +40,29 @@ export interface CatalogFeatures {
 
 /** Product mutation input; `tiers` may be omitted to leave stored tiers untouched. */
 export type ProductPayload = Omit<UpdateProductInput, 'tiers'> & { tiers?: PriceTierInput[] };
+
+// The rate is stored with 5 decimals; dividing by 100 can leave float noise past them.
+function taxPayload(values: ProductFormValues): Pick<ProductPayload, 'taxRate' | 'taxExempt'> {
+  const taxExempt = values.taxExempt ?? false;
+  if (taxExempt) return { taxRate: 0, taxExempt };
+  if (values.taxRatePercent == null) return { taxExempt };
+  return { taxRate: Math.round(fromPercent(values.taxRatePercent) * 100000) / 100000, taxExempt };
+}
+
+/**
+ * Tax fields of the product form: the product's own, or the organization default on create. With
+ * neither known the rate stays empty, and an empty rate is not sent, so the API applies the default.
+ */
+export function taxFormValues(
+  product: { taxRate: number; taxExempt: boolean } | undefined,
+  defaultTaxRate: number | undefined,
+): Pick<ProductFormValues, 'taxRatePercent' | 'taxExempt'> {
+  const rate = product?.taxRate ?? defaultTaxRate;
+  return {
+    taxRatePercent: rate === undefined ? undefined : toDisplayPercent(rate),
+    taxExempt: product?.taxExempt ?? false,
+  };
+}
 
 const blankToUndefined = (value: string | undefined) => (value?.trim() ? value : undefined);
 
@@ -67,6 +93,7 @@ export function buildProductPayload(
     sku: values.sku ?? null,
     categoryId: values.categoryId ?? null,
     minQuantity: values.minQuantity,
+    ...taxPayload(values),
     // Stored tiers are kept untouched while the add-on is off; the API rejects any tiers then.
     ...(priceTiersEnabled ? { tiers } : {}),
     // The API rejects a cost from a caller who may not edit it; omitted keeps the stored one.

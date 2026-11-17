@@ -187,6 +187,7 @@ describe('ProductsService price and quotable', () => {
     const repo = {
       findProductByName: vi.fn().mockResolvedValue(undefined),
       createProduct: vi.fn().mockResolvedValue(row),
+      findDefaultTaxRate: vi.fn().mockResolvedValue(0),
       findTierQuantities: vi.fn().mockResolvedValue([{ quantity: 1 }, { quantity: 2 }]),
       findUnit: vi.fn().mockResolvedValue(unit),
       findProductImages: vi.fn().mockResolvedValue([]),

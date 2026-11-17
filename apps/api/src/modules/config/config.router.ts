@@ -5,7 +5,6 @@ import {
   updateQuoteDefaultsSchema,
   updateQuoteStagesSchema,
   updateTaxPreferencesSchema,
-  updateTaxRatesSchema,
 } from '@repo/schemas';
 import { RESOURCES, ACTIONS } from '@repo/guards';
 import { router, guardedProcedure, protectedProcedure } from '../../core/trpc/trpc';
@@ -13,10 +12,6 @@ import { configModule } from './config.module';
 
 export const configRouter = router({
   get: protectedProcedure.query(({ ctx }) => configModule(ctx).get()),
-
-  updateTaxRates: guardedProcedure({ [RESOURCES.TAX_RATES]: [ACTIONS.UPDATE] })
-    .input(updateTaxRatesSchema)
-    .mutation(({ ctx, input }) => configModule(ctx).updateTaxRates(input)),
 
   updateTaxPreferences: guardedProcedure({ [RESOURCES.TAX_RATES]: [ACTIONS.UPDATE] })
     .input(updateTaxPreferencesSchema)

@@ -57,6 +57,7 @@ Exit code: 0 when no problem was found, 1 otherwise.`;
 // platform-managed feature tables have their own check).
 export const TENANT_TABLES = [
   'app_settings',
+  'charge_types',
   'clients',
   'event_history',
   'event_payment_attachments',
@@ -74,6 +75,7 @@ export const TENANT_TABLES = [
   'product_price_tiers',
   'products',
   'quote_assignment_history',
+  'quote_charges',
   'quote_line_options',
   'quote_lines',
   'quote_stage_history',
@@ -84,7 +86,6 @@ export const TENANT_TABLES = [
   'role_audit_log',
   'role_permission',
   'staff',
-  'state_settings',
   'templates',
   'units_of_measure',
   'user_preferences',
@@ -108,6 +109,8 @@ const PARENT_LINKS: [string, string, string][] = [
   ['quote_line_options', 'option_group_id', 'option_groups'],
   ['quote_stage_history', 'quote_id', 'quotes'],
   ['quote_assignment_history', 'quote_id', 'quotes'],
+  ['quote_charges', 'quote_id', 'quotes'],
+  ['quote_charges', 'charge_type_id', 'charge_types'],
   ['events', 'quote_id', 'quotes'],
   ['events', 'client_id', 'clients'],
   ['events', 'event_type_id', 'event_types'],
@@ -129,7 +132,6 @@ const TENANT_UNIQUES: [string, string[]][] = [
   ['quotes', ['seq']],
   ['quotes', ['number']],
   ['templates', ['type', 'locale']],
-  ['state_settings', ['state']],
   ['user_preferences', ['user_id']],
   ['app_settings', []],
 ];

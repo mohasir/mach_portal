@@ -5,7 +5,6 @@ import {
   createQuoteSchema,
   quotesBoardQuerySchema,
   quotesListQuerySchema,
-  resolveQuoteRateDriftSchema,
   updateQuoteSchema,
   updateQuoteStageSchema,
 } from '@repo/schemas';
@@ -101,17 +100,6 @@ export const quotesRouter = router({
         canManagePricing(ctx),
         ownerScope(ctx, ACTIONS.UPDATE),
       ),
-    ),
-  // Gated to QUOTE.UPDATE: only someone who can reprice the quote is asked about new config rates.
-  rateDrift: update
-    .input(z.object({ id: z.uuid() }))
-    .query(({ ctx, input }) =>
-      quotesModule(ctx).rateDrift(input.id, ownerScope(ctx, ACTIONS.UPDATE)),
-    ),
-  resolveRateDrift: update
-    .input(resolveQuoteRateDriftSchema)
-    .mutation(({ ctx, input }) =>
-      quotesModule(ctx).resolveRateDrift(input.id, input.accept, ownerScope(ctx, ACTIONS.UPDATE)),
     ),
   updateStage: update
     .input(updateQuoteStageSchema)

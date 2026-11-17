@@ -1,7 +1,6 @@
 import { and, asc, eq, sql } from 'drizzle-orm';
 import type {
   QuoteStageCatalogItem,
-  StateSettingInput,
   UpdateCatalogPreferencesInput,
   UpdatePipelinePreferencesInput,
   UpdateQuoteBuilderPreferencesInput,
@@ -10,28 +9,14 @@ import type {
 } from '@repo/schemas';
 import type { Executor } from '../../db';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
-import {
-  appSettings,
-  stateSettings,
-  quotes,
-  quoteStages,
-  quoteStageSettings,
-} from '../../db/schema';
-import { publicAppSettingsColumns, publicStateSettingColumns } from './config.resource';
+import { appSettings, quotes, quoteStages, quoteStageSettings } from '../../db/schema';
+import { publicAppSettingsColumns } from './config.resource';
 
 export class ConfigRepository {
   constructor(
     private db: Executor,
     private tenantId: string,
   ) {}
-
-  findStateSettings() {
-    return this.db
-      .select(publicStateSettingColumns)
-      .from(stateSettings)
-      .where(tenantEq(stateSettings, this.tenantId))
-      .orderBy(asc(stateSettings.state));
-  }
 
   findQuoteStages() {
     return this.db
@@ -62,22 +47,6 @@ export class ConfigRepository {
       .where(tenantEq(appSettings, this.tenantId))
       .limit(1)
       .then((r) => r[0]);
-  }
-
-  async upsertStateSettings(rows: StateSettingInput[]) {
-    await this.db.transaction(async (tx) => {
-      await Promise.all(
-        rows.map((row) =>
-          tx
-            .insert(stateSettings)
-            .values({ ...row, tenantId: this.tenantId })
-            .onConflictDoUpdate({
-              target: [stateSettings.tenantId, stateSettings.state],
-              set: { taxRate: row.taxRate, updatedAt: new Date() },
-            }),
-        ),
-      );
-    });
   }
 
   // A tenant without an app_settings row gets one (column defaults) on its first update.

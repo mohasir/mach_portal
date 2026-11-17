@@ -15,10 +15,18 @@ describe('RESOURCE_MODULE', () => {
     expect(moduleOfResource('pipeline_preferences')).toBe('quotes');
     expect(moduleOfResource('payment')).toBe('events');
     expect(moduleOfResource('reschedule_reason')).toBe('events');
+    expect(moduleOfResource('charge_type')).toBe('quotes');
   });
 
   it('leaves unmapped resources without a module', () => {
-    for (const r of ['product', 'price_tiers', 'product_option', 'tax_rates', 'catalog_preferences', 'client']) {
+    for (const r of [
+      'product',
+      'price_tiers',
+      'product_option',
+      'tax_rates',
+      'catalog_preferences',
+      'client',
+    ]) {
       expect(moduleOfResource(r)).toBeUndefined();
     }
   });

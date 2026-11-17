@@ -45,9 +45,9 @@ Tres clusters de datos: **comercial** (`clients → quotes → …`), **operaci�
 | D5 | **`events.month` se elimina** (derivado de `event_date`). **`events.status`** ya no es 100% derivado de `quote.stage` (D18: la quote solo llega hasta Aprobada) — el "realizado" pasa a ser un campo propio del evento; `upcoming`/`cancelled` sí siguen derivados. A definir en detalle en Fase 5. | `month` en español era frágil (locale, sin año, redundante). El recorte de D18 mueve "realizado" fuera del eje de la quote. |
 | D6 | **Ingredientes solo viven en la quote** (no se copian al evento). El catálogo usa **soft-delete** (`is_active`). | La operación consulta la quote/PDF vía `event.quote_id`; el soft-delete evita romper quotes históricas. |
 | D7 | **Dinero en centavos (`integer`)**; tasas en `numeric`. | Float rompe decimales (`0.1+0.2≠0.3`); enteros son exactos. Ver §3. |
-| D8 | **Precio**: subtotal − descuento (fijo o %) → +impuesto → total → depósito. Descuento **antes** de impuesto. | Cascada estándar de factura. Ver §7. |
-| D9 | **Tasas configurables** en un módulo de config; **snapshot** en la quote al calcular. | Cambiar una tasa no debe recalcular quotes históricas. |
-| D10 | **Sin `travel_fee`** por ahora (columna futura en `state_settings`). | El negocio no lo usa aún. |
+| D8 | **Precio**: subtotal − descuento (fijo o %, repartido entre las líneas) → +impuesto por línea → total → depósito. Descuento **antes** de impuesto. | Cascada estándar de factura. Ver §7. |
+| D9 | **Impuesto por producto** (tasa o exento; la organización define la tasa por defecto); **snapshot** de la tasa en cada línea al cotizar. | Cambiar una tasa no debe recalcular quotes históricas. |
+| D10 | **Sin `travel_fee`** por estado (el impuesto por estado y `state_settings` se eliminaron, migración 0014). | El negocio no lo usa aún. |
 | D11 | **Número de quote** `QUOYYYYMMDD-NNNNNN` (prefijo en mayúscula) con consecutivo global; inicio configurable con validación `≥ último usado`. | — |
 | D12 | **PDF**: la API arma un **payload denormalizado** y lo POSTea al micro Go, que devuelve URL. | Micro stateless, PDF idéntico al preview, sin acoplar a la DB. |
 | D13 | **El evento NO copia su composición**: lee sus líneas y opciones de la quote (`event.quote_id`). Se **elimina la copia** (`event_lines`). | El evento se ejecuta exacto a lo cotizado; la quote es read-only tras Aprobada → una sola fuente de verdad (coherente con D6). |
@@ -119,8 +119,7 @@ quotes {
   discountType     discount_type?,    // fixed | percent
   discountValue    numeric?,          // % o cents según type
   discountAmount*  integer,           // resuelto
-  taxRate*         numeric,           // snapshot de state_settings
-  taxAmount*       integer,
+  taxAmount*       integer,           // Σ quote_lines.taxAmount
   total*           integer,
   depositRate*     numeric default 0.5,
   depositAmount*   integer,
@@ -153,6 +152,8 @@ quote_lines {
   id, quoteId* -> quotes (cascade), productId* -> products,
   quantity*  integer,               // tramo elegido (debe existir en product_price_tiers) — D16
   subtotal*    integer,               // cents, total de la línea; pre-carga del tramo, EDITABLE — D16
+  taxRate*     numeric,               // copia de la tasa del producto al cotizar (0 si exento) — §7
+  taxAmount*   integer,               // cents, impuesto de la línea — §7
   sortOrder
 }
 
@@ -192,7 +193,9 @@ Etiquetas i18n en Mach Bar: `product` = "Estación", `option_group` = "Sección"
 ```ts
 products {
   id, name* unique, description,      // sin precio: vive en product_price_tiers (D16)
-  isPremium* default false, isActive* default true, sortOrder
+  isPremium* default false, isActive* default true, sortOrder,
+  taxRate* numeric,                    // nace con app_settings.defaultTaxRate
+  taxExempt* default false             // exento: cotiza a 0 sin perder su tasa
 }
 product_price_tiers {                 // precio por tramo (bracket) — D16
   id, productId* -> products (cascade),
@@ -225,16 +228,13 @@ event_types {
 ### 5.4 Configuración
 
 ```ts
-state_settings {                      // una fila por estado (seed NY/NJ/CT)
-  state* PK, taxRate* numeric, updatedAt
-  // futuro: travelFee
-}
 app_settings {                        // fila única (singleton)
   id* = 1,
   depositRate*         numeric default 0.5,
   quoteValidityMonths* integer default 3,
   minPersonsPerLine*   integer default 30,
   quoteSeqStart*       integer default 1,   // no < último seq usado
+  defaultTaxRate*      numeric default 0,   // tasa con la que nace un producto
   updatedAt
 }
 ```
@@ -305,6 +305,8 @@ erDiagram
     uuid product_id FK
     int quantity "tramo elegido"
     int subtotal "cents · total línea (editable)"
+    numeric tax_rate "copia al cotizar"
+    int tax_amount "cents"
   }
   quote_line_options {
     uuid id PK
@@ -338,6 +340,8 @@ erDiagram
     varchar name UK
     bool is_premium
     bool is_active
+    numeric tax_rate
+    bool tax_exempt
   }
   product_price_tiers {
     uuid id PK
@@ -364,10 +368,6 @@ erDiagram
     varchar name UK
     bool is_active
   }
-  state_settings {
-    state state PK
-    numeric tax_rate
-  }
   app_settings {
     int id PK "=1"
     numeric deposit_rate
@@ -381,44 +381,62 @@ erDiagram
 
 ## 7. Cascada de precio
 
+Una sola implementación, `computeQuoteTotals` (`@repo/schemas`), compartida por la vista previa (web),
+el guardado (API) y el PDF.
+
 ```
-subtotal     = Σ(quote_lines.subtotal)   // cada línea = precio del tramo elegido (editable)  [cents]
-− discount   discountType ∈ {fixed, percent} · discountValue          → discountAmount [cents]
-= base
-+ tax        round(base × taxRate)                                    → taxAmount [cents]
+neto línea     = quote_lines.subtotal   // precio del tramo o precio × cantidad (editable)       [cents]
+subtotal       = Σ neto línea
+− discount     discountType ∈ {fixed, percent} · discountValue → discountAmount (≤ subtotal) [cents]
+               repartido entre las líneas en proporción a su neto; resto por mayor residuo
++ tax          por tasa: round(Σ(neto − descuento asignado) × tasa) de las líneas con esa tasa,
+               repartido entre esas líneas por mayor residuo → quote_lines.taxAmount;
+               taxAmount = Σ de las tasas                                              [cents]
+= total con impuesto
++ cargos        add-on extraCharges, sin impuesto (quote_charges.amount):
+                 fijo         su valor                                                  [cents]
+                 porcentaje   round(total con impuesto × tasa), cada uno sobre el mismo
+                              total con impuesto, sin componerse entre sí
 = total
-deposit      round(total × depositRate)                               → depositAmount [cents]
-balance      total − depositAmount                                    (derivado)
+deposit        round(total × depositRate)                                   → depositAmount [cents]
+balance        total − depositAmount                                        (derivado)
 ```
 
-Ejemplo (2 estaciones, −10%, tax NY 8.875%, depósito 50%):
+La tasa de cada línea es la del producto al cotizar (0 si es exento). Las sumas de partes son exactas:
+Σ descuentos asignados = `discountAmount` y Σ impuestos de línea = `taxAmount`. Con una sola tasa el
+impuesto es `round((subtotal − descuento) × tasa)`, igual que antes del impuesto por línea. El
+resultado expone el desglose por tasa (base e impuesto) para el cotizador y el PDF.
+
+Ejemplo (2 estaciones a 8.875 %, −10 %, depósito 50 %):
 
 | paso | cents | se ve |
 |---|---|---|
 | subtotal | 78500 | $785.00 |
 | descuento 10% `round(78500×0.10)` | −7850 | −$78.50 |
-| base | 70650 | $706.50 |
+| base gravada | 70650 | $706.50 |
 | tax `round(70650×0.08875)` | +6270 | $62.70 |
 | **total** | **76920** | **$769.20** |
 | depósito 50% | 38460 | $384.60 |
 | saldo | 38460 | $384.60 |
 
-**Snapshot**: `taxRate`, `cardSurchargeRate` y todos los `*Amount` se congelan en la quote al calcular.
-Una quote guardada trabaja **siempre** con sus propias tasas, en cualquier stage; cambiar la config no
-la recalcula sola. Excepción: si cambia el `state` del evento (a otro estado, no a vacío), `taxRate` se
-toma de la config del nuevo estado. Las elecciones propias de la quote (`applyCardSurcharge`,
-`depositRate`) siguen editables en `new` y `quoted`; desde `confirmed` la quote no se edita.
+**Snapshot**: la tasa y el impuesto de cada línea, el nombre, tipo y valor de cada cargo aplicado y
+todos los `*Amount` se congelan al calcular. Cambiar la tasa de un producto o la tasa por defecto de la organización no
+recalcula nada guardado: solo afecta a líneas nuevas o editadas, que toman la tasa vigente del
+producto. Una línea reenviada sin cambios conserva su tasa (mismo criterio que su unidad). Las
+elecciones propias de la quote (cargos aplicados, `depositRate`) siguen editables en `new` y
+`quoted`; desde `confirmed` la quote no se edita. Al guardar una edición los montos se recalculan con
+las tasas de cada línea.
 
-**Tasas desactualizadas** (`quoteRateDrift`), solo si `app_settings.promptRateChanges` está activo (lo decide el superadmin en Configuración → Armador de cotizaciones; apagado por defecto, y apagado la quote conserva siempre sus valores): si una quote en `new` tiene un `taxRate` o
-`cardSurchargeRate` distinto del que da hoy la config, a quien puede editarla (`QUOTE.UPDATE`) se le
-pregunta si actualizarlas, avisando que el total cambia: al abrirla en el builder (no en el detalle) y al pasarla a
-`quoted` desde el pipeline o el dropdown de stage. Solo cuentan las tasas que la quote aplica, porque
-las otras no mueven el total: el impuesto si se guardó con alguno (`taxRate` > 0) y el recargo si
-`applyCardSurcharge` está activo. El `depositRate` no entra: siempre es el guardado.
-- **Actualizar**: toma las tasas de la config, recalcula los montos y regenera el PDF si tiene.
-- **Mantener**: guarda los valores rechazados en `declinedRates`; no se vuelve a preguntar hasta que la
-  config cambie otra vez.
-- Desde `quoted` no se pregunta más: las tasas quedan como se enviaron.
+Cotizaciones anteriores al impuesto por línea (migración 0014): cada línea hereda la tasa de su
+cotización y el impuesto guardado se reparte entre sus líneas por mayor residuo; los totales
+guardados no cambian hasta que alguien edita la cotización. Una cotización sin líneas pudo guardar
+impuesto (la fórmula anterior gravaba la larga distancia): ese monto no tiene línea donde quedar, y
+las lecturas (`taxBreakdown`, PDF) lo muestran como impuesto sin tasa para que el desglose sume el
+`taxAmount` guardado.
+
+Cotizaciones anteriores a los cargos adicionales (migración 0015): la larga distancia y el recargo
+por tarjeta pasan a `quote_charges` con el monto (y la tasa) guardados, en las organizaciones que los
+usaron; esas organizaciones reciben los tipos "Larga distancia" y "Recargo por tarjeta" y el add-on.
 
 ---
 
@@ -497,7 +515,7 @@ Necesitan diseño propio; se apartan de la receta genérica:
 | `/admin/events/[id]` | Detalle de evento | Datos + líneas (de la quote) + `event_staff` (asignación) + pagos (deposit/balance) + link a la quote/PDF. |
 | `/admin/clients/[id]` | Ficha de cliente | Historial de quotes y eventos. |
 | `/admin/catalog` | **Editor del catálogo** | Jerárquico (`product → option_groups → options`) con soft-delete + reordenar (drag); grupo **Catálogo** del sidebar. |
-| `/admin/settings` | **Ajustes** | `<Form>` de config (tax por estado, depósito, validez, min personas, inicio de consecutivo). `config.get` + `config.update`, solo admin. |
+| `/admin/settings` | **Ajustes** | `<Form>` de config (tasa de impuesto por defecto, depósito, validez, inicio de consecutivo). `config.get` + `config.update`, solo admin. |
 | `/admin` | **Dashboard** | Métricas del mes (eventos, ingresos, tasa de cierre), próximos eventos, top estaciones, quotes por mes. Solo lecturas agregadas. |
 
 ---
@@ -507,7 +525,7 @@ Necesitan diseño propio; se apartan de la receta genérica:
 **Crear cotización**
 ```
 Constructor (estado local) → preview en vivo (sin API)
-  → quotes.create(input)  → service calcula cascada (§7) en cents, snapshot de tasas
+  → quotes.create(input)  → service calcula cascada (§7) en cents, snapshot de la tasa en cada línea
   → inserta quotes + quote_lines + quote_line_options
   → redirect a /admin/quotes/[id]
 ```
@@ -571,6 +589,5 @@ Acciones estándar `list/create/update/delete` + algunas de dominio: `quote.appr
 - **Templates de textos del PDF** (Terms, Service Duration, cierre): PAUSADO. Rama probable: tabla
   `templates(type, locale, content, isDefault)` con placeholders + snapshot al generar.
 - **Branding/terms del PDF** y **object storage**: se define al aterrizar el micro Go.
-- **`travel_fee`** por estado: columna futura en `state_settings`.
 - **Fase 2** (del spec): portal público de clientes, disponibilidad por fecha, cotizador
   self-service, reserva + depósito online (Stripe), notificaciones WhatsApp/email.

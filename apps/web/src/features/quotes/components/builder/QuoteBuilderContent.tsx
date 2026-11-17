@@ -4,24 +4,20 @@ import { useRouter } from 'next/navigation';
 import { App, Button, Card } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { TRPCClientError } from '@trpc/client';
-import {
-  computeQuoteTotals,
-  QUOTE_STAGE,
-  resolveQuoteRates,
-  type QuoteStageId,
-  type SavedQuoteRates,
-} from '@repo/schemas';
+import { QUOTE_STAGE, type QuoteStageId } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
 import { useConfirmModal, type ConfirmModalType } from '@/components/shared/ConfirmDialogs';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { QuoteNumberHeader } from '@/components/shared/QuoteNumberHeader';
 import { showEnvBanner } from '@/env';
-import type { Config } from '@/features/settings';
+import { useFeature } from '@/lib/auth/useFeature';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useApiError } from '@/lib/error/useApiError';
 import { copyToClipboard } from '@/lib/utils/clipboard';
+import { computeBuilderTotals } from '../../builderTotals';
+import { chargeValueError } from '../../chargeHelpers';
 import { hasBuilderChanges, hasClient, isQuoteReadyToSend, toCreateInput } from '../../helpers';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { useCreateQuote, useUpdateQuote } from '../../hooks/useQuotes';
@@ -40,9 +36,6 @@ interface QuoteBuilderContentProps {
   number?: string;
   stageId?: QuoteStageId;
   isDraft?: boolean;
-  config: Config;
-  /** The saved quote's own rates, kept over config (see resolveQuoteRates). */
-  savedRates?: SavedQuoteRates;
   createdByName?: string | null;
   assignedToId?: string | null;
   assignedToName?: string | null;
@@ -55,8 +48,6 @@ export function QuoteBuilderContent({
   number,
   stageId,
   isDraft,
-  config,
-  savedRates,
   createdByName,
   assignedToId,
   assignedToName,
@@ -87,21 +78,9 @@ export function QuoteBuilderContent({
   const isUpdateAction = !!quoteId && !isDraft;
   const saveLabel = isUpdateAction ? t('builder.saveChanges') : t('builder.saveDraft');
 
-  const { taxRate, cardSurchargeRate } = resolveQuoteRates(
-    { ...config.appSettings, stateSettings: config.stateSettings },
-    state.state,
-    savedRates,
-  );
-  const totals = computeQuoteTotals({
-    lines: state.lines.map((l) => ({ subtotal: l.subtotal })),
-    discountType: state.discountType,
-    discountValue: state.discountValue,
-    longDistanceAmount: state.longDistanceAmount,
-    taxRate,
-    applyCardSurcharge: state.applyCardSurcharge,
-    cardSurchargeRate,
-    depositRate: state.depositRate,
-  });
+  const chargesEnabled = useFeature('extraCharges');
+  const builderTotals = computeBuilderTotals(state, initialState, catalog, chargesEnabled);
+  const { totals } = builderTotals;
 
   const canSend = isQuoteReadyToSend(state);
 
@@ -130,9 +109,15 @@ export function QuoteBuilderContent({
     onApiError(error);
   };
 
+  const hasInvalidCharges = state.charges.some(chargeValueError);
+
   const handleSaveDraft = async () => {
     if (!hasClient(state)) {
       message.error(t('builder.errors.clientRequired'));
+      return;
+    }
+    if (hasInvalidCharges) {
+      message.error(t('builder.errors.chargeInvalid'));
       return;
     }
     const input = toCreateInput(state, quoteId ? !!isDraft : true);
@@ -154,6 +139,10 @@ export function QuoteBuilderContent({
 
   const handleSend = async () => {
     if (!canSend) return;
+    if (hasInvalidCharges) {
+      message.error(t('builder.errors.chargeInvalid'));
+      return;
+    }
     const input = toCreateInput(state, false);
     const isNew = !quoteId;
     let id = quoteId;
@@ -228,19 +217,13 @@ export function QuoteBuilderContent({
       {!isDesktop && (
         <>
           <LinesBuilderSection catalog={catalog} readOnly={readOnly} />
-          <ExtraChargesSection
-            readOnly={readOnly}
-            taxRate={taxRate}
-            cardSurchargeRate={cardSurchargeRate}
-          />
+          <ExtraChargesSection readOnly={readOnly} appliedRows={builderTotals.chargeRows} />
           <WrapperCard className="border-line border-2 bg-primary/5">
             <QuoteSummary
               subtotal={totals.subtotal}
               discountAmount={totals.discountAmount}
-              longDistanceAmount={totals.longDistanceAmount}
-              taxAmount={totals.taxAmount}
-              cardSurchargeRate={totals.cardSurchargeRate}
-              cardSurchargeAmount={totals.cardSurchargeAmount}
+              taxRows={builderTotals.taxRows}
+              charges={builderTotals.chargeRows}
               total={totals.total}
               depositRate={totals.depositRate}
               depositAmount={totals.depositAmount}
@@ -253,11 +236,7 @@ export function QuoteBuilderContent({
       )}
       <EventSection eventTypes={eventTypes} readOnly={readOnly} quoteId={quoteId} />
       {isDesktop && (
-        <ExtraChargesSection
-            readOnly={readOnly}
-            taxRate={taxRate}
-            cardSurchargeRate={cardSurchargeRate}
-          />
+        <ExtraChargesSection readOnly={readOnly} appliedRows={builderTotals.chargeRows} />
       )}
       {isDesktop && <LinesBuilderSection catalog={catalog} readOnly={readOnly} />}
       <NotesSection readOnly={readOnly} />
@@ -266,7 +245,12 @@ export function QuoteBuilderContent({
 
   const previewContent = (
     <div className="flex h-full min-h-0 flex-col gap-6">
-      <QuotePreview catalog={catalog} eventTypes={eventTypes} totals={totals} readOnly={readOnly} />
+      <QuotePreview
+        catalog={catalog}
+        eventTypes={eventTypes}
+        totals={builderTotals}
+        readOnly={readOnly}
+      />
     </div>
   );
 

@@ -2,12 +2,12 @@
 import { Divider, Empty, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
-import type { QuoteTotals } from '@repo/schemas';
 import { ProductThumb, type Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
 import { AddressLines } from '@/components/shared/AddressLines';
 import { formatQuantity } from '@/lib/format/quantity';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
+import type { BuilderTotals } from '../../../builderTotals';
 import { useQuoteBuilder } from '../../../hooks/useQuoteBuilder';
 import { lineUnit } from '../../../lineHelpers';
 import { QuoteLineItem } from '../../QuoteLineItem';
@@ -17,7 +17,7 @@ import { WrapperCard } from '@/components/shared/WrapperCard';
 interface QuotePreviewProps {
   catalog: Product[];
   eventTypes: EventType[];
-  totals: QuoteTotals;
+  totals: BuilderTotals;
   readOnly?: boolean;
 }
 
@@ -110,15 +110,13 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
       <WrapperCard className="border-line border-2 bg-primary/5">
         <QuoteSummary
           className="shrink-0"
-          subtotal={totals.subtotal}
-          discountAmount={totals.discountAmount}
-          longDistanceAmount={totals.longDistanceAmount}
-          taxAmount={totals.taxAmount}
-          cardSurchargeRate={totals.cardSurchargeRate}
-          cardSurchargeAmount={totals.cardSurchargeAmount}
-          total={totals.total}
-          depositRate={totals.depositRate}
-          depositAmount={totals.depositAmount}
+          subtotal={totals.totals.subtotal}
+          discountAmount={totals.totals.discountAmount}
+          taxRows={totals.taxRows}
+          charges={totals.chargeRows}
+          total={totals.totals.total}
+          depositRate={totals.totals.depositRate}
+          depositAmount={totals.totals.depositAmount}
           onChangeDepositRate={readOnly ? undefined : (rate) => setFields({ depositRate: rate })}
         />
       </WrapperCard>
