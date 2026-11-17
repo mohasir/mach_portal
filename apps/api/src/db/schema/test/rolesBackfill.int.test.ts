@@ -30,13 +30,15 @@ async function insertLegacyMember(tenantId: string, legacyRole: string): Promise
 const runMigration = () => testDb.execute(sql.raw(migrationSql));
 
 // Resources added to the templates after 0003; their migration grants them to existing roles
-// (0009: unit_of_measure, 0010: product_category and product_cost, 0015: charge_type; see the
-// migration.0009, migration.0010 and migration.0015 int tests).
+// (0009: unit_of_measure, 0010: product_category and product_cost, 0015: charge_type, 0016:
+// location_settings; see the migration.0009, migration.0010, migration.0015 and migration.0016 int
+// tests).
 const GRANTED_BY_LATER_MIGRATIONS = [
   'unit_of_measure',
   'product_category',
   'product_cost',
   'charge_type',
+  'location_settings',
 ];
 
 // Drizzle wraps the driver error, so the RAISE message sits on the cause.

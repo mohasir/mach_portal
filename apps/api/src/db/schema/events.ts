@@ -10,7 +10,7 @@ import {
   uuid,
   index,
 } from 'drizzle-orm/pg-core';
-import { paymentMethodEnum, stateEnum } from './enums';
+import { paymentMethodEnum } from './enums';
 import { clients } from './clients';
 import { eventTypes } from './eventTypes';
 import { quotes } from './quotes';
@@ -35,9 +35,10 @@ export const events = pgTable(
     eventTypeId: uuid('event_type_id').references(() => eventTypes.id),
     eventDate: date('event_date', { mode: 'string' }),
     eventTime: text('event_time'),
-    state: stateEnum('state'),
+    country: text('country'),
+    region: text('region'),
+    locality: text('locality'),
     address: text('address'),
-    city: text('city'),
     totalAmount: integer('total_amount').notNull(),
     depositPaid: boolean('deposit_paid').default(false).notNull(),
     balancePaid: boolean('balance_paid').default(false).notNull(),

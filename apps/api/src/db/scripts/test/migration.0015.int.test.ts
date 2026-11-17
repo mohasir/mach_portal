@@ -29,6 +29,15 @@ function migrationsBefore(tag: string, dir: string) {
     copyFileSync(join(MIGRATIONS_FOLDER, `${t}.sql`), join(dir, `${t}.sql`));
 }
 
+// Adds the given tag to that copy, so later migrations (which grant more to the same roles) stay out.
+function addMigration(tag: string, dir: string) {
+  const source = JSON.parse(readFileSync(join(MIGRATIONS_FOLDER, 'meta/_journal.json'), 'utf8'));
+  const target = JSON.parse(readFileSync(join(dir, 'meta/_journal.json'), 'utf8'));
+  target.entries.push((source.entries as { tag: string }[]).find((e) => e.tag === tag));
+  writeFileSync(join(dir, 'meta/_journal.json'), JSON.stringify(target));
+  copyFileSync(join(MIGRATIONS_FOLDER, `${tag}.sql`), join(dir, `${tag}.sql`));
+}
+
 const quoteTotals = (sql: postgres.Sql) => sql`
   SELECT number, subtotal, discount_amount, tax_amount, total, deposit_amount
   FROM quotes ORDER BY number`;
@@ -80,7 +89,8 @@ describe('0015 on a database with long distance and card surcharges', () => {
               ('r_operator', 'org_a', 'quote', 'create', 'own'),
               ('r_none', 'org_c', 'client', 'read', 'all')`;
     totalsBefore = await quoteTotals(sql);
-    await runMigrate(withDatabase(name));
+    addMigration(TAG, dir);
+    await runMigrate(withDatabase(name), { migrationsFolder: dir });
   });
 
   afterAll(async () => {

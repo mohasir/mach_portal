@@ -1,5 +1,4 @@
 import { pgTable, uuid, text, timestamp, index } from 'drizzle-orm/pg-core';
-import { stateEnum } from './enums';
 import { tenantId } from './tenantColumn';
 import { tenantIsolationPolicy } from '../rls/policy';
 
@@ -11,8 +10,6 @@ export const clients = pgTable(
     name: text('name').notNull(),
     phone: text('phone'),
     email: text('email'),
-    city: text('city'),
-    state: stateEnum('state'),
     address: text('address'),
     notes: text('notes'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
