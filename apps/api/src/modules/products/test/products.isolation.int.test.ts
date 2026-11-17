@@ -20,7 +20,7 @@ type Seeded = { productId: string; groupId: string; optionId: string };
 async function seedCatalog(tenant: TestTenant, name: string): Promise<Seeded> {
   const [product] = await testDb
     .insert(products)
-    .values({ tenantId: tenant.id, name, uomId: await testUnitId(tenant.id) })
+    .values({ tenantId: tenant.id, name, taxRate: 0, uomId: await testUnitId(tenant.id) })
     .returning({ id: products.id });
   await testDb.insert(productPriceTiers).values({
     tenantId: tenant.id,
@@ -66,7 +66,6 @@ async function useInQuote(
       seq: nextSeq,
       number: `Q-${tenant.slug}-${nextSeq}`,
       clientId: client!.id,
-      taxRate: 0,
     })
     .returning({ id: quotes.id });
   const [line] = await testDb
@@ -78,6 +77,8 @@ async function useInQuote(
       uomId: await testUnitId(tenant.id),
       quantity: 10,
       subtotal: 1000,
+      taxRate: 0,
+      taxAmount: 0,
     })
     .returning({ id: quoteLines.id });
   await testDb
@@ -168,6 +169,7 @@ describe('products tenant isolation', () => {
       name: 'Menu B',
       isPremium: false,
       uomId: unitA,
+      taxRate: 0,
       tiers: [{ quantity: 5, price: 500 }],
     });
     const [row] = await testDb.select().from(products).where(eq(products.id, created.id));
@@ -182,7 +184,13 @@ describe('products tenant isolation', () => {
 
   it('createProduct with a duplicate name inside one tenant is rejected by the DB', async () => {
     await expect(
-      repoA.createProduct({ name: 'Menu A', isPremium: false, uomId: unitA, tiers: [] }),
+      repoA.createProduct({
+        name: 'Menu A',
+        isPremium: false,
+        uomId: unitA,
+        taxRate: 0,
+        tiers: [],
+      }),
     ).rejects.toThrow();
   });
 

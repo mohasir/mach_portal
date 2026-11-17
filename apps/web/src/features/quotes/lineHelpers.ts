@@ -75,3 +75,59 @@ export function withCurrentUnitOnRepricing<T extends object>(
   }
   return { ...payload, uomId: undefined, unit: undefined };
 }
+
+interface TaxableProduct {
+  id: string;
+  uomId: string;
+  taxRate: number;
+  taxExempt: boolean;
+}
+
+interface TaxableLine {
+  key: string;
+  productId: string;
+  quantity: number;
+  subtotal: number;
+  selections: Record<string, string[]>;
+  uomId?: string;
+  taxRate?: number;
+}
+
+/** What a line of the product is taxed at today: nothing when the product is exempt. */
+export const productTaxRate = (product: Pick<TaxableProduct, 'taxRate' | 'taxExempt'>) =>
+  product.taxExempt ? 0 : product.taxRate;
+
+const lineContentKey = (line: TaxableLine, productUomId: string) =>
+  JSON.stringify([
+    line.productId,
+    line.uomId ?? productUomId,
+    line.quantity,
+    line.subtotal,
+    Object.entries(line.selections)
+      .flatMap(([groupId, optionIds]) => optionIds.map((optionId) => `${groupId}:${optionId}`))
+      .sort(),
+  ]);
+
+/**
+ * The rate each line is taxed at, as the API will apply it: a saved line resent unchanged keeps
+ * its frozen rate (the rate of the product never changes it); a new or edited one takes the
+ * current rate of its product. A line of a product that left the catalog keeps what it had.
+ */
+export function lineTaxRates(
+  lines: readonly TaxableLine[],
+  savedLines: readonly TaxableLine[],
+  catalog: readonly TaxableProduct[],
+): number[] {
+  return lines.map((line) => {
+    const product = catalog.find((p) => p.id === line.productId);
+    if (!product) return line.taxRate ?? 0;
+    const saved = savedLines.find((s) => s.key === line.key);
+    if (
+      saved?.taxRate != null &&
+      lineContentKey(line, product.uomId) === lineContentKey(saved, product.uomId)
+    ) {
+      return saved.taxRate;
+    }
+    return productTaxRate(product);
+  });
+}

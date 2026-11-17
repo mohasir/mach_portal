@@ -45,27 +45,26 @@ function lineKey(
   return JSON.stringify([line.productId, line.uomId, line.quantity, line.subtotal, picked]);
 }
 
-// Submitted lines that do not match a stored line of the quote. Matching is a multiset: each
-// stored line excuses at most one submitted line. A submitted line without a unit is read in the
-// product's current one, so a line that would silently switch unit counts as changed.
-export function changedLines(
+// For each submitted line, the stored line it resends unchanged, if any. Matching is a multiset:
+// each stored line backs at most one submitted line. A submitted line without a unit is read in
+// the product's current one, so a line that would silently switch unit does not match.
+export function matchStoredLines<
+  S extends LineShape & { selections: QuoteLineInput['selections'] },
+>(
   submitted: readonly QuoteLineInput[],
-  stored: ReadonlyArray<LineShape & { selections: QuoteLineInput['selections'] }>,
+  stored: readonly S[],
   currentUnits: ReadonlyMap<string, string>,
-): QuoteLineInput[] {
-  const available = new Map<string, number>();
+): (S | undefined)[] {
+  const available = new Map<string, S[]>();
   for (const line of stored) {
     const key = lineKey(line, line.selections);
-    available.set(key, (available.get(key) ?? 0) + 1);
+    available.set(key, [...(available.get(key) ?? []), line]);
   }
-  return submitted.filter((line) => {
+  return submitted.map((line) => {
     const key = lineKey(
       { ...line, uomId: line.uomId ?? currentUnits.get(line.productId) },
       line.selections,
     );
-    const left = available.get(key) ?? 0;
-    if (left === 0) return true;
-    available.set(key, left - 1);
-    return false;
+    return available.get(key)?.shift();
   });
 }

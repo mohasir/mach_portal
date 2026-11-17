@@ -17,6 +17,7 @@ import { useCan } from '@/lib/auth/useCan';
 import { useFeature } from '@/lib/auth/useFeature';
 import { formatQuantity, unitNoun } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
+import { toDisplayPercent } from '@/lib/utils/percent';
 import { getDetailTabs } from '../helpers';
 import { useProduct } from '../hooks/useCatalog';
 import { useProductMutations } from '../hooks/useProductMutations';
@@ -213,6 +214,17 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                   </Typography.Text>
                 </div>
               )}
+
+              <div>
+                <Typography.Text strong className="block text-sm">
+                  {t('product.detailFields.taxRate')}
+                </Typography.Text>
+                <Typography.Text type="secondary" className="block text-sm">
+                  {product.taxExempt
+                    ? t('product.detailFields.taxExempt')
+                    : `${toDisplayPercent(product.taxRate)}%`}
+                </Typography.Text>
+              </div>
 
               {canSeeCost && product.cost != null && (
                 <div>

@@ -71,6 +71,19 @@ describe('ROLE_TEMPLATES', () => {
     expect(isCatalogPermission('product_category', 'delete')).toBe(true);
   });
 
+  it('gives charge types to the roles that manage tax rates, operators read them', () => {
+    const actionsOf = (key: string) =>
+      template(key)
+        .permissions.filter((p) => p.resource === 'charge_type')
+        .map((p) => p.action)
+        .sort();
+    expect(actionsOf(ROLES.ADMIN)).toEqual(['create', 'disable', 'read', 'update']);
+    expect(actionsOf(ROLES.OPERATOR)).toEqual(['read']);
+    expect(actionsOf(ROLES.MEMBER)).toEqual([]);
+    expect(isCatalogPermission('charge_type', 'enable')).toBe(true);
+    expect(isCatalogPermission('charge_type', 'delete')).toBe(false);
+  });
+
   it('keeps the product cost to the roles that administer the catalog', () => {
     const actionsOf = (key: string) =>
       template(key)

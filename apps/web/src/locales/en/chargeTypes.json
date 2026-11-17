@@ -1,0 +1,51 @@
+{
+  "title": "Extra charges",
+  "index": {
+    "add": "New charge"
+  },
+  "columns": {
+    "name": "Name",
+    "kind": "Type",
+    "defaultValue": "Default value",
+    "status": "Status"
+  },
+  "kinds": {
+    "fixed": "Fixed amount",
+    "percent": "Percentage"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "actions": {
+    "activate": "Activate",
+    "deactivate": "Deactivate"
+  },
+  "deactivateConfirm": {
+    "title": "Deactivate \"{{name}}\"?",
+    "content": "It will no longer be offered when building a quote.",
+    "caption": "Quotes that already have it applied keep it."
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "E.g. Delivery",
+    "kind": "Charge type",
+    "fixedValue": "Default amount",
+    "percentValue": "Default percentage",
+    "percentValueCaption": "Calculated on the total with tax, without adding other charges.",
+    "save": "Save"
+  },
+  "create": {
+    "title": "New extra charge"
+  },
+  "edit": {
+    "title": "Edit extra charge"
+  },
+  "empty": "No extra charges yet",
+  "validation": {
+    "nameRequired": "Name required",
+    "valueInvalid": "The value is not valid for this charge type",
+    "percentInvalid": "Enter a percentage above 0 and up to 100",
+    "fixedInvalid": "Enter an amount of 0 or more"
+  }
+}

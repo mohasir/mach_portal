@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import { listQuerySchema } from './pagination';
-import { stateSchema, type StateValue } from './enums';
+import { stateSchema } from './enums';
 import { optionalText } from './fields';
 import { createClientSchema } from './clients';
+import { quoteChargesInputSchema, type ChargeKind } from './charges';
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
@@ -103,10 +104,10 @@ const quoteMutationFields = {
   clientNotes: optionalText(2000),
   discountType: z.preprocess(blankToUndefined, discountTypeSchema.optional()),
   discountValue: z.number().min(0).optional(),
-  longDistanceAmount: z.number().int().min(0).optional(),
-  applyCardSurcharge: z.boolean().optional(),
   depositRate: z.number().min(0).max(1).optional(),
   lines: z.array(quoteLineInputSchema).default([]),
+  // Omitted, the quote is left without charges (see the quotes service for the add-on rules).
+  charges: quoteChargesInputSchema.optional(),
   selectOptionsAtQuote: z.boolean().default(false),
 } as const;
 
@@ -185,156 +186,176 @@ export type QuotesListQuery = z.infer<typeof quotesListQuerySchema>;
 export const quotesBoardQuerySchema = quotesFiltersSchema.extend(quotesViewOptionsSchema.shape);
 export type QuotesBoardQuery = z.infer<typeof quotesBoardQuerySchema>;
 
-// ── config-driven rates — mach-bar-domain.md §7, shared so preview (FE) = saved (BE) ──
-export interface QuoteRatesConfig {
-  applyTaxByState: boolean;
-  stateSettings: { state: StateValue; taxRate: number }[];
-  cardSurchargeRate: number;
-}
-
-export interface QuoteRates {
-  taxRate: number;
-  cardSurchargeRate: number;
-}
-
-export interface SavedQuoteRates extends QuoteRates {
-  state: StateValue | null;
-}
-
-/** The tax rate config assigns to `state` (0 when tax by state is off or the state has none). */
-export const configTaxRate = (config: QuoteRatesConfig, state: StateValue | null | undefined) =>
-  config.applyTaxByState ? (config.stateSettings.find((s) => s.state === state)?.taxRate ?? 0) : 0;
-
-/** Whether resolveQuoteRates has to read config: a new quote, or one moved to another state. */
-export const needsConfigRates = (
-  state: StateValue | null | undefined,
-  saved?: SavedQuoteRates | null,
-) => !saved || (!!state && state !== saved.state);
-
-// A saved quote keeps its own rates, so config edits never reprice it silently (the user is asked
-// instead, see quoteRateDrift). Moving the event to another state is a change to the quote itself,
-// so it takes that state's current tax rate; clearing the state is not a move and keeps the saved one.
-export function resolveQuoteRates(
-  config: QuoteRatesConfig,
-  state: StateValue | null | undefined,
-  saved?: SavedQuoteRates | null,
-): QuoteRates {
-  if (!saved) {
-    return { taxRate: configTaxRate(config, state), cardSurchargeRate: config.cardSurchargeRate };
-  }
-  return {
-    taxRate: needsConfigRates(state, saved) ? configTaxRate(config, state) : saved.taxRate,
-    cardSurchargeRate: saved.cardSurchargeRate,
-  };
-}
-
-export interface QuoteRateDrift {
-  saved: QuoteRates;
-  current: QuoteRates;
-}
-
-const sameRates = (a: QuoteRates, b: QuoteRates) =>
-  a.taxRate === b.taxRate && a.cardSurchargeRate === b.cardSurchargeRate;
+// ── price cascade — mach-bar-domain.md §7, shared so preview (FE) = saved (BE) = PDF ──
 
 /**
- * Config rates that differ from a pending quote's saved ones, for the user to accept or keep.
- * Only rates the quote actually applies count, since the others can't change its total: tax when
- * it was saved with some and config still taxes its state (no state, or tax by state turned off,
- * would read as 0% and offer to drop a tax the quote keeps anyway, see resolveQuoteRates), and
- * card surcharge when it's turned on. A rate that doesn't count stays at
- * its saved value in `current`, so accepting never touches it. Once sent, a quote always keeps its
- * rates, and a difference the user already declined isn't offered again until config changes.
+ * Splits a non-negative integer `amount` in proportion to non-negative integer `weights` so the
+ * parts add up to it exactly: each part takes the floor of its share and the leftover units go to
+ * the largest remainders, the earlier entry on a tie. The arithmetic runs on BigInt because
+ * amount × weight easily passes 2^53 on large quotes, where floating point loses the exact
+ * remainders (and equal shares then tie exactly, as they do in SQL `numeric`). Throws a RangeError
+ * for an amount or weight that is not a safe integer.
  */
-export function quoteRateDrift(
-  config: QuoteRatesConfig,
-  quote: SavedQuoteRates & {
-    stageId: number;
-    applyCardSurcharge: boolean;
-    declinedRates: QuoteRates | null;
-  },
-): QuoteRateDrift | null {
-  if (quote.stageId !== QUOTE_STAGE.PENDING) return null;
-  const saved = { taxRate: quote.taxRate, cardSurchargeRate: quote.cardSurchargeRate };
-  const current = {
-    taxRate:
-      saved.taxRate > 0 && quote.state && config.applyTaxByState
-        ? configTaxRate(config, quote.state)
-        : saved.taxRate,
-    cardSurchargeRate: quote.applyCardSurcharge
-      ? config.cardSurchargeRate
-      : saved.cardSurchargeRate,
-  };
-  if (sameRates(saved, current)) return null;
-  if (quote.declinedRates && sameRates(quote.declinedRates, current)) return null;
-  return { saved, current };
+export function allocateProportionally(amount: number, weights: readonly number[]): number[] {
+  for (const value of [amount, ...weights]) {
+    if (!Number.isSafeInteger(value)) {
+      throw new RangeError(`allocateProportionally: ${value} is not a safe integer`);
+    }
+  }
+  const totalWeight = weights.reduce((sum, w) => sum + BigInt(w), 0n);
+  if (amount <= 0 || totalWeight <= 0n) return weights.map(() => 0);
+  const big = BigInt(amount);
+  const scaled = weights.map((w) => big * BigInt(w));
+  const remainders = scaled.map((value) => value % totalWeight);
+  const parts = scaled.map((value, index) => (value - remainders[index]!) / totalWeight);
+  const order = remainders
+    .map((remainder, index) => ({ index, remainder }))
+    .sort((x, y) =>
+      x.remainder === y.remainder ? x.index - y.index : x.remainder > y.remainder ? -1 : 1,
+    );
+  let left = big - parts.reduce((sum, p) => sum + p, 0n);
+  for (const { index } of order) {
+    if (left <= 0n) break;
+    parts[index]! += 1n;
+    left -= 1n;
+  }
+  return parts.map(Number);
 }
 
-export const resolveQuoteRateDriftSchema = z.object({
-  id: z.uuid(),
-  /** true takes the config rates (repricing the quote); false keeps the saved ones. */
-  accept: z.boolean(),
-});
-export type ResolveQuoteRateDriftInput = z.infer<typeof resolveQuoteRateDriftSchema>;
+export interface QuoteTotalsLine {
+  subtotal: number;
+  /** The rate frozen on the line; 0 for an exempt product. */
+  taxRate: number;
+}
 
-// ── price cascade — mach-bar-domain.md §7, shared so preview (FE) = saved (BE) = PDF ──
 export interface QuoteTotalsInput {
-  lines: { subtotal: number }[];
+  lines: QuoteTotalsLine[];
   discountType?: DiscountType | null;
   discountValue?: number | null;
-  longDistanceAmount?: number | null;
-  taxRate: number;
-  applyCardSurcharge?: boolean | null;
-  cardSurchargeRate: number;
+  /** Untaxed charges on top of the total with tax: cents when fixed, a rate when percent. */
+  charges?: readonly QuoteTotalsCharge[];
   depositRate: number;
+}
+
+export interface QuoteTotalsCharge {
+  kind: ChargeKind;
+  value: number;
+}
+
+export interface QuoteLineTotals {
+  /** The part of the quote discount this line carries. */
+  discountShare: number;
+  taxAmount: number;
+}
+
+export interface QuoteTaxBreakdownItem {
+  taxRate: number;
+  /** Net of the lines at this rate, after their discount share. */
+  base: number;
+  taxAmount: number;
 }
 
 export interface QuoteTotals {
   subtotal: number;
   discountAmount: number;
-  longDistanceAmount: number;
-  taxRate: number;
   taxAmount: number;
-  applyCardSurcharge: boolean;
-  cardSurchargeRate: number;
-  cardSurchargeAmount: number;
   total: number;
   depositRate: number;
   depositAmount: number;
+  /** One entry per input line, in the same order. */
+  lines: QuoteLineTotals[];
+  /** One entry per distinct rate, lowest rate first. */
+  taxBreakdown: QuoteTaxBreakdownItem[];
+  /** One entry per input charge, in the same order. */
+  charges: { amount: number }[];
 }
 
-export function computeQuoteTotals(input: QuoteTotalsInput): QuoteTotals {
-  const subtotal = input.lines.reduce((sum, line) => sum + line.subtotal, 0);
-
-  const discountAmount =
+const quoteDiscount = (input: QuoteTotalsInput, subtotal: number) => {
+  const raw =
     input.discountType === 'fixed'
       ? Math.round(input.discountValue ?? 0)
       : input.discountType === 'percent'
         ? Math.round(subtotal * (input.discountValue ?? 0))
         : 0;
+  return Math.min(Math.max(raw, 0), subtotal);
+};
 
-  const longDistanceAmount = Math.round(input.longDistanceAmount ?? 0);
+// Tax is rounded once per rate over the lines that share it, then split back over those lines, so
+// a quote at a single rate is taxed exactly as round(base × rate) whatever its number of lines.
+export function computeQuoteTotals(input: QuoteTotalsInput): QuoteTotals {
+  const subtotal = input.lines.reduce((sum, line) => sum + line.subtotal, 0);
+  const discountAmount = quoteDiscount(input, subtotal);
+  const discountShares = allocateProportionally(
+    discountAmount,
+    input.lines.map((l) => l.subtotal),
+  );
+  const bases = input.lines.map((line, i) => line.subtotal - discountShares[i]!);
 
-  const base = subtotal - discountAmount + longDistanceAmount;
-  const taxAmount = Math.round(base * input.taxRate);
-  const taxedTotal = base + taxAmount;
-  const applyCardSurcharge = input.applyCardSurcharge ?? false;
-  const cardSurchargeAmount = applyCardSurcharge
-    ? Math.round(taxedTotal * input.cardSurchargeRate)
-    : 0;
-  const total = taxedTotal + cardSurchargeAmount;
+  const lineTaxes = input.lines.map(() => 0);
+  const rates = [...new Set(input.lines.map((l) => l.taxRate))].sort((x, y) => x - y);
+  const taxBreakdown = rates.map((taxRate) => {
+    const indexes = input.lines.flatMap((l, i) => (l.taxRate === taxRate ? [i] : []));
+    const base = indexes.reduce((sum, i) => sum + bases[i]!, 0);
+    const taxAmount = Math.round(base * taxRate);
+    const parts = allocateProportionally(
+      taxAmount,
+      indexes.map((i) => bases[i]!),
+    );
+    indexes.forEach((lineIndex, k) => (lineTaxes[lineIndex] = parts[k]!));
+    return { taxRate, base, taxAmount };
+  });
+  const taxAmount = taxBreakdown.reduce((sum, b) => sum + b.taxAmount, 0);
+
+  // Charges are not taxed, and every percent charge is taken on the same total with tax, so
+  // neither fixed charges nor other percent charges are part of its base.
+  const taxedTotal = subtotal - discountAmount + taxAmount;
+  const charges = (input.charges ?? []).map((charge) => ({
+    amount:
+      charge.kind === 'percent' ? Math.round(taxedTotal * charge.value) : Math.round(charge.value),
+  }));
+  const total = taxedTotal + charges.reduce((sum, c) => sum + c.amount, 0);
   const depositAmount = Math.round(total * input.depositRate);
 
   return {
     subtotal,
     discountAmount,
-    longDistanceAmount,
-    taxRate: input.taxRate,
     taxAmount,
-    applyCardSurcharge,
-    cardSurchargeRate: input.cardSurchargeRate,
-    cardSurchargeAmount,
     total,
     depositRate: input.depositRate,
     depositAmount,
+    lines: input.lines.map((_, i) => ({
+      discountShare: discountShares[i]!,
+      taxAmount: lineTaxes[i]!,
+    })),
+    taxBreakdown,
+    charges,
   };
+}
+
+export interface SavedTaxBreakdownItem {
+  /** Null for stored quote tax that no line carries (see summarizeLineTaxes). */
+  taxRate: number | null;
+  taxAmount: number;
+}
+
+/**
+ * Tax of saved lines grouped by their frozen rate, lowest rate first. Quotes saved before taxes
+ * moved to the lines may hold tax that none of their lines carries (a quote without lines, taxed on
+ * its long distance amount); that difference with the stored `quoteTaxAmount` is kept as a last
+ * entry without rate, so the breakdown still adds up to the stored tax.
+ */
+export function summarizeLineTaxes(
+  lines: readonly { taxRate: number; taxAmount: number }[],
+  quoteTaxAmount: number,
+): SavedTaxBreakdownItem[] {
+  const byRate = new Map<number, number>();
+  for (const line of lines) {
+    byRate.set(line.taxRate, (byRate.get(line.taxRate) ?? 0) + line.taxAmount);
+  }
+  const items: SavedTaxBreakdownItem[] = [...byRate]
+    .sort(([x], [y]) => x - y)
+    .map(([taxRate, taxAmount]) => ({ taxRate, taxAmount }));
+  const unassigned = quoteTaxAmount - items.reduce((sum, item) => sum + item.taxAmount, 0);
+  if (unassigned !== 0) items.push({ taxRate: null, taxAmount: unassigned });
+  return items;
 }

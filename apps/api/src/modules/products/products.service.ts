@@ -210,8 +210,9 @@ export class ProductsService {
         cause: new AppError(ErrorCodes.product.ALREADY_EXISTS),
       });
     await this.assertSkuFree(input.sku);
+    const taxRate = input.taxRate ?? (await this.repo.findDefaultTaxRate());
     const created = await this.repo
-      .createProduct({ ...data, uomId }, this.cost.read)
+      .createProduct({ ...data, uomId, taxRate }, this.cost.read)
       .catch(rethrowUniqueViolation);
     return this.withQuotable(created);
   }

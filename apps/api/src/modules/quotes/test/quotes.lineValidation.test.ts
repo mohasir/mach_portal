@@ -39,6 +39,7 @@ function validate(
     () => undefined,
     tiersOn,
     true,
+    true,
   );
   const lines = [{ productId: PRODUCT, quantity: 40, subtotal: 200, selections: [], ...line }];
   return (

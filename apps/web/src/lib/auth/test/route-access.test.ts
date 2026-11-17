@@ -27,6 +27,12 @@ describe('resolveRouteAccess', () => {
     });
   });
 
+  it('requires CHARGE_TYPE:READ on the extra charges catalog', () => {
+    expect(resolveRouteAccess('/admin/charge-types')).toEqual({
+      [RESOURCES.CHARGE_TYPE]: [ACTIONS.READ],
+    });
+  });
+
   it('requires PRODUCT_CATEGORY:READ on the categories catalog', () => {
     expect(resolveRouteAccess('/admin/product-categories')).toEqual({
       [RESOURCES.PRODUCT_CATEGORY]: [ACTIONS.READ],
@@ -72,6 +78,10 @@ describe('resolveRouteFeature', () => {
 
   it('requires the unitsOfMeasure add-on for the units page', () => {
     expect(resolveRouteFeature('/admin/units-of-measure')).toBe('unitsOfMeasure');
+  });
+
+  it('requires the extraCharges add-on for the extra charges page', () => {
+    expect(resolveRouteFeature('/admin/charge-types')).toBe('extraCharges');
   });
 
   it('has no feature on core routes or unknown paths', () => {

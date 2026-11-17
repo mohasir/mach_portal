@@ -18,3 +18,4 @@ export * from './tenantProfile';
 export * from './unitsOfMeasure';
 export * from './productCategories';
 export * from './productImages';
+export * from './charges';

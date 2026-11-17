@@ -47,6 +47,7 @@ describe('toBuilderState', () => {
           selections: [],
         },
       ],
+      charges: [],
     } as unknown as QuoteDetail;
     const [line] = toBuilderState(detail).lines;
     expect(line!.uomId).toBe('u-hour');

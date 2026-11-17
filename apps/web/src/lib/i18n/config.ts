@@ -23,6 +23,7 @@ import esTenant from '@/locales/es/tenant.json';
 import esRoles from '@/locales/es/roles.json';
 import esVocabulary from '@/locales/es/vocabulary.json';
 import esUnitsOfMeasure from '@/locales/es/unitsOfMeasure.json';
+import esChargeTypes from '@/locales/es/chargeTypes.json';
 import esProductCategories from '@/locales/es/productCategories.json';
 import enCommon from '@/locales/en/common.json';
 import enApi from '@/locales/en/api.json';
@@ -45,6 +46,7 @@ import enTenant from '@/locales/en/tenant.json';
 import enRoles from '@/locales/en/roles.json';
 import enVocabulary from '@/locales/en/vocabulary.json';
 import enUnitsOfMeasure from '@/locales/en/unitsOfMeasure.json';
+import enChargeTypes from '@/locales/en/chargeTypes.json';
 import enProductCategories from '@/locales/en/productCategories.json';
 
 export const locales = LOCALES;
@@ -75,6 +77,7 @@ i18n.use(initReactI18next).init({
       roles: esRoles,
       vocabulary: esVocabulary,
       unitsOfMeasure: esUnitsOfMeasure,
+      chargeTypes: esChargeTypes,
       productCategories: esProductCategories,
     },
     en: {
@@ -99,6 +102,7 @@ i18n.use(initReactI18next).init({
       roles: enRoles,
       vocabulary: enVocabulary,
       unitsOfMeasure: enUnitsOfMeasure,
+      chargeTypes: enChargeTypes,
       productCategories: enProductCategories,
     },
   },
@@ -126,6 +130,7 @@ i18n.use(initReactI18next).init({
     'roles',
     'vocabulary',
     'unitsOfMeasure',
+    'chargeTypes',
     'productCategories',
   ],
   defaultNS: 'common',

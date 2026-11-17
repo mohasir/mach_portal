@@ -2,14 +2,13 @@
 import { Form, Input, Select } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { configTaxRate, STATE_NAMES, stateSchema, type StateValue } from '@repo/schemas';
+import { STATE_NAMES, stateSchema, type StateValue } from '@repo/schemas';
 import type { EventType } from '@/features/event-types';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { WrapperDatePicker } from '@/components/shared/WrapperDatePicker';
 import { WrapperTimePicker } from '@/components/shared/WrapperTimePicker';
-import { useConfig } from '@/features/settings';
 import { disabledPastDate, disabledPastTime } from '@/lib/date';
 import { blurActiveElementOnTouch } from '@/lib/utils/dom';
 import CITIES_BY_STATE from '../../citiesByState.json';
@@ -29,7 +28,6 @@ interface EventFormValues {
   state?: StateValue;
   city?: string;
   address?: string;
-  longDistanceAmount?: number;
 }
 
 const CITIES_BY_STATE_MAP = CITIES_BY_STATE as Record<StateValue, string[]>;
@@ -37,7 +35,6 @@ const CITIES_BY_STATE_MAP = CITIES_BY_STATE as Record<StateValue, string[]>;
 export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProps) {
   const { t } = useTranslation('quotes');
   const { state, setFields } = useQuoteBuilder();
-  const { data: config } = useConfig();
   const [form] = Form.useForm<EventFormValues>();
   const eventDate = Form.useWatch('eventDate', form);
   const eventTime = Form.useWatch('eventTime', form);
@@ -72,7 +69,6 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
     state: state.state ?? undefined,
     city: state.city,
     address: state.address,
-    longDistanceAmount: state.longDistanceAmount,
   };
 
   const handleValuesChange = (changed: Partial<EventFormValues>) => {
@@ -91,24 +87,9 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
         form.setFieldValue('city', undefined);
         patch.city = '';
       }
-
-      // Suggests the fee from the new state's tax rate — a starting point the staff overrides freely.
-      if (config?.appSettings.applyTaxByState) {
-        const nextTaxRate = configTaxRate(
-          { ...config.appSettings, stateSettings: config.stateSettings },
-          changed.state,
-        );
-        const subtotal = state.lines.reduce((sum, line) => sum + line.subtotal, 0);
-        const suggestedLongDistance = Math.round(subtotal * nextTaxRate);
-        patch.longDistanceAmount = suggestedLongDistance;
-        form.setFieldValue('longDistanceAmount', suggestedLongDistance);
-      }
     }
     if ('city' in changed) patch.city = changed.city ?? '';
     if ('address' in changed) patch.address = changed.address ?? '';
-    if ('longDistanceAmount' in changed) {
-      patch.longDistanceAmount = changed.longDistanceAmount ?? 0;
-    }
     setFields(patch);
   };
 

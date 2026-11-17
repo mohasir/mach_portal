@@ -80,7 +80,8 @@
     "priceTiers": "Precios por tramos",
     "configurableOptions": "Opciones configurables",
     "productGallery": "Galería de imágenes",
-    "unitsOfMeasure": "Unidades de medida"
+    "unitsOfMeasure": "Unidades de medida",
+    "extraCharges": "Cargos adicionales"
   },
   "richText": {
     "toolbar": "Formato del texto",

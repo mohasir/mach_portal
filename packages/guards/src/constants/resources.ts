@@ -12,6 +12,7 @@ export const RESOURCES = {
   UNIT_OF_MEASURE: 'unit_of_measure',
   PRODUCT_CATEGORY: 'product_category',
   PRODUCT_COST: 'product_cost',
+  CHARGE_TYPE: 'charge_type',
   EVENT_TYPE: 'event_type',
   RESCHEDULE_REASON: 'reschedule_reason',
   TAX_RATES: 'tax_rates',

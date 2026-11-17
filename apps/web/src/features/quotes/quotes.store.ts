@@ -1,6 +1,7 @@
 import { createStore } from 'zustand';
 import type { DiscountType, StateValue } from '@repo/schemas';
 import type { QuantityUnit } from '@/lib/format/quantity';
+import type { BuilderCharge } from './chargeHelpers';
 
 export interface LineDraft {
   key: string;
@@ -11,6 +12,8 @@ export interface LineDraft {
   /** Unit frozen on a line loaded from a saved quote; absent on lines added from the catalog. */
   uomId?: string;
   unit?: QuantityUnit;
+  /** Rate frozen on a line loaded from a saved quote; absent on lines added from the catalog. */
+  taxRate?: number;
 }
 
 export interface NewClientDraft {
@@ -34,8 +37,7 @@ export interface QuoteBuilderState {
   lines: LineDraft[];
   discountType: DiscountType | null;
   discountValue: number | null;
-  longDistanceAmount: number;
-  applyCardSurcharge: boolean;
+  charges: BuilderCharge[];
   depositRate: number;
   selectOptionsAtQuote: boolean;
 }
@@ -60,8 +62,7 @@ export function emptyBuilderState(
     lines: [],
     discountType: null,
     discountValue: null,
-    longDistanceAmount: 0,
-    applyCardSurcharge: false,
+    charges: [],
     depositRate,
     selectOptionsAtQuote: false,
   };

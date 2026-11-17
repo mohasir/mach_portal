@@ -8,6 +8,8 @@ import {
 } from '@repo/schemas';
 import { db as defaultDb, type Executor } from '../index';
 import {
+  chargeTypes,
+  quoteCharges,
   quotes,
   quoteLines,
   quoteLineOptions,
@@ -19,7 +21,6 @@ import {
   productPriceTiers,
   optionGroups,
   options,
-  stateSettings,
   appSettings,
   user,
 } from '../schema';
@@ -35,6 +36,12 @@ export interface SeedLine {
   selections?: SeedSelection[];
 }
 
+export interface SeedCharge {
+  chargeTypeName: string;
+  // Omitted: the type's default value.
+  value?: number;
+}
+
 export interface SeedQuote {
   clientEmail: string;
   eventTypeName?: string;
@@ -46,6 +53,7 @@ export interface SeedQuote {
   discountType?: DiscountType;
   discountValue?: number;
   lines: SeedLine[];
+  charges?: SeedCharge[];
   // Backdates `createdAt` (defaults to "now" otherwise) so quotes spread across the
   // year instead of bunching into whichever day the seed happened to run — needed for
   // dashboard.quotesByMonth/closeRate to show a real distribution, not one spike.
@@ -95,6 +103,7 @@ export const SEED_QUOTES: SeedQuote[] = [
     discountType: 'percent',
     discountValue: 0.1,
     createdAt: '2026-06-20',
+    charges: [{ chargeTypeName: 'Traslado' }],
     lines: [
       {
         productName: 'Paquete Plus',
@@ -117,6 +126,10 @@ export const SEED_QUOTES: SeedQuote[] = [
     address: '1 Landmark Sq, Stamford',
     stageId: QUOTE_STAGE.CONFIRMED,
     createdAt: '2026-06-01',
+    charges: [
+      { chargeTypeName: 'Traslado', value: 7500 },
+      { chargeTypeName: 'Recargo por pago con tarjeta' },
+    ],
     lines: [
       {
         productName: 'Kit Básico',
@@ -604,7 +617,7 @@ async function loadContext(
     tierRows,
     groupRows,
     optionRows,
-    stateRows,
+    chargeTypeRows,
     appRow,
     creator,
     assignees,
@@ -618,7 +631,13 @@ async function loadContext(
       .from(eventTypes)
       .where(eq(eventTypes.tenantId, tenantId)),
     db
-      .select({ id: products.id, name: products.name, uomId: products.uomId })
+      .select({
+        id: products.id,
+        name: products.name,
+        uomId: products.uomId,
+        taxRate: products.taxRate,
+        taxExempt: products.taxExempt,
+      })
       .from(products)
       .where(eq(products.tenantId, tenantId)),
     db
@@ -638,16 +657,19 @@ async function loadContext(
       .from(options)
       .where(eq(options.tenantId, tenantId)),
     db
-      .select({ state: stateSettings.state, taxRate: stateSettings.taxRate })
-      .from(stateSettings)
-      .where(eq(stateSettings.tenantId, tenantId)),
+      .select({
+        id: chargeTypes.id,
+        name: chargeTypes.name,
+        kind: chargeTypes.kind,
+        defaultValue: chargeTypes.defaultValue,
+      })
+      .from(chargeTypes)
+      .where(eq(chargeTypes.tenantId, tenantId)),
     db
       .select({
         depositRate: appSettings.depositRate,
         quoteValidityMonths: appSettings.quoteValidityMonths,
         quoteSeqStart: appSettings.quoteSeqStart,
-        applyTaxByState: appSettings.applyTaxByState,
-        cardSurchargeRate: appSettings.cardSurchargeRate,
       })
       .from(appSettings)
       .where(eq(appSettings.tenantId, tenantId))
@@ -674,7 +696,7 @@ async function loadContext(
     tierRows,
     groupRows,
     optionRows,
-    stateRows,
+    chargeTypeRows,
     appRow,
     creator,
     assigneeIds: assigneeEmails
@@ -684,6 +706,17 @@ async function loadContext(
 }
 
 type Context = Awaited<ReturnType<typeof loadContext>>;
+
+function resolveCharge(charge: SeedCharge, ctx: Context) {
+  const type = ctx.chargeTypeRows.find((t) => t.name === charge.chargeTypeName);
+  if (!type) throw new Error(`seedQuotes: cargo "${charge.chargeTypeName}" no existe`);
+  return {
+    chargeTypeId: type.id,
+    name: type.name,
+    kind: type.kind,
+    value: charge.value ?? type.defaultValue,
+  };
+}
 
 function resolveLine(line: SeedLine, ctx: Context) {
   const product = ctx.productRows.find((p) => p.name === line.productName);
@@ -715,6 +748,7 @@ function resolveLine(line: SeedLine, ctx: Context) {
     uomId: product.uomId,
     quantity: line.quantity,
     subtotal: tier.price,
+    taxRate: product.taxExempt ? 0 : product.taxRate,
     selections,
   };
 }
@@ -762,22 +796,19 @@ export async function seedQuotes(
     const eventTypeId = seed.eventTypeName
       ? (ctx.eventTypeRows.find((e) => e.name === seed.eventTypeName)?.id ?? null)
       : null;
-    const taxRate = appRow.applyTaxByState
-      ? (ctx.stateRows.find((s) => s.state === client.state)?.taxRate ?? 0)
-      : 0;
-    const depositRate = appRow.depositRate;
-
     const lines = seed.lines.map((l) => resolveLine(l, ctx));
-    const subtotal = lines.reduce((sum, l) => sum + l.subtotal, 0);
-    const longDistanceAmount = Math.round(subtotal * taxRate);
-    const totals = computeQuoteTotals({
-      lines: lines.map((l) => ({ subtotal: l.subtotal })),
+    const charges = (seed.charges ?? []).map((c) => resolveCharge(c, ctx));
+    const {
+      lines: lineTotals,
+      taxBreakdown: _breakdown,
+      charges: chargeTotals,
+      ...totals
+    } = computeQuoteTotals({
+      lines,
       discountType: seed.discountType,
       discountValue: seed.discountValue,
-      longDistanceAmount,
-      taxRate,
-      cardSurchargeRate: appRow.cardSurchargeRate,
-      depositRate,
+      charges,
+      depositRate: appRow.depositRate,
     });
 
     const validUntil = new Date(issuedAt);
@@ -850,6 +881,8 @@ export async function seedQuotes(
         uomId: line.uomId,
         quantity: line.quantity,
         subtotal: line.subtotal,
+        taxRate: line.taxRate,
+        taxAmount: lineTotals[i]!.taxAmount,
         sortOrder: i,
         tenantId,
       }));
@@ -866,6 +899,18 @@ export async function seedQuotes(
         ),
       );
       if (optionRows.length > 0) await db.insert(quoteLineOptions).values(optionRows);
+    }
+
+    if (charges.length > 0) {
+      await db.insert(quoteCharges).values(
+        charges.map((charge, i) => ({
+          ...charge,
+          quoteId: quote!.id,
+          amount: chargeTotals[i]!.amount,
+          sortOrder: i,
+          tenantId,
+        })),
+      );
     }
 
     console.log(

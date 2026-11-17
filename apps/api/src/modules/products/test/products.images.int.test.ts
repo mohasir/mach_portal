@@ -57,7 +57,7 @@ const insertProduct = async (tenantId: string, name: string) =>
   (
     await testDb
       .insert(products)
-      .values({ tenantId, name, uomId: await testUnitId(tenantId), price: 100 })
+      .values({ tenantId, name, taxRate: 0, uomId: await testUnitId(tenantId), price: 100 })
       .returning({ id: products.id })
   )[0]!.id;
 

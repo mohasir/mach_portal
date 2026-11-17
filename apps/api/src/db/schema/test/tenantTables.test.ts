@@ -282,10 +282,6 @@ describe('tenant scoping of the schema', () => {
       expect(getTableConfig(find('app_settings')).columns.map((c) => c.name)).not.toContain('id');
     });
 
-    it('state_settings is keyed by (tenant_id, state)', () => {
-      expect([...pkColumns(find('state_settings'))].sort()).toEqual(['state', 'tenant_id']);
-    });
-
     it('user_preferences is keyed by (tenant_id, user_id)', () => {
       expect([...pkColumns(find('user_preferences'))].sort()).toEqual(['tenant_id', 'user_id']);
     });

@@ -45,6 +45,7 @@ function serviceFor(tenantId: string, priceTiersActive: boolean, eventsActive = 
     () => undefined,
     priceTiersActive,
     eventsActive,
+    true,
   );
 }
 
@@ -78,7 +79,7 @@ describe('quote prices are frozen once a line is saved', () => {
       .returning({ id: clients.id })) as [{ id: string }];
     [{ id: productId }] = (await testDb
       .insert(products)
-      .values({ tenantId, name: 'Bar', uomId: await testUnitId(tenantId) })
+      .values({ tenantId, name: 'Bar', taxRate: 0, uomId: await testUnitId(tenantId) })
       .returning({ id: products.id })) as [{ id: string }];
     await testDb
       .insert(productPriceTiers)
@@ -171,7 +172,7 @@ describe('quote prices are frozen once a line is saved', () => {
   it('rejects a new line for a product that is not quotable', async () => {
     const [other] = await testDb
       .insert(products)
-      .values({ tenantId, name: 'No price', uomId: await testUnitId(tenantId) })
+      .values({ tenantId, name: 'No price', taxRate: 0, uomId: await testUnitId(tenantId) })
       .returning({ id: products.id });
     await expect(
       save(serviceFor(tenantId, true), [

@@ -4,6 +4,7 @@ import {
   uuid,
   text,
   integer,
+  numeric,
   boolean,
   pgEnum,
   unique,
@@ -43,6 +44,9 @@ export const products = pgTable(
     cost: integer('cost'),
     // Smallest quantity of a quote line, in the product's unit.
     minQuantity: integer('min_quantity').default(1).notNull(),
+    // An exempt product quotes at 0% whatever its rate says, so the rate survives toggling it.
+    taxRate: numeric('tax_rate', { mode: 'number', precision: 6, scale: 5 }).notNull(),
+    taxExempt: boolean('tax_exempt').default(false).notNull(),
   },
   (t) => [
     unique('products_tenant_name_unique').on(t.tenantId, t.name),

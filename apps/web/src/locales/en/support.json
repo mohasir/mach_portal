@@ -145,8 +145,8 @@
       "description": "Editing your account and logging out other devices"
     },
     "impuestos-y-valores-por-defecto": {
-      "title": "Taxes by State and quote defaults",
-      "description": "Rates, deposit, validity and quote sequence"
+      "title": "Taxes, extra charges and quote defaults",
+      "description": "Default rate, exempt {{items}}, charges, deposit, validity and quote sequence"
     },
     "personalizar-estados-del-pipeline": {
       "title": "Customizing the pipeline stages",

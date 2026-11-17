@@ -27,13 +27,20 @@ Tipo de evento, fecha, hora, Estado (NY, NJ o CT), Ciudad y Dirección.
 - Estado, Ciudad y Dirección no son obligatorios para guardar un borrador, pero sí para poder
   **enviar** la cotización más adelante.
 
-## Paso 3: Cargos extra
+## Paso 3: Cargos extras
 
-- **Cargo por larga distancia**: monto libre. Al elegir o cambiar el Estado del evento, este campo
-  **se sobreescribe automáticamente** con un valor sugerido — si ya tenía un monto cargado a mano,
-  se pierde. Conviene cargarlo (o corregirlo) después de confirmar el Estado, no antes.
-- **Recargo tarjeta/cheque**: switch on/off que suma el porcentaje configurado en Ajustes sobre el
-  total ya con impuesto.
+Esta sección aparece solo si tu organización tiene activo el add-on de **cargos adicionales**.
+Muestra los cargos activos del catálogo (**Cargos adicionales** en el menú): se activa cada uno que
+corresponda y se puede ajustar su valor para esta cotización.
+
+- Un cargo **fijo** suma su monto.
+- Un cargo **en porcentaje** se calcula sobre el total con impuesto. Si hay varios, cada uno usa
+  ese mismo total (no se suman entre sí).
+- Los cargos **no pagan impuesto**.
+
+Un cargo que ya estaba en la cotización y cuyo tipo se desactivó después se conserva tal cual: solo
+se puede quitar. Sin el add-on, la cotización conserva los cargos que ya tenía, pero no se pueden
+agregar ni cambiar.
 
 ## Paso 4: Agregar {{items}}
 
@@ -60,16 +67,17 @@ Texto libre que **no** aparece en el PDF ni lo ve el cliente — es solo para us
 
 ```text
 Subtotal (líneas)
-− Descuento
-+ Cargo por larga distancia
-= Base
-+ Impuesto (según el Estado, si está activado en Ajustes)
+− Descuento (repartido entre las líneas)
++ Impuesto (por tasa: cada línea con la tasa de su {{item}})
 = Total con impuesto
-+ Recargo tarjeta/cheque (si está activado)
++ Cargos extras (fijos y en porcentaje sobre el total con impuesto, sin impuesto)
 = TOTAL
 ```
 
-El depósito y el saldo se calculan sobre ese TOTAL final.
+Cada línea toma la tasa de impuesto de su {{item}} al agregarse (0% si el {{item}} es exento) y la
+conserva aunque después cambie la tasa del {{item}}. El Estado del evento no influye en el impuesto.
+El resumen muestra un renglón de impuesto por cada tasa. El depósito y el saldo se calculan sobre
+ese TOTAL final.
 
 ## "Guardar borrador" vs "Crear cotización"
 

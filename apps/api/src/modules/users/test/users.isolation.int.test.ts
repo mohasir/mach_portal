@@ -807,6 +807,7 @@ describe('users tenant isolation (membership scope)', () => {
         ['product', 'read', 'all'],
         ['unit_of_measure', 'read', 'all'],
         ['product_category', 'read', 'all'],
+        ['charge_type', 'read', 'all'],
         ['event_type', 'read', 'all'],
         ['staff', 'read', 'all'],
         ['pipeline', 'read', 'all'],

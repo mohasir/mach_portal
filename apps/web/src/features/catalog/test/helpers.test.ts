@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { updateProductSchema } from '@repo/schemas';
 import {
   buildProductPayload,
   categoryFilterOptions,
@@ -9,6 +10,7 @@ import {
   isNotQuotable,
   mergeReorder,
   NO_CATEGORY,
+  taxFormValues,
 } from '../helpers';
 
 const tiers = [{ quantity: 50, price: 10000 }];
@@ -209,5 +211,66 @@ describe('getNotQuotableHintKey', () => {
   it('asks for a fixed price, or a price or tiers when tiers are available', () => {
     expect(getNotQuotableHintKey(false)).toBe('product.notQuotable.hintFixedPrice');
     expect(getNotQuotableHintKey(true)).toBe('product.notQuotable.hintPriceOrTiers');
+  });
+});
+
+describe('product tax', () => {
+  const off = { tiers, priceTiersEnabled: false };
+
+  it('sends the rate as a decimal without float noise, and the exempt flag', () => {
+    expect(
+      buildProductPayload({ ...values, taxRatePercent: 8.875, taxExempt: false }, off),
+    ).toMatchObject({ taxRate: 0.08875, taxExempt: false });
+    expect(
+      buildProductPayload({ ...values, taxRatePercent: 7, taxExempt: false }, off).taxRate,
+    ).toBe(0.07);
+  });
+
+  it('forces the rate to zero when the product is exempt', () => {
+    expect(
+      buildProductPayload({ ...values, taxRatePercent: 10, taxExempt: true }, off),
+    ).toMatchObject({ taxRate: 0, taxExempt: true });
+  });
+
+  it('leaves the rate to the API when the form has none', () => {
+    const payload = buildProductPayload(
+      { ...values, taxRatePercent: undefined, taxExempt: undefined },
+      off,
+    );
+    expect(payload).not.toHaveProperty('taxRate');
+    expect(payload.taxExempt).toBe(false);
+  });
+
+  it('produces a payload the API schema accepts', () => {
+    const payload = buildProductPayload(
+      {
+        ...values,
+        uomId: '0f8fad5b-d9cb-469f-a165-70867728950e',
+        taxRatePercent: 8.875,
+        taxExempt: false,
+      },
+      off,
+    );
+    expect(updateProductSchema.safeParse(payload).success).toBe(true);
+  });
+});
+
+describe('taxFormValues', () => {
+  it('prefills a new product with the organization rate', () => {
+    expect(taxFormValues(undefined, 0.08875)).toEqual({ taxRatePercent: 8.875, taxExempt: false });
+  });
+
+  it('shows the rate and the flag stored on an existing product', () => {
+    expect(taxFormValues({ taxRate: 0.1, taxExempt: true }, 0.08875)).toEqual({
+      taxRatePercent: 10,
+      taxExempt: true,
+    });
+  });
+
+  it('leaves the rate empty while the organization rate is not loaded, so the API applies it', () => {
+    expect(taxFormValues(undefined, undefined)).toEqual({
+      taxRatePercent: undefined,
+      taxExempt: false,
+    });
   });
 });

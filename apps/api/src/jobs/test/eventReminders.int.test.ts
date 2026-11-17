@@ -41,7 +41,7 @@ async function seedPendingEvent(
     .returning({ id: clients.id });
   const [product] = await testDb
     .insert(products)
-    .values({ tenantId: t, name: `Menu ${label}`, uomId: await testUnitId(t) })
+    .values({ tenantId: t, name: `Menu ${label}`, taxRate: 0, uomId: await testUnitId(t) })
     .returning({ id: products.id });
   await testDb
     .insert(optionGroups)
@@ -53,7 +53,6 @@ async function seedPendingEvent(
       clientId: client!.id,
       eventDate,
       eventTime: '18:00',
-      taxRate: 0.08,
       depositAmount: 0,
       createdById: tenant.userId,
       assignedToId: tenant.userId,
@@ -69,6 +68,8 @@ async function seedPendingEvent(
     uomId: await testUnitId(t),
     quantity: 10,
     subtotal: 1000,
+    taxRate: 0,
+    taxAmount: 0,
   });
   const [event] = await testDb
     .insert(events)

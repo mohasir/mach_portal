@@ -314,3 +314,84 @@ También se puede fijar al crear (`tenant:create --catalog-kind <kind>`). Un tip
 
 No hay migraciones inversas. **Recomendado: restaurar el backup previo y desplegar la versión anterior de API y web.** La reversión manual no es trivial: `0010` elimina `app_settings.min_persons_per_line` y `0007` y `0012` renombran columnas que el código anterior usa; deshacerlas implica recrear la columna, devolver los nombres y borrar de `drizzle.__drizzle_migrations` las filas con `created_at` igual al `when` de cada migración en `apps/api/drizzle/meta/_journal.json`. Los archivos ya subidos a R2 bajo `t/{tenantId}/products/` quedan huérfanos si se descarta `product_images`. `0013` agrega `quote_lines.uom_id`: revertirla es quitar esa columna y la fila de su `when` en `drizzle.__drizzle_migrations`; tras eso el código anterior mostraría las líneas viejas en la unidad actual de cada producto.
 
+
+---
+
+## 10. Impuesto por línea y cargos adicionales (migraciones `0014`–`0015`)
+
+Spec: `docs/superpowers/specs/2026-11-16-impuesto-por-linea-design.md`. Arquitectura: `docs/backend/architecture.md` §14.6 y §14.7. **Nada de esta sección se ejecuta contra producción sin la aprobación del dueño del proyecto.**
+
+### 10.1 Qué hacen las migraciones
+
+| Migración | Efecto |
+| --- | --- |
+| `0014_line_tax` | Impuesto por producto y por línea; elimina el impuesto por estado (`state_settings`) y el aviso de tasas. Los totales guardados no cambian. |
+| `0015_extra_charges` | Crea `charge_types` y `quote_charges` (RLS con `FORCE`). Convierte la larga distancia y el recargo por tarjeta en cargos, activa el add-on `extraCharges` donde hubo cargos, otorga `charge_type` a los roles y **elimina** `quotes.long_distance_amount`, `quotes.apply_card_surcharge`, `quotes.card_surcharge_rate`, `quotes.card_surcharge_amount` y `app_settings.card_surcharge_rate`. |
+
+Relleno de la `0015`, solo en las organizaciones con alguna cotización que usó cada cargo:
+
+- Con alguna cotización con `long_distance_amount > 0`: tipo "Larga distancia" (fijo, valor por defecto 0) y, por cada una de esas cotizaciones, un `quote_charges` con el monto guardado como valor y como monto.
+- Con alguna cotización con `apply_card_surcharge`: tipo "Recargo por tarjeta" (porcentaje, valor por defecto = `app_settings.card_surcharge_rate`, 0.09 si la organización no tiene fila de ajustes) y, por cada una de esas cotizaciones, un `quote_charges` con la tasa y el monto guardados.
+- `extraCharges` se activa como fila permanente y sin precio (`tenant_features`, sin historial en `tenant_feature_events`, igual que la `0006`) solo en esas organizaciones. Las demás nacen sin el add-on y sin tipos de cargo.
+- Permisos: los roles con `tax_rates.update` reciben `charge_type` `create`, `read`, `update` y `disable`; los roles con `quote.create` reciben `charge_type.read`. Solo los roles que ganaron un permiso suben `role.version`. Incluye roles propios de cada organización: revisarlos después de migrar.
+- Ningún total guardado (`subtotal`, `tax_amount`, `total`, `deposit_amount`) se recalcula: el total de cada cotización sigue siendo total con impuesto + suma de sus `quote_charges`.
+
+Relleno de la `0014`: `app_settings.default_tax_rate` toma la tasa de la cotización más reciente de la organización **con tasa mayor que 0** (0 si no tiene ninguna); cada producto toma esa tasa; cada línea toma la tasa de su cotización y una parte del impuesto ya guardado, por mayor residuo.
+
+### 10.2 Orden de despliegue y verificación
+
+1. Backup con el dueño, como en la sección 3 (paso 1). Guardar además, para comparar después, las tasas por estado y la tasa de la cotización más reciente de cada organización (la `0014` borra `state_settings` y `quotes.tax_rate`; sin esto solo el backup las conserva):
+
+   ```sql
+   SELECT tenant_id, state, tax_rate FROM state_settings ORDER BY tenant_id, state;
+   SELECT DISTINCT ON (tenant_id) tenant_id, number, tax_rate, created_at
+   FROM quotes ORDER BY tenant_id, created_at DESC, seq DESC;
+   ```
+
+2. **Detener la app** (API y jobs; web en mantenimiento), como en las secciones 3 y 5: el código anterior lee columnas que la `0014` y la `0015` eliminan y falla en cuanto se aplican.
+3. `db:migrate` (`0014`–`0015`) y desplegar API y web de la misma versión **en el mismo paso**; recién entonces arrancar la app.
+4. `mt:verify` con exit 0: comprueba RLS habilitado, forzado y con política de aislamiento en `charge_types` y `quote_charges`, y los enlaces `quote_charges.quote_id` y `quote_charges.charge_type_id`.
+5. Revisar las tasas resultantes por organización y compararlas con lo guardado en el paso 1. Una organización que cobraba impuesto y quedó con `default_tax_rate` 0 (o con productos al 0%) debe corregirse antes de cotizar: tasa por defecto en Ajustes y tasa de cada producto.
+
+   ```sql
+   SELECT s.tenant_id, s.default_tax_rate,
+          array_agg(DISTINCT p.tax_rate) AS product_rates,
+          count(*) FILTER (WHERE p.tax_rate = 0 AND NOT p.tax_exempt) AS untaxed_products
+   FROM app_settings s LEFT JOIN products p ON p.tenant_id = s.tenant_id
+   GROUP BY s.tenant_id, s.default_tax_rate ORDER BY s.tenant_id;
+   ```
+
+   Con varias tasas por estado, la `0014` toma una sola (la de la última cotización con impuesto): los productos que deban cotizar con otra tasa se ajustan a mano.
+6. Revisar con `feature:list --tenant <slug>` qué organizaciones recibieron `extraCharges`. Para darlo a otra: `feature:set --tenant <slug> --key extraCharges`.
+
+### 10.3 Cambios de comportamiento a tener presentes
+
+`0014` (impuesto por línea):
+
+- El estado de la cotización ya no influye en el impuesto: cada producto tiene su tasa (o es exento) y cada línea guarda la tasa con la que se cotizó. La organización solo define la tasa por defecto con la que nace un producto.
+- Ya no existe el aviso de tasas desactualizadas al abrir una cotización.
+- El descuento de la cotización se limita al subtotal (antes podía dejar una base negativa).
+
+`0015` (cargos adicionales):
+
+- Sin `extraCharges` el catálogo de cargos se lee pero no se edita, y una cotización no puede recibir cargos nuevos ni cambiar los suyos; al editarla conserva los cargos que ya tenía y los recalcula sobre el total nuevo.
+- Un tipo de cargo desactivado no se puede aplicar a una cotización nueva; las cotizaciones que ya lo tienen lo conservan.
+- El recargo por tarjeta deja de ser un ajuste de la organización: su tasa es el valor por defecto del tipo de cargo.
+- Los cargos migrados se llaman "Larga distancia" y "Recargo por tarjeta", y el PDF imprime el nombre tal como está guardado en cada cotización (antes imprimía "Long Distance Travel Fee" y "Card/Check Surcharge"). Son datos de la organización: el admin puede renombrar el tipo para las cotizaciones nuevas; las cotizaciones ya migradas conservan su copia del nombre.
+
+**Editar una cotización migrada la recalcula con las reglas nuevas** (los totales guardados no cambian mientras nadie la edite):
+
+- La larga distancia ya no paga impuesto (la `0014` había repartido ese impuesto entre las líneas): el impuesto y el total bajan.
+- El recargo por porcentaje se calcula sobre el total con impuesto, sin incluir los cargos fijos.
+- Un descuento mayor que el subtotal queda limitado al subtotal.
+- Puede haber diferencias de centavos por el redondeo por tasa.
+
+Avisar a soporte antes del despliegue.
+
+### 10.4 Reversión
+
+No hay migraciones inversas. **Recomendado: restaurar el backup previo y desplegar la versión anterior de API y web.** A mano, en orden inverso:
+
+- `0015`: las columnas eliminadas pueden reconstruirse desde `quote_charges` (monto del cargo "Larga distancia"; tasa y monto del "Recargo por tarjeta") y `charge_types.default_value`, pero solo para los cargos migrados: los creados después no tienen equivalente en el esquema anterior. Recrear las columnas, rellenarlas, borrar `charge_types`, `quote_charges`, el tipo `charge_kind`, las filas `extraCharges` de `tenant_features` y los permisos `charge_type`.
+- `0014`: recrear `state_settings` (con las filas guardadas en el paso 1 de 10.2), `app_settings.apply_tax_by_state` y `prompt_rate_changes`, `quotes.tax_rate` (la tasa de cualquiera de sus líneas, que la heredaron de la cotización; para una cotización con líneas a tasas distintas, creada después, no hay equivalente) y `quotes.declined_rates` (sin datos: el aviso vuelve a aparecer); luego quitar `app_settings.default_tax_rate`, `products.tax_rate`/`tax_exempt` y `quote_lines.tax_rate`/`tax_amount`.
+- En ambos casos, borrar la fila de cada migración en `drizzle.__drizzle_migrations` (`created_at` = su `when` en `apps/api/drizzle/meta/_journal.json`).

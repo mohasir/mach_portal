@@ -85,7 +85,7 @@ export async function seedEventsTenant(tenant: TestTenant, label: string): Promi
     .returning({ id: rescheduleReasons.id });
   const [product] = await testDb
     .insert(products)
-    .values({ tenantId: t, name: `Menu ${label}`, uomId: await testUnitId(t) })
+    .values({ tenantId: t, name: `Menu ${label}`, taxRate: 0, uomId: await testUnitId(t) })
     .returning({ id: products.id });
   await testDb
     .insert(productPriceTiers)
@@ -105,7 +105,6 @@ export async function seedEventsTenant(tenant: TestTenant, label: string): Promi
     eventTypeId: eventType!.id,
     eventDate: DATE,
     eventTime: TIME,
-    taxRate: 0.08,
     depositAmount: 200,
     createdById: tenant.userId,
     assignedToId: tenant.userId,
@@ -127,6 +126,8 @@ export async function seedEventsTenant(tenant: TestTenant, label: string): Promi
       uomId: await testUnitId(t),
       quantity: 10,
       subtotal: 1000,
+      taxRate: 0,
+      taxAmount: 0,
     })
     .returning({ id: quoteLines.id });
 

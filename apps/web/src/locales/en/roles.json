@@ -155,6 +155,10 @@
         "label": "Units of measure",
         "caption": "Units each {{item}} is priced and counted in."
       },
+      "charge_type": {
+        "label": "Extra charges",
+        "caption": "Fixed or percentage charges that can be added to a quote."
+      },
       "product_category": {
         "label": "Categories",
         "caption": "Categories to group and filter the catalog {{items}}."
@@ -176,7 +180,7 @@
       },
       "tax_rates": {
         "label": "Tax rates",
-        "caption": "Tax rates by state."
+        "caption": "Default tax rate for new products."
       },
       "quote_defaults": {
         "label": "Quote defaults",

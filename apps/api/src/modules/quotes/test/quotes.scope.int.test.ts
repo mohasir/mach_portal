@@ -1,7 +1,7 @@
 import { eq, inArray } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ACTIONS, RESOURCES } from '@repo/guards';
-import { quotesListQuerySchema } from '@repo/schemas';
+import { QUOTE_STAGE, quotesListQuerySchema } from '@repo/schemas';
 import { db } from '../../../db';
 import { quotes } from '../../../db/schema';
 import {
@@ -71,7 +71,9 @@ describe('quotes router owner scope', () => {
     const caller = callerFor(tenant, me);
 
     await expect(listIds(caller)).resolves.toEqual(all(seed));
-    await expect(caller.quotes.rateDrift({ id: seed.quoteId })).rejects.toMatchObject({
+    await expect(
+      caller.quotes.updateStage({ id: seed.quoteId, stageId: QUOTE_STAGE.CANCELLED }),
+    ).rejects.toMatchObject({
       code: 'NOT_FOUND',
     });
     await expect(caller.quotes.cancel({ id: seed.quoteId })).rejects.toMatchObject({
@@ -93,7 +95,9 @@ describe('quotes router owner scope', () => {
     ]);
     const caller = callerFor(tenant, me);
 
-    await expect(caller.quotes.rateDrift({ id: seed.quoteId })).rejects.toMatchObject({
+    await expect(
+      caller.quotes.updateStage({ id: seed.quoteId, stageId: QUOTE_STAGE.CANCELLED }),
+    ).rejects.toMatchObject({
       code: 'NOT_FOUND',
     });
     await expect(caller.quotes.cancel({ id: seed.quoteId })).rejects.toMatchObject({

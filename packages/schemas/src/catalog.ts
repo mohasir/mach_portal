@@ -71,6 +71,14 @@ const productMutationFields = {
     .optional(),
   // Null leaves the product without a category; omitted keeps the stored one on update.
   categoryId: z.uuid().nullable().optional(),
+  // Omitted: the organization's default rate on create, the stored one on update.
+  taxRate: z
+    .number()
+    .min(0, 'catalog.validation.taxRateInvalid')
+    .max(1, 'catalog.validation.taxRateInvalid')
+    .optional(),
+  // Omitted: false on create, the stored value on update.
+  taxExempt: z.boolean().optional(),
 } as const;
 
 export const createProductSchema = z.object(productMutationFields);

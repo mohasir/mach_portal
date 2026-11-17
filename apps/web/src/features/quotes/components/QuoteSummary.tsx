@@ -7,16 +7,16 @@ import { toDisplayPercent } from '@/lib/utils/percent';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
+import { chargeRowLabel, type BuilderCharge } from '../chargeHelpers';
+import type { TaxSummaryRow } from '../builderTotals';
 
 const DEPOSIT_RATE_OPTIONS = [0.1, 0.2, 0.3, 0.4, 0.5];
 
 interface QuoteSummaryProps {
   subtotal: number;
   discountAmount: number;
-  longDistanceAmount: number;
-  taxAmount: number;
-  cardSurchargeRate: number;
-  cardSurchargeAmount: number;
+  taxRows: TaxSummaryRow[];
+  charges: (Pick<BuilderCharge, 'name' | 'kind' | 'value'> & { amount: number })[];
   total: number;
   depositRate: number;
   depositAmount: number;
@@ -27,10 +27,8 @@ interface QuoteSummaryProps {
 export function QuoteSummary({
   subtotal,
   discountAmount,
-  longDistanceAmount,
-  taxAmount,
-  cardSurchargeRate,
-  cardSurchargeAmount,
+  taxRows,
+  charges,
   total,
   depositRate,
   depositAmount,
@@ -53,26 +51,24 @@ export function QuoteSummary({
           <span>- {money(discountAmount)}</span>
         </div>
       )}
-      {longDistanceAmount > 0 && (
-        <div className="flex justify-between">
-          <span className="text-gray-500">{t('builder.pricing.longDistance')}</span>
-          <span>{money(longDistanceAmount)}</span>
-        </div>
-      )}
-      {taxAmount > 0 && (
-        <div className="flex justify-between">
-          <span className="text-gray-500">{t('builder.pricing.taxShort')}</span>
-          <span>{money(taxAmount)}</span>
-        </div>
-      )}
-      {cardSurchargeAmount > 0 && (
-        <div className="flex justify-between">
+      {taxRows.map((row) => (
+        <div key={row.taxRate ?? 'plain'} className="flex justify-between">
           <span className="text-gray-500">
-            {t('builder.pricing.cardSurcharge', { rate: toDisplayPercent(cardSurchargeRate) })}
+            {row.taxRate == null
+              ? t('builder.pricing.taxShort')
+              : t('builder.pricing.tax', { rate: toDisplayPercent(row.taxRate) })}
           </span>
-          <span>{money(cardSurchargeAmount)}</span>
+          <span>{money(row.taxAmount)}</span>
         </div>
-      )}
+      ))}
+      {charges
+        .filter((charge) => charge.amount > 0)
+        .map((charge, index) => (
+          <div key={charge.name + index} className="flex justify-between">
+            <span className="text-gray-500">{chargeRowLabel(charge)}</span>
+            <span>{money(charge.amount)}</span>
+          </div>
+        ))}
       <div className="flex justify-between text-base font-semibold">
         <span>{t('builder.pricing.total')}</span>
         <span>{money(total)}</span>

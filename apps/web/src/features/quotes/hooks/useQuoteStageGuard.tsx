@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { QUOTE_STAGE, canTransition, type QuoteStageId } from '@repo/schemas';
 import { useConfirmModal } from '@/components/shared/ConfirmDialogs';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
-import { useQuoteRatesPrompt } from './useQuoteRatesPrompt';
 
 const CONFIRM_STAGES: QuoteStageId[] = [QUOTE_STAGE.CONFIRMED, QUOTE_STAGE.CANCELLED];
 
@@ -15,32 +14,22 @@ const CONFIRM_STAGE_KEYS: Partial<Record<QuoteStageId, string>> = {
 
 /**
  * Shared guardrails for a quote stage transition: validates `canTransition`, confirms
- * before CONFIRMED/CANCELLED, warns before a draft leaves PENDING, and asks about changed
- * config rates before a quote is sent (its rates are final from then on) — independent of
- * how the transition is actually committed (optimistic for drag-and-drop, plain elsewhere).
+ * before CONFIRMED/CANCELLED and warns before a draft leaves PENDING — independent of how the
+ * transition is actually committed (optimistic for drag-and-drop, plain elsewhere).
  */
 export function useQuoteStageGuard() {
   const { t } = useTranslation('quotes');
   const { modal } = App.useApp();
   const isDesktop = useIsDesktop();
   const [confirmAction, confirmModalHolder] = useConfirmModal();
-  const { promptRates, ratesContextHolder } = useQuoteRatesPrompt();
 
   const guardTransition = (
-    quoteId: string,
     from: QuoteStageId,
     to: QuoteStageId,
     isDraft: boolean,
     commitTransition: () => unknown,
   ) => {
     if (!canTransition(from, to)) return;
-
-    const commit = async () => {
-      if (to === QUOTE_STAGE.QUOTED && from === QUOTE_STAGE.PENDING) {
-        if (!(await promptRates(quoteId))) return;
-      }
-      return commitTransition();
-    };
 
     const proceed = () => {
       if (CONFIRM_STAGES.includes(to)) {
@@ -49,13 +38,13 @@ export function useQuoteStageGuard() {
           title: t(`pipeline.confirm.${stageKey}.title`),
           content: t(`pipeline.confirm.${stageKey}.content`),
           okText: t(`pipeline.confirm.${stageKey}.ok`),
-          onOk: () => commit(),
+          onOk: () => commitTransition(),
         };
         const danger = to === QUOTE_STAGE.CANCELLED;
         if (!isDesktop) return confirmAction({ ...options, danger });
         modal.confirm({ ...options, okButtonProps: danger ? { danger: true } : undefined });
       } else {
-        void commit();
+        void commitTransition();
       }
     };
 
@@ -84,11 +73,6 @@ export function useQuoteStageGuard() {
 
   return {
     guardTransition,
-    confirmContextHolder: (
-      <>
-        {confirmModalHolder}
-        {ratesContextHolder}
-      </>
-    ),
+    confirmContextHolder: confirmModalHolder,
   };
 }

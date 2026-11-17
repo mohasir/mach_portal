@@ -2,22 +2,23 @@ import { TRPCError } from '@trpc/server';
 import {
   canTransition,
   computeQuoteTotals,
+  isValidChargeValue,
+  normalizeChargeValue,
   paginationMeta,
-  needsConfigRates,
   QUOTE_STAGE,
-  quoteRateDrift,
-  resolveQuoteRates,
   TEMPLATE_TYPES,
   type CheckQuoteAvailabilityQuery,
   type CreateQuoteInput,
+  type QuoteChargeInput,
   type QuoteLineInput,
   type QuoteStageId,
   type QuotesBoardQuery,
   type QuotesListQuery,
-  type QuoteRatesConfig,
+  type QuoteTotalsInput,
   type QuotesViewOptions,
   type UpdateQuoteInput,
 } from '@repo/schemas';
+import { featureNotEnabled } from '../../core/trpc/requireFeature';
 import type { AfterCommit } from '../../core/trpc/tenantCtx';
 import type { TenantRunner, Tx } from '../../db';
 import { runInBackground } from '../../lib/background';
@@ -29,11 +30,18 @@ import type { NotificationActor } from '../notifications/notifications.resource'
 import type { ProductsRepository } from '../products/products.repository';
 import { isQuotable } from '../products/products.pricing';
 import { buildProductTree } from '../products/products.resource';
+import { invalidChargeValue } from '../chargeTypes/chargeTypes.service';
 import type { TemplatesRepository } from '../templates/templates.repository';
 import { quotePdfTemplateResource } from '../templates/templates.resource';
-import { QuotesRepository, type InvalidLine, type MissingRef } from './quotes.repository';
+import {
+  QuotesRepository,
+  type InvalidLine,
+  type MissingRef,
+  type PricedQuoteCharge,
+  type PricedQuoteLine,
+} from './quotes.repository';
 import { buildQuotePdfPayload } from './quotes.pdf';
-import { changedLines, validateLineSelections, type CatalogContext } from './quotes.validation';
+import { matchStoredLines, validateLineSelections, type CatalogContext } from './quotes.validation';
 import {
   buildQuoteDetail,
   buildQuoteLineDetails,
@@ -41,8 +49,10 @@ import {
   quoteAvailabilityConflictResource,
   quoteCardResource,
   quoteListItemResource,
+  buildQuoteChargeDetails,
   quoteResource,
   type PublicQuote,
+  type PublicQuoteCharge,
   type PublicQuoteLine,
 } from './quotes.resource';
 
@@ -99,6 +109,24 @@ function belowMinQuantity() {
     cause: new AppError(ErrorCodes.quote.BELOW_MIN_QUANTITY),
   });
 }
+function amountTooLarge() {
+  return new TRPCError({
+    code: 'BAD_REQUEST',
+    cause: new AppError(ErrorCodes.quote.AMOUNT_TOO_LARGE),
+  });
+}
+function chargeTypeNotFound() {
+  return new TRPCError({
+    code: 'NOT_FOUND',
+    cause: new AppError(ErrorCodes.chargeType.NOT_FOUND),
+  });
+}
+function chargeTypeInactive() {
+  return new TRPCError({
+    code: 'BAD_REQUEST',
+    cause: new AppError(ErrorCodes.chargeType.INACTIVE),
+  });
+}
 function pricingNotAllowed() {
   return new TRPCError({
     code: 'FORBIDDEN',
@@ -149,7 +177,13 @@ export class QuotePdfGenerator {
       );
       const templateRow = await repos.templates.findByType(TEMPLATE_TYPES.QUOTE_PDF);
       const { content: template } = quotePdfTemplateResource(templateRow);
-      return buildQuotePdfPayload(result.quoteRow, lines, catalog, template);
+      return buildQuotePdfPayload(
+        result.quoteRow,
+        lines,
+        buildQuoteChargeDetails(result.chargeRows),
+        catalog,
+        template,
+      );
     });
 
     let pdf: { url: string; key: string };
@@ -180,6 +214,7 @@ export class QuotesService {
     private afterCommit: AfterCommit,
     private priceTiersActive: boolean,
     private eventsActive: boolean,
+    private extraChargesActive: boolean,
   ) {}
 
   // The PDF is generated from the committed quote, on its own short transactions, so the request
@@ -215,6 +250,7 @@ export class QuotesService {
       result.optionRows,
       result.historyRows,
       result.assignmentHistoryRows,
+      result.chargeRows,
     );
   }
 
@@ -247,29 +283,25 @@ export class QuotesService {
 
   async create(input: CreateQuoteInput, userId: string, canManagePricing: boolean) {
     await this.validateLines(input.lines, canManagePricing);
+    const charges = await this.resolveCharges(input.charges ?? [], []);
 
-    const [stateRows, appRow] = await Promise.all([
-      this.configRepo.findStateSettings(),
+    const [appRow, productRates] = await Promise.all([
       this.configRepo.findAppSettings(),
+      this.repo.findProductTaxRates(input.lines.map((l) => l.productId)),
     ]);
     if (!appRow) throw configNotFound();
 
     const now = new Date();
-    const { taxRate, cardSurchargeRate } = resolveQuoteRates(
-      { ...appRow, stateSettings: stateRows },
-      input.state,
+    const { totals, lines, pricedCharges } = priceQuote(
+      input.lines,
+      input.lines.map((l) => productTaxRate(productRates, l.productId)),
+      charges,
+      {
+        discountType: input.discountType,
+        discountValue: input.discountValue,
+        depositRate: input.depositRate ?? appRow.depositRate,
+      },
     );
-    const depositRate = input.depositRate ?? appRow.depositRate;
-    const totals = computeQuoteTotals({
-      lines: input.lines.map((l) => ({ subtotal: l.subtotal })),
-      discountType: input.discountType,
-      discountValue: input.discountValue,
-      longDistanceAmount: input.longDistanceAmount,
-      taxRate,
-      applyCardSurcharge: input.applyCardSurcharge,
-      cardSurchargeRate,
-      depositRate,
-    });
 
     const validUntil = addMonths(now, appRow.quoteValidityMonths);
 
@@ -293,8 +325,9 @@ export class QuotesService {
         ...totals,
       },
       (seq) => buildQuoteNumber(now, seq),
-      input.lines,
+      lines,
       input.newClient,
+      pricedCharges,
     );
     if ('missingRef' in created) throw refNotFound(created);
     if ('invalidLine' in created) throw invalidLineRef(created);
@@ -315,14 +348,32 @@ export class QuotesService {
         cause: new AppError(ErrorCodes.quote.NOT_EDITABLE),
       });
     }
-    // Lines kept as they are stay frozen; only new or modified ones are checked against the catalog.
+    // Lines kept as they are stay frozen, tax rate included; only new or modified ones are checked
+    // against the catalog and take the product's current rate.
     const stored = await this.repo.findLinesWithOptions(id);
-    const currentUnits = await this.repo.findProductUnits(input.lines.map((l) => l.productId));
-    const changed = changedLines(input.lines, storedLinesWithSelections(stored), currentUnits);
+    const productIds = input.lines.map((l) => l.productId);
+    const [currentUnits, productRates] = await Promise.all([
+      this.repo.findProductUnits(productIds),
+      this.repo.findProductTaxRates(productIds),
+    ]);
+    const matches = matchStoredLines(input.lines, storedLinesWithSelections(stored), currentUnits);
+    const changed = input.lines.filter((_, index) => !matches[index]);
     if (!canManagePricing) assertFrozenUnitsOnlyReselected(changed, stored.lineRows, currentUnits);
     await this.validateLines(changed, canManagePricing);
+    const charges = await this.resolveCharges(input.charges ?? [], await this.repo.findCharges(id));
 
-    const totals = await this.resolveTotals(current, input);
+    const { totals, lines, pricedCharges } = priceQuote(
+      input.lines,
+      input.lines.map(
+        (l, index) => matches[index]?.taxRate ?? productTaxRate(productRates, l.productId),
+      ),
+      charges,
+      {
+        discountType: input.discountType,
+        discountValue: input.discountValue,
+        depositRate: input.depositRate ?? current.depositRate,
+      },
+    );
 
     const updated = await this.repo.replaceLines(
       id,
@@ -342,8 +393,9 @@ export class QuotesService {
         selectOptionsAtQuote: input.selectOptionsAtQuote,
         ...totals,
       },
-      input.lines,
+      lines,
       input.newClient,
+      pricedCharges,
     );
     if (!updated) throw notFound();
     if ('missingRef' in updated) throw refNotFound(updated);
@@ -357,82 +409,6 @@ export class QuotesService {
       this.generatePdfInBackground(id, 'background pdf regeneration failed');
     }
 
-    return quoteResource(updated);
-  }
-
-  private async loadRatesConfig(): Promise<QuoteRatesConfig & { promptRateChanges: boolean }> {
-    const [stateRows, appRow] = await Promise.all([
-      this.configRepo.findStateSettings(),
-      this.configRepo.findAppSettings(),
-    ]);
-    if (!appRow) throw configNotFound();
-    return { ...appRow, stateSettings: stateRows };
-  }
-
-  private async resolveTotals(current: PublicQuote, input: UpdateQuoteInput) {
-    const { taxRate, cardSurchargeRate } = needsConfigRates(input.state, current)
-      ? resolveQuoteRates(await this.loadRatesConfig(), input.state, current)
-      : current;
-    return computeQuoteTotals({
-      lines: input.lines.map((l) => ({ subtotal: l.subtotal })),
-      discountType: input.discountType,
-      discountValue: input.discountValue,
-      longDistanceAmount: input.longDistanceAmount,
-      taxRate,
-      applyCardSurcharge: input.applyCardSurcharge ?? current.applyCardSurcharge,
-      cardSurchargeRate,
-      depositRate: input.depositRate ?? current.depositRate,
-    });
-  }
-
-  async rateDrift(id: string, ownerId?: string) {
-    const [current, config] = await Promise.all([
-      this.repo.findQuoteRow(id, ownerId),
-      this.loadRatesConfig(),
-    ]);
-    if (!current) throw notFound();
-    return config.promptRateChanges ? quoteRateDrift(config, current) : null;
-  }
-
-  async resolveRateDrift(id: string, accept: boolean, ownerId?: string) {
-    const [current, config] = await Promise.all([
-      this.repo.findQuoteRow(id, ownerId),
-      this.loadRatesConfig(),
-    ]);
-    if (!current) throw notFound();
-    const drift = config.promptRateChanges ? quoteRateDrift(config, current) : null;
-    if (!drift) return quoteResource(current);
-
-    const updated = await this.repo.updateRates(
-      id,
-      drift.saved,
-      accept
-        ? {
-            ...computeQuoteTotals({
-              lines: [{ subtotal: current.subtotal }],
-              discountType: current.discountType,
-              discountValue: current.discountValue,
-              longDistanceAmount: current.longDistanceAmount,
-              ...drift.current,
-              applyCardSurcharge: current.applyCardSurcharge,
-              depositRate: current.depositRate,
-            }),
-            declinedRates: null,
-          }
-        : { declinedRates: drift.current },
-      ownerId,
-    );
-    // It was sent or edited meanwhile: nothing left to answer, so report how it stands now.
-    if (!updated) {
-      const latest = await this.repo.findQuoteRow(id, ownerId);
-      if (!latest) throw notFound();
-      return quoteResource(latest);
-    }
-
-    // Repricing changes the client-facing amounts, so the PDF has to follow (same as update()).
-    if (accept && canGeneratePdf(updated)) {
-      this.generatePdfInBackground(id, 'background pdf regeneration failed');
-    }
     return quoteResource(updated);
   }
 
@@ -548,6 +524,47 @@ export class QuotesService {
     }
   }
 
+  // A charge resent with the type and value it already has on the quote keeps its stored copy, even
+  // if its type was edited or deactivated since; any other charge is read from the tenant's catalog
+  // and must be active, with a value valid for its kind (the type's default when omitted). Without
+  // the extraCharges add-on nothing can be added or changed, and the stored charges stay as they are
+  // whatever the input holds, so editing the quote recalculates them without losing any.
+  private async resolveCharges(
+    input: readonly QuoteChargeInput[],
+    stored: readonly PublicQuoteCharge[],
+  ): Promise<SettledCharge[]> {
+    const keptCopy = (charge: QuoteChargeInput) =>
+      stored.find(
+        (s) =>
+          s.chargeTypeId === charge.chargeTypeId &&
+          (charge.value === undefined || normalizeChargeValue(s.kind, charge.value) === s.value),
+      );
+
+    if (!this.extraChargesActive) {
+      if (input.some((charge) => !keptCopy(charge))) throw featureNotEnabled('extraCharges');
+      return stored.map(settledFromStored);
+    }
+
+    const types = await this.repo.findChargeTypes(
+      input.filter((charge) => !keptCopy(charge)).map((charge) => charge.chargeTypeId),
+    );
+    return input.map((charge) => {
+      const kept = keptCopy(charge);
+      if (kept) return settledFromStored(kept);
+      const type = types.find((t) => t.id === charge.chargeTypeId);
+      if (!type) throw chargeTypeNotFound();
+      if (!type.isActive) throw chargeTypeInactive();
+      const value = charge.value ?? type.defaultValue;
+      if (!isValidChargeValue(type.kind, value)) throw invalidChargeValue();
+      return {
+        chargeTypeId: type.id,
+        name: type.name,
+        kind: type.kind,
+        value: normalizeChargeValue(type.kind, value),
+      };
+    });
+  }
+
   // Revalidates every line against the live catalog (mach-bar-domain.md D16/D17) — the
   // builder UI already prevents this, this is the server-side boundary.
   private async validateLines(lines: QuoteLineInput[], canManagePricing: boolean) {
@@ -603,6 +620,64 @@ export class QuotesService {
   }
 }
 
+// Every product was resolved inside the tenant by validateLines, or the line is frozen and keeps
+// its own rate; a product missing here is a line that never passed validation.
+function productTaxRate(rates: ReadonlyMap<string, number>, productId: string): number {
+  const rate = rates.get(productId);
+  if (rate === undefined) throw invalidLines();
+  return rate;
+}
+
+type SettledCharge = Omit<PricedQuoteCharge, 'amount'>;
+
+const settledFromStored = (charge: PublicQuoteCharge): SettledCharge => ({
+  chargeTypeId: charge.chargeTypeId,
+  name: charge.name,
+  kind: charge.kind,
+  value: charge.value,
+});
+
+// Every amount is stored in an int4 column; past it the insert would fail as a server error.
+const INT4_MAX = 2_147_483_647;
+const fitsInt4 = (value: number) => value >= -INT4_MAX - 1 && value <= INT4_MAX;
+
+function priceQuote(
+  lines: QuoteLineInput[],
+  taxRates: number[],
+  charges: SettledCharge[],
+  rest: Omit<QuoteTotalsInput, 'lines' | 'charges'>,
+) {
+  if (!lines.every((line) => fitsInt4(line.subtotal))) throw amountTooLarge();
+  const result = computeQuoteTotals({
+    ...rest,
+    lines: lines.map((line, index) => ({ subtotal: line.subtotal, taxRate: taxRates[index]! })),
+    charges,
+  });
+  const amounts = [
+    result.subtotal,
+    result.discountAmount,
+    result.taxAmount,
+    result.total,
+    result.depositAmount,
+    ...result.lines.map((l) => l.taxAmount),
+    ...result.charges.map((c) => c.amount),
+  ];
+  if (!amounts.every(fitsInt4)) throw amountTooLarge();
+  const { lines: lineTotals, taxBreakdown: _breakdown, charges: chargeTotals, ...totals } = result;
+  return {
+    totals,
+    pricedCharges: charges.map((charge, index): PricedQuoteCharge => ({
+      ...charge,
+      amount: chargeTotals[index]!.amount,
+    })),
+    lines: lines.map((line, index): PricedQuoteLine => ({
+      ...line,
+      taxRate: taxRates[index]!,
+      taxAmount: lineTotals[index]!.taxAmount,
+    })),
+  };
+}
+
 function buildQuoteNumber(date: Date, seq: number): string {
   const yyyymmdd = date.toISOString().slice(0, 10).replace(/-/g, '');
   return `QUO${yyyymmdd}-${String(seq).padStart(6, '0')}`;
@@ -652,6 +727,7 @@ function storedLinesWithSelections({
       uomId: line.uomId,
       quantity: line.quantity,
       subtotal: line.subtotal,
+      taxRate: line.taxRate,
       selections: [...byGroup].map(([optionGroupId, optionIds]) => ({ optionGroupId, optionIds })),
     };
   });

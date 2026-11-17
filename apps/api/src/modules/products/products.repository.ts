@@ -11,6 +11,7 @@ import { NEUTRAL_UNIT_CODE } from '@repo/schemas';
 import type { Executor, Tx } from '../../db';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import {
+  appSettings,
   options,
   optionGroups,
   productCategories,
@@ -248,7 +249,17 @@ export class ProductsRepository {
     }
   }
 
-  createProduct(data: ProductWriteInput & { uomId: string }, withCost = false) {
+  // The rate a product starts with when created without one; 0 before settings are saved once.
+  async findDefaultTaxRate(): Promise<number> {
+    const [row] = await this.db
+      .select({ defaultTaxRate: appSettings.defaultTaxRate })
+      .from(appSettings)
+      .where(tenantEq(appSettings, this.tenantId))
+      .limit(1);
+    return row?.defaultTaxRate ?? 0;
+  }
+
+  createProduct(data: ProductWriteInput & { uomId: string; taxRate: number }, withCost = false) {
     return this.db.transaction(async (tx) => {
       const [product] = await tx
         .insert(products)
@@ -263,6 +274,8 @@ export class ProductsRepository {
           sku: data.sku ?? null,
           cost: data.cost ?? null,
           ...(data.minQuantity !== undefined && { minQuantity: data.minQuantity }),
+          taxRate: data.taxRate,
+          taxExempt: data.taxExempt ?? false,
           tenantId: this.tenantId,
         })
         .returning(productColumns(withCost));
@@ -296,6 +309,8 @@ export class ProductsRepository {
           categoryId: source.categoryId,
           cost: source.cost,
           minQuantity: source.minQuantity,
+          taxRate: source.taxRate,
+          taxExempt: source.taxExempt,
           isActive: true,
           sortOrder: (last?.value ?? -1) + 1,
           tenantId: this.tenantId,
@@ -375,6 +390,8 @@ export class ProductsRepository {
           ...(data.cost !== undefined && { cost: data.cost }),
           ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
           ...(data.minQuantity !== undefined && { minQuantity: data.minQuantity }),
+          ...(data.taxRate !== undefined && { taxRate: data.taxRate }),
+          ...(data.taxExempt !== undefined && { taxExempt: data.taxExempt }),
         })
         .where(and(eq(products.id, id), tenantEq(products, this.tenantId)))
         .returning(productColumns(withCost));

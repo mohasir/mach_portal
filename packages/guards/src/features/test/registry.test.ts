@@ -36,4 +36,8 @@ describe('FEATURES', () => {
     expect(isToggleable('quotes')).toBe(true);
     expect(isToggleable('priceTiers')).toBe(true);
   });
+
+  it('offers extra charges as an add-on of its own', () => {
+    expect(FEATURES.extraCharges).toEqual({ kind: 'addon', requires: [] });
+  });
 });

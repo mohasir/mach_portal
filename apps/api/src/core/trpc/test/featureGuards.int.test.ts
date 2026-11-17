@@ -44,9 +44,16 @@ async function seedTenant(slug: string, features?: FeatureKey[]): Promise<Seeded
 }
 
 const allBut = (...off: FeatureKey[]): FeatureKey[] =>
-  (['quotes', 'events', 'notifications', 'priceTiers', 'configurableOptions'] as const).filter(
-    (k) => !off.includes(k),
-  );
+  (
+    [
+      'quotes',
+      'events',
+      'notifications',
+      'priceTiers',
+      'configurableOptions',
+      'unitsOfMeasure',
+    ] as const
+  ).filter((k) => !off.includes(k));
 
 // The domain code of a failed call, or 'ok'. Other failures (validation, domain rules) still prove
 // the call got past the feature guard.

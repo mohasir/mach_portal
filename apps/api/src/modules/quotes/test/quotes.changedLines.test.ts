@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import type { QuoteLineInput } from '@repo/schemas';
-import { changedLines } from '../quotes.validation';
+import { matchStoredLines } from '../quotes.validation';
+
+// Submitted lines that no stored line backs.
+const changedLines = (
+  submitted: QuoteLineInput[],
+  stored: Parameters<typeof matchStoredLines>[1],
+  currentUnits: ReadonlyMap<string, string>,
+) => {
+  const matches = matchStoredLines(submitted, stored, currentUnits);
+  return submitted.filter((_, index) => !matches[index]);
+};
 
 const units = new Map([['p1', 'u1']]);
 
@@ -13,7 +23,17 @@ const line = (over: Partial<QuoteLineInput> = {}): QuoteLineInput => ({
 });
 const stored = (over: Partial<QuoteLineInput> = {}) => line({ uomId: 'u1', ...over });
 
-describe('changedLines', () => {
+describe('matchStoredLines', () => {
+  it('returns the stored line each submitted line resends', () => {
+    const first = { ...stored(), id: 'a' };
+    const second = { ...stored(), id: 'b' };
+    expect(matchStoredLines([line(), line(), line()], [first, second], units)).toEqual([
+      first,
+      second,
+      undefined,
+    ]);
+  });
+
   it('skips a submitted line identical to a stored one', () => {
     expect(changedLines([line()], [stored()], units)).toEqual([]);
   });

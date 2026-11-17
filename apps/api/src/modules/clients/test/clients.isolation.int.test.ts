@@ -22,7 +22,6 @@ async function insertQuote(tenantId: string, clientId: string, seq: number, stag
     number: `QUO-${tenantId.slice(0, 4)}-${seq}`,
     clientId,
     stageId,
-    taxRate: 0.08,
   });
 }
 

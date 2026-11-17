@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { useProductMutations } from '../hooks/useProductMutations';
-import type { ProductFormValues, ProductPayload } from '../helpers';
+import { taxFormValues, type ProductFormValues, type ProductPayload } from '../helpers';
 import { NotQuotableAlert } from './NotQuotableAlert';
 import { ProductForm } from './ProductForm';
 import type { Product } from '../types';
@@ -69,6 +69,7 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
                     categoryId: product.categoryId,
                     cost: product.cost,
                     minQuantity: product.minQuantity,
+                    ...taxFormValues(product, undefined),
                   }
                 : undefined
             }

@@ -2,6 +2,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { DEFAULT_UNIT_CODE } from '@repo/schemas';
 import { db } from '../index';
 import {
+  appSettings,
   options,
   optionGroups,
   productCategories,
@@ -42,6 +43,9 @@ export interface SeedProduct {
   minQuantity?: number;
   // Category name, created for the tenant when missing.
   category?: string;
+  // Defaults to the tenant's default rate (seedConfig runs first).
+  taxRate?: number;
+  taxExempt?: boolean;
   tiers: SeedTier[];
   groups: SeedGroup[];
 }
@@ -604,6 +608,12 @@ export async function seedCatalog(
   catalog: SeedProduct[] = SEED_CATALOG,
 ) {
   console.log('🍽️  Seeding catálogo...');
+  const [settings] = await x
+    .select({ defaultTaxRate: appSettings.defaultTaxRate })
+    .from(appSettings)
+    .where(eq(appSettings.tenantId, tenantId))
+    .limit(1);
+  const defaultTaxRate = settings?.defaultTaxRate ?? 0;
 
   for (const [productIndex, p] of catalog.entries()) {
     const [existing] = await x
@@ -637,6 +647,8 @@ export async function seedCatalog(
         uomId: unit.id,
         minQuantity: seedMinQuantity(p),
         categoryId,
+        taxRate: p.taxRate ?? defaultTaxRate,
+        taxExempt: p.taxExempt ?? false,
         sortOrder: productIndex,
         tenantId,
       })

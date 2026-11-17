@@ -30,7 +30,6 @@ async function quoteLineFor(tenant: TestTenant, productId: string) {
       seq: 1,
       number: `Q-${tenant.slug}-1`,
       clientId: client!.id,
-      taxRate: 0,
     })
     .returning({ id: quotes.id });
   await testDb.insert(quoteLines).values({
@@ -40,6 +39,8 @@ async function quoteLineFor(tenant: TestTenant, productId: string) {
     uomId: await testUnitId(tenant.id),
     quantity: 10,
     subtotal: 1000,
+    taxRate: 0,
+    taxAmount: 0,
   });
 }
 

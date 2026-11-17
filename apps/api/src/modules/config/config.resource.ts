@@ -1,10 +1,4 @@
-import { appSettings, stateSettings, quoteStages } from '../../db/schema';
-
-export const publicStateSettingColumns = {
-  state: stateSettings.state,
-  taxRate: stateSettings.taxRate,
-  updatedAt: stateSettings.updatedAt,
-} as const;
+import { appSettings, quoteStages } from '../../db/schema';
 
 export const publicQuoteStageColumns = {
   id: quoteStages.id,
@@ -22,17 +16,11 @@ export const publicAppSettingsColumns = {
   catalogSortable: appSettings.catalogSortable,
   optionsSelectionDeadlineDays: appSettings.optionsSelectionDeadlineDays,
   allowSelectOptionsAtQuote: appSettings.allowSelectOptionsAtQuote,
-  promptRateChanges: appSettings.promptRateChanges,
   hideStaleQuotes: appSettings.hideStaleQuotes,
-  applyTaxByState: appSettings.applyTaxByState,
-  cardSurchargeRate: appSettings.cardSurchargeRate,
+  defaultTaxRate: appSettings.defaultTaxRate,
   updatedAt: appSettings.updatedAt,
 } as const;
 
-export type PublicStateSetting = Pick<
-  typeof stateSettings.$inferSelect,
-  keyof typeof publicStateSettingColumns
->;
 export type PublicAppSettings = Pick<
   typeof appSettings.$inferSelect,
   keyof typeof publicAppSettingsColumns
@@ -42,12 +30,6 @@ export type PublicQuoteStage = Pick<
   keyof typeof publicQuoteStageColumns
 >;
 
-export const stateSettingResource = (row: PublicStateSetting) => ({
-  state: row.state,
-  taxRate: row.taxRate,
-  updatedAt: row.updatedAt,
-});
-
 export const appSettingsResource = (row: PublicAppSettings) => ({
   depositRate: row.depositRate,
   quoteValidityMonths: row.quoteValidityMonths,
@@ -56,10 +38,8 @@ export const appSettingsResource = (row: PublicAppSettings) => ({
   catalogSortable: row.catalogSortable,
   optionsSelectionDeadlineDays: row.optionsSelectionDeadlineDays,
   allowSelectOptionsAtQuote: row.allowSelectOptionsAtQuote,
-  promptRateChanges: row.promptRateChanges,
   hideStaleQuotes: row.hideStaleQuotes,
-  applyTaxByState: row.applyTaxByState,
-  cardSurchargeRate: row.cardSurchargeRate,
+  defaultTaxRate: row.defaultTaxRate,
   updatedAt: row.updatedAt,
 });
 
@@ -72,12 +52,10 @@ export const quoteStageResource = (row: PublicQuoteStage) => ({
 });
 
 export const configResource = (
-  stateRows: PublicStateSetting[],
   appRow: PublicAppSettings,
   lastUsedSeq: number,
   quoteStageRows: PublicQuoteStage[],
 ) => ({
-  stateSettings: stateRows.map(stateSettingResource),
   appSettings: appSettingsResource(appRow),
   lastUsedSeq,
   quoteStages: quoteStageRows.map(quoteStageResource),

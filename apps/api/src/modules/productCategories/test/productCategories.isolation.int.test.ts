@@ -49,6 +49,7 @@ describe('productCategories tenant isolation', () => {
     await testDb.insert(products).values({
       tenantId: b.id,
       name: 'Cruzado',
+      taxRate: 0,
       uomId: await testUnitId(b.id),
       categoryId: own.id,
     });

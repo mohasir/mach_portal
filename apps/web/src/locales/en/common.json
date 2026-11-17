@@ -80,7 +80,8 @@
     "priceTiers": "Price tiers",
     "configurableOptions": "Configurable options",
     "productGallery": "Image gallery",
-    "unitsOfMeasure": "Units of measure"
+    "unitsOfMeasure": "Units of measure",
+    "extraCharges": "Extra charges"
   },
   "richText": {
     "toolbar": "Text formatting",

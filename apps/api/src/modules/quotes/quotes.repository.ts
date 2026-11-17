@@ -31,6 +31,8 @@ import type { Executor, Tx } from '../../db';
 import { lockQuoteSeq } from '../../db/locks';
 import {
   appSettings,
+  chargeTypes,
+  quoteCharges,
   quotes,
   quoteLines,
   quoteLineOptions,
@@ -53,6 +55,7 @@ import { resolvePagination } from '../../lib/utils/pagination';
 import { todayInBusinessTimezone } from '../../lib/utils/date';
 import { containsPattern } from '../../lib/utils/search';
 import {
+  publicQuoteChargeColumns,
   publicQuoteColumns,
   publicQuoteLineOptionColumns,
   quoteLineWithUnitColumns,
@@ -64,6 +67,16 @@ export type MissingRef = { missingRef: 'client' | 'eventType' | 'user' };
 
 // A submitted line whose product or unit cannot be resolved inside the tenant.
 export type InvalidLine = { invalidLine: 'product' | 'unit' };
+
+// A submitted line with the tax the service settled for it.
+export type PricedQuoteLine = QuoteLineInput & { taxRate: number; taxAmount: number };
+
+// A charge as the service settled it: copied from its type (or from the quote, when kept as it was)
+// with the amount the totals gave it.
+export type PricedQuoteCharge = Pick<
+  typeof quoteCharges.$inferInsert,
+  'chargeTypeId' | 'name' | 'kind' | 'value' | 'amount'
+>;
 
 // Inner join: the unit is matched inside the tenant in its own ON clause, so a line pointing at
 // another tenant's unit is dropped instead of leaking it.
@@ -232,8 +245,33 @@ export class QuotesRepository {
 
     const historyRows = await this.findStageHistory(id);
     const assignmentHistoryRows = await this.findAssignmentHistory(id);
+    const chargeRows = await this.findCharges(id);
 
-    return { quoteRow, lineRows, optionRows, historyRows, assignmentHistoryRows };
+    return { quoteRow, lineRows, optionRows, historyRows, assignmentHistoryRows, chargeRows };
+  }
+
+  findCharges(quoteId: string) {
+    return this.db
+      .select(publicQuoteChargeColumns)
+      .from(quoteCharges)
+      .where(and(eq(quoteCharges.quoteId, quoteId), tenantEq(quoteCharges, this.tenantId)))
+      .orderBy(asc(quoteCharges.sortOrder));
+  }
+
+  // Charge types the input points at, read inside the tenant: a foreign or unknown id is missing.
+  findChargeTypes(ids: string[]) {
+    const uniqueIds = [...new Set(ids)];
+    if (uniqueIds.length === 0) return Promise.resolve([]);
+    return this.db
+      .select({
+        id: chargeTypes.id,
+        name: chargeTypes.name,
+        kind: chargeTypes.kind,
+        defaultValue: chargeTypes.defaultValue,
+        isActive: chargeTypes.isActive,
+      })
+      .from(chargeTypes)
+      .where(and(inArray(chargeTypes.id, uniqueIds), tenantEq(chargeTypes, this.tenantId)));
   }
 
   async findLinesWithOptions(quoteId: string) {
@@ -299,31 +337,6 @@ export class QuotesRepository {
       .update(quotes)
       .set({ pdfUrl: url, pdfKey: key, pdfGeneratedAt: new Date() })
       .where(this.quoteWhere(id))
-      .returning(publicQuoteColumns)
-      .then((r) => r[0]);
-  }
-
-  // Only while the quote is still pending with the rates the caller read: a concurrent send or
-  // edit in between must not be repriced (sent quotes keep their rates). No row means it changed.
-  updateRates(
-    id: string,
-    expected: { taxRate: number; cardSurchargeRate: number },
-    values: Partial<Omit<typeof quotes.$inferInsert, 'id' | 'seq' | 'number' | 'tenantId'>>,
-    ownerId?: string,
-  ) {
-    return this.db
-      .update(quotes)
-      .set(values)
-      .where(
-        and(
-          this.quoteWhere(id),
-          eq(quotes.stageId, QUOTE_STAGE.PENDING),
-          eq(quotes.taxRate, expected.taxRate),
-          eq(quotes.cardSurchargeRate, expected.cardSurchargeRate),
-          isNull(quotes.archivedAt),
-          this.ownerFilter(ownerId),
-        ),
-      )
       .returning(publicQuoteColumns)
       .then((r) => r[0]);
   }
@@ -564,6 +577,17 @@ export class QuotesRepository {
     return new Map(rows.map((r) => [r.id, r.uomId]));
   }
 
+  // The rate a new or edited line of each product takes: 0 when the product is exempt.
+  async findProductTaxRates(productIds: string[]): Promise<Map<string, number>> {
+    const uniqueIds = [...new Set(productIds)];
+    if (uniqueIds.length === 0) return new Map();
+    const rows = await this.db
+      .select({ id: products.id, taxRate: products.taxRate, taxExempt: products.taxExempt })
+      .from(products)
+      .where(and(inArray(products.id, uniqueIds), tenantEq(products, this.tenantId)));
+    return new Map(rows.map((r) => [r.id, r.taxExempt ? 0 : r.taxRate]));
+  }
+
   async loadCatalogContext(productIds: string[]) {
     const uniqueIds = [...new Set(productIds)];
     if (uniqueIds.length === 0) return { products: [], tiers: [], groups: [], options: [] };
@@ -659,7 +683,7 @@ export class QuotesRepository {
     return unitIds;
   }
 
-  private buildLineRows(quoteId: string, lines: QuoteLineInput[], unitIds: string[]) {
+  private buildLineRows(quoteId: string, lines: PricedQuoteLine[], unitIds: string[]) {
     return lines.map((line, index) => ({
       id: randomUUID(),
       quoteId,
@@ -667,6 +691,8 @@ export class QuotesRepository {
       uomId: unitIds[index]!,
       quantity: line.quantity,
       subtotal: line.subtotal,
+      taxRate: line.taxRate,
+      taxAmount: line.taxAmount,
       sortOrder: index,
       tenantId: this.tenantId,
     }));
@@ -685,7 +711,23 @@ export class QuotesRepository {
     );
   }
 
-  private async insertLines(tx: Tx, quoteId: string, lines: QuoteLineInput[], unitIds: string[]) {
+  private async insertCharges(tx: Tx, quoteId: string, charges: PricedQuoteCharge[]) {
+    if (charges.length === 0) return;
+    await tx.insert(quoteCharges).values(
+      charges.map((charge, index) => ({
+        chargeTypeId: charge.chargeTypeId,
+        name: charge.name,
+        kind: charge.kind,
+        value: charge.value,
+        amount: charge.amount,
+        quoteId,
+        sortOrder: index,
+        tenantId: this.tenantId,
+      })),
+    );
+  }
+
+  private async insertLines(tx: Tx, quoteId: string, lines: PricedQuoteLine[], unitIds: string[]) {
     const lineRows = this.buildLineRows(quoteId, lines, unitIds);
     if (lineRows.length === 0) return;
     await tx.insert(quoteLines).values(lineRows);
@@ -738,8 +780,9 @@ export class QuotesRepository {
   async insertFull(
     quoteData: QuoteInsert,
     buildNumber: (seq: number) => string,
-    lines: QuoteLineInput[],
+    lines: PricedQuoteLine[],
     newClient?: CreateClientInput,
+    charges: PricedQuoteCharge[] = [],
   ): Promise<PublicQuote | MissingRef | InvalidLine> {
     return this.db.transaction(async (tx) => {
       const missing = await this.findMissingRef(tx, quoteData, newClient);
@@ -760,6 +803,7 @@ export class QuotesRepository {
         tenantId: this.tenantId,
       });
       await this.insertLines(tx, quote!.id, lines, unitIds);
+      await this.insertCharges(tx, quote!.id, charges);
       return quote!;
     });
   }
@@ -767,8 +811,9 @@ export class QuotesRepository {
   async replaceLines(
     id: string,
     quoteData: QuoteValues,
-    lines: QuoteLineInput[],
+    lines: PricedQuoteLine[],
     newClient?: CreateClientInput,
+    charges: PricedQuoteCharge[] = [],
   ): Promise<PublicQuote | MissingRef | InvalidLine | undefined> {
     return this.db.transaction(async (tx) => {
       const [existing] = await tx
@@ -792,6 +837,10 @@ export class QuotesRepository {
         .delete(quoteLines)
         .where(and(eq(quoteLines.quoteId, id), tenantEq(quoteLines, this.tenantId)));
       await this.insertLines(tx, id, lines, unitIds);
+      await tx
+        .delete(quoteCharges)
+        .where(and(eq(quoteCharges.quoteId, id), tenantEq(quoteCharges, this.tenantId)));
+      await this.insertCharges(tx, id, charges);
       return quote;
     });
   }

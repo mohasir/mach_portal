@@ -26,7 +26,7 @@ const bundle: CreateUnitInput = {
 async function insertProduct(tenantId: string, uomId: string, isActive = true) {
   const [row] = await testDb
     .insert(products)
-    .values({ tenantId, name: `P ${Math.random()}`, uomId, isActive })
+    .values({ tenantId, name: `P ${Math.random()}`, taxRate: 0, uomId, isActive })
     .returning({ id: products.id });
   return row!.id;
 }
@@ -45,7 +45,7 @@ async function insertLineOnlyUnit(tenantId: string, lineUnitId: string) {
     .returning({ id: clients.id });
   const [quote] = await testDb
     .insert(quotes)
-    .values({ tenantId, seq: 1, number: 'Q-1', clientId: client!.id, taxRate: 0 })
+    .values({ tenantId, seq: 1, number: 'Q-1', clientId: client!.id })
     .returning({ id: quotes.id });
   await testDb.insert(quoteLines).values({
     tenantId,
@@ -54,6 +54,8 @@ async function insertLineOnlyUnit(tenantId: string, lineUnitId: string) {
     uomId: lineUnitId,
     quantity: 1,
     subtotal: 100,
+    taxRate: 0,
+    taxAmount: 0,
   });
 }
 

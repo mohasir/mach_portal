@@ -3,30 +3,25 @@ import type {
   QuoteStageId,
   UpdateQuoteDefaultsInput,
   UpdateQuoteStagesInput,
-  UpdateTaxRatesInput,
+  UpdateTaxPreferencesInput,
 } from '@repo/schemas';
-import { fromPercent, toPercent } from '@/lib/utils/percent';
+import { fromPercent, toDisplayPercent, toPercent } from '@/lib/utils/percent';
 import type { Config } from './types';
 
-export interface TaxRatesFormValues {
-  rates: { taxRatePercent: number }[];
+export interface DefaultTaxFormValues {
+  defaultTaxRatePercent: number;
 }
 
-export function toTaxRatesFormValues(config: Config): TaxRatesFormValues {
-  return {
-    rates: config.stateSettings.map((s) => ({ taxRatePercent: toPercent(s.taxRate) })),
-  };
-}
+export const toDefaultTaxFormValues = (config: Config): DefaultTaxFormValues => ({
+  defaultTaxRatePercent: toDisplayPercent(config.appSettings.defaultTaxRate),
+});
 
-export function toTaxRatesUpdateInput(
-  values: TaxRatesFormValues,
-  config: Config,
-): UpdateTaxRatesInput {
-  return config.stateSettings.map((s, index) => ({
-    state: s.state,
-    taxRate: fromPercent(values.rates[index]!.taxRatePercent),
-  }));
-}
+// The rate is stored with 5 decimals; dividing by 100 can leave float noise past them.
+export const toDefaultTaxUpdateInput = (
+  values: DefaultTaxFormValues,
+): UpdateTaxPreferencesInput => ({
+  defaultTaxRate: Math.round(fromPercent(values.defaultTaxRatePercent) * 100000) / 100000,
+});
 
 export interface QuoteDefaultsFormValues {
   depositRatePercent: number;

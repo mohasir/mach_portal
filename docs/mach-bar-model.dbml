@@ -7,7 +7,8 @@
 // - clients.status (lead|active) es DERIVADO, no columna.
 // - El catálogo (products/option_groups/options) y los lookups (event_types) usan soft-delete
 //   (is_active); nunca DELETE, porque quotes/events los referencian por FK viva.
-// - Montos, tax_rate y deposit_rate se CONGELAN (snapshot) en la quote al calcular.
+// - Montos y deposit_rate se CONGELAN (snapshot) en la quote al calcular; la tasa de impuesto se
+//   congela en cada quote_line (copia de products.tax_rate, 0 si el producto es exento).
 // - El evento NO copia su composición: lee sus líneas (products) y opciones de la quote
 //   (event.quote_id). La quote es read-only tras 'confirmed'. Por eso no hay event_lines.
 // - Nombres GENÉRICOS para reuso en otros negocios del giro. Mach Bar los muestra vía i18n:
@@ -76,8 +77,7 @@ Table quotes {
   discount_type discount_type
   discount_value "numeric(10,2)" [note: '% o centavos según discount_type']
   discount_amount integer [not null, default: 0, note: 'cents, resuelto']
-  tax_rate "numeric(6,5)" [not null, default: 0, note: 'snapshot de state_settings.tax_rate']
-  tax_amount integer [not null, default: 0, note: 'cents']
+  tax_amount integer [not null, default: 0, note: 'cents = Σ(quote_lines.tax_amount)']
   total integer [not null, default: 0, note: 'cents']
   deposit_rate "numeric(4,3)" [not null, default: 0.5, note: 'snapshot de app_settings.deposit_rate']
   deposit_amount integer [not null, default: 0, note: 'cents']
@@ -101,11 +101,39 @@ Table quote_lines {
   product_id uuid [not null, ref: > products.id]
   quantity integer [not null, note: 'tramo elegido; existe en product_price_tiers (D16)']
   subtotal integer [not null, note: 'cents, total de la línea; pre-carga del tramo, EDITABLE (D16)']
+  tax_rate "numeric(6,5)" [not null, note: 'copia de la tasa del producto al cotizar (0 si exento)']
+  tax_amount integer [not null, note: 'cents, impuesto de la línea']
   sort_order integer [default: 0]
 
   indexes {
     quote_id
   }
+}
+
+Enum charge_kind {
+  fixed
+  percent
+}
+
+Table charge_types {
+  id uuid [pk]
+  name text [not null, note: 'único por organización sin distinguir mayúsculas']
+  kind charge_kind [not null]
+  default_value "numeric(14,5)" [not null, note: 'cents si fixed; tasa 0..1 si percent']
+  is_active boolean [not null, default: true]
+  sort_order integer [not null, default: 0]
+  Note: 'add-on extraCharges; catálogo de cargos adicionales por organización'
+}
+
+Table quote_charges {
+  id uuid [pk]
+  quote_id uuid [not null, ref: > quotes.id, note: 'onDelete cascade']
+  charge_type_id uuid [ref: > charge_types.id, note: 'onDelete set null']
+  name text [not null, note: 'copia del tipo al aplicar']
+  kind charge_kind [not null, note: 'copia del tipo al aplicar']
+  value "numeric(14,5)" [not null, note: 'cents si fixed; tasa si percent']
+  amount integer [not null, note: 'cents, sin impuesto; total = total con impuesto + Σ amount']
+  sort_order integer [not null, default: 0]
 }
 
 Table quote_line_options {
@@ -180,6 +208,8 @@ Table products {
   is_premium boolean [not null, default: false]
   is_active boolean [not null, default: true]
   sort_order integer [default: 0]
+  tax_rate "numeric(6,5)" [not null, note: 'nace con app_settings.default_tax_rate']
+  tax_exempt boolean [not null, default: false, note: 'cotiza a 0 sin perder su tasa']
   Note: 'sin precio: vive en product_price_tiers (D16)'
 }
 
@@ -230,17 +260,11 @@ Table event_types {
 // CONFIGURACIÓN
 // ─────────────────────────────────────────────
 
-Table state_settings {
-  state state [pk]
-  tax_rate "numeric(6,5)" [not null, default: 0, note: 'ej. 0.08875']
-  updated_at timestamp [not null, default: `now()`]
-  Note: 'futuro: travel_fee por estado entra acá'
-}
-
 Table app_settings {
   id integer [pk, default: 1, note: 'fila única (check id = 1)']
   deposit_rate "numeric(4,3)" [not null, default: 0.5]
   quote_validity_months integer [not null, default: 3]
   quote_seq_start integer [not null, default: 1, note: 'no puede ser < último seq usado']
+  default_tax_rate "numeric(6,5)" [not null, default: 0, note: 'tasa con la que nace un producto']
   updated_at timestamp [not null, default: `now()`]
 }
