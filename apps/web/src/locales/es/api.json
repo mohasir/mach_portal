@@ -89,6 +89,15 @@
     "BAD_REQUEST": "Datos inválidos",
     "INTERNAL_SERVER_ERROR": "Error del servidor",
     "FEATURE_NOT_ENABLED": "Este módulo no está habilitado para tu organización",
-    "PRODUCT_NOT_QUOTABLE": "Este producto no se puede cotizar porque no tiene precio fijo ni escalas de precio activas; define un precio en el catálogo"
+    "PRODUCT_NOT_QUOTABLE": "Este producto no se puede cotizar porque no tiene precio fijo ni escalas de precio activas; define un precio en el catálogo",
+    "LOCATION_SETTINGS_INCOMPLETE": "Para activar la ubicación de operación completá el país, la precisión y la cobertura",
+    "LOCATION_SETTINGS_INVALID_COUNTRY": "El país elegido no está disponible",
+    "LOCATION_SETTINGS_INVALID_DEPTH": "La precisión elegida supera los niveles del país",
+    "LOCATION_SETTINGS_AREAS_REQUIRED": "Elegí al menos una zona o cubrí todo el país",
+    "LOCATION_SETTINGS_INVALID_AREA": "Una de las zonas no existe en el país elegido",
+    "LOCATION_SETTINGS_AREA_BEYOND_DEPTH": "Las zonas deben estar dentro de la precisión elegida",
+    "QUOTE_INVALID_LOCATION": "La ubicación no es válida: elegí una opción de la lista",
+    "QUOTE_LOCATION_NOT_COVERED": "La ubicación está fuera de las zonas que cubre la organización",
+    "QUOTE_LOCATION_INCOMPLETE": "Completá los datos de ubicación que pide la organización para guardar la cotización"
   }
 }

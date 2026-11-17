@@ -84,6 +84,19 @@ describe('ROLE_TEMPLATES', () => {
     expect(isCatalogPermission('charge_type', 'delete')).toBe(false);
   });
 
+  it('gives the operating location settings to the roles that manage tax rates', () => {
+    const actionsOf = (key: string) =>
+      template(key)
+        .permissions.filter((p) => p.resource === 'location_settings')
+        .map((p) => p.action)
+        .sort();
+    expect(actionsOf(ROLES.ADMIN)).toEqual(['update', 'view']);
+    expect(actionsOf(ROLES.OPERATOR)).toEqual([]);
+    expect(actionsOf(ROLES.MEMBER)).toEqual([]);
+    expect(isCatalogPermission('location_settings', 'update')).toBe(true);
+    expect(isCatalogPermission('location_settings', 'create')).toBe(false);
+  });
+
   it('keeps the product cost to the roles that administer the catalog', () => {
     const actionsOf = (key: string) =>
       template(key)

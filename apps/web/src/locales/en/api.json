@@ -89,6 +89,15 @@
     "BAD_REQUEST": "Invalid data",
     "INTERNAL_SERVER_ERROR": "Server error",
     "FEATURE_NOT_ENABLED": "This module is not enabled for your organization",
-    "PRODUCT_NOT_QUOTABLE": "This product cannot be quoted because it has no fixed price and no active price tiers; set a price for it in the catalog"
+    "PRODUCT_NOT_QUOTABLE": "This product cannot be quoted because it has no fixed price and no active price tiers; set a price for it in the catalog",
+    "LOCATION_SETTINGS_INCOMPLETE": "To turn on the operating location, fill in the country, the precision and the coverage",
+    "LOCATION_SETTINGS_INVALID_COUNTRY": "The selected country is not available",
+    "LOCATION_SETTINGS_INVALID_DEPTH": "The selected precision exceeds the levels of the country",
+    "LOCATION_SETTINGS_AREAS_REQUIRED": "Pick at least one area or cover the whole country",
+    "LOCATION_SETTINGS_INVALID_AREA": "One of the areas does not exist in the selected country",
+    "LOCATION_SETTINGS_AREA_BEYOND_DEPTH": "The areas must be within the selected precision",
+    "QUOTE_INVALID_LOCATION": "The location is not valid: pick an option from the list",
+    "QUOTE_LOCATION_NOT_COVERED": "The location is outside the areas the organization covers",
+    "QUOTE_LOCATION_INCOMPLETE": "Fill in the location details your organization requires to save the quote"
   }
 }

@@ -71,5 +71,6 @@ export const permissionsMatrix = [
   { resource: RESOURCES.QUOTE_PDF_TEMPLATE, actions: VIEW_UPDATE },
   { resource: RESOURCES.QUOTE_BUILDER_PREFERENCES, actions: VIEW_UPDATE },
   { resource: RESOURCES.PIPELINE_PREFERENCES, actions: VIEW_UPDATE },
+  { resource: RESOURCES.LOCATION_SETTINGS, actions: VIEW_UPDATE },
   { resource: RESOURCES.ROLE, actions: CRUD },
 ] as const satisfies readonly PermissionsMatrixItem[];

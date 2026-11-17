@@ -16,6 +16,7 @@ describe('RESOURCE_MODULE', () => {
     expect(moduleOfResource('payment')).toBe('events');
     expect(moduleOfResource('reschedule_reason')).toBe('events');
     expect(moduleOfResource('charge_type')).toBe('quotes');
+    expect(moduleOfResource('location_settings')).toBe('quotes');
   });
 
   it('leaves unmapped resources without a module', () => {
