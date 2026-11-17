@@ -78,7 +78,8 @@
     "events": "Eventos",
     "notifications": "Notificaciones",
     "priceTiers": "Precios por tramos",
-    "configurableOptions": "Opciones configurables"
+    "configurableOptions": "Opciones configurables",
+    "productGallery": "Galería de imágenes"
   },
   "richText": {
     "toolbar": "Formato del texto",

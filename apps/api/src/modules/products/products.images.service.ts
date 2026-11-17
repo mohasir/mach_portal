@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { TRPCError } from '@trpc/server';
-import { PRODUCT_IMAGES_MAX } from '@repo/schemas';
+import { PRODUCT_IMAGES_MAX_WITHOUT_GALLERY, productImagesLimit } from '@repo/schemas';
 import type { TenantRunner, Tx } from '../../db';
 import type { AfterCommit } from '../../core/trpc/tenantCtx';
 import { runInBackground } from '../../lib/background';
@@ -30,11 +30,18 @@ export class ProductImageUploader {
     private runInTenant: TenantRunner,
     private repositoryFor: (tx: Tx) => ProductImagesRepository,
     private tenantId: string,
+    private galleryEnabled: boolean,
     private storage: StorageProvider = getStorageProvider(),
   ) {}
 
+  // Without the gallery add-on a product holds a single image, which a new upload replaces. More
+  // than one stored (the add-on was switched off afterwards) is never replaced: that would silently
+  // drop images, so the upload is refused until they are removed.
   private async assertRoomFor(repo: ProductImagesRepository, productId: string) {
-    if ((await repo.count(productId)) >= PRODUCT_IMAGES_MAX) {
+    const count = await repo.count(productId);
+    const limit = productImagesLimit(this.galleryEnabled);
+    const replaces = !this.galleryEnabled && count === PRODUCT_IMAGES_MAX_WITHOUT_GALLERY;
+    if (count >= limit && !replaces) {
       throw new AppError(ErrorCodes.productImage.LIMIT_REACHED, undefined, 409);
     }
   }
@@ -74,6 +81,7 @@ export class ProductImageUploader {
       if (failed) throw failed.reason;
       const [image, thumb] = stored;
 
+      const replacedKeys: string[] = [];
       const row = await this.runInTenant(async (tx) => {
         const repo = this.repositoryFor(tx);
         // Another upload may have finished since phase 1: the maximum is checked again under lock.
@@ -81,6 +89,12 @@ export class ProductImageUploader {
           throw new AppError(ErrorCodes.product.NOT_FOUND, undefined, 404);
         }
         await this.assertRoomFor(repo, productId);
+        if (!this.galleryEnabled) {
+          for (const old of await repo.listKeys(productId)) {
+            await repo.delete(productId, old.id);
+            replacedKeys.push(old.imageKey, old.thumbKey);
+          }
+        }
         return repo.insert({
           productId,
           imageKey: image!.key,
@@ -94,6 +108,14 @@ export class ProductImageUploader {
           createdById: uploadedById,
         });
       });
+      // Best effort, once the row swap committed: a failure only leaves an orphan.
+      await Promise.all(
+        replacedKeys.map((key) =>
+          this.storage
+            .delete(key)
+            .catch((cleanupErr) => console.error('storage delete failed', cleanupErr)),
+        ),
+      );
       return productImageResource(row);
     } catch (err) {
       // Best effort: without a row nothing references the objects, so they would only leak space.

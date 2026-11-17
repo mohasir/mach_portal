@@ -57,6 +57,17 @@ export class ProductImagesRepository {
       .then((r) => r[0]?.n ?? 0);
   }
 
+  listKeys(productId: string) {
+    return this.db
+      .select({
+        id: productImages.id,
+        imageKey: productImages.imageKey,
+        thumbKey: productImages.thumbKey,
+      })
+      .from(productImages)
+      .where(this.ofProduct(productId));
+  }
+
   listByProduct(productId: string): Promise<PublicImage[]> {
     return this.db
       .select(publicImageColumns)

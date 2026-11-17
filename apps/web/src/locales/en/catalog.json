@@ -173,6 +173,7 @@
     "empty": "No images",
     "featured": "Featured",
     "add": "Add image",
+    "replace": "Replace image",
     "hint": "JPG, PNG or WebP, up to {{size}} MB",
     "uploaded": "Image uploaded",
     "invalidType": "The file isn't an allowed image. Use a JPG, PNG or WebP",

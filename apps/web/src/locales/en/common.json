@@ -78,7 +78,8 @@
     "events": "Events",
     "notifications": "Notifications",
     "priceTiers": "Price tiers",
-    "configurableOptions": "Configurable options"
+    "configurableOptions": "Configurable options",
+    "productGallery": "Image gallery"
   },
   "richText": {
     "toolbar": "Text formatting",

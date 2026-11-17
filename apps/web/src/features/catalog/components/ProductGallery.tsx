@@ -8,8 +8,9 @@ import { PRODUCT_IMAGE_ALLOWED_MIME_TYPES, PRODUCT_IMAGE_MAX_SIZE_BYTES } from '
 import { useActionConfirm } from '@/components/shared/ConfirmDialogs';
 import { IconButton } from '@/components/shared/IconButton';
 import { WrapperCard } from '@/components/shared/WrapperCard';
+import { useFeature } from '@/lib/auth/useFeature';
 import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
-import { fitsInGallery, galleryState, moveImage } from '../gallery';
+import { featuredImage, fitsInGallery, galleryState, moveImage } from '../gallery';
 import { useProductImageMutations, useUploadProductImage } from '../hooks/useProductImages';
 import type { Product } from '../types';
 
@@ -29,9 +30,12 @@ export function ProductGallery({ product, canEdit }: ProductGalleryProps) {
   const { uploadUrl, onUploaded, onUploadError } = useUploadProductImage();
   const { setFeaturedImage, reorderImages, deleteImage, isPending } = useProductImageMutations();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const galleryEnabled = useFeature('productGallery');
 
-  const { images } = product;
-  const { count, max, canUpload, isEmpty } = galleryState(images);
+  const { count, max, canUpload, replaces, isEmpty } = galleryState(product.images, galleryEnabled);
+  // Without the add-on only the featured image is shown; the others stay stored but hidden.
+  const featured = featuredImage(product.images);
+  const images = galleryEnabled ? product.images : featured ? [featured] : [];
   const ids = images.map((image) => image.id);
   const uploading = fileList.some((file) => file.status === 'uploading');
 
@@ -52,7 +56,7 @@ export function ProductGallery({ product, canEdit }: ProductGalleryProps) {
       message.error(t('gallery.tooLarge', { size: MAX_SIZE_MB }));
       return Upload.LIST_IGNORE;
     }
-    if (!fitsInGallery(count, batch.indexOf(file))) {
+    if (!replaces && !fitsInGallery(count, batch.indexOf(file), max)) {
       message.error(t('gallery.limitReached', { max, ...vocabulary }));
       return Upload.LIST_IGNORE;
     }
@@ -76,9 +80,11 @@ export function ProductGallery({ product, canEdit }: ProductGalleryProps) {
     <WrapperCard
       title={t('gallery.title')}
       extra={
-        <Typography.Text type="secondary" className="text-sm">
-          {t('gallery.counter', { count, max })}
-        </Typography.Text>
+        galleryEnabled && (
+          <Typography.Text type="secondary" className="text-sm">
+            {t('gallery.counter', { count, max })}
+          </Typography.Text>
+        )
       }
     >
       <Spin spinning={isPending}>
@@ -99,7 +105,7 @@ export function ProductGallery({ product, canEdit }: ProductGalleryProps) {
                       rootClassName="block size-full"
                       className="size-full object-cover"
                     />
-                    {image.isFeatured && (
+                    {galleryEnabled && image.isFeatured && (
                       <Tag
                         color="gold"
                         icon={<Star size={12} fill="currentColor" />}
@@ -111,24 +117,26 @@ export function ProductGallery({ product, canEdit }: ProductGalleryProps) {
                   </div>
                   {canEdit && (
                     <div className="flex items-center justify-between">
+                      {galleryEnabled && (
+                        <div className="flex items-center">
+                          <IconButton
+                            icon={ChevronLeft}
+                            size="sm"
+                            disabled={index === 0}
+                            onClick={() => move(image.id, -1)}
+                            aria-label={t('gallery.moveLeft')}
+                          />
+                          <IconButton
+                            icon={ChevronRight}
+                            size="sm"
+                            disabled={index === images.length - 1}
+                            onClick={() => move(image.id, 1)}
+                            aria-label={t('gallery.moveRight')}
+                          />
+                        </div>
+                      )}
                       <div className="flex items-center">
-                        <IconButton
-                          icon={ChevronLeft}
-                          size="sm"
-                          disabled={index === 0}
-                          onClick={() => move(image.id, -1)}
-                          aria-label={t('gallery.moveLeft')}
-                        />
-                        <IconButton
-                          icon={ChevronRight}
-                          size="sm"
-                          disabled={index === images.length - 1}
-                          onClick={() => move(image.id, 1)}
-                          aria-label={t('gallery.moveRight')}
-                        />
-                      </div>
-                      <div className="flex items-center">
-                        {!image.isFeatured && (
+                        {galleryEnabled && !image.isFeatured && (
                           <IconButton
                             icon={Star}
                             size="sm"
@@ -155,7 +163,7 @@ export function ProductGallery({ product, canEdit }: ProductGalleryProps) {
                   name="file"
                   action={uploadUrl(product.id)}
                   withCredentials
-                  multiple
+                  multiple={galleryEnabled}
                   accept={ACCEPT.join(',')}
                   showUploadList={false}
                   fileList={fileList}
@@ -171,7 +179,7 @@ export function ProductGallery({ product, canEdit }: ProductGalleryProps) {
                     className="border-line text-muted hover:text-navy flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed px-2 text-center text-xs"
                   >
                     {uploading ? <Spin size="small" /> : <ImagePlus size={22} />}
-                    <span>{t('gallery.add')}</span>
+                    <span>{replaces ? t('gallery.replace') : t('gallery.add')}</span>
                     <span>{t('gallery.hint', { size: MAX_SIZE_MB })}</span>
                   </button>
                 </Upload>

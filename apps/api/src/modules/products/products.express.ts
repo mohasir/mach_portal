@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { PRODUCT_IMAGE_ALLOWED_MIME_TYPES, PRODUCT_IMAGE_MAX_SIZE_BYTES } from '@repo/schemas';
 import { ACTIONS, RESOURCES } from '@repo/guards';
+import type { FeatureKey } from '@repo/guards';
 import type { Database, TenantRunner } from '../../db';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import { guardTenantSession } from '../../core/express/middleware/guardTenantSession';
@@ -34,11 +35,12 @@ async function uploadProductImage(req: Request, res: Response) {
     res.status(400).json({ errorCode: ErrorCodes.productImage.INVALID_IMAGE });
     return;
   }
-  const image = await productImageUploaderModule(runInTenant, tenantId).add(
-    parsedId.data,
-    req.file,
-    userId,
-  );
+  const features = res.locals['features'] as ReadonlySet<FeatureKey> | undefined;
+  const image = await productImageUploaderModule(
+    runInTenant,
+    tenantId,
+    features?.has('productGallery') ?? false,
+  ).add(parsedId.data, req.file, userId);
   res.status(201).json(image);
 }
 

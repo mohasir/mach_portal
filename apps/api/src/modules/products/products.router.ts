@@ -94,13 +94,17 @@ const pricesRouter = router({
     ),
 });
 
+// Reordering and featuring only mean something with several images; deleting stays open so a
+// product can always be cleaned up.
+const galleryUpdate = update.use(requireFeature('productGallery'));
+
 const imagesRouter = router({
-  setFeatured: update
+  setFeatured: galleryUpdate
     .input(productImageIdSchema)
     .mutation(({ ctx, input }) =>
       productImagesModule(ctx).setFeatured(input.productId, input.imageId),
     ),
-  reorder: update
+  reorder: galleryUpdate
     .input(reorderProductImagesSchema)
     .mutation(({ ctx, input }) => productImagesModule(ctx).reorder(input.productId, input.ids)),
   delete: update

@@ -211,7 +211,7 @@ Spec: `docs/superpowers/specs/2026-11-13-multitenant-fase4a-features-design.md`.
 
 - Crea `tenant_features` (con su política `tenant_features_tenant_read`, solo `SELECT`) y `tenant_feature_events` (RLS sin política); las dos con `ENABLE` y `FORCE ROW LEVEL SECURITY`.
 - Añade la columna `products.price` (centavos por unidad, nullable).
-- **Relleno de las organizaciones existentes:** inserta, para cada `organization`, 5 filas **permanentes** (`expires_at` `NULL`) y sin precio: `quotes`, `events`, `notifications`, `priceTiers` y `configurableOptions`. Así no se quita funcionalidad a nadie. El relleno corre antes del `FORCE`, porque después el propio dueño que migra quedaría sujeto a la política de solo lectura.
+- **Relleno de las organizaciones existentes:** inserta, para cada `organization`, 5 filas **permanentes** (`expires_at` `NULL`) y sin precio: `quotes`, `events`, `notifications`, `priceTiers` y `configurableOptions`. Así no se quita funcionalidad a nadie. El add-on `productGallery` no se rellena: las imágenes de producto son nuevas en esta línea, y se activa por organización con `feature:set` cuando se contrate. El relleno corre antes del `FORCE`, porque después el propio dueño que migra quedaría sujeto a la política de solo lectura.
 
 ### 8.2 Organizaciones nuevas
 

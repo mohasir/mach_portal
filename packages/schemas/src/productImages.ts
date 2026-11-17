@@ -1,6 +1,10 @@
 import { z } from 'zod';
 
 export const PRODUCT_IMAGES_MAX = 5;
+export const PRODUCT_IMAGES_MAX_WITHOUT_GALLERY = 1;
+
+export const productImagesLimit = (galleryEnabled: boolean): number =>
+  galleryEnabled ? PRODUCT_IMAGES_MAX : PRODUCT_IMAGES_MAX_WITHOUT_GALLERY;
 export const PRODUCT_IMAGE_ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 export type ProductImageMimeType = (typeof PRODUCT_IMAGE_ALLOWED_MIME_TYPES)[number];
 export const PRODUCT_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;

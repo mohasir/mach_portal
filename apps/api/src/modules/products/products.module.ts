@@ -25,10 +25,15 @@ export function productImagesModule(ctx: TenantCtx) {
 }
 
 // No request transaction: each phase of the upload opens its own short one through `runInTenant`.
-export function productImageUploaderModule(runInTenant: TenantRunner, tenantId: string) {
+export function productImageUploaderModule(
+  runInTenant: TenantRunner,
+  tenantId: string,
+  galleryEnabled: boolean,
+) {
   return new ProductImageUploader(
     runInTenant,
     (tx) => new ProductImagesRepository(tx, tenantId),
     tenantId,
+    galleryEnabled,
   );
 }

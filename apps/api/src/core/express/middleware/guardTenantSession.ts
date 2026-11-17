@@ -102,6 +102,7 @@ export function guardTenantSession(
           res.status(403).json({ errorCode: ErrorCodes.feature.NOT_ENABLED });
           return;
         }
+        res.locals['features'] = features;
       }
 
       res.locals['tenantId'] = tenant.id;

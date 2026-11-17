@@ -7,6 +7,7 @@ import { withTenantTx } from '../../../db';
 import { productImages, products } from '../../../db/schema';
 import { settleBackgroundTasks } from '../../../lib/background';
 import {
+  ALL_TOGGLEABLE_FEATURES,
   addMember,
   addMemberWithGrants,
   createTestUser,
@@ -37,11 +38,12 @@ beforeAll(async () => {
 
 const file = (name = 'photo.png') => ({ buffer: png, originalname: name });
 
-const uploaderFor = (tenantId: string) =>
+const uploaderFor = (tenantId: string, galleryEnabled = true) =>
   new ProductImageUploader(
     (fn) => withTenantTx(tenantId, fn, testDb),
     (tx) => new ProductImagesRepository(tx, tenantId),
     tenantId,
+    galleryEnabled,
   );
 
 const imagesOf = (productId: string) =>
@@ -433,6 +435,54 @@ describe('product images', () => {
       expect(stored).toEqual({ tenantId: a.id });
       // B's featured image does not count as A's: A's first image is featured too.
       expect(row.isFeatured).toBe(true);
+    });
+  });
+
+  describe('without the productGallery add-on', () => {
+    const single = (tenant: TestTenant, productId: string, name?: string) =>
+      uploaderFor(tenant.id, false).add(productId, file(name), tenant.userId);
+
+    it('replaces the only image and removes the old files', async () => {
+      await single(a, productA, 'one.png');
+      const [old] = await imagesOf(productA);
+      await single(a, productA, 'two.png');
+      const rows = await imagesOf(productA);
+      expect(rows.map((r) => [r.fileName, r.isFeatured])).toEqual([['two.png', true]]);
+      expect(
+        storage.delete.mock.calls.map((call) => (call as unknown as [string])[0]).sort(),
+      ).toEqual([old!.imageKey, old!.thumbKey].sort());
+    });
+
+    it('refuses an upload while several images from before remain', async () => {
+      await upload(a, productA);
+      await upload(a, productA);
+      await expect(single(a, productA)).rejects.toMatchObject({
+        code: 'PRODUCT_IMAGE_LIMIT_REACHED',
+        status: 409,
+      });
+      expect(await imagesOf(productA)).toHaveLength(2);
+    });
+
+    it('blocks featuring and reordering but allows deleting', async () => {
+      await resetDb();
+      ({ a } = await seedTwoTenants({
+        features: ALL_TOGGLEABLE_FEATURES.filter((key) => key !== 'productGallery'),
+      }));
+      const admin = await createTestUser();
+      await addMember(admin.id, a.id, 'admin');
+      productA = await insertProduct(a.id, 'Bar A');
+      await upload(a, productA, 'one.png');
+      await upload(a, productA, 'two.png');
+      const [first, second] = (await imagesOf(productA)).map((r) => r.id);
+      const caller = callerFor(a, admin);
+      await expect(
+        caller.products.images.setFeatured({ productId: productA, imageId: second! }),
+      ).rejects.toMatchObject({ cause: { code: 'FEATURE_NOT_ENABLED' } });
+      await expect(
+        caller.products.images.reorder({ productId: productA, ids: [second!, first!] }),
+      ).rejects.toMatchObject({ cause: { code: 'FEATURE_NOT_ENABLED' } });
+      const images = await caller.products.images.delete({ productId: productA, imageId: first! });
+      expect(images.map((i) => i.id)).toEqual([second]);
     });
   });
 });

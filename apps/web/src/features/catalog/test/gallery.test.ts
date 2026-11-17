@@ -26,28 +26,45 @@ describe('featuredImage', () => {
 
 describe('galleryState', () => {
   it('counts against the maximum and allows uploads while there is room', () => {
-    expect(galleryState([image('a')])).toEqual({
+    expect(galleryState([image('a')], true)).toEqual({
       count: 1,
       max: PRODUCT_IMAGES_MAX,
       canUpload: true,
+      replaces: false,
       isEmpty: false,
     });
   });
 
   it('stops uploads once full', () => {
     const full = Array.from({ length: PRODUCT_IMAGES_MAX }, (_, i) => image(String(i)));
-    expect(galleryState(full)).toMatchObject({ count: PRODUCT_IMAGES_MAX, canUpload: false });
+    expect(galleryState(full, true)).toMatchObject({ count: PRODUCT_IMAGES_MAX, canUpload: false });
   });
 
   it('reports an empty gallery', () => {
-    expect(galleryState([])).toMatchObject({ count: 0, canUpload: true, isEmpty: true });
+    expect(galleryState([], true)).toMatchObject({ count: 0, canUpload: true, isEmpty: true });
+  });
+
+  it('without the add-on allows one image and lets a new upload replace it', () => {
+    expect(galleryState([], false)).toMatchObject({ max: 1, canUpload: true, replaces: false });
+    expect(galleryState([image('a')], false)).toMatchObject({ canUpload: true, replaces: true });
+  });
+
+  it('without the add-on refuses uploads while several images remain from before', () => {
+    expect(galleryState([image('a'), image('b')], false)).toMatchObject({
+      canUpload: false,
+      replaces: false,
+    });
   });
 });
 
 describe('fitsInGallery', () => {
   it('accepts the files of one selection only while they fit', () => {
-    expect([0, 1, 2].map((index) => fitsInGallery(3, index))).toEqual([true, true, false]);
-    expect(fitsInGallery(PRODUCT_IMAGES_MAX, 0)).toBe(false);
+    expect([0, 1, 2].map((index) => fitsInGallery(3, index, PRODUCT_IMAGES_MAX))).toEqual([
+      true,
+      true,
+      false,
+    ]);
+    expect(fitsInGallery(PRODUCT_IMAGES_MAX, 0, PRODUCT_IMAGES_MAX)).toBe(false);
   });
 });
 
