@@ -1,5 +1,7 @@
 # Mach Bar — Modelo de datos y flujos (refinado)
 
+> Nota: el enum `state` (NY/NJ/CT) descrito acá fue reemplazado por la ubicación de operación (migración 0016, `docs/backend/architecture.md` §14.8).
+
 > Refinamiento del `mach-bar-specs.md` original, enfocado en **modelo de datos** y **flujos de front**.
 > La **arquitectura** (cómo se construye) NO se repite acá: manda `docs/backend/architecture.md`
 > y `docs/frontend/architecture.md`. Este doc describe **qué** se construye (el dominio).
