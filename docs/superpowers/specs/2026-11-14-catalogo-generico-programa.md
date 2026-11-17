@@ -1,6 +1,8 @@
 # Catálogo genérico (productos o servicios): programa y decisiones
 
-Estado: **programa de tres fases**. Este documento recoge las decisiones comunes y el reparto; cada fase tiene su propio spec (`docs/superpowers/specs/YYYY-MM-DD-<fase>-design.md`), su plan y **su propia rama, creada desde `multitenant` cuando la fase anterior ya está integrada** (así no hay ramas apiladas).
+Estado (2026-11-17): **las tres fases están terminadas e integradas en `multitenant`** (merges `--no-ff`, el último `592fe49`). Lo que sigue del multi-tenant es la fase 4b; ver `docs/superpowers/handoffs/2026-11-17-multitenant-fase-4b.md`.
+
+Programa original: **programa de tres fases**. Este documento recoge las decisiones comunes y el reparto; cada fase tiene su propio spec (`docs/superpowers/specs/YYYY-MM-DD-<fase>-design.md`), su plan y **su propia rama, creada desde `multitenant` cuando la fase anterior ya está integrada** (así no hay ramas apiladas).
 
 | Fase | Rama | Contenido |
 |---|---|---|

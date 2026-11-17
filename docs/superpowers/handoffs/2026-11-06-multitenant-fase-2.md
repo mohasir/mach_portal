@@ -80,3 +80,5 @@ y `final-review.md`.
    `docs/backend/architecture.md` §11, `docs/frontend/architecture.md` §9.3 y este archivo.
 3. Plantearla con un brainstorming y su propio spec en
    `docs/superpowers/specs/YYYY-MM-DD-<tema>-design.md`.
+
+> Actualización 2026-11-17: las fases 1b, 2 y 4a ya están hechas y el catálogo genérico también. Lo pendiente (4b y branding) está en `2026-11-17-multitenant-fase-4b.md`.
