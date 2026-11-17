@@ -124,6 +124,7 @@ export async function seedEventsTenant(tenant: TestTenant, label: string): Promi
       tenantId: t,
       quoteId: quote!.id,
       productId: product!.id,
+      uomId: await testUnitId(t),
       quantity: 10,
       subtotal: 1000,
     })

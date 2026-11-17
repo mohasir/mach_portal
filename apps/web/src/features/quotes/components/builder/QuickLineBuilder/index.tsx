@@ -5,7 +5,7 @@ import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabula
 import type { Product } from '@/features/catalog';
 import { nextLineKey } from '../../../helpers';
 import { useLineConfig } from '../../../hooks/useLineConfig';
-import { buildNewLine } from '../../../lineHelpers';
+import { buildNewLine, lineUnit, withCurrentUnitOnRepricing } from '../../../lineHelpers';
 import { useQuoteBuilder } from '../../../hooks/useQuoteBuilder';
 import { ProductPicker } from '../LineBuilder/ProductPicker';
 import { QuickLineCard } from './QuickLineCard';
@@ -42,7 +42,12 @@ export function QuickLineBuilder({ catalog, readOnly, canEditPricing }: QuickLin
             const product = catalog.find((p) => p.id === line.productId);
             if (!product) return null;
             return readOnly ? (
-              <QuickLineCard key={line.key} mode="readOnly" line={line} product={product} />
+              <QuickLineCard
+                key={line.key}
+                mode="readOnly"
+                line={{ ...line, unit: lineUnit(line, product) }}
+                product={product}
+              />
             ) : (
               <QuickLineCard
                 key={line.key}
@@ -51,7 +56,9 @@ export function QuickLineBuilder({ catalog, readOnly, canEditPricing }: QuickLin
                 product={product}
                 canEditPricing={canEditPricing}
                 onRemove={() => removeLine(line.key)}
-                onChange={(payload) => updateLine(line.key, payload)}
+                onChange={(payload) =>
+                  updateLine(line.key, withCurrentUnitOnRepricing(line, product, payload))
+                }
               />
             );
           })}

@@ -1,7 +1,14 @@
 import { and, eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { unitsOfMeasureListQuerySchema, type CreateUnitInput } from '@repo/schemas';
-import { products, unitsOfMeasure } from '../../../db/schema';
+import {
+  clients,
+  products,
+  quoteLines,
+  quoteStages,
+  quotes,
+  unitsOfMeasure,
+} from '../../../db/schema';
 import { createTestTenant, resetDb, testDb, testUnitId } from '../../../test/db';
 import { UnitsOfMeasureRepository } from '../unitsOfMeasure.repository';
 import { UnitsOfMeasureService } from '../unitsOfMeasure.service';
@@ -22,6 +29,32 @@ async function insertProduct(tenantId: string, uomId: string, isActive = true) {
     .values({ tenantId, name: `P ${Math.random()}`, uomId, isActive })
     .returning({ id: products.id });
   return row!.id;
+}
+
+// A unit that only a quote line references: the product it came from moved on to another unit.
+async function insertLineOnlyUnit(tenantId: string, lineUnitId: string) {
+  const productUnit = await testUnitId(tenantId, 'kg');
+  const productId = await insertProduct(tenantId, productUnit, true);
+  await testDb
+    .insert(quoteStages)
+    .values({ id: 1, label: 'stage 1', color: '#000000', sortOrder: 1 })
+    .onConflictDoNothing();
+  const [client] = await testDb
+    .insert(clients)
+    .values({ tenantId, name: 'Client' })
+    .returning({ id: clients.id });
+  const [quote] = await testDb
+    .insert(quotes)
+    .values({ tenantId, seq: 1, number: 'Q-1', clientId: client!.id, taxRate: 0 })
+    .returning({ id: quotes.id });
+  await testDb.insert(quoteLines).values({
+    tenantId,
+    quoteId: quote!.id,
+    productId,
+    uomId: lineUnitId,
+    quantity: 1,
+    subtotal: 100,
+  });
 }
 
 const rejects = (promise: Promise<unknown>, code: string, errorCode: string) =>
@@ -200,6 +233,14 @@ describe('UnitsOfMeasureService', () => {
       ).resolves.toMatchObject({ name: 'Charola', code: 'chr', factor: '6' });
     });
 
+    it('locks the dimension and factor of an own unit that only a quote line uses', async () => {
+      const { id } = await service.create(bundle);
+      await insertLineOnlyUnit(tenantId, id);
+      await rejects(service.update(id, { ...bundle, factor: '12' }), 'CONFLICT', 'UNIT_IN_USE');
+      const listed = (await service.list(listAll)).items.find((u) => u.id === id);
+      expect(listed?.isUsed).toBe(true);
+    });
+
     it('rejects a code taken by another unit, but keeps its own', async () => {
       const { id } = await service.create(bundle);
       await rejects(service.update(id, { ...bundle, code: 'Doc' }), 'CONFLICT', 'UNIT_CODE_TAKEN');
@@ -239,6 +280,12 @@ describe('UnitsOfMeasureService', () => {
       const id = await testUnitId(tenantId, 'serv');
       await insertProduct(tenantId, id, false);
       expect((await service.disable(id)).isActive).toBe(false);
+    });
+
+    it('refuses to deactivate a unit that only a quote line uses', async () => {
+      const id = await testUnitId(tenantId, 'pers');
+      await insertLineOnlyUnit(tenantId, id);
+      await rejects(service.disable(id), 'CONFLICT', 'UNIT_IN_USE');
     });
 
     it('answers NOT_FOUND for an unknown unit', async () => {

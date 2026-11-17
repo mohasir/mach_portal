@@ -110,7 +110,7 @@ export type PublicOptionGroup = Pick<
 >;
 export type PublicOption = Pick<typeof options.$inferSelect, keyof typeof publicOptionColumns>;
 
-const unitRefResource = (unit: UnitRef) => ({
+export const unitRefResource = (unit: UnitRef) => ({
   id: unit.id,
   name: unit.name,
   pluralName: unit.pluralName,
@@ -227,7 +227,6 @@ export type OptionGroupWithOptions = OptionGroupResource & { options: OptionReso
 export type CatalogUsage = {
   optionIds: Set<string>;
   groupIds: Set<string>;
-  productIds: Set<string>;
 };
 export type ProductWithGroups = ProductResource & {
   priceTiers: TierResource[];
@@ -306,8 +305,6 @@ export const buildPricesList = (
   );
 
 export type CatalogProduct = Omit<ProductWithGroups, 'optionGroups'> & {
-  // A quote line already reads its quantity in this product's unit, so the unit cannot change.
-  unitLocked: boolean;
   optionGroups: (Omit<OptionGroupWithOptions, 'options'> & {
     isUsed: boolean;
     options: (OptionResource & { isUsed: boolean })[];
@@ -320,7 +317,6 @@ export const withCatalogUsage = (
 ): CatalogProduct[] =>
   tree.map((product) => ({
     ...product,
-    unitLocked: usage.productIds.has(product.id),
     optionGroups: product.optionGroups.map((group) => ({
       ...group,
       isUsed: usage.groupIds.has(group.id),

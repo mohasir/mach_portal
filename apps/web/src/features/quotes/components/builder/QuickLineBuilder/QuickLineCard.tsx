@@ -8,19 +8,20 @@ import { BottomSheet } from '@/components/shared/BottomSheet';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { IconButton } from '@/components/shared/IconButton';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
-import { formatQuantity } from '@/lib/format/quantity';
+import { formatQuantity, type QuantityUnit } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { useLineConfig } from '../../../hooks/useLineConfig';
 import {
   isQuantityLocked,
   lineMinQuantity,
+  lineUnit,
   lineSubtotalForQuantity,
   selectableTiers,
   usesTierPicker,
 } from '../../../lineHelpers';
 
 interface QuickLineCardBaseProps {
-  line: { quantity: number; subtotal: number };
+  line: { quantity: number; subtotal: number; unit?: QuantityUnit | null };
   product: Product;
 }
 
@@ -38,7 +39,7 @@ type QuickLineCardProps = QuickLineCardBaseProps &
         onShow: () => void;
         line: { selections: { optionGroupId: string; optionIds: string[] }[] };
       }
-    | { mode: 'readOnly' }
+    | { mode: 'readOnly'; line: { unit: QuantityUnit } }
   );
 
 export function QuickLineCard(props: QuickLineCardProps) {
@@ -47,6 +48,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
   const { money } = useMoneyFormatter();
   const [editOpen, setEditOpen] = useState(false);
   const { priceTiersEnabled } = useLineConfig();
+  const unit = lineUnit(line, product);
   const minQuantity = lineMinQuantity(product, mode === 'edit' && props.canEditPricing);
   const tierPicker = usesTierPicker(product, priceTiersEnabled);
   const quantityLocked = isQuantityLocked(product, priceTiersEnabled);
@@ -165,13 +167,11 @@ export function QuickLineCard(props: QuickLineCardProps) {
               precision={0}
               value={line.quantity}
               onChange={handleQuantityChange}
-              suffix={product.unit.code}
+              suffix={unit.code}
               aria-label={t('builder.lines.quantity')}
             />
           ) : (
-            <span className="text-base text-gray-500">
-              {formatQuantity(line.quantity, product.unit)}
-            </span>
+            <span className="text-base text-gray-500">{formatQuantity(line.quantity, unit)}</span>
           )}
           <div className="flex items-center gap-2">
             {mode === 'edit' && props.canEditPricing && (

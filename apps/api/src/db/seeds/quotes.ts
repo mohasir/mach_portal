@@ -618,7 +618,7 @@ async function loadContext(
       .from(eventTypes)
       .where(eq(eventTypes.tenantId, tenantId)),
     db
-      .select({ id: products.id, name: products.name })
+      .select({ id: products.id, name: products.name, uomId: products.uomId })
       .from(products)
       .where(eq(products.tenantId, tenantId)),
     db
@@ -710,7 +710,13 @@ function resolveLine(line: SeedLine, ctx: Context) {
     return { optionGroupId: group.id, optionIds };
   });
 
-  return { productId: product.id, quantity: line.quantity, subtotal: tier.price, selections };
+  return {
+    productId: product.id,
+    uomId: product.uomId,
+    quantity: line.quantity,
+    subtotal: tier.price,
+    selections,
+  };
 }
 
 export async function seedQuotes(
@@ -841,6 +847,7 @@ export async function seedQuotes(
         id: randomUUID(),
         quoteId: quote!.id,
         productId: line.productId,
+        uomId: line.uomId,
         quantity: line.quantity,
         subtotal: line.subtotal,
         sortOrder: i,

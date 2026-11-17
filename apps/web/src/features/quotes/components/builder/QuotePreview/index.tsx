@@ -9,6 +9,7 @@ import { AddressLines } from '@/components/shared/AddressLines';
 import { formatQuantity } from '@/lib/format/quantity';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
 import { useQuoteBuilder } from '../../../hooks/useQuoteBuilder';
+import { lineUnit } from '../../../lineHelpers';
 import { QuoteLineItem } from '../../QuoteLineItem';
 import { QuoteSummary } from '../../QuoteSummary';
 import { WrapperCard } from '@/components/shared/WrapperCard';
@@ -94,7 +95,7 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
                   key={line.key}
                   media={<ProductThumb product={product} size="xs" />}
                   name={product.name}
-                  quantity={formatQuantity(line.quantity, product.unit)}
+                  quantity={formatQuantity(line.quantity, lineUnit(line, product))}
                   total={line.subtotal}
                   groups={groups}
                   onRemove={readOnly ? undefined : () => removeLine(line.key)}

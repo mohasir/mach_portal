@@ -102,6 +102,7 @@ const PARENT_LINKS: [string, string, string][] = [
   ['quotes', 'event_type_id', 'event_types'],
   ['quote_lines', 'quote_id', 'quotes'],
   ['quote_lines', 'product_id', 'products'],
+  ['quote_lines', 'uom_id', 'units_of_measure'],
   ['quote_line_options', 'quote_line_id', 'quote_lines'],
   ['quote_line_options', 'option_id', 'options'],
   ['quote_line_options', 'option_group_id', 'option_groups'],

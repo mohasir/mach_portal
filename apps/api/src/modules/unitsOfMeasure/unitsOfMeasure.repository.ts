@@ -1,7 +1,7 @@
 import { and, asc, count, desc, eq, ilike, ne, or, sql, type SQL } from 'drizzle-orm';
 import type { CreateUnitInput, UnitsOfMeasureListQuery, UpdateUnitInput } from '@repo/schemas';
 import type { Executor } from '../../db';
-import { products, unitsOfMeasure } from '../../db/schema';
+import { products, quoteLines, unitsOfMeasure } from '../../db/schema';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
 import { containsPattern } from '../../lib/utils/search';
@@ -21,8 +21,8 @@ export class UnitsOfMeasureRepository {
     private tenantId: string,
   ) {}
 
-  private usedBy(activeOnly: boolean) {
-    // Built with eq()/and() so the columns stay table-qualified inside the correlated subquery.
+  // Built with eq()/and() so the columns stay table-qualified inside the correlated subquery.
+  private usedByProduct(activeOnly: boolean) {
     const match = and(
       eq(products.uomId, unitsOfMeasure.id),
       tenantEq(products, this.tenantId),
@@ -31,8 +31,16 @@ export class UnitsOfMeasureRepository {
     return sql<boolean>`exists (select 1 from ${products} where ${match})`;
   }
 
+  private usedByQuoteLine() {
+    const match = and(eq(quoteLines.uomId, unitsOfMeasure.id), tenantEq(quoteLines, this.tenantId));
+    return sql<boolean>`exists (select 1 from ${quoteLines} where ${match})`;
+  }
+
   private get columns() {
-    return { ...publicUnitColumns, isUsed: this.usedBy(false) };
+    return {
+      ...publicUnitColumns,
+      isUsed: sql<boolean>`(${this.usedByProduct(false)} or ${this.usedByQuoteLine()})`,
+    };
   }
 
   async findPaginated(query: UnitsOfMeasureListQuery) {
@@ -103,15 +111,17 @@ export class UnitsOfMeasureRepository {
       .then((r) => r[0]);
   }
 
-  isUsed(id: string) {
-    return this.isReferenced(id, false);
+  async isUsed(id: string) {
+    return (await this.isReferencedByProduct(id, false)) || (await this.isUsedByQuoteLine(id));
   }
 
-  isUsedByActiveProduct(id: string) {
-    return this.isReferenced(id, true);
+  // Deactivating is blocked by an active product or by any quote line: a line keeps its unit
+  // for good, even after the product that spawned it changed unit.
+  async blocksDeactivation(id: string) {
+    return (await this.isReferencedByProduct(id, true)) || (await this.isUsedByQuoteLine(id));
   }
 
-  private isReferenced(id: string, activeOnly: boolean) {
+  private isReferencedByProduct(id: string, activeOnly: boolean) {
     return this.db
       .select({ id: products.id })
       .from(products)
@@ -122,6 +132,15 @@ export class UnitsOfMeasureRepository {
           activeOnly ? eq(products.isActive, true) : undefined,
         ),
       )
+      .limit(1)
+      .then((r) => r.length > 0);
+  }
+
+  private isUsedByQuoteLine(id: string) {
+    return this.db
+      .select({ id: quoteLines.id })
+      .from(quoteLines)
+      .where(and(eq(quoteLines.uomId, id), tenantEq(quoteLines, this.tenantId)))
       .limit(1)
       .then((r) => r.length > 0);
   }

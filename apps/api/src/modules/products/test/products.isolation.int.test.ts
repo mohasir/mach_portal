@@ -71,7 +71,14 @@ async function useInQuote(
     .returning({ id: quotes.id });
   const [line] = await testDb
     .insert(quoteLines)
-    .values({ tenantId: tenant.id, quoteId: quote!.id, productId, quantity: 10, subtotal: 1000 })
+    .values({
+      tenantId: tenant.id,
+      quoteId: quote!.id,
+      productId,
+      uomId: await testUnitId(tenant.id),
+      quantity: 10,
+      subtotal: 1000,
+    })
     .returning({ id: quoteLines.id });
   await testDb
     .insert(quoteLineOptions)

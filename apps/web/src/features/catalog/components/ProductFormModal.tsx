@@ -11,7 +11,7 @@ import { ProductForm } from './ProductForm';
 import type { Product } from '../types';
 
 interface ProductFormModalProps {
-  product: (Product & { unitLocked?: boolean }) | null;
+  product: Product | null;
   open: boolean;
   onClose: () => void;
 }
@@ -73,7 +73,6 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
                 : undefined
             }
             currentUnit={product?.unit}
-            unitLocked={product?.unitLocked}
             currentCategory={product?.category}
             tiers={product?.priceTiers.map((tier) => ({
               quantity: tier.quantity,

@@ -16,7 +16,7 @@ import {
 } from '../../../db/schema';
 import { settleBackgroundTasks } from '../../../lib/background';
 import type { StorageProvider } from '../../../lib/storage';
-import { resetDb, seedTwoTenants, testDb, type TestTenant } from '../../../test/db';
+import { resetDb, seedTwoTenants, testDb, testUnitId, type TestTenant } from '../../../test/db';
 import { ConfigRepository } from '../../config/config.repository';
 import { NotificationsRepository } from '../../notifications/notifications.repository';
 import { QuotesRepository } from '../../quotes/quotes.repository';
@@ -371,6 +371,7 @@ describe('events tenant isolation', () => {
         tenantId: a.id,
         quoteId: sa.freeQuoteId,
         productId: sa.productId,
+        uomId: await testUnitId(a.id),
         quantity: 1,
         subtotal: 1,
       });
@@ -436,6 +437,7 @@ describe('events tenant isolation', () => {
         tenantId: a.id,
         quoteId: sb.freeQuoteId,
         productId: sa.productId,
+        uomId: await testUnitId(a.id),
         quantity: 1,
         subtotal: 1,
       });
@@ -771,6 +773,7 @@ describe('events tenant isolation', () => {
         tenantId: b.id,
         quoteId: sa.quoteId,
         productId: sb.productId,
+        uomId: await testUnitId(b.id),
         quantity: 1,
         subtotal: 1,
       });
@@ -790,6 +793,7 @@ describe('events tenant isolation', () => {
         tenantId: b.id,
         quoteId: sa.quote2Id,
         productId: sa.productId,
+        uomId: await testUnitId(b.id),
         quantity: 1,
         subtotal: 1,
       });

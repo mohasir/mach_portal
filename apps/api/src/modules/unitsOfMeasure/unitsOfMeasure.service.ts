@@ -74,7 +74,7 @@ export class UnitsOfMeasureService {
 
   async disable(id: string) {
     if (!(await this.repo.findById(id))) throw notFound();
-    if (await this.repo.isUsedByActiveProduct(id)) throw inUse();
+    if (await this.repo.blocksDeactivation(id)) throw inUse();
     return this.setActive(id, false);
   }
 

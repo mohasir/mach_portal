@@ -45,7 +45,7 @@
     "factor": "Equals",
     "factorCaption": "How many base units ({{base}}) make one of this unit.",
     "systemLocked": "This is a system unit: only its name can change.",
-    "usedLocked": "Products use this unit: its type and equivalence cannot change.",
+    "usedLocked": "Products or quotes use this unit: its type and equivalence cannot change.",
     "save": "Save"
   },
   "create": {

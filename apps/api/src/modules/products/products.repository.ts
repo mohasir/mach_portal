@@ -16,7 +16,6 @@ import {
   productPriceTiers,
   products,
   quoteLineOptions,
-  quoteLines,
   unitsOfMeasure,
 } from '../../db/schema';
 import { ProductImagesRepository } from './products.images.repository';
@@ -160,10 +159,6 @@ export class ProductsRepository {
 
   // Catalog rows that a quote line already references; they can only be deactivated.
   async findUsage() {
-    const lineRows = await this.db
-      .selectDistinct({ productId: quoteLines.productId })
-      .from(quoteLines)
-      .where(tenantEq(quoteLines, this.tenantId));
     const rows = await this.db
       .selectDistinct({
         optionId: quoteLineOptions.optionId,
@@ -175,17 +170,7 @@ export class ProductsRepository {
     return {
       optionIds: new Set(rows.map((r) => r.optionId)),
       groupIds: new Set(rows.map((r) => r.optionGroupId)),
-      productIds: new Set(lineRows.map((r) => r.productId)),
     };
-  }
-
-  async isProductQuoted(productId: string) {
-    const [row] = await this.db
-      .select({ id: quoteLines.id })
-      .from(quoteLines)
-      .where(and(eq(quoteLines.productId, productId), tenantEq(quoteLines, this.tenantId)))
-      .limit(1);
-    return !!row;
   }
 
   async findPricesTree(withCost = false) {

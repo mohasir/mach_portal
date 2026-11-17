@@ -1,4 +1,5 @@
 import { quotes, quoteLines, quoteLineOptions } from '../../db/schema';
+import { unitRefColumns, unitRefResource, type UnitRef } from '../products/products.resource';
 
 export const publicQuoteColumns = {
   id: quotes.id,
@@ -44,9 +45,16 @@ export const publicQuoteLineColumns = {
   id: quoteLines.id,
   quoteId: quoteLines.quoteId,
   productId: quoteLines.productId,
+  uomId: quoteLines.uomId,
   quantity: quoteLines.quantity,
   subtotal: quoteLines.subtotal,
   sortOrder: quoteLines.sortOrder,
+} as const;
+
+// A line reads its unit from its own `uomId`, never from the product it points at.
+export const quoteLineWithUnitColumns = {
+  ...publicQuoteLineColumns,
+  unit: unitRefColumns,
 } as const;
 
 export const publicQuoteLineOptionColumns = {
@@ -60,7 +68,7 @@ export type PublicQuote = Pick<typeof quotes.$inferSelect, keyof typeof publicQu
 export type PublicQuoteLine = Pick<
   typeof quoteLines.$inferSelect,
   keyof typeof publicQuoteLineColumns
->;
+> & { unit: UnitRef };
 export type PublicQuoteLineOption = Pick<
   typeof quoteLineOptions.$inferSelect,
   keyof typeof publicQuoteLineOptionColumns
@@ -167,6 +175,8 @@ export type QuoteLineSelection = { optionGroupId: string; optionIds: string[] };
 export type QuoteLineDetail = {
   id: string;
   productId: string;
+  uomId: string;
+  unit: ReturnType<typeof unitRefResource>;
   quantity: number;
   subtotal: number;
   sortOrder: number;
@@ -205,6 +215,8 @@ export const buildQuoteLineDetails = (
       return {
         id: line.id,
         productId: line.productId,
+        uomId: line.uomId,
+        unit: unitRefResource(line.unit),
         quantity: line.quantity,
         subtotal: line.subtotal,
         sortOrder: line.sortOrder,

@@ -1,3 +1,5 @@
+import type { QuantityUnit } from '@/lib/format/quantity';
+
 interface QuotableProduct {
   quotable: boolean;
   /** Cents per unit. */
@@ -50,4 +52,26 @@ export function getPickerState(product: Pick<QuotableProduct, 'quotable'>) {
   return product.quotable
     ? { selectable: true as const }
     : { selectable: false as const, reasonKey: 'builder.lines.notQuotable' as const };
+}
+
+/** A saved line keeps the unit it was quoted in; a new one shows the product's current unit. */
+export const lineUnit = (
+  line: { unit?: QuantityUnit | null },
+  product: { unit: QuantityUnit },
+): QuantityUnit => line.unit ?? product.unit;
+
+/**
+ * Pricing and tiers are per product unit, so repricing a line stored in another unit would mix
+ * units. Changing the quantity makes the line adopt the product's current unit (the server reads
+ * a missing `uomId` as that); a price-only edit keeps the frozen unit.
+ */
+export function withCurrentUnitOnRepricing<T extends object>(
+  line: { uomId?: string },
+  product: { uomId: string },
+  payload: T,
+): T & { uomId?: undefined; unit?: undefined } {
+  if (!('quantity' in payload) || !line.uomId || line.uomId === product.uomId) {
+    return payload;
+  }
+  return { ...payload, uomId: undefined, unit: undefined };
 }

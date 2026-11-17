@@ -31,10 +31,10 @@ export function validateLineSelections(
   return true;
 }
 
-type LineShape = { productId: string; quantity: number; subtotal: number };
+type LineShape = { productId: string; quantity: number; subtotal: number; uomId?: string };
 
-// Order-insensitive identity of a line: its values plus the set of chosen options. Groups with
-// no chosen option are dropped because a stored line cannot represent them.
+// Order-insensitive identity of a line: its values, its unit and the set of chosen options.
+// Groups with no chosen option are dropped because a stored line cannot represent them.
 function lineKey(
   line: LineShape,
   selections: ReadonlyArray<{ optionGroupId: string; optionIds: readonly string[] }>,
@@ -42,14 +42,16 @@ function lineKey(
   const picked = selections
     .flatMap((s) => s.optionIds.map((optionId) => `${s.optionGroupId}:${optionId}`))
     .sort();
-  return JSON.stringify([line.productId, line.quantity, line.subtotal, picked]);
+  return JSON.stringify([line.productId, line.uomId, line.quantity, line.subtotal, picked]);
 }
 
 // Submitted lines that do not match a stored line of the quote. Matching is a multiset: each
-// stored line excuses at most one submitted line.
+// stored line excuses at most one submitted line. A submitted line without a unit is read in the
+// product's current one, so a line that would silently switch unit counts as changed.
 export function changedLines(
   submitted: readonly QuoteLineInput[],
   stored: ReadonlyArray<LineShape & { selections: QuoteLineInput['selections'] }>,
+  currentUnits: ReadonlyMap<string, string>,
 ): QuoteLineInput[] {
   const available = new Map<string, number>();
   for (const line of stored) {
@@ -57,7 +59,10 @@ export function changedLines(
     available.set(key, (available.get(key) ?? 0) + 1);
   }
   return submitted.filter((line) => {
-    const key = lineKey(line, line.selections);
+    const key = lineKey(
+      { ...line, uomId: line.uomId ?? currentUnits.get(line.productId) },
+      line.selections,
+    );
     const left = available.get(key) ?? 0;
     if (left === 0) return true;
     available.set(key, left - 1);

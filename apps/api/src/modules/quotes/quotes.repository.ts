@@ -42,6 +42,7 @@ import {
   eventPayments,
   products,
   productPriceTiers,
+  unitsOfMeasure,
   optionGroups,
   options,
   user,
@@ -53,13 +54,29 @@ import { todayInBusinessTimezone } from '../../lib/utils/date';
 import { containsPattern } from '../../lib/utils/search';
 import {
   publicQuoteColumns,
-  publicQuoteLineColumns,
   publicQuoteLineOptionColumns,
+  quoteLineWithUnitColumns,
   type PublicQuote,
 } from './quotes.resource';
 
 // A referenced id from the input that does not resolve inside the tenant.
 export type MissingRef = { missingRef: 'client' | 'eventType' | 'user' };
+
+// A submitted line whose product or unit cannot be resolved inside the tenant.
+export type InvalidLine = { invalidLine: 'product' | 'unit' };
+
+// Inner join: the unit is matched inside the tenant in its own ON clause, so a line pointing at
+// another tenant's unit is dropped instead of leaking it.
+export function selectLinesWithUnit(db: Executor, tenantId: string, quoteId: string) {
+  return db
+    .select(quoteLineWithUnitColumns)
+    .from(quoteLines)
+    .innerJoin(
+      unitsOfMeasure,
+      and(eq(quoteLines.uomId, unitsOfMeasure.id), tenantEq(unitsOfMeasure, tenantId)),
+    )
+    .where(and(eq(quoteLines.quoteId, quoteId), tenantEq(quoteLines, tenantId)));
+}
 
 type QuoteInsert = Omit<typeof quotes.$inferInsert, 'tenantId' | 'clientId' | 'seq' | 'number'> & {
   clientId?: string;
@@ -220,10 +237,7 @@ export class QuotesRepository {
   }
 
   async findLinesWithOptions(quoteId: string) {
-    const lineRows = await this.db
-      .select(publicQuoteLineColumns)
-      .from(quoteLines)
-      .where(and(eq(quoteLines.quoteId, quoteId), tenantEq(quoteLines, this.tenantId)));
+    const lineRows = await selectLinesWithUnit(this.db, this.tenantId, quoteId);
 
     const lineIds = lineRows.map((l) => l.id);
     const optionRows = lineIds.length
@@ -540,6 +554,16 @@ export class QuotesRepository {
       .where(and(eq(quoteLines.quoteId, quoteId), tenantEq(quoteLines, this.tenantId)));
   }
 
+  async findProductUnits(productIds: string[]): Promise<Map<string, string>> {
+    const uniqueIds = [...new Set(productIds)];
+    if (uniqueIds.length === 0) return new Map();
+    const rows = await this.db
+      .select({ id: products.id, uomId: products.uomId })
+      .from(products)
+      .where(and(inArray(products.id, uniqueIds), tenantEq(products, this.tenantId)));
+    return new Map(rows.map((r) => [r.id, r.uomId]));
+  }
+
   async loadCatalogContext(productIds: string[]) {
     const uniqueIds = [...new Set(productIds)];
     if (uniqueIds.length === 0) return { products: [], tiers: [], groups: [], options: [] };
@@ -596,11 +620,51 @@ export class QuotesRepository {
     return { products: productRows, tiers: tierRows, groups: groupRows, options: optionRows };
   }
 
-  private buildLineRows(quoteId: string, lines: QuoteLineInput[]) {
+  // A line keeps the unit it was quoted in. replaceLines deletes and reinserts every line, so a
+  // submitted unit that differs from the product's current one is honored only when the quote
+  // already holds a line of that product in it; anything else would let a client pick any unit.
+  private async resolveLineUnits(
+    tx: Tx,
+    quoteId: string | undefined,
+    lines: QuoteLineInput[],
+  ): Promise<string[] | InvalidLine> {
+    if (lines.length === 0) return [];
+    const productIds = [...new Set(lines.map((l) => l.productId))];
+    const productRows = await tx
+      .select({ id: products.id, uomId: products.uomId })
+      .from(products)
+      .where(and(inArray(products.id, productIds), tenantEq(products, this.tenantId)));
+    const currentUnit = new Map(productRows.map((p) => [p.id, p.uomId]));
+
+    const needsStored = lines.some((l) => l.uomId && l.uomId !== currentUnit.get(l.productId));
+    const stored =
+      needsStored && quoteId
+        ? await tx
+            .select({ productId: quoteLines.productId, uomId: quoteLines.uomId })
+            .from(quoteLines)
+            .where(and(eq(quoteLines.quoteId, quoteId), tenantEq(quoteLines, this.tenantId)))
+        : [];
+    const storedPairs = new Set(stored.map((l) => `${l.productId}:${l.uomId}`));
+
+    const unitIds: string[] = [];
+    for (const line of lines) {
+      const current = currentUnit.get(line.productId);
+      if (!current) return { invalidLine: 'product' };
+      const uomId = line.uomId ?? current;
+      if (uomId !== current && !storedPairs.has(`${line.productId}:${uomId}`)) {
+        return { invalidLine: 'unit' };
+      }
+      unitIds.push(uomId);
+    }
+    return unitIds;
+  }
+
+  private buildLineRows(quoteId: string, lines: QuoteLineInput[], unitIds: string[]) {
     return lines.map((line, index) => ({
       id: randomUUID(),
       quoteId,
       productId: line.productId,
+      uomId: unitIds[index]!,
       quantity: line.quantity,
       subtotal: line.subtotal,
       sortOrder: index,
@@ -621,8 +685,8 @@ export class QuotesRepository {
     );
   }
 
-  private async insertLines(tx: Tx, quoteId: string, lines: QuoteLineInput[]) {
-    const lineRows = this.buildLineRows(quoteId, lines);
+  private async insertLines(tx: Tx, quoteId: string, lines: QuoteLineInput[], unitIds: string[]) {
+    const lineRows = this.buildLineRows(quoteId, lines, unitIds);
     if (lineRows.length === 0) return;
     await tx.insert(quoteLines).values(lineRows);
     const optionRows = this.buildOptionRows(lineRows, lines);
@@ -676,10 +740,12 @@ export class QuotesRepository {
     buildNumber: (seq: number) => string,
     lines: QuoteLineInput[],
     newClient?: CreateClientInput,
-  ): Promise<PublicQuote | MissingRef> {
+  ): Promise<PublicQuote | MissingRef | InvalidLine> {
     return this.db.transaction(async (tx) => {
       const missing = await this.findMissingRef(tx, quoteData, newClient);
       if (missing) return missing;
+      const unitIds = await this.resolveLineUnits(tx, undefined, lines);
+      if ('invalidLine' in unitIds) return unitIds;
       const clientId = await this.resolveClientId(tx, quoteData.clientId, newClient);
       const seq = await this.nextSeq(tx);
       const [quote] = await tx
@@ -693,7 +759,7 @@ export class QuotesRepository {
         changedById: quoteData.createdById ?? null,
         tenantId: this.tenantId,
       });
-      await this.insertLines(tx, quote!.id, lines);
+      await this.insertLines(tx, quote!.id, lines, unitIds);
       return quote!;
     });
   }
@@ -703,7 +769,7 @@ export class QuotesRepository {
     quoteData: QuoteValues,
     lines: QuoteLineInput[],
     newClient?: CreateClientInput,
-  ): Promise<PublicQuote | MissingRef | undefined> {
+  ): Promise<PublicQuote | MissingRef | InvalidLine | undefined> {
     return this.db.transaction(async (tx) => {
       const [existing] = await tx
         .select({ id: quotes.id })
@@ -713,6 +779,8 @@ export class QuotesRepository {
       if (!existing) return undefined;
       const missing = await this.findMissingRef(tx, quoteData, newClient);
       if (missing) return missing;
+      const unitIds = await this.resolveLineUnits(tx, id, lines);
+      if ('invalidLine' in unitIds) return unitIds;
       const clientId = await this.resolveClientId(tx, quoteData.clientId, newClient);
       const [quote] = await tx
         .update(quotes)
@@ -723,7 +791,7 @@ export class QuotesRepository {
       await tx
         .delete(quoteLines)
         .where(and(eq(quoteLines.quoteId, id), tenantEq(quoteLines, this.tenantId)));
-      await this.insertLines(tx, id, lines);
+      await this.insertLines(tx, id, lines, unitIds);
       return quote;
     });
   }

@@ -74,6 +74,7 @@ export type QuoteLineSelectionInput = z.infer<typeof quoteLineSelectionSchema>;
 
 export const quoteLineInputSchema = z.object({
   productId: z.uuid(),
+  uomId: z.uuid().optional(),
   quantity: z.number().int().min(1, 'quotes:validation.quantityInvalid'),
   subtotal: z.number().int().min(0, 'quotes:validation.subtotalInvalid'),
   selections: z.array(quoteLineSelectionSchema).default([]),

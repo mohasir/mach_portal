@@ -31,8 +31,6 @@ interface ProductFormProps {
   initialValues?: Partial<ProductFormValues>;
   /** The product's unit when editing, offered even if it was deactivated later. */
   currentUnit?: ComponentProps<typeof UnitSelect>['current'];
-  /** Quotes already count this product in its unit, so the unit stays as it is. */
-  unitLocked?: boolean;
   /** The product's category when editing, offered even if it was deactivated later. */
   currentCategory?: ComponentProps<typeof CategorySelect>['current'];
   tiers?: PriceTierInput[];
@@ -43,7 +41,6 @@ export function ProductForm({
   form,
   initialValues,
   currentUnit,
-  unitLocked = false,
   currentCategory,
   tiers = [],
   onSubmit,
@@ -142,14 +139,10 @@ export function ProductForm({
       <Form.Item
         name="uomId"
         label={<FieldLabel title={t('product.form.unit')} required />}
-        extra={t(unitLocked ? 'product.form.unitLocked' : 'product.form.unitCaption', vocabulary)}
+        extra={t('product.form.unitCaption', vocabulary)}
         rules={[{ required: true, message: t('validation.unitRequired') }]}
       >
-        <UnitSelect
-          current={currentUnit}
-          disabled={unitLocked}
-          placeholder={t('product.form.unitPlaceholder')}
-        />
+        <UnitSelect current={currentUnit} placeholder={t('product.form.unitPlaceholder')} />
       </Form.Item>
 
       <Form.Item

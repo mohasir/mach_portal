@@ -107,6 +107,7 @@ async function seedTenant(tenant: TestTenant, label: string): Promise<Seeded> {
       tenantId: tenant.id,
       quoteId: quote!.id,
       productId: product!.id,
+      uomId: await testUnitId(tenant.id),
       quantity: 10,
       subtotal: 1000,
     })
@@ -273,6 +274,11 @@ describe('quotes tenant isolation', () => {
       expect(byDate.map((r) => r.id)).toEqual([sa.confirmedQuoteId]);
     });
 
+    it('findProductUnits ignores the products of another tenant', async () => {
+      const units = await repoA.findProductUnits([sa.productId, sb.productId]);
+      expect([...units.keys()]).toEqual([sa.productId]);
+    });
+
     it('loadCatalogContext ignores another tenant catalog', async () => {
       const ctx = await repoA.loadCatalogContext([sa.productId, sb.productId]);
       expect(ctx.products.map((p) => p.id)).toEqual([sa.productId]);
@@ -292,6 +298,7 @@ describe('quotes tenant isolation', () => {
           tenantId: b.id,
           quoteId: sa.quoteId,
           productId: sb.productId,
+          uomId: await testUnitId(b.id),
           quantity: 1,
           subtotal: 1,
         })
@@ -651,6 +658,7 @@ describe('quotes tenant isolation', () => {
         tenantId: b.id,
         quoteId: sa.quoteId,
         productId: sb.productId,
+        uomId: await testUnitId(b.id),
         quantity: 1,
         subtotal: 1,
       });

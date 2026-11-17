@@ -70,7 +70,12 @@ export function ProductSelectionsSheet({
       }
     >
       <div className="flex flex-col gap-6 px-4 pb-4">
-        <ProductSheetHeader product={product} quantity={line.quantity} subtotal={line.subtotal} />
+        <ProductSheetHeader
+          product={product}
+          quantity={line.quantity}
+          unit={line.unit}
+          subtotal={line.subtotal}
+        />
         <div className="flex flex-col gap-2">
           {selectGroups.map((group) => (
             <OptionGroupSelectList

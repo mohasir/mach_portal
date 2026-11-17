@@ -27,7 +27,10 @@ function validate(
   manager: boolean,
   tiersOn: boolean,
 ) {
-  const repo = { loadCatalogContext: async () => ctx } as unknown as QuotesRepository;
+  const repo = {
+    loadCatalogContext: async () => ctx,
+    findProductUnits: async () => new Map<string, string>(),
+  } as unknown as QuotesRepository;
   const service = new QuotesService(
     repo,
     {} as never,

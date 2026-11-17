@@ -44,6 +44,7 @@ export function toQuoteLineInputs(lines: LineDraft[]): QuoteLineInput[] {
     productId: line.productId,
     quantity: line.quantity,
     subtotal: line.subtotal,
+    ...(line.uomId ? { uomId: line.uomId } : {}),
     selections: Object.entries(line.selections)
       .filter(([, optionIds]) => optionIds.length > 0)
       .map(([optionGroupId, optionIds]) => ({ optionGroupId, optionIds })),
@@ -103,6 +104,8 @@ export function toBuilderState(detail: QuoteDetail): QuoteBuilderState {
       productId: line.productId,
       quantity: line.quantity,
       subtotal: line.subtotal,
+      uomId: line.uomId,
+      unit: line.unit,
       selections: Object.fromEntries(line.selections.map((s) => [s.optionGroupId, s.optionIds])),
     })),
   };

@@ -45,7 +45,7 @@
     "factor": "Equivale a",
     "factorCaption": "Cuántas unidades base ({{base}}) hay en una de esta unidad.",
     "systemLocked": "Es una unidad del sistema: solo se puede cambiar el nombre.",
-    "usedLocked": "Hay productos con esta unidad: el tipo y la equivalencia no se pueden cambiar.",
+    "usedLocked": "Hay productos o cotizaciones con esta unidad: el tipo y la equivalencia no se pueden cambiar.",
     "save": "Guardar"
   },
   "create": {

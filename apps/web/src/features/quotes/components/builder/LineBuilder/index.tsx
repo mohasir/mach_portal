@@ -5,7 +5,7 @@ import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabula
 import type { Product } from '@/features/catalog';
 import { nextLineKey } from '../../../helpers';
 import { useLineConfig } from '../../../hooks/useLineConfig';
-import { buildNewLine } from '../../../lineHelpers';
+import { buildNewLine, withCurrentUnitOnRepricing } from '../../../lineHelpers';
 import { useQuoteBuilder } from '../../../hooks/useQuoteBuilder';
 import { LineCard } from './LineCard';
 import { ProductPicker } from './ProductPicker';
@@ -48,7 +48,9 @@ export function LineBuilder({ catalog, readOnly, canEditPricing }: LineBuilderPr
               readOnly={readOnly}
               canEditPricing={canEditPricing}
               onRemove={() => removeLine(line.key)}
-              onChange={(payload) => updateLine(line.key, payload)}
+              onChange={(payload) =>
+                updateLine(line.key, withCurrentUnitOnRepricing(line, product, payload))
+              }
               onSelectionChange={(groupId, optionIds) => setSelection(line.key, groupId, optionIds)}
             />
           );

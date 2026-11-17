@@ -1,5 +1,6 @@
 import { createStore } from 'zustand';
 import type { DiscountType, StateValue } from '@repo/schemas';
+import type { QuantityUnit } from '@/lib/format/quantity';
 
 export interface LineDraft {
   key: string;
@@ -7,6 +8,9 @@ export interface LineDraft {
   quantity: number;
   subtotal: number;
   selections: Record<string, string[]>;
+  /** Unit frozen on a line loaded from a saved quote; absent on lines added from the catalog. */
+  uomId?: string;
+  unit?: QuantityUnit;
 }
 
 export interface NewClientDraft {
@@ -69,7 +73,10 @@ export interface QuoteBuilderStore {
   setFields: (payload: Partial<QuoteBuilderState>) => void;
   addLine: (line: LineDraft) => void;
   removeLine: (key: string) => void;
-  updateLine: (key: string, payload: Partial<Pick<LineDraft, 'quantity' | 'subtotal'>>) => void;
+  updateLine: (
+    key: string,
+    payload: Partial<Pick<LineDraft, 'quantity' | 'subtotal' | 'uomId' | 'unit'>>,
+  ) => void;
   setSelection: (key: string, optionGroupId: string, optionIds: string[]) => void;
   reset: (state: QuoteBuilderState) => void;
 }

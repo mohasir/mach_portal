@@ -16,7 +16,7 @@ export const publicUnitColumns = {
 
 export type PublicUnit = Pick<typeof unitsOfMeasure.$inferSelect, keyof typeof publicUnitColumns>;
 
-// `isUsed`: a product references the unit, so its dimension and factor are locked.
+// `isUsed`: a product or a quote line references the unit, so its dimension and factor are locked.
 export const unitResource = (row: PublicUnit & { isUsed: boolean }) => ({
   id: row.id,
   name: row.name,

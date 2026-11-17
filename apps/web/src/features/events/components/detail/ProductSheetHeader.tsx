@@ -1,16 +1,17 @@
 'use client';
 import { Typography } from 'antd';
 import { ProductThumb, type Product } from '@/features/catalog';
-import { formatQuantity } from '@/lib/format/quantity';
+import { formatQuantity, type QuantityUnit } from '@/lib/format/quantity';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 
 interface ProductSheetHeaderProps {
   product: Product;
   quantity: number;
+  unit: QuantityUnit;
   subtotal: number;
 }
 
-export function ProductSheetHeader({ product, quantity, subtotal }: ProductSheetHeaderProps) {
+export function ProductSheetHeader({ product, quantity, unit, subtotal }: ProductSheetHeaderProps) {
   const { money } = useMoneyFormatter();
 
   return (
@@ -21,7 +22,7 @@ export function ProductSheetHeader({ product, quantity, subtotal }: ProductSheet
           {product.name}
         </Typography.Text>
         <div className="flex flex-col mt-1">
-          <span className="text-sm text-gray-500">{formatQuantity(quantity, product.unit)}</span>
+          <span className="text-sm text-gray-500">{formatQuantity(quantity, unit)}</span>
           <span className="text-lg font-semibold">{money(subtotal)}</span>
         </div>
       </div>

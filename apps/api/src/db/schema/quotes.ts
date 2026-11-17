@@ -18,6 +18,7 @@ import { stateEnum } from './enums';
 import { clients } from './clients';
 import { eventTypes } from './eventTypes';
 import { products, optionGroups, options } from './catalog';
+import { unitsOfMeasure } from './unitsOfMeasure';
 import { user } from './auth';
 import { tenantId } from './tenantColumn';
 import { tenantIsolationPolicy } from '../rls/policy';
@@ -133,11 +134,19 @@ export const quoteLines = pgTable(
     productId: uuid('product_id')
       .notNull()
       .references(() => products.id),
+    // The unit the line was quoted in: later changes to the product's unit do not reach it.
+    uomId: uuid('uom_id')
+      .notNull()
+      .references(() => unitsOfMeasure.id, { onDelete: 'restrict' }),
     quantity: integer('quantity').notNull(),
     subtotal: integer('subtotal').notNull(),
     sortOrder: integer('sort_order').default(0).notNull(),
   },
-  (t) => [index('quote_lines_tenant_idx').on(t.tenantId), tenantIsolationPolicy('quote_lines')],
+  (t) => [
+    index('quote_lines_tenant_idx').on(t.tenantId),
+    index('quote_lines_tenant_uom_idx').on(t.tenantId, t.uomId),
+    tenantIsolationPolicy('quote_lines'),
+  ],
 ).enableRLS();
 
 export const quoteLineOptions = pgTable(

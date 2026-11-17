@@ -1,7 +1,14 @@
 import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { unitsOfMeasureListQuerySchema, type CreateUnitInput } from '@repo/schemas';
-import { products, unitsOfMeasure } from '../../../db/schema';
+import {
+  clients,
+  products,
+  quoteLines,
+  quoteStages,
+  quotes,
+  unitsOfMeasure,
+} from '../../../db/schema';
 import { resetDb, seedTwoTenants, testDb, testUnitId, type TestTenant } from '../../../test/db';
 import { UnitsOfMeasureRepository } from '../unitsOfMeasure.repository';
 import { UnitsOfMeasureService } from '../unitsOfMeasure.service';
@@ -63,7 +70,38 @@ describe('unitsOfMeasure tenant isolation', () => {
     expect(await repoA.findByCode('bdj')).toBeUndefined();
     await testDb.insert(products).values({ tenantId: b.id, name: 'Usa bdj', uomId: unitB });
     expect(await repoA.isUsed(unitB)).toBe(false);
-    expect(await repoA.isUsedByActiveProduct(unitB)).toBe(false);
+    expect(await repoA.blocksDeactivation(unitB)).toBe(false);
+  });
+
+  it('quote lines of another tenant do not count as usage', async () => {
+    const unitA = await testUnitId(a.id, 'pers');
+    const [product] = await testDb
+      .insert(products)
+      .values({ tenantId: b.id, name: 'Menu B', uomId: await testUnitId(b.id) })
+      .returning({ id: products.id });
+    await testDb
+      .insert(quoteStages)
+      .values({ id: 1, label: 'stage 1', color: '#000000', sortOrder: 1 })
+      .onConflictDoNothing();
+    const [client] = await testDb
+      .insert(clients)
+      .values({ tenantId: b.id, name: 'Client B' })
+      .returning({ id: clients.id });
+    const [quote] = await testDb
+      .insert(quotes)
+      .values({ tenantId: b.id, seq: 1, number: 'Q-B-1', clientId: client!.id, taxRate: 0 })
+      .returning({ id: quotes.id });
+    await testDb.insert(quoteLines).values({
+      tenantId: b.id,
+      quoteId: quote!.id,
+      productId: product!.id,
+      uomId: unitA,
+      quantity: 1,
+      subtotal: 100,
+    });
+    expect(await repoA.isUsed(unitA)).toBe(false);
+    expect(await repoA.blocksDeactivation(unitA)).toBe(false);
+    expect((await serviceA.list(listAll)).items.find((u) => u.id === unitA)?.isUsed).toBe(false);
   });
 
   it('the same code in two tenants does not conflict', async () => {

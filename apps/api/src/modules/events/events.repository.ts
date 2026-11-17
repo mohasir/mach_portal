@@ -46,7 +46,8 @@ import {
 } from '../../db/schema';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
-import { publicQuoteLineColumns, publicQuoteLineOptionColumns } from '../quotes/quotes.resource';
+import { selectLinesWithUnit } from '../quotes/quotes.repository';
+import { publicQuoteLineOptionColumns } from '../quotes/quotes.resource';
 import { staffBusyOnDate } from '../staff/staff.availability';
 import {
   publicEventColumns,
@@ -246,10 +247,7 @@ export class EventsRepository {
       .limit(1);
     if (!eventRow) return undefined;
 
-    const lineRows = await this.db
-      .select(publicQuoteLineColumns)
-      .from(quoteLines)
-      .where(and(eq(quoteLines.quoteId, eventRow.quoteId), tenantEq(quoteLines, this.tenantId)));
+    const lineRows = await selectLinesWithUnit(this.db, this.tenantId, eventRow.quoteId);
 
     const lineIds = lineRows.map((l) => l.id);
     const optionRows = lineIds.length

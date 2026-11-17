@@ -31,7 +31,7 @@ import { isQuotable } from '../products/products.pricing';
 import { buildProductTree } from '../products/products.resource';
 import type { TemplatesRepository } from '../templates/templates.repository';
 import { quotePdfTemplateResource } from '../templates/templates.resource';
-import { QuotesRepository, type MissingRef } from './quotes.repository';
+import { QuotesRepository, type InvalidLine, type MissingRef } from './quotes.repository';
 import { buildQuotePdfPayload } from './quotes.pdf';
 import { changedLines, validateLineSelections, type CatalogContext } from './quotes.validation';
 import {
@@ -43,6 +43,7 @@ import {
   quoteListItemResource,
   quoteResource,
   type PublicQuote,
+  type PublicQuoteLine,
 } from './quotes.resource';
 
 const EDITABLE_STAGES: QuoteStageId[] = [QUOTE_STAGE.PENDING, QUOTE_STAGE.QUOTED];
@@ -67,6 +68,17 @@ const missingRefCodes = {
 
 function refNotFound({ missingRef }: MissingRef) {
   return new TRPCError({ code: 'NOT_FOUND', cause: new AppError(missingRefCodes[missingRef]) });
+}
+
+function invalidLineRef({ invalidLine }: InvalidLine) {
+  return invalidLine === 'unit' ? invalidLineUnit() : invalidLines();
+}
+
+function invalidLineUnit() {
+  return new TRPCError({
+    code: 'BAD_REQUEST',
+    cause: new AppError(ErrorCodes.quote.INVALID_LINE_UNIT),
+  });
 }
 
 function invalidLines() {
@@ -285,6 +297,7 @@ export class QuotesService {
       input.newClient,
     );
     if ('missingRef' in created) throw refNotFound(created);
+    if ('invalidLine' in created) throw invalidLineRef(created);
 
     if (canGeneratePdf(created)) {
       this.generatePdfInBackground(created.id, 'background pdf generation failed');
@@ -304,10 +317,10 @@ export class QuotesService {
     }
     // Lines kept as they are stay frozen; only new or modified ones are checked against the catalog.
     const stored = await this.repo.findLinesWithOptions(id);
-    await this.validateLines(
-      changedLines(input.lines, storedLinesWithSelections(stored)),
-      canManagePricing,
-    );
+    const currentUnits = await this.repo.findProductUnits(input.lines.map((l) => l.productId));
+    const changed = changedLines(input.lines, storedLinesWithSelections(stored), currentUnits);
+    if (!canManagePricing) assertFrozenUnitsOnlyReselected(changed, stored.lineRows, currentUnits);
+    await this.validateLines(changed, canManagePricing);
 
     const totals = await this.resolveTotals(current, input);
 
@@ -334,6 +347,7 @@ export class QuotesService {
     );
     if (!updated) throw notFound();
     if ('missingRef' in updated) throw refNotFound(updated);
+    if ('invalidLine' in updated) throw invalidLineRef(updated);
 
     // Editing a quote that's already a finished sales document (see canGeneratePdf) leaves
     // its PDF out of date — regenerate it in the background so the save itself doesn't wait
@@ -538,13 +552,32 @@ export class QuotesService {
   // builder UI already prevents this, this is the server-side boundary.
   private async validateLines(lines: QuoteLineInput[], canManagePricing: boolean) {
     if (lines.length === 0) return;
-    const ctx = await this.repo.loadCatalogContext(lines.map((l) => l.productId));
-    for (const line of lines) this.validateLine(line, ctx, canManagePricing);
+    const productIds = lines.map((l) => l.productId);
+    const [ctx, currentUnits] = await Promise.all([
+      this.repo.loadCatalogContext(productIds),
+      this.repo.findProductUnits(productIds),
+    ]);
+    for (const line of lines) {
+      const frozenUnit = !!line.uomId && line.uomId !== currentUnits.get(line.productId);
+      this.validateLine(line, ctx, canManagePricing, frozenUnit);
+    }
   }
 
-  private validateLine(line: QuoteLineInput, ctx: CatalogContext, canManagePricing: boolean) {
+  // `frozenUnit`: the line keeps the unit it was quoted in, which is not the product's current one.
+  // Its quantity and price are read in that old unit, so the product's present minimum, tiers and
+  // price (all in the current unit) do not apply to it.
+  private validateLine(
+    line: QuoteLineInput,
+    ctx: CatalogContext,
+    canManagePricing: boolean,
+    frozenUnit: boolean,
+  ) {
     const product = ctx.products.find((p) => p.id === line.productId);
     if (!product?.isActive) throw invalidLines();
+    if (frozenUnit) {
+      if (!validateLineSelections(line.productId, line.selections, ctx)) throw invalidLines();
+      return;
+    }
 
     const productTiers = ctx.tiers.filter((tier) => tier.productId === line.productId);
     if (!isQuotable(product, productTiers, this.priceTiersActive)) throw productNotQuotable();
@@ -581,6 +614,27 @@ function addMonths(date: Date, months: number): string {
   return result.toISOString().slice(0, 10);
 }
 
+// A line in a unit other than its product's current one cannot be repriced by a user without line
+// pricing: its quantity and subtotal must stay as stored, so only its options may change. Anything
+// else has to adopt the current unit, where it is validated like a new line.
+function assertFrozenUnitsOnlyReselected(
+  changed: readonly QuoteLineInput[],
+  stored: readonly PublicQuoteLine[],
+  currentUnits: ReadonlyMap<string, string>,
+) {
+  for (const line of changed) {
+    if (!line.uomId || line.uomId === currentUnits.get(line.productId)) continue;
+    const backed = stored.some(
+      (s) =>
+        s.productId === line.productId &&
+        s.uomId === line.uomId &&
+        s.quantity === line.quantity &&
+        s.subtotal === line.subtotal,
+    );
+    if (!backed) throw invalidLineUnit();
+  }
+}
+
 function storedLinesWithSelections({
   lineRows,
   optionRows,
@@ -595,6 +649,7 @@ function storedLinesWithSelections({
     }
     return {
       productId: line.productId,
+      uomId: line.uomId,
       quantity: line.quantity,
       subtotal: line.subtotal,
       selections: [...byGroup].map(([optionGroupId, optionIds]) => ({ optionGroupId, optionIds })),

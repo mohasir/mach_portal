@@ -54,12 +54,7 @@ export function QuoteLinesCard({ detail, catalog, variant }: QuoteLinesCardProps
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {lineRows.map((row) => (
-              <QuickLineCard
-                key={row.id}
-                mode="readOnly"
-                line={{ quantity: row.quantity, subtotal: row.subtotal }}
-                product={row.product}
-              />
+              <QuickLineCard key={row.id} mode="readOnly" line={row} product={row.product} />
             ))}
           </div>
         )}

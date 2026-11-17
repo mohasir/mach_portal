@@ -11,6 +11,7 @@ import type { LineDraft } from '../../../hooks/useQuoteBuilder';
 import {
   isQuantityLocked,
   lineMinQuantity,
+  lineUnit,
   lineSubtotalForQuantity,
   selectableTiers,
   usesTierPicker,
@@ -101,7 +102,7 @@ export function LineCard({
                         precision={0}
                         value={line.quantity}
                         onChange={handleQuantityChange}
-                        suffix={product.unit.code}
+                        suffix={lineUnit(line, product).code}
                       />
                       {quantityLocked && !readOnly && (
                         <span className="text-muted text-xs">{t('builder.lines.notQuotable')}</span>

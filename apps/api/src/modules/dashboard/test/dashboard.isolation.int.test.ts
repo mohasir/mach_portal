@@ -119,12 +119,14 @@ async function seedTenant(tenant: TestTenant, label: string, spec: Spec): Promis
     }
   }
 
+  const uomId = await testUnitId(tenant.id);
   for (const [name, lines] of spec.productLines) {
     await testDb.insert(quoteLines).values(
       Array.from({ length: lines }, () => ({
         tenantId: tenant.id,
         quoteId: confirmedQuoteIds[0]!,
         productId: productIds[name]!,
+        uomId,
         quantity: 10,
         subtotal: 1000,
       })),
@@ -253,6 +255,7 @@ describe('dashboard tenant isolation', () => {
         tenantId: b.id,
         quoteId: sa.confirmedQuoteIds[0]!,
         productId: sa.productIds['Menu A1']!,
+        uomId: await testUnitId(b.id),
         quantity: 10,
         subtotal: 1000,
       });
@@ -266,6 +269,7 @@ describe('dashboard tenant isolation', () => {
         tenantId: a.id,
         quoteId: sb.confirmedQuoteIds[0]!,
         productId: sa.productIds['Menu A1']!,
+        uomId: await testUnitId(a.id),
         quantity: 10,
         subtotal: 1000,
       });
@@ -279,6 +283,7 @@ describe('dashboard tenant isolation', () => {
         tenantId: a.id,
         quoteId: sa.confirmedQuoteIds[0]!,
         productId: sb.productIds['Menu B1']!,
+        uomId: await testUnitId(a.id),
         quantity: 10,
         subtotal: 1000,
       });
