@@ -111,8 +111,9 @@ export function EventCard({
               {layout === 'dashboard' && (
                 <AddressLines
                   address={row.address}
-                  city={row.city}
-                  state={row.state}
+                  country={row.country}
+                  region={row.region}
+                  locality={row.locality}
                   lines={2}
                   showIcon
                   className="mt-0.5 text-sm text-gray-500"
@@ -131,8 +132,9 @@ export function EventCard({
             <div>
               <AddressLines
                 address={row.address}
-                city={row.city}
-                state={row.state}
+                country={row.country}
+                region={row.region}
+                locality={row.locality}
                 lines={1}
                 showIcon
                 className="mt-0.5 text-sm text-gray-500"

@@ -34,12 +34,6 @@ export function ClientCard({ client, onEdit, onDelete, onClick }: ClientCardProp
         <Tag color={CLIENT_STATUS_COLORS[client.status] ?? 'default'}>
           {t(`status.${client.status}`, client.status)}
         </Tag>
-        {client.state ? <Tag>{client.state}</Tag> : null}
-        {client.city ? (
-          <Typography.Text type="secondary" className="text-sm">
-            {client.city}
-          </Typography.Text>
-        ) : null}
       </Flex>
 
       {client.phone ? (

@@ -6,7 +6,7 @@
   "columns": {
     "name": "Nombre",
     "phone": "Teléfono",
-    "location": "Ubicación",
+    "address": "Dirección",
     "status": "Estado",
     "createdAt": "Creado"
   },
@@ -21,10 +21,6 @@
     "emailPlaceholder": "correo@ejemplo.com",
     "phone": "Teléfono",
     "phonePlaceholder": "(212) 555-0100",
-    "city": "Ciudad",
-    "cityPlaceholder": "Ciudad",
-    "state": "Estado",
-    "statePlaceholder": "Seleccioná un estado",
     "address": "Dirección",
     "addressPlaceholder": "Calle, número, apto",
     "notes": "Notas",

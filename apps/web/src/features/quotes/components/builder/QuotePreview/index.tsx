@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useCatalogVocabulary } from '@/features/tenant/hooks/useCatalogVocabulary';
 import { ProductThumb, type Product } from '@/features/catalog';
 import type { EventType } from '@/features/event-types';
+import { useLocationSettings } from '@/features/settings';
 import { AddressLines } from '@/components/shared/AddressLines';
 import { formatQuantity } from '@/lib/format/quantity';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
@@ -26,6 +27,7 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
   const vocabulary = useCatalogVocabulary();
   const { date } = useDateFormatter();
   const { state, removeLine, setFields } = useQuoteBuilder();
+  const { data: locationSettings } = useLocationSettings();
 
   const eventType = eventTypes.find((e) => e.id === state.eventTypeId);
 
@@ -49,10 +51,16 @@ export function QuotePreview({ catalog, eventTypes, totals, readOnly }: QuotePre
           <span className="text-gray-500">{t('builder.preview.eventDate')}</span>
           <span>{state.eventDate ? date(state.eventDate) : '—'}</span>
         </div>
-        {state.address && (
+        {(state.address || state.region || state.locality) && (
           <div className="flex items-start justify-between">
             <span className="text-gray-500">{t('builder.preview.address')}</span>
-            <AddressLines address={state.address} city={state.city} className="text-right" />
+            <AddressLines
+              address={state.address}
+              country={state.country ?? locationSettings?.country}
+              region={state.region}
+              locality={state.locality}
+              className="text-right"
+            />
           </div>
         )}
       </div>

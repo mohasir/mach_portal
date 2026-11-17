@@ -1,7 +1,7 @@
 'use client';
-import { Button, Form, Input, Select, type FormInstance } from 'antd';
+import { Button, Form, Input, type FormInstance } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { stateSchema, type CreateClientInput } from '@repo/schemas';
+import type { CreateClientInput } from '@repo/schemas';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { PhoneInput } from '@/components/shared/Inputs/PhoneInput';
 
@@ -11,8 +11,6 @@ interface ClientFormProps {
   onSubmit: (values: CreateClientInput) => Promise<void> | void;
   isPending: boolean;
 }
-
-const stateOptions = stateSchema.options.map((state) => ({ value: state, label: state }));
 
 export function ClientForm({ form, initialValues, onSubmit, isPending }: ClientFormProps) {
   const { t } = useTranslation('clients');
@@ -45,14 +43,6 @@ export function ClientForm({ form, initialValues, onSubmit, isPending }: ClientF
         <PhoneInput placeholder={t('form.phonePlaceholder')} />
       </Form.Item>
 
-      <Form.Item name="city" label={<FieldLabel title={t('form.city')} />} rules={[{ max: 120 }]}>
-        <Input placeholder={t('form.cityPlaceholder')} />
-      </Form.Item>
-
-      <Form.Item name="state" label={<FieldLabel title={t('form.state')} />}>
-        <Select options={stateOptions} placeholder={t('form.statePlaceholder')} allowClear />
-      </Form.Item>
-
       <Form.Item
         name="address"
         label={<FieldLabel title={t('form.address')} />}
@@ -64,7 +54,11 @@ export function ClientForm({ form, initialValues, onSubmit, isPending }: ClientF
         />
       </Form.Item>
 
-      <Form.Item name="notes" label={<FieldLabel title={t('form.notes')} />} rules={[{ max: 2000 }]}>
+      <Form.Item
+        name="notes"
+        label={<FieldLabel title={t('form.notes')} />}
+        rules={[{ max: 2000 }]}
+      >
         <Input.TextArea
           placeholder={t('form.notesPlaceholder')}
           autoSize={{ minRows: 2, maxRows: 5 }}

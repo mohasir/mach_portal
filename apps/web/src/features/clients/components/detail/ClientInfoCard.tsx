@@ -37,7 +37,6 @@ export function ClientInfoCard({ client }: ClientInfoCardProps) {
         <Tag color={CLIENT_STATUS_COLORS[client.status] ?? 'default'}>
           {t(`status.${client.status}`, client.status)}
         </Tag>
-        {client.state ? <Tag>{client.state}</Tag> : null}
       </Flex>
 
       <div className="mt-3 flex flex-col gap-1">
@@ -51,10 +50,10 @@ export function ClientInfoCard({ client }: ClientInfoCardProps) {
             <Phone size={14} /> <FormattedPhone value={client.phone} />
           </Typography.Text>
         )}
-        {(client.address || client.city) && (
+        {client.address && (
           <Typography.Text type="secondary" className="flex items-start gap-2 text-base">
             <MapPin size={14} className="mt-1 shrink-0" />
-            <AddressLines address={client.address} city={client.city} />
+            <AddressLines address={client.address} />
           </Typography.Text>
         )}
       </div>

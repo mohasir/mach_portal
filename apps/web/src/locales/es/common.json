@@ -35,11 +35,6 @@
     "irreversible": "Esta acción no se puede deshacer"
   },
   "confirmAction": "Confirmar",
-  "states": {
-    "NY": "Nueva York",
-    "NJ": "Nueva Jersey",
-    "CT": "Connecticut"
-  },
   "notFound": {
     "title": "Página no encontrada",
     "subtitle": "La página que buscás no existe o fue movida.",
@@ -98,5 +93,9 @@
     "linkRemove": "Quitar enlace",
     "linkInvalid": "Ingresá una dirección web, de correo o de teléfono válida",
     "counter": "{{count}}/{{max}}"
+  },
+  "location": {
+    "stored": "Ubicación",
+    "select": "Seleccionar {{level}}"
   }
 }

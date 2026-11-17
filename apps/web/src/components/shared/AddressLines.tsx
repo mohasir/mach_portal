@@ -1,11 +1,12 @@
 'use client';
-import { useTranslation } from 'react-i18next';
 import { TbMapPinFilled } from 'react-icons/tb';
+import { formatPlace } from './LocationFields/helpers';
 
 interface AddressLinesProps {
   address?: string | null;
-  city?: string | null;
-  state?: string | null;
+  country?: string | null;
+  region?: string | null;
+  locality?: string | null;
   lines?: 1 | 2;
   className?: string;
   showIcon?: boolean;
@@ -13,16 +14,15 @@ interface AddressLinesProps {
 
 export function AddressLines({
   address,
-  city,
-  state,
+  country,
+  region,
+  locality,
   lines = 2,
   className,
   showIcon = false,
 }: AddressLinesProps) {
-  const { t } = useTranslation('common');
-  const stateLabel = state ? t(`states.${state}`, state) : state;
-  const cityState = [city, stateLabel].filter(Boolean).join(', ');
-  if (!address && !cityState) return null;
+  const place = formatPlace(country, region, locality);
+  if (!address && !place) return null;
 
   const icon = showIcon && <TbMapPinFilled size={14} className="text-navy shrink-0" />;
 
@@ -30,7 +30,7 @@ export function AddressLines({
     return (
       <div className={`flex items-center gap-1 ${className ?? ''}`}>
         {icon}
-        <span className="truncate">{[address, cityState].filter(Boolean).join(', ')}</span>
+        <span className="truncate">{[address, place].filter(Boolean).join(', ')}</span>
       </div>
     );
   }
@@ -42,7 +42,7 @@ export function AddressLines({
       </div>
       <div className="min-w-0">
         {address && <div>{address}</div>}
-        {cityState && <div className="truncate">{cityState}</div>}
+        {place && <div className="truncate">{place}</div>}
       </div>
     </div>
   );

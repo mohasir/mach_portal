@@ -2,16 +2,20 @@
 import { Form, Input, Select } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { STATE_NAMES, stateSchema, type StateValue } from '@repo/schemas';
 import type { EventType } from '@/features/event-types';
+import { useLocationSettings } from '@/features/settings';
+import { LocationFields } from '@/components/shared/LocationFields';
+import {
+  formatPlace,
+  isLocationActive,
+  isPlaceStale,
+} from '@/components/shared/LocationFields/helpers';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { WrapperAlert } from '@/components/shared/WrapperAlert';
 import { WrapperCard } from '@/components/shared/WrapperCard';
 import { WrapperDatePicker } from '@/components/shared/WrapperDatePicker';
 import { WrapperTimePicker } from '@/components/shared/WrapperTimePicker';
 import { disabledPastDate, disabledPastTime } from '@/lib/date';
-import { blurActiveElementOnTouch } from '@/lib/utils/dom';
-import CITIES_BY_STATE from '../../citiesByState.json';
 import { useQuoteBuilder, type QuoteBuilderState } from '../../hooks/useQuoteBuilder';
 import { useQuoteAvailability } from '../../hooks/useQuotes';
 
@@ -25,12 +29,8 @@ interface EventFormValues {
   eventTypeId?: string;
   eventDate?: Dayjs;
   eventTime?: Dayjs;
-  state?: StateValue;
-  city?: string;
   address?: string;
 }
-
-const CITIES_BY_STATE_MAP = CITIES_BY_STATE as Record<StateValue, string[]>;
 
 export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProps) {
   const { t } = useTranslation('quotes');
@@ -38,7 +38,14 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
   const [form] = Form.useForm<EventFormValues>();
   const eventDate = Form.useWatch('eventDate', form);
   const eventTime = Form.useWatch('eventTime', form);
-  const selectedState = Form.useWatch('state', form);
+  const { data: locationSettings } = useLocationSettings();
+  const locationActive = isLocationActive(locationSettings);
+  const askAddress = locationActive && locationSettings.askAddress;
+  // A place saved while the function was on stays visible, read-only, once it is off.
+  const showAddress = askAddress || state.address.trim().length > 0;
+  const asksPlace = locationActive && (locationSettings.depth > 0 || askAddress);
+  const showPlaceCard = asksPlace || !!state.region || !!state.locality || showAddress;
+  const placeIsStale = isPlaceStale(locationSettings, state.country);
 
   const eventDateStr = eventDate?.format('YYYY-MM-DD');
   const eventTimeStr = eventTime?.format('HH:mm');
@@ -58,16 +65,10 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
           ? undefined
           : ('success' as const);
 
-  const cityOptions = (selectedState ? (CITIES_BY_STATE_MAP[selectedState] ?? []) : []).map(
-    (city) => ({ value: city, label: city }),
-  );
-
   const initialValues: EventFormValues = {
     eventTypeId: state.eventTypeId ?? undefined,
     eventDate: state.eventDate ? dayjs(state.eventDate) : undefined,
     eventTime: state.eventTime ? dayjs(state.eventTime, 'HH:mm') : undefined,
-    state: state.state ?? undefined,
-    city: state.city,
     address: state.address,
   };
 
@@ -80,15 +81,6 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
     if ('eventTime' in changed) {
       patch.eventTime = changed.eventTime ? changed.eventTime.format('HH:mm') : null;
     }
-    if ('state' in changed) {
-      patch.state = changed.state ?? null;
-      const validCities = changed.state ? (CITIES_BY_STATE_MAP[changed.state] ?? []) : [];
-      if (!validCities.includes(form.getFieldValue('city'))) {
-        form.setFieldValue('city', undefined);
-        patch.city = '';
-      }
-    }
-    if ('city' in changed) patch.city = changed.city ?? '';
     if ('address' in changed) patch.address = changed.address ?? '';
     setFields(patch);
   };
@@ -135,40 +127,14 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
     </Form.Item>
   );
 
-  const stateField = (
-    <Form.Item
-      name="state"
-      label={<FieldLabel title={t('builder.event.state')} required />}
-      required
-    >
-      <Select
-        allowClear
-        placeholder={t('builder.event.statePlaceholder')}
-        options={stateSchema.options.map((s) => ({ value: s, label: STATE_NAMES[s] }))}
-      />
-    </Form.Item>
-  );
-
-  const cityField = (
-    <Form.Item name="city" label={<FieldLabel title={t('builder.event.city')} required />} required>
-      <Select
-        showSearch
-        allowClear
-        disabled={!selectedState}
-        placeholder={t('builder.event.cityPlaceholder')}
-        options={cityOptions}
-        onSelect={blurActiveElementOnTouch}
-      />
-    </Form.Item>
-  );
-
   const addressField = (
     <Form.Item
       name="address"
-      label={<FieldLabel title={t('builder.event.address')} required />}
-      required
+      label={<FieldLabel title={t('builder.event.address')} required={askAddress} />}
+      required={askAddress}
     >
       <Input.TextArea
+        disabled={!askAddress}
         autoSize={{ minRows: 1, maxRows: 3 }}
         placeholder={t('builder.event.addressPlaceholder')}
       />
@@ -211,13 +177,37 @@ export function EventSection({ eventTypes, readOnly, quoteId }: EventSectionProp
         )}
       </WrapperCard>
 
-      <WrapperCard title={t('builder.event.addressGroupTitle')}>
-        <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-          {stateField}
-          {cityField}
-          <div className="sm:col-span-2">{addressField}</div>
-        </div>
-      </WrapperCard>
+      {showPlaceCard && (
+        <WrapperCard title={t('builder.event.addressGroupTitle')}>
+          {placeIsStale && (
+            <WrapperAlert
+              type="warning"
+              closeable={false}
+              className="mb-4"
+              description={t('builder.event.placeStale', {
+                place: formatPlace(state.country, state.region, state.locality) || '—',
+              })}
+            />
+          )}
+          <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+            <LocationFields
+              settings={locationSettings}
+              value={
+                placeIsStale
+                  ? { region: null, locality: null }
+                  : { region: state.region, locality: state.locality }
+              }
+              onChange={(place) =>
+                // Picking a place stamps the configured country, which clears the stale state.
+                setFields({ ...place, country: locationSettings?.country ?? state.country })
+              }
+              readOnly={readOnly}
+              storedCountry={state.country}
+            />
+            {showAddress && <div className="sm:col-span-2">{addressField}</div>}
+          </div>
+        </WrapperCard>
+      )}
     </Form>
   );
 }

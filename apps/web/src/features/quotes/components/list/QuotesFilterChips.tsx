@@ -1,6 +1,6 @@
 'use client';
 import { useTranslation } from 'react-i18next';
-import { STATE_NAMES, stateSchema, type QuotesViewOptions, type StateValue } from '@repo/schemas';
+import type { QuotesViewOptions } from '@repo/schemas';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import {
   FilterChips,
@@ -9,8 +9,11 @@ import {
   type FilterOption,
 } from '@/components/shared/FilterChips';
 import { useEventTypesList } from '@/features/event-types';
+import { useLocationSettings } from '@/features/settings';
+import { regionOptions, levelTitle } from '@/components/shared/LocationFields/helpers';
 import { useUsersList } from '@/features/users';
 import { useSession } from '@/lib/auth/client';
+import { useLocaleStore } from '@/lib/stores/locale.store';
 import { useCanReassignQuote } from '@/lib/auth/useCan';
 import type { QuotesViewTab } from '../../quotesView.store';
 import type { QuotesPageFilters } from '../../types';
@@ -33,6 +36,8 @@ export function QuotesFilterChips({
 }: QuotesFilterChipsProps) {
   const { t } = useTranslation('quotes');
   const { data: session } = useSession();
+  const lang = useLocaleStore((s) => s.locale);
+  const { data: location } = useLocationSettings();
   // Users who only see their own quotes have nobody else to filter by.
   const canFilterByAssignee = useCanReassignQuote();
   const { data: users } = useUsersList({ sortBy: 'name', sortDir: 'asc' }, canFilterByAssignee);
@@ -65,15 +70,14 @@ export function QuotesFilterChips({
 
   return (
     <FilterChips>
-      <FilterChipSelect
-        label={t('filters.state')}
-        options={stateSchema.options.map((state) => ({
-          value: state,
-          label: STATE_NAMES[state],
-        }))}
-        value={filters.states ?? []}
-        onChange={(states) => onChange({ states: toFilter(states as StateValue[]) })}
-      />
+      {location?.country && location.depth !== 0 && (
+        <FilterChipSelect
+          label={levelTitle(location.country, 1, lang)}
+          options={regionOptions(location.country)}
+          value={filters.regions ?? []}
+          onChange={(regions) => onChange({ regions: toFilter(regions) })}
+        />
+      )}
       {canFilterByAssignee && (
         <FilterChipSelect
           label={t('filters.assignee')}

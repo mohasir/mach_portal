@@ -12,7 +12,6 @@
     "total": "Total"
   },
   "filters": {
-    "state": "State",
     "assignee": "Assignee",
     "eventType": "Event type",
     "drafts": "Drafts",
@@ -75,10 +74,6 @@
       "typePlaceholder": "Pick a type",
       "eventDetailsGroupTitle": "Event details",
       "addressGroupTitle": "Address",
-      "state": "State",
-      "statePlaceholder": "NY / NJ / CT",
-      "city": "City",
-      "cityPlaceholder": "Event city",
       "date": "Event date",
       "time": "Time",
       "availabilityWarning": "Warning",
@@ -90,7 +85,8 @@
       "internalNotesPlaceholder": "Only visible to your team",
       "clientNotesLabel": "Client notes",
       "clientNotesCaption": "Appears on the quote PDF",
-      "clientNotesPlaceholder": "Visible to the client on the PDF"
+      "clientNotesPlaceholder": "Visible to the client on the PDF",
+      "placeStale": "The saved place ({{place}}) belongs to a different country than the one configured now and will be discarded on save. Pick the new place below."
     },
     "selectionsMode": {
       "label": "Choose options now",

@@ -1,5 +1,5 @@
 import { createStore } from 'zustand';
-import type { DiscountType, StateValue } from '@repo/schemas';
+import type { DiscountType } from '@repo/schemas';
 import type { QuantityUnit } from '@/lib/format/quantity';
 import type { BuilderCharge } from './chargeHelpers';
 
@@ -29,9 +29,10 @@ export interface QuoteBuilderState {
   eventTypeId: string | null;
   eventDate: string | null;
   eventTime: string | null;
-  state: StateValue | null;
+  country: string | null; // display-only, the server fixes it on save
+  region: string | null;
+  locality: string | null;
   address: string;
-  city: string;
   notes: string;
   clientNotes: string;
   lines: LineDraft[];
@@ -54,9 +55,10 @@ export function emptyBuilderState(
     eventTypeId: null,
     eventDate: initialEventDate ?? null,
     eventTime: null,
-    state: null,
+    country: null,
+    region: null,
+    locality: null,
     address: '',
-    city: '',
     notes: '',
     clientNotes: '',
     lines: [],
