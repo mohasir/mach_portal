@@ -11,6 +11,8 @@ export const RESOURCE_MODULE: Partial<Record<ResourceType, FeatureKey>> = {
   [RESOURCES.PIPELINE_PREFERENCES]: 'quotes',
   // Charges only exist on quotes; the extraCharges add-on is checked on top of it.
   [RESOURCES.CHARGE_TYPE]: 'quotes',
+  // The operating location only shapes quotes and the events copied from them.
+  [RESOURCES.LOCATION_SETTINGS]: 'quotes',
   [RESOURCES.EVENT]: 'events',
   [RESOURCES.PAYMENT]: 'events',
   [RESOURCES.STAFF]: 'events',

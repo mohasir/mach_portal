@@ -183,8 +183,13 @@ export function QuoteDetailCard({
         </Descriptions>
         <Descriptions column={1} size="small" layout={isDesktop ? 'horizontal' : 'vertical'}>
           <Descriptions.Item label={t('detail.addressLabel')}>
-            {detail.address || detail.city ? (
-              <AddressLines address={detail.address} city={detail.city} state={detail.state} />
+            {detail.address || detail.region || detail.locality ? (
+              <AddressLines
+                address={detail.address}
+                country={detail.country}
+                region={detail.region}
+                locality={detail.locality}
+              />
             ) : (
               '—'
             )}

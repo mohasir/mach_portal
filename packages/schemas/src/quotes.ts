@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { listQuerySchema } from './pagination';
-import { stateSchema } from './enums';
 import { optionalText } from './fields';
 import { createClientSchema } from './clients';
 import { quoteChargesInputSchema, type ChargeKind } from './charges';
+import { LOCATION_LOCALITY_MAX, LOCATION_REGION_MAX } from './location';
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
@@ -97,9 +97,10 @@ const quoteMutationFields = {
   eventTypeId: z.preprocess(blankToUndefined, z.uuid().optional()),
   eventDate: z.preprocess(blankToUndefined, z.iso.date().optional()),
   eventTime: optionalText(20),
-  state: z.preprocess(blankToUndefined, stateSchema.optional()),
+  // The country is never accepted from the client: the API takes it from the location settings.
+  region: optionalText(LOCATION_REGION_MAX),
+  locality: optionalText(LOCATION_LOCALITY_MAX),
   address: optionalText(240),
-  city: optionalText(120),
   notes: optionalText(2000),
   clientNotes: optionalText(2000),
   discountType: z.preprocess(blankToUndefined, discountTypeSchema.optional()),
@@ -151,7 +152,7 @@ export type CheckQuoteAvailabilityQuery = z.infer<typeof checkQuoteAvailabilityS
 // Filters that mean the same thing on the list and the pipeline board, so the quotes page can
 // share one filter bar between both views. Each list matches any of its values.
 export const quotesFiltersSchema = listQuerySchema.pick({ search: true }).extend({
-  states: z.array(stateSchema).optional(),
+  regions: z.array(z.string().max(LOCATION_REGION_MAX)).max(100).optional(),
   assignedToIds: z.array(z.string()).optional(),
   eventTypeIds: z.array(z.uuid()).optional(),
   /** true: drafts only; omitted: drafts and finished quotes alike. */

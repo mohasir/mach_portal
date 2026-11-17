@@ -19,12 +19,17 @@ El cliente es el **único dato obligatorio** para poder guardar como borrador.
 
 ## Paso 2: Datos del evento
 
-Tipo de evento, fecha, hora, Estado (NY, NJ o CT), Ciudad y Dirección.
+Tipo de evento, fecha, hora y, según la **Ubicación de operación** de la organización
+(Configuración → General), el lugar y la Dirección. Con la ubicación apagada no se pide ninguno de
+los dos.
 
 - No se puede elegir una fecha anterior a hoy, ni una hora ya pasada si la fecha elegida es hoy.
-- La Ciudad depende del Estado elegido — es una lista cerrada, no texto libre. Si se cambia el
-  Estado y la ciudad cargada no pertenece a la lista nueva, se borra sola.
-- Estado, Ciudad y Dirección no son obligatorios para guardar un borrador, pero sí para poder
+- El lugar se elige en listas encadenadas (por ejemplo Estado y luego Ciudad, o Departamento y
+  luego Municipio), limitadas a la cobertura de la organización. Los niveles que se piden dependen
+  de la precisión configurada. Si se cambia el primer nivel, el segundo se borra solo.
+- Bajar la precisión de la ubicación descarta, al guardar de nuevo cada cotización, los niveles más profundos que la precisión vigente.
+- La Dirección solo aparece si la organización la pide.
+- El lugar y la Dirección no son obligatorios para guardar un borrador, pero sí para poder
   **enviar** la cotización más adelante.
 
 ## Paso 3: Cargos extras
@@ -75,7 +80,7 @@ Subtotal (líneas)
 ```
 
 Cada línea toma la tasa de impuesto de su {{item}} al agregarse (0% si el {{item}} es exento) y la
-conserva aunque después cambie la tasa del {{item}}. El Estado del evento no influye en el impuesto.
+conserva aunque después cambie la tasa del {{item}}. El lugar del evento no influye en el impuesto.
 El resumen muestra un renglón de impuesto por cada tasa. El depósito y el saldo se calculan sobre
 ese TOTAL final.
 
@@ -83,7 +88,7 @@ ese TOTAL final.
 
 - **Guardar borrador**: guarda lo que haya cargado, sin exigir que esté completo. Alcanza con
   tener un cliente. La cotización queda en **Pendiente**, marcada como borrador.
-- **Crear cotización**: exige cliente, Estado, Ciudad, Dirección y al menos una línea. Saca la
+- **Crear cotización**: exige cliente, el lugar y la Dirección (según la configuración de ubicación) y al menos una línea. Saca la
   marca de "borrador", pero la cotización **sigue en Pendiente** — todavía no es lo mismo que
   enviarla al cliente. Ese paso está en
   [Cómo enviar una cotización al cliente y generar el PDF](/admin/settings/support/enviar-una-cotizacion).

@@ -11,6 +11,7 @@ import { useConfirmModal, type ConfirmModalType } from '@/components/shared/Conf
 import { PageHeader } from '@/components/shared/PageHeader';
 import { QuoteNumberHeader } from '@/components/shared/QuoteNumberHeader';
 import { showEnvBanner } from '@/env';
+import { useLocationSettings } from '@/features/settings';
 import { useFeature } from '@/lib/auth/useFeature';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
@@ -82,7 +83,8 @@ export function QuoteBuilderContent({
   const builderTotals = computeBuilderTotals(state, initialState, catalog, chargesEnabled);
   const { totals } = builderTotals;
 
-  const canSend = isQuoteReadyToSend(state);
+  const { data: locationSettings } = useLocationSettings();
+  const canSend = isQuoteReadyToSend(state, locationSettings);
 
   // create/update don't have their own onError (see useQuotes.ts) — a failed client lookup can
   // fail on `newClient.*` (owned by ClientSection) as easily as on a top-level quote field, so
@@ -120,7 +122,7 @@ export function QuoteBuilderContent({
       message.error(t('builder.errors.chargeInvalid'));
       return;
     }
-    const input = toCreateInput(state, quoteId ? !!isDraft : true);
+    const input = toCreateInput(state, quoteId ? !!isDraft : true, locationSettings);
     setPendingAction('draft');
     try {
       if (quoteId) {
@@ -143,7 +145,7 @@ export function QuoteBuilderContent({
       message.error(t('builder.errors.chargeInvalid'));
       return;
     }
-    const input = toCreateInput(state, false);
+    const input = toCreateInput(state, false, locationSettings);
     const isNew = !quoteId;
     let id = quoteId;
     setPendingAction('send');

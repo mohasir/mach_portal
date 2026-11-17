@@ -12,7 +12,6 @@ import {
   index,
   primaryKey,
 } from 'drizzle-orm/pg-core';
-import { stateEnum } from './enums';
 import { clients } from './clients';
 import { eventTypes } from './eventTypes';
 import { products, optionGroups, options } from './catalog';
@@ -69,9 +68,10 @@ export const quotes = pgTable(
     eventTypeId: uuid('event_type_id').references(() => eventTypes.id),
     eventDate: date('event_date', { mode: 'string' }),
     eventTime: text('event_time'),
-    state: stateEnum('state'),
+    country: text('country'),
+    region: text('region'),
+    locality: text('locality'),
     address: text('address'),
-    city: text('city'),
     notes: text('notes'),
     clientNotes: text('client_notes'),
     subtotal: integer('subtotal').notNull().default(0),

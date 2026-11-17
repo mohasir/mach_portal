@@ -395,3 +395,58 @@ No hay migraciones inversas. **Recomendado: restaurar el backup previo y despleg
 - `0015`: las columnas eliminadas pueden reconstruirse desde `quote_charges` (monto del cargo "Larga distancia"; tasa y monto del "Recargo por tarjeta") y `charge_types.default_value`, pero solo para los cargos migrados: los creados después no tienen equivalente en el esquema anterior. Recrear las columnas, rellenarlas, borrar `charge_types`, `quote_charges`, el tipo `charge_kind`, las filas `extraCharges` de `tenant_features` y los permisos `charge_type`.
 - `0014`: recrear `state_settings` (con las filas guardadas en el paso 1 de 10.2), `app_settings.apply_tax_by_state` y `prompt_rate_changes`, `quotes.tax_rate` (la tasa de cualquiera de sus líneas, que la heredaron de la cotización; para una cotización con líneas a tasas distintas, creada después, no hay equivalente) y `quotes.declined_rates` (sin datos: el aviso vuelve a aparecer); luego quitar `app_settings.default_tax_rate`, `products.tax_rate`/`tax_exempt` y `quote_lines.tax_rate`/`tax_amount`.
 - En ambos casos, borrar la fila de cada migración en `drizzle.__drizzle_migrations` (`created_at` = su `when` en `apps/api/drizzle/meta/_journal.json`).
+
+## 11. Ubicación de operación (migración `0016`)
+
+Spec: `docs/superpowers/specs/2026-11-16-ubicacion-operacion-design.md`. Arquitectura: `docs/backend/architecture.md` §14.8. **Nada de esta sección se ejecuta contra producción sin la aprobación del dueño del proyecto.**
+
+### 11.1 Qué hace la migración
+
+`0016_operating_location` crea `tenant_location` (una fila por organización, con `CHECK` que exige país, precisión y cobertura cuando `enabled`) y `tenant_location_areas` (RLS con `FORCE` en ambas), agrega `country`, `region` y `locality` a `quotes` y `events`, y **elimina** `state` y `city` de `quotes`, `events` y `clients` y el tipo enum `state`.
+
+Conversión, antes de eliminar las columnas:
+
+- Cada cotización y cada evento con `state` queda con `country = 'US'`, `region` = el código del estado (`NY`, `NJ`, `CT`) y `locality` = su `city` sin espacios sobrantes (nula si estaba vacía). `address` no cambia.
+- Una cotización o evento **sin** `state` queda sin lugar: si tenía `city`, esa ciudad se pierde (una localidad sin región no es un lugar válido).
+- Las ciudades se copian como texto, sin validar contra el dataset: una ciudad que no está en `@repo/geo` (p. ej. `Bronx`, `Brooklyn`) se sigue leyendo y se conserva al editar la cotización si se reenvía igual; para cambiarla hay que elegir una localidad del dataset.
+- Las organizaciones con alguna cotización o evento con `state` quedan con la función **activa**: `country = 'US'`, `depth = 2`, `scope = 'country'`, `ask_address = true` (el flujo anterior). Las demás quedan sin fila (función apagada).
+- `clients.state` y `clients.city` **se descartan** (el cliente conserva solo `address`).
+- Permisos: los roles con `tax_rates.view` reciben `location_settings.view` y los que tienen `tax_rates.update` reciben `location_settings.update`. Solo los roles que ganaron un permiso suben `role.version`. Incluye roles propios de cada organización: revisarlos después de migrar.
+
+### 11.2 Orden de despliegue y verificación
+
+1. Backup con el dueño, como en la sección 3 (paso 1). Guardar además lo que la migración descarta, para poder consultarlo después:
+
+   ```sql
+   SELECT tenant_id, id, name, state, city FROM clients
+   WHERE state IS NOT NULL OR city IS NOT NULL ORDER BY tenant_id, name;
+   SELECT tenant_id, number, city FROM quotes WHERE state IS NULL AND city IS NOT NULL;
+   SELECT tenant_id, id, city FROM events WHERE state IS NULL AND city IS NOT NULL;
+   ```
+
+2. **Detener la app** (API y jobs; web en mantenimiento): el código anterior lee `state`/`city`, que la `0016` elimina.
+3. `db:migrate` (`0016`) y desplegar API y web de la misma versión **en el mismo paso**; recién entonces arrancar la app.
+4. `mt:verify` con exit 0: comprueba RLS habilitado, forzado y con política en `tenant_location` y `tenant_location_areas`.
+5. Revisar qué organizaciones quedaron activas y que cada lugar se copió:
+
+   ```sql
+   SELECT tenant_id, enabled, country, depth, scope, ask_address FROM tenant_location;
+   SELECT tenant_id, region, count(*) FROM quotes GROUP BY tenant_id, region ORDER BY 1, 2;
+   ```
+
+6. Cada organización activada puede ajustar en Ajustes la precisión, la cobertura o si pide dirección.
+
+### 11.3 Cambios de comportamiento a tener presentes
+
+- El país de una cotización lo fija el servidor desde la configuración; el cliente solo envía `region` y `locality`, validadas contra el dataset y la cobertura.
+- Con la función activa, una cotización que no es borrador exige los niveles configurados y la dirección si `ask_address`; para salir de borrador (pasar a "Cotizada") se aplica la misma regla más al menos una línea. Con la función apagada solo se exige una línea (antes se exigían estado, ciudad y dirección).
+- Con la función apagada la cotización no cambia su lugar ni su dirección guardados, aunque la petición los traiga.
+- El evento copia país, región, localidad y dirección de la cotización al aprobarla.
+- El PDF muestra dirección, localidad y nombre de la región (`New York` en lugar de `NY`).
+- Bajar la precisión (`depth`) no borra nada al instante: la cotización conserva su localidad y se sigue mostrando, pero al guardarla de nuevo el servidor descarta los niveles más profundos que la precisión vigente.
+- Una cotización creada con la función apagada no tiene país; con la función activa a precisión 0 se considera completa y el primer guardado le fija el país configurado.
+- Los códigos de región se repiten entre países (`CA`, `CO`, `MD`, `MN`, `MS`, `MT`, `RI` existen en `US` y `NI`): el filtro por región se limita al país configurado, y un lugar guardado bajo otro país no se reenvía desde el cotizador (se descarta al guardar salvo que el usuario elija el nuevo).
+
+### 11.4 Reversión
+
+No hay migración inversa. **Recomendado: restaurar el backup previo y desplegar la versión anterior de API y web.** A mano: recrear el tipo `state` (`NY`, `NJ`, `CT`) y las columnas `state`/`city` en `quotes`, `events` y `clients`; rellenar `quotes`/`events` con `state = region::state`, `city = locality` donde `country = 'US'` y `region IN ('NY','NJ','CT')` (otras regiones o países no tienen equivalente); los clientes solo recuperan sus datos desde lo guardado en el paso 1 de 11.2. Luego borrar `country`, `region` y `locality`, las tablas `tenant_location_areas` y `tenant_location`, los permisos `location_settings` y la fila de la migración en `drizzle.__drizzle_migrations` (`created_at` = su `when` en `apps/api/drizzle/meta/_journal.json`).

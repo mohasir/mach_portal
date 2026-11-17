@@ -11,6 +11,7 @@ import { productCategoriesRouter } from '../../modules/productCategories/product
 import { chargeTypesRouter } from '../../modules/chargeTypes/chargeTypes.router';
 import { rescheduleReasonsRouter } from '../../modules/rescheduleReasons/rescheduleReasons.router';
 import { configRouter } from '../../modules/config/config.router';
+import { locationSettingsRouter } from '../../modules/locationSettings/locationSettings.router';
 import { quotesRouter } from '../../modules/quotes/quotes.router';
 import { eventsRouter } from '../../modules/events/events.router';
 import { paymentsRouter } from '../../modules/payments/payments.router';
@@ -36,6 +37,7 @@ export const appRouter = router({
   eventTypes: eventTypesRouter,
   rescheduleReasons: rescheduleReasonsRouter,
   config: configRouter,
+  locationSettings: locationSettingsRouter,
   quotes: quotesRouter,
   events: eventsRouter,
   payments: paymentsRouter,

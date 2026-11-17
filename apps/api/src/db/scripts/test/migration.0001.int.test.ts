@@ -186,7 +186,7 @@ describe('0001 on a legacy database with data', () => {
   // Legacy columns that still exist after the migrations (0010 drops
   // app_settings.min_persons_per_line; 0014 drops state_settings, the tax by state and rate drift
   // columns of app_settings and the quote's own tax rate and declined rates; 0015 drops long distance
-  // and the card surcharge columns).
+  // and the card surcharge columns; 0016 drops state and city from clients, quotes and events).
   let survivingSets: Record<string, string[]>;
   let survivingPrints: Fingerprints;
   let renamedSets: Record<string, string[]>;
@@ -216,7 +216,11 @@ describe('0001 on a legacy database with data', () => {
         'apply_card_surcharge',
         'card_surcharge_rate',
         'card_surcharge_amount',
+        'state',
+        'city',
       ],
+      clients: ['city', 'state'],
+      events: ['state', 'city'],
     };
     survivingSets = Object.fromEntries(
       Object.entries(keptSets).map(([t, cols]) => [
@@ -316,6 +320,9 @@ describe('0001 on a legacy database with data', () => {
       product_images: 0,
       charge_types: 0,
       quote_charges: 0,
+      // The legacy quotes have states, so 0016 turns the operating location on.
+      tenant_location: 1,
+      tenant_location_areas: 0,
     });
   });
 
@@ -355,6 +362,7 @@ describe('0001 on a legacy database with data', () => {
       const created: Record<string, number | undefined> = {
         quote_stage_settings: legacyCounts['quote_stages'],
         units_of_measure: SYSTEM_UNITS.length,
+        tenant_location: 1,
       };
       const n = created[t] ?? legacyCounts[t] ?? 0;
       expect(rows, t).toEqual(n === 0 ? [] : [{ tenant_id: orgId, n }]);
@@ -527,9 +535,10 @@ describe('0001 backfill edge cases', () => {
     const post = await verifyMultitenant(db.url);
     // Migrated only up to 0003, so the RLS checks (0005), the feature tables (0006) and the
     // later tables (units_of_measure, 0009; product_categories, 0010; product_images, 0011;
-    // charge_types and quote_charges, 0015) legitimately fail here.
+    // charge_types and quote_charges, 0015; tenant_location and its areas, 0016) legitimately fail
+    // here.
     const rlsProblem =
-      /row level security|policy|^tenant_(features?|profile)\w*: missing table$|^(units_of_measure|product_categories|product_images|charge_types|quote_charges): missing table/;
+      /row level security|policy|^tenant_(features?|profile)\w*: missing table$|^(units_of_measure|product_categories|product_images|charge_types|quote_charges|tenant_location|tenant_location_areas): missing table/;
     expect(post.problems.filter((p) => !rlsProblem.test(p))).toEqual([
       'member: 2 row(s) without role_id',
       `organization: 1 without an owner role that has a member (${SLUG})`,

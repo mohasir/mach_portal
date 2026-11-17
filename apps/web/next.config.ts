@@ -42,6 +42,9 @@ const withSerwist = withSerwistInit({
   swSrc: 'src/app/sw.ts',
   swDest: process.env.NEXT_DIST_DIR ? path.join(distDir, 'sw.js') : 'public/sw.js',
   disable: process.env.NODE_ENV === 'development',
+  // Locality chunks are about 70 lazy files; precaching them would download all on every install.
+  // Listed together with Serwist's defaults, which this option replaces.
+  exclude: [/\.map$/, /^manifest.*\.js$/, /geo-(us|ni)-localities-/],
   reloadOnOnline: false,
 });
 

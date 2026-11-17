@@ -33,6 +33,7 @@ describe('visibleSettingsSections', () => {
     canTaxRates: true,
     canQuoteDefaults: true,
     canQuoteStages: true,
+    canLocationSettings: true,
     canCatalogPreferences: true,
     canQuotePdfTemplate: true,
   };
@@ -66,9 +67,18 @@ describe('visibleSettingsSections', () => {
         ...all,
         canQuoteDefaults: false,
         canQuoteStages: false,
+        canLocationSettings: false,
         canTaxRates: false,
       }).general,
     ).toBe(false);
+    expect(
+      visibleSettingsSections({
+        ...all,
+        canQuoteDefaults: false,
+        canQuoteStages: false,
+        canTaxRates: false,
+      }).general,
+    ).toBe(true);
     expect(visibleSettingsSections({ ...all, canCatalogPreferences: false }).preferences).toBe(
       false,
     );

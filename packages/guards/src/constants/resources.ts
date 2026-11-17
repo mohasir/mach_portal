@@ -22,6 +22,7 @@ export const RESOURCES = {
   QUOTE_PDF_TEMPLATE: 'quote_pdf_template',
   QUOTE_BUILDER_PREFERENCES: 'quote_builder_preferences',
   PIPELINE_PREFERENCES: 'pipeline_preferences',
+  LOCATION_SETTINGS: 'location_settings',
   ROLE: 'role',
 } as const;
 

@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { FEATURE_KEYS, isToggleable } from '@repo/guards';
-import { QUOTE_STAGE, type CatalogKind, type UserPreferences } from '@repo/schemas';
+import {
+  QUOTE_STAGE,
+  type CatalogKind,
+  type UpdateLocationSettingsInput,
+  type UserPreferences,
+} from '@repo/schemas';
 import { db as defaultDb, type Executor } from '../index';
 import { organization } from '../schema';
 import { listFeatures, setFeature } from '../../lib/features/admin';
@@ -14,6 +19,7 @@ import type { SeedAppSettings } from './config';
 import { seedTenantDefaults } from './defaults';
 import { seedEventPayments } from './eventPayments';
 import { seedEvents } from './events';
+import { seedLocationSettings } from './location';
 import { seedQuoteStages } from './quoteStages';
 import { SEED_QUOTES, seedQuotes, type SeedQuote } from './quotes';
 import { SEED_STAFF, seedStaff, type SeedStaff } from './staff';
@@ -37,6 +43,20 @@ export interface DemoProfile {
   preferences: Partial<UserPreferences>;
 }
 
+// The demo clients' events happen in these three states, so the demo covers only them.
+const DEMO_LOCATION: UpdateLocationSettingsInput = {
+  enabled: true,
+  country: 'US',
+  depth: 2,
+  scope: 'areas',
+  areas: [
+    { region: 'CT', locality: null },
+    { region: 'NJ', locality: null },
+    { region: 'NY', locality: null },
+  ],
+  askAddress: true,
+};
+
 const demoUsers = (domain: string, label: string): SeedUser[] => [
   { name: `Super ${label}`, email: `superadmin@${domain}`, role: 'superadmin' },
   { name: `Admin ${label}`, email: `admin@${domain}`, role: 'admin' },
@@ -50,63 +70,63 @@ const SUR_CLIENTS: SeedClient[] = [
     name: 'Valentina Ortiz',
     email: 'valentina.ortiz@example.org',
     phone: '+12125550301',
-    city: 'Yonkers',
-    state: 'NY',
+    region: 'NY',
+    locality: 'Yonkers',
     notes: 'Boda en jardín, 2026.',
   },
   {
     name: 'Gabriel Moreno',
     email: 'gabriel.moreno@example.org',
     phone: '+12015550302',
-    city: 'Newark',
-    state: 'NJ',
+    region: 'NJ',
+    locality: 'Newark',
     address: '12 Ferry St',
   },
   {
     name: 'Isabella Cruz',
     email: 'isabella.cruz@example.org',
     phone: '+12035550303',
-    city: 'Hartford',
-    state: 'CT',
+    region: 'CT',
+    locality: 'Hartford',
     notes: 'Evento de empresa, ~80 personas.',
   },
   {
     name: 'Mateo Rojas',
     email: 'mateo.rojas@example.org',
     phone: '+13475550304',
-    city: 'Bronx',
-    state: 'NY',
+    region: 'NY',
+    locality: 'Albany',
     address: '500 Grand Concourse',
   },
   {
     name: 'Lucía Vargas',
     email: 'lucia.vargas@example.org',
     phone: '+19085550305',
-    city: 'Edison',
-    state: 'NJ',
+    region: 'NJ',
+    locality: 'Edison',
     notes: 'Baby shower en salón.',
   },
   {
     name: 'Martín Castillo',
     email: 'martin.castillo@example.org',
     phone: '+12035550306',
-    city: 'Waterbury',
-    state: 'CT',
+    region: 'CT',
+    locality: 'Waterbury',
     address: '77 Bank St',
   },
   {
     name: 'Renata Silva',
     email: 'renata.silva@example.org',
     phone: '+16465550307',
-    city: 'Staten Island',
-    state: 'NY',
+    region: 'NY',
+    locality: 'Syracuse',
   },
   {
     name: 'Joaquín Medina',
     email: 'joaquin.medina@example.org',
     phone: '+15515550308',
-    city: 'Paterson',
-    state: 'NJ',
+    region: 'NJ',
+    locality: 'Paterson',
     address: '9 Market St',
     notes: 'Aniversario familiar.',
   },
@@ -114,15 +134,15 @@ const SUR_CLIENTS: SeedClient[] = [
     name: 'Emilia Navarro',
     email: 'emilia.navarro@example.org',
     phone: '+14755550309',
-    city: 'Norwalk',
-    state: 'CT',
+    region: 'CT',
+    locality: 'Norwalk',
   },
   {
     name: 'Santiago Peña',
     email: 'santiago.pena@example.org',
     phone: '+19175550310',
-    city: 'Harlem',
-    state: 'NY',
+    region: 'NY',
+    locality: 'White Plains',
     notes: 'Corporativo mensual.',
   },
 ];
@@ -250,12 +270,14 @@ export async function seedDemoTenant(
   await seedClients(tenantId, profile.clients, db);
   await seedStaff(tenantId, profile.staff, db);
   await seedChargeTypes(tenantId, db);
+  await seedLocationSettings(tenantId, DEMO_LOCATION, db);
   await seedQuotes(
     tenantId,
     {
       quotes: profile.quotes,
       creatorEmail: admin,
       assigneeEmails: profile.users.filter((u) => u.role !== 'superadmin').map((u) => u.email),
+      clients: profile.clients,
     },
     db,
   );

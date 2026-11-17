@@ -38,8 +38,6 @@ export function EditClientModal({ client, open, onClose }: EditClientModalProps)
             name: client.name,
             email: client.email ?? undefined,
             phone: client.phone ?? undefined,
-            city: client.city ?? undefined,
-            state: client.state ?? undefined,
             address: client.address ?? undefined,
             notes: client.notes ?? undefined,
           }}

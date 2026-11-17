@@ -26,6 +26,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.1090.0
         version: 3.1090.0
+      '@repo/geo':
+        specifier: workspace:*
+        version: link:../../packages/geo
       '@repo/guards':
         specifier: workspace:*
         version: link:../../packages/guards
@@ -117,6 +120,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.7)
+      '@repo/geo':
+        specifier: workspace:*
+        version: link:../../packages/geo
       '@repo/guards':
         specifier: workspace:*
         version: link:../../packages/guards
@@ -253,6 +259,24 @@ importers:
       typescript-eslint:
         specifier: ^8
         version: 8.64.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+
+  packages/geo:
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/node':
+        specifier: ^22
+        version: 22.20.1
+      tsx:
+        specifier: ^4
+        version: 4.23.1
+      typescript:
+        specifier: ^5.7
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@22.20.1)(vite@8.3.3(@types/node@22.20.1)(esbuild@0.25.12)(jiti@2.7.0)(tsx@4.23.1))
 
   packages/guards:
     dependencies:

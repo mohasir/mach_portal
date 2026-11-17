@@ -88,6 +88,7 @@ export interface SettingsSectionGateInput {
   canTaxRates: boolean;
   canQuoteDefaults: boolean;
   canQuoteStages: boolean;
+  canLocationSettings: boolean;
   canCatalogPreferences: boolean;
   canQuotePdfTemplate: boolean;
 }
@@ -97,7 +98,9 @@ export interface SettingsSectionGateInput {
 export function visibleSettingsSections(input: SettingsSectionGateInput) {
   return {
     general:
-      input.canTaxRates || (input.quotesActive && (input.canQuoteDefaults || input.canQuoteStages)),
+      input.canTaxRates ||
+      (input.quotesActive &&
+        (input.canQuoteDefaults || input.canQuoteStages || input.canLocationSettings)),
     preferences: input.canCatalogPreferences,
     quotePdfTemplate: input.quotesActive && input.canQuotePdfTemplate,
   };

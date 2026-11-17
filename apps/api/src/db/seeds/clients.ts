@@ -1,5 +1,4 @@
 import { and, eq } from 'drizzle-orm';
-import type { StateValue } from '@repo/schemas';
 import { db } from '../index';
 import { clients } from '../schema';
 import type { Executor } from '../index';
@@ -8,8 +7,10 @@ export interface SeedClient {
   name: string;
   email: string;
   phone: string;
-  city: string;
-  state: StateValue;
+  // Where this client's events usually take place: copied to the quotes the seed creates for it,
+  // never stored on the client.
+  region: string;
+  locality: string;
   address?: string;
   notes?: string;
 }
@@ -19,8 +20,8 @@ export const SEED_CLIENTS: SeedClient[] = [
     name: 'Laura Jiménez',
     email: 'laura.jimenez@example.com',
     phone: '+12125550134',
-    city: 'New York',
-    state: 'NY',
+    region: 'NY',
+    locality: 'New York',
     address: '145 W 57th St, Apt 12B',
     notes: 'Referida por Instagram. Interesada en boda 2026.',
   },
@@ -28,55 +29,55 @@ export const SEED_CLIENTS: SeedClient[] = [
     name: 'Marcus Bennett',
     email: 'marcus.bennett@example.com',
     phone: '+12015550198',
-    city: 'Jersey City',
-    state: 'NJ',
+    region: 'NJ',
+    locality: 'Jersey City',
     address: '88 Morgan St',
   },
   {
     name: 'Priya Nair',
     email: 'priya.nair@example.com',
     phone: '+12035550176',
-    city: 'Stamford',
-    state: 'CT',
+    region: 'CT',
+    locality: 'Stamford',
     notes: 'Cumpleaños corporativo, ~60 personas.',
   },
   {
     name: 'Diego Fernández',
     email: 'diego.fernandez@example.com',
     phone: '+13475550112',
-    city: 'Brooklyn',
-    state: 'NY',
+    region: 'NY',
+    locality: 'Buffalo',
     address: '210 Bedford Ave',
   },
   {
     name: 'Emily Carter',
     email: 'emily.carter@example.com',
     phone: '+19085550155',
-    city: 'Princeton',
-    state: 'NJ',
+    region: 'NJ',
+    locality: 'Princeton',
     notes: 'Pidió cotización para baby shower.',
   },
   {
     name: 'Sofía Ramírez',
     email: 'sofia.ramirez@example.com',
     phone: '+12035550143',
-    city: 'New Haven',
-    state: 'CT',
+    region: 'CT',
+    locality: 'New Haven',
     address: '19 Elm St',
   },
   {
     name: 'James O’Connor',
     email: 'james.oconnor@example.com',
     phone: '+16465550187',
-    city: 'Queens',
-    state: 'NY',
+    region: 'NY',
+    locality: 'Rochester',
   },
   {
     name: 'Hannah Weiss',
     email: 'hannah.weiss@example.com',
     phone: '+15515550169',
-    city: 'Hoboken',
-    state: 'NJ',
+    region: 'NJ',
+    locality: 'Hoboken',
     address: '400 Washington St',
     notes: 'Evento aniversario, terraza.',
   },
@@ -84,15 +85,15 @@ export const SEED_CLIENTS: SeedClient[] = [
     name: 'Tomás Álvarez',
     email: 'tomas.alvarez@example.com',
     phone: '+14755550121',
-    city: 'Bridgeport',
-    state: 'CT',
+    region: 'CT',
+    locality: 'Bridgeport',
   },
   {
     name: 'Rachel Kim',
     email: 'rachel.kim@example.com',
     phone: '+19175550102',
-    city: 'Manhattan',
-    state: 'NY',
+    region: 'NY',
+    locality: 'New York',
     notes: 'Corporativo trimestral recurrente.',
   },
 ];
@@ -115,7 +116,8 @@ export async function seedClients(
       continue;
     }
 
-    await x.insert(clients).values({ ...c, tenantId });
-    console.log(`  ✅ ${c.name} (${c.state})`);
+    const { region: _region, locality: _locality, ...client } = c;
+    await x.insert(clients).values({ ...client, tenantId });
+    console.log(`  ✅ ${c.name}`);
   }
 }

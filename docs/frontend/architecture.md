@@ -682,6 +682,18 @@ El catálogo de features (`FEATURES`, `FeatureKey`, `isToggleable`) vive en `@re
 - **Imágenes del producto:** `ProductGallery` (`features/catalog/components/ProductGallery.tsx`, subida, destacada, reordenar y borrar con los hooks de `features/catalog/hooks/useProductImages.ts`; helpers puros en `features/catalog/gallery.ts`) y `ProductThumb` (miniatura o icono de marcador de posición; se reutiliza desde cotizaciones y eventos). La subida va al endpoint de Express (`/api/uploads/products/:id/images`), no a tRPC; permisos: `product.update`.
 - **Costo:** el campo del formulario del producto depende de `product_cost` (`edit`, `read` o `hidden`); sin `product_cost.read` el costo no viaja.
 
+### 10.2 Ubicación de operación
+
+Cada organización decide en Configuración → General (tarjeta `LocationSettingsCard`, permiso `location_settings`, módulo `quotes`) dónde opera y qué lugar pide la cotización; ver `docs/backend/architecture.md` §14.8. La config viaja por `locationSettings.get` (abierto a cualquier miembro: el cotizador y los lectores la necesitan) y se lee con `useLocationSettings()` (`features/settings`).
+
+- **El país lo fija el servidor.** La web nunca envía `country`: la API lo toma de la configuración y lo guarda en la cotización. El cotizador solo manda `region`, `locality` y `address`.
+- **Activar exige el formulario completo.** `LocationSettingsCard` mantiene un borrador local; **Guardar** arma el payload con `settingsPayload` (`features/settings/locationHelpers.ts`). Si falta algo (`missingSettings`: país, precisión, cobertura, zonas, zonas incompatibles con la precisión) no se envía nada, el interruptor no se aplica y el aviso nombra lo que falta. Apagar reenvía la configuración **guardada** con `enabled: false`, no el borrador.
+- **`LocationFields`** (`components/shared/LocationFields`): selectores encadenados con los nombres de nivel del país en el idioma activo (`levelTitle`), limitados a la cobertura (`locationOptions`), con las localidades cargadas bajo demanda por región (`loadLocalities` de `@repo/geo`, `useLocalities`). Exige hasta el nivel de `depth`; con la función apagada solo **muestra** lo guardado. Un valor guardado que no está entre las opciones (ciudades migradas como texto libre) se muestra y se reenvía tal cual: nunca se borra.
+- **La regla de envío espeja a la API.** `isQuoteReadyToSend(state, settings)` pide líneas y, con la función activa, cada nivel hasta `depth` más la dirección si `askAddress` (`isLocationComplete`, `components/shared/LocationFields/helpers.ts`); apagada no pide lugar ni dirección. Sin la config cargada no se habilita.
+- **Lugar de otro país:** si el país guardado de la cotización difiere del configurado (`isPlaceStale`, solo con precisión > 0), el cotizador muestra el lugar viejo en un aviso con el nombre de **su** país, no pasa al selector (los códigos como `CA` existen en `US` y `NI`) y no lo reenvía (`toCreateInput`); al elegir un lugar nuevo se fija el país configurado y se habilita "Enviar".
+- **Chunks de localidades:** son ~70 archivos perezosos (`geo-us-localities-*`, `geo-ni-localities-*`); el service worker los excluye del precache (`exclude` en `next.config.ts`) y se piden al elegir una región.
+- **Lectores:** `AddressLines` recibe `country`, `region`, `locality` y `address` y muestra "localidad, nombre de región" (`formatPlace`); un lugar guardado se sigue viendo con la función apagada. El filtro de la lista de cotizaciones es por región (`regions`), con las regiones del país configurado. El cliente solo conserva `address`.
+
 ---
 
 ## 11. UI (Ant Design + Tailwind)

@@ -1,5 +1,6 @@
 export { SettingsPage } from './components/SettingsPage';
 export { useConfig } from './hooks/useConfig';
+export { useLocationSettings } from './hooks/useLocationSettings';
 export { useQuoteStages } from './hooks/useQuoteStages';
 export {
   useSyncUserPreferences,

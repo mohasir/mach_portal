@@ -87,6 +87,8 @@ export const TENANT_TABLES = [
   'role_permission',
   'staff',
   'templates',
+  'tenant_location',
+  'tenant_location_areas',
   'units_of_measure',
   'user_preferences',
 ] as const;

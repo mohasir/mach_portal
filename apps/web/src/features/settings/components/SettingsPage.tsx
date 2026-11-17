@@ -58,6 +58,7 @@ export function SettingsPage() {
     canTaxRates: can({ [RESOURCES.TAX_RATES]: [ACTIONS.VIEW] }),
     canQuoteDefaults: can({ [RESOURCES.QUOTE_DEFAULTS]: [ACTIONS.VIEW] }),
     canQuoteStages: can({ [RESOURCES.QUOTE_STAGES]: [ACTIONS.VIEW] }),
+    canLocationSettings: can({ [RESOURCES.LOCATION_SETTINGS]: [ACTIONS.VIEW] }),
     canCatalogPreferences: can({ [RESOURCES.CATALOG_PREFERENCES]: [ACTIONS.VIEW] }),
     canQuotePdfTemplate: can({ [RESOURCES.QUOTE_PDF_TEMPLATE]: [ACTIONS.VIEW] }),
   });

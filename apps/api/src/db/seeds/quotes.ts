@@ -7,6 +7,7 @@ import {
   type QuoteStageId,
 } from '@repo/schemas';
 import { db as defaultDb, type Executor } from '../index';
+import { SEED_CLIENTS, type SeedClient } from './clients';
 import {
   chargeTypes,
   quoteCharges,
@@ -602,6 +603,8 @@ export interface SeedQuotesOptions {
   creatorEmail: string;
   // Rotated over the quotes as assignees, each with one assignment history row.
   assigneeEmails?: string[];
+  // Gives each quote the usual place of its client (in the US).
+  clients?: SeedClient[];
 }
 
 async function loadContext(
@@ -623,7 +626,7 @@ async function loadContext(
     assignees,
   ] = await Promise.all([
     db
-      .select({ id: clients.id, email: clients.email, state: clients.state })
+      .select({ id: clients.id, email: clients.email })
       .from(clients)
       .where(eq(clients.tenantId, tenantId)),
     db
@@ -777,6 +780,7 @@ export async function seedQuotes(
       console.log(`  ⏭️  cliente "${seed.clientEmail}" no existe, salteando`);
       continue;
     }
+    const place = (opts.clients ?? SEED_CLIENTS).find((c) => c.email === seed.clientEmail);
 
     // Seq and number derive from the seed itself (not from "today") so a re-run finds them.
     const seq = appRow.quoteSeqStart + index;
@@ -825,7 +829,9 @@ export async function seedQuotes(
         eventTypeId,
         eventDate: seed.eventDate ?? null,
         eventTime: seed.eventTime ?? null,
-        state: client.state,
+        country: place ? 'US' : null,
+        region: place?.region ?? null,
+        locality: place?.locality ?? null,
         address: seed.address ?? null,
         notes: seed.notes ?? null,
         discountType: seed.discountType ?? null,

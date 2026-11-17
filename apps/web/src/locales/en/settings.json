@@ -167,5 +167,54 @@
     "currencyInvalid": "Invalid currency",
     "optionsSelectionDeadlineDaysInvalid": "Invalid number of days",
     "quoteStagesLabelInvalid": "Label required"
+  },
+  "location": {
+    "title": "Operating location",
+    "caption": "Where the organization offers its products or services and which place each quote must ask for.",
+    "enable": "Ask for a location on quotes",
+    "enableCaption": "When off, quotes do not ask for a place; what was already saved is kept and still shown.",
+    "pendingHint": "It turns on when you save, once the form is complete.",
+    "country": "Country",
+    "countryPlaceholder": "Select a country",
+    "countries": {
+      "US": "United States",
+      "NI": "Nicaragua"
+    },
+    "scope": {
+      "title": "Coverage",
+      "caption": "Where you offer your products or services; the quote options are limited to that coverage.",
+      "country": "Whole country",
+      "areas": "Only some areas"
+    },
+    "areas": {
+      "title": "Covered areas",
+      "regionPlaceholder": "Select {{level}}",
+      "localityPlaceholder": "Whole area",
+      "add": "Add area",
+      "empty": "You have not added any areas yet."
+    },
+    "depth": {
+      "title": "Precision",
+      "caption": "How far down the place of each quote must go.",
+      "options": {
+        "0": "Country only",
+        "1": "Up to {{level}}",
+        "2": "Up to {{level}}"
+      }
+    },
+    "askAddress": {
+      "title": "Ask for an address",
+      "caption": "The quote asks for the address of the service."
+    },
+    "missing": {
+      "country": "the country",
+      "depth": "the precision",
+      "scope": "the coverage",
+      "areas": "at least one area",
+      "areasBeyondDepth": "areas that fit the chosen precision"
+    },
+    "incomplete": "Not applied. Still missing: {{fields}}.",
+    "loadError": "Could not load the location settings.",
+    "retry": "Retry"
   }
 }

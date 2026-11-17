@@ -35,11 +35,6 @@
     "irreversible": "This action cannot be undone"
   },
   "confirmAction": "Confirm",
-  "states": {
-    "NY": "New York",
-    "NJ": "New Jersey",
-    "CT": "Connecticut"
-  },
   "notFound": {
     "title": "Page not found",
     "subtitle": "The page you're looking for doesn't exist or was moved.",
@@ -98,5 +93,9 @@
     "linkRemove": "Remove link",
     "linkInvalid": "Enter a valid web, email or phone address",
     "counter": "{{count}}/{{max}}"
+  },
+  "location": {
+    "stored": "Location",
+    "select": "Select {{level}}"
   }
 }

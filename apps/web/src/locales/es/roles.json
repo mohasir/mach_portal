@@ -182,6 +182,10 @@
         "label": "Impuestos",
         "caption": "Tasa de impuesto por defecto de los productos nuevos."
       },
+      "location_settings": {
+        "label": "Ubicación de operación",
+        "caption": "Dónde opera la organización y qué lugar pide cada cotización."
+      },
       "quote_defaults": {
         "label": "Valores por defecto",
         "caption": "Depósito, validez y consecutivo de cotizaciones nuevas."

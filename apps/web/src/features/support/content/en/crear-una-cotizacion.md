@@ -18,12 +18,16 @@ The client is the **only required field** to save a draft.
 
 ## Step 2: Event details
 
-Event type, date, time, State (NY, NJ or CT), City and Address.
+Event type, date, time and, depending on the organization's **Operating location**
+(Settings → General), the place and the Address. With the location turned off neither is asked.
 
 - You can't pick a date earlier than today, or a time that already passed if you picked today.
-- City depends on the State you picked (it's a closed list, not free text) — if you change the
-  State and the loaded city isn't in the new list, it gets cleared automatically.
-- State, City and Address aren't required to save a draft, but they are required to **send** the
+- The place is picked in chained lists (for example State then City, or Department then
+  Municipality), limited to the organization's coverage. Which levels are asked depends on the
+  configured precision. Changing the first level clears the second.
+- Lowering the location precision drops, the next time each quote is saved, the levels deeper than the current precision.
+- The Address only shows up if the organization asks for it.
+- The place and the Address aren't required to save a draft, but they are required to **send** the
   quote later on.
 
 ## Step 3: Extra charges
@@ -75,7 +79,7 @@ Subtotal (lines)
 ```
 
 Each line takes its {{item}}'s tax rate when it's added (0% if the {{item}} is tax exempt) and
-keeps it even if the {{item}}'s rate changes later. The event's State doesn't affect tax. The
+keeps it even if the {{item}}'s rate changes later. The event's place doesn't affect tax. The
 summary shows one tax row per rate.
 The deposit and balance are calculated on that final TOTAL.
 
@@ -83,7 +87,7 @@ The deposit and balance are calculated on that final TOTAL.
 
 - **Save draft**: saves whatever is there, without requiring it to be complete. Having a client is
   enough. The quote stays in **Pending**, marked as a draft.
-- **Create quote**: requires client, State, City, Address and at least one line. It removes the
+- **Create quote**: requires client, the place and the Address (as set in the location settings) and at least one line. It removes the
   "draft" mark, but the quote **stays in Pending** — this still isn't the same as sending it to
   the client. For that, see
   [How to send a quote to the client and generate the PDF](/admin/settings/support/enviar-una-cotizacion).

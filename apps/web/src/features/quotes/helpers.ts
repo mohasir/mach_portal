@@ -4,6 +4,11 @@ import {
   type QuoteLineInput,
   type QuotesFilters,
 } from '@repo/schemas';
+import {
+  isLocationComplete,
+  isPlaceStale,
+  type LocationSettings,
+} from '@/components/shared/LocationFields/helpers';
 import { isPastDate, type DateInput } from '@/lib/date';
 import { chargesToSend } from './chargeHelpers';
 import type { LineDraft, QuoteBuilderState } from './hooks/useQuoteBuilder';
@@ -26,14 +31,14 @@ export const isQuotePastDue = (quote: QuoteTimeline) =>
 
 /** Filter-bar criteria in use; search is left out since it has its own field. */
 export const countActiveFilters = ({
-  states,
+  regions,
   assignedToIds,
   eventTypeIds,
   isDraft,
   stale,
   archived,
 }: QuotesFilters) =>
-  [states?.length, assignedToIds?.length, eventTypeIds?.length, isDraft, stale, archived].filter(
+  [regions?.length, assignedToIds?.length, eventTypeIds?.length, isDraft, stale, archived].filter(
     Boolean,
   ).length;
 
@@ -52,7 +57,14 @@ export function toQuoteLineInputs(lines: LineDraft[]): QuoteLineInput[] {
   }));
 }
 
-export function toCreateInput(state: QuoteBuilderState, isDraft: boolean): CreateQuoteInput {
+// A place saved under another country is not resent: the API would validate it against the
+// current country, and a code shared between countries would silently change meaning.
+export function toCreateInput(
+  state: QuoteBuilderState,
+  isDraft: boolean,
+  settings?: LocationSettings | null,
+): CreateQuoteInput {
+  const stale = isPlaceStale(settings, state.country);
   return {
     isDraft,
     clientId: state.newClient ? undefined : (state.clientId ?? undefined),
@@ -66,9 +78,9 @@ export function toCreateInput(state: QuoteBuilderState, isDraft: boolean): Creat
     eventTypeId: state.eventTypeId ?? undefined,
     eventDate: state.eventDate ?? undefined,
     eventTime: state.eventTime ?? undefined,
-    state: state.state ?? undefined,
+    region: (!stale && state.region) || undefined,
+    locality: (!stale && state.locality) || undefined,
     address: state.address.trim() || undefined,
-    city: state.city.trim() || undefined,
     notes: state.notes.trim() || undefined,
     clientNotes: state.clientNotes.trim() || undefined,
     discountType: state.discountType ?? undefined,
@@ -88,9 +100,10 @@ export function toBuilderState(detail: QuoteDetail): QuoteBuilderState {
     eventTypeId: detail.eventTypeId,
     eventDate: detail.eventDate,
     eventTime: detail.eventTime,
-    state: detail.state,
+    country: detail.country,
+    region: detail.region,
+    locality: detail.locality,
     address: detail.address ?? '',
-    city: detail.city ?? '',
     notes: detail.notes ?? '',
     clientNotes: detail.clientNotes ?? '',
     discountType: detail.discountType,
@@ -146,13 +159,20 @@ export function hasBuilderChanges(
   return JSON.stringify(state) !== JSON.stringify(initialState);
 }
 
-/** Enables "Enviar" — "Guardar borrador" only needs a client. */
-export function isQuoteReadyToSend(state: QuoteBuilderState): boolean {
+/**
+ * Enables "Enviar" — "Guardar borrador" only needs a client. Mirrors the API gate: lines,
+ * and with the location function on every level up to its depth plus the address when asked.
+ * Without the settings loaded the place cannot be judged, so it is not ready.
+ */
+export function isQuoteReadyToSend(
+  state: QuoteBuilderState,
+  settings: LocationSettings | null | undefined,
+): boolean {
   return (
     hasClient(state) &&
-    !!state.state &&
-    state.address.trim().length > 0 &&
-    state.city.trim().length > 0 &&
-    state.lines.length > 0
+    state.lines.length > 0 &&
+    !!settings &&
+    !isPlaceStale(settings, state.country) &&
+    isLocationComplete(settings, state)
   );
 }

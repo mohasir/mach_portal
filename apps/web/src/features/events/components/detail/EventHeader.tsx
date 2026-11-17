@@ -126,12 +126,7 @@ export function EventHeader({ event }: EventHeaderProps) {
                   {t('detail.reschedule')}
                 </Button>
               </Can>
-              <Button
-                danger
-                icon={<XCircle size={14} />}
-                loading={isCancelling}
-                onClick={onCancel}
-              >
+              <Button danger icon={<XCircle size={14} />} loading={isCancelling} onClick={onCancel}>
                 {t('detail.cancel')}
               </Button>
             </Space>
@@ -153,8 +148,9 @@ export function EventHeader({ event }: EventHeaderProps) {
           </div>
           <AddressLines
             address={event.address}
-            city={event.city}
-            state={event.state}
+            country={event.country}
+            region={event.region}
+            locality={event.locality}
             className="text-base text-gray-500"
           />
         </div>

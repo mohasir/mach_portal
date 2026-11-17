@@ -12,7 +12,6 @@
     "total": "Total"
   },
   "filters": {
-    "state": "Estado",
     "assignee": "Asignado a",
     "eventType": "Tipo de evento",
     "drafts": "Borradores",
@@ -75,10 +74,6 @@
       "typePlaceholder": "Elegí un tipo",
       "eventDetailsGroupTitle": "Detalle del evento",
       "addressGroupTitle": "Dirección",
-      "state": "Estado",
-      "statePlaceholder": "NY / NJ / CT",
-      "city": "Ciudad",
-      "cityPlaceholder": "Ciudad del evento",
       "date": "Fecha del evento",
       "time": "Hora",
       "availabilityWarning": "Advertencia",
@@ -90,7 +85,8 @@
       "internalNotesPlaceholder": "Solo visible para tu equipo",
       "clientNotesLabel": "Notas para el cliente",
       "clientNotesCaption": "Aparece en el PDF de la cotización",
-      "clientNotesPlaceholder": "Visible para el cliente en el PDF"
+      "clientNotesPlaceholder": "Visible para el cliente en el PDF",
+      "placeStale": "El lugar guardado ({{place}}) es de otro país que el configurado ahora y se descartará al guardar. Elegí el lugar nuevo abajo."
     },
     "selectionsMode": {
       "label": "Elegir opciones ahora",

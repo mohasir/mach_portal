@@ -40,6 +40,7 @@ import {
   type PricedQuoteCharge,
   type PricedQuoteLine,
 } from './quotes.repository';
+import { resolveQuotePlace } from './quotes.location';
 import { buildQuotePdfPayload } from './quotes.pdf';
 import { matchStoredLines, validateLineSelections, type CatalogContext } from './quotes.validation';
 import {
@@ -236,7 +237,8 @@ export class QuotesService {
       await this.allowedViewOptions(query),
       ownerId,
     );
-    const resource = items.map(quoteListItemResource);
+    const location = await this.repo.findLocationSettings();
+    const resource = items.map((row) => quoteListItemResource(row, location));
     if (!paginate) return { items: resource };
     return { items: resource, pagination: paginationMeta(total, page, pageSize) };
   }
@@ -251,11 +253,13 @@ export class QuotesService {
       result.historyRows,
       result.assignmentHistoryRows,
       result.chargeRows,
+      await this.repo.findLocationSettings(),
     );
   }
 
   async board(query: QuotesBoardQuery, ownerId?: string) {
     const rows = await this.repo.findBoard(await this.allowedViewOptions(query), ownerId);
+    const location = await this.repo.findLocationSettings();
     type Card = ReturnType<typeof quoteCardResource>;
     const grouped: Record<QuoteStageId, Card[]> & { archived: Card[] } = {
       [QUOTE_STAGE.PENDING]: [],
@@ -265,7 +269,7 @@ export class QuotesService {
       archived: [],
     };
     for (const row of rows) {
-      const card = quoteCardResource(row);
+      const card = quoteCardResource(row, location);
       if (card.isArchived) grouped.archived.push(card);
       else grouped[row.stageId as QuoteStageId].push(card);
     }
@@ -282,6 +286,12 @@ export class QuotesService {
   }
 
   async create(input: CreateQuoteInput, userId: string, canManagePricing: boolean) {
+    const place = await resolveQuotePlace(
+      await this.repo.findLocationSettings(),
+      input,
+      null,
+      input.isDraft,
+    );
     await this.validateLines(input.lines, canManagePricing);
     const charges = await this.resolveCharges(input.charges ?? [], []);
 
@@ -311,9 +321,7 @@ export class QuotesService {
         eventTypeId: input.eventTypeId ?? null,
         eventDate: input.eventDate ?? null,
         eventTime: input.eventTime ?? null,
-        state: input.state ?? null,
-        address: input.address ?? null,
-        city: input.city ?? null,
+        ...place,
         notes: input.notes ?? null,
         clientNotes: input.clientNotes ?? null,
         discountType: input.discountType ?? null,
@@ -348,6 +356,12 @@ export class QuotesService {
         cause: new AppError(ErrorCodes.quote.NOT_EDITABLE),
       });
     }
+    const place = await resolveQuotePlace(
+      await this.repo.findLocationSettings(),
+      input,
+      current,
+      input.isDraft,
+    );
     // Lines kept as they are stay frozen, tax rate included; only new or modified ones are checked
     // against the catalog and take the product's current rate.
     const stored = await this.repo.findLinesWithOptions(id);
@@ -382,9 +396,7 @@ export class QuotesService {
         eventTypeId: input.eventTypeId ?? null,
         eventDate: input.eventDate ?? null,
         eventTime: input.eventTime ?? null,
-        state: input.state ?? null,
-        address: input.address ?? null,
-        city: input.city ?? null,
+        ...place,
         notes: input.notes ?? null,
         clientNotes: input.clientNotes ?? null,
         discountType: input.discountType ?? null,
@@ -444,9 +456,10 @@ export class QuotesService {
             eventTypeId: current.eventTypeId,
             eventDate: current.eventDate,
             eventTime: current.eventTime,
-            state: current.state,
+            country: current.country,
+            region: current.region,
+            locality: current.locality,
             address: current.address,
-            city: current.city,
             totalAmount: current.total,
             selectionsConfirmedAt: current.selectOptionsAtQuote ? new Date() : null,
             selectionsConfirmedById: current.selectOptionsAtQuote ? userId : null,
@@ -515,8 +528,11 @@ export class QuotesService {
   }
 
   private async assertReadyToSend(current: PublicQuote, id: string) {
-    const linesCount = await this.repo.countLines(id);
-    if (!isQuoteComplete(current, linesCount)) {
+    const [linesCount, location] = await Promise.all([
+      this.repo.countLines(id),
+      this.repo.findLocationSettings(),
+    ]);
+    if (!isQuoteComplete(current, linesCount, location)) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         cause: new AppError(ErrorCodes.quote.INCOMPLETE),

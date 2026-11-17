@@ -13,7 +13,7 @@ antes del evento). La cantidad mínima de cada línea se define en cada elemento
 
 ## Impuestos
 
-El impuesto es de cada {{item}}, no del Estado del evento. La tarjeta **Impuestos** tiene la **tasa
+El impuesto es de cada {{item}}, no del lugar del evento. La tarjeta **Impuestos** tiene la **tasa
 de impuesto por defecto**: es la tasa con la que nace cada {{item}} nuevo.
 
 - En cada {{item}} del catálogo se puede cambiar su tasa o marcarlo **exento de impuesto** (se

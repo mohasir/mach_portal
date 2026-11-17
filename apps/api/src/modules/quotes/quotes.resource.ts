@@ -1,6 +1,8 @@
 import { summarizeLineTaxes } from '@repo/schemas';
 import { quotes, quoteCharges, quoteLines, quoteLineOptions } from '../../db/schema';
+import type { LocationSettingsResource } from '../locationSettings/locationSettings.resource';
 import { unitRefColumns, unitRefResource, type UnitRef } from '../products/products.resource';
+import { isLocationComplete, type QuotePlace } from './quotes.location';
 
 export const publicQuoteColumns = {
   id: quotes.id,
@@ -10,9 +12,10 @@ export const publicQuoteColumns = {
   eventTypeId: quotes.eventTypeId,
   eventDate: quotes.eventDate,
   eventTime: quotes.eventTime,
-  state: quotes.state,
+  country: quotes.country,
+  region: quotes.region,
+  locality: quotes.locality,
   address: quotes.address,
-  city: quotes.city,
   notes: quotes.notes,
   clientNotes: quotes.clientNotes,
   subtotal: quotes.subtotal,
@@ -111,9 +114,10 @@ export const quoteResource = (row: PublicQuote) => ({
   eventTypeId: row.eventTypeId,
   eventDate: row.eventDate,
   eventTime: row.eventTime,
-  state: row.state,
+  country: row.country,
+  region: row.region,
+  locality: row.locality,
   address: row.address,
-  city: row.city,
   notes: row.notes,
   clientNotes: row.clientNotes,
   subtotal: row.subtotal,
@@ -141,11 +145,13 @@ export type QuoteResource = ReturnType<typeof quoteResource>;
 export type QuoteWithNames = PublicQuote & { clientName: string; eventTypeName: string | null };
 
 // Mirrors the "ready to send" gate enforced server-side in quotes.service.ts (assertReadyToSend) —
-// a quote can only leave PENDING/draft once it has a state, an address, a city and at least one line.
+// a quote can only leave PENDING/draft once it has at least one line and the place the current
+// location settings require.
 export const isQuoteComplete = (
-  row: Pick<PublicQuote, 'state' | 'address' | 'city'>,
+  row: QuotePlace,
   linesCount: number,
-): boolean => !!row.state && !!row.address && !!row.city && linesCount > 0;
+  location: LocationSettingsResource,
+): boolean => isLocationComplete(row, location) && linesCount > 0;
 
 export type QuoteListItemRow = QuoteWithNames & {
   linesCount: number;
@@ -154,11 +160,14 @@ export type QuoteListItemRow = QuoteWithNames & {
   eventId: string | null;
 };
 
-export const quoteListItemResource = (row: QuoteListItemRow) => ({
+export const quoteListItemResource = (
+  row: QuoteListItemRow,
+  location: LocationSettingsResource,
+) => ({
   ...quoteResource(row),
   clientName: row.clientName,
   eventTypeName: row.eventTypeName,
-  isComplete: isQuoteComplete(row, row.linesCount),
+  isComplete: isQuoteComplete(row, row.linesCount, location),
   createdByName: row.createdByName,
   assignedToName: row.assignedToName,
   eventId: row.eventId,
@@ -173,7 +182,7 @@ export type QuoteCardRow = QuoteWithNames & {
   depositPaid: boolean | null;
 };
 
-export const quoteCardResource = (row: QuoteCardRow) => ({
+export const quoteCardResource = (row: QuoteCardRow, location: LocationSettingsResource) => ({
   id: row.id,
   number: row.number,
   clientName: row.clientName,
@@ -182,7 +191,7 @@ export const quoteCardResource = (row: QuoteCardRow) => ({
   total: row.total,
   stageId: row.stageId,
   isDraft: row.isDraft,
-  isComplete: isQuoteComplete(row, row.linesCount),
+  isComplete: isQuoteComplete(row, row.linesCount, location),
   validUntil: row.validUntil,
   linesCount: row.linesCount,
   createdByName: row.createdByName,
@@ -264,6 +273,7 @@ export const buildQuoteDetail = (
   historyRows: StageHistoryRow[],
   assignmentHistoryRows: AssignmentHistoryRow[],
   chargeRows: PublicQuoteCharge[],
+  location: LocationSettingsResource,
 ) => {
   const lines = buildQuoteLineDetails(lineRows, optionRows);
   return {
@@ -274,7 +284,7 @@ export const buildQuoteDetail = (
     assignedToName: quoteRow.assignedToName,
     eventId: quoteRow.eventId,
     isArchived: !!quoteRow.archivedAt,
-    isComplete: isQuoteComplete(quoteRow, lineRows.length),
+    isComplete: isQuoteComplete(quoteRow, lineRows.length, location),
     stageHistory: historyRows,
     assignmentHistory: assignmentHistoryRows,
     lines,

@@ -1,8 +1,9 @@
 'use client';
-import { Flex, Tag, type TableColumnsType } from 'antd';
+import { Tag, type TableColumnsType } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { ClientStatus } from '@repo/schemas';
 import { DataTableRowActions } from '@/components/shared/DataTable';
+import { AddressLines } from '@/components/shared/AddressLines';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { FormattedPhone } from '@/components/shared/Inputs/PhoneInput';
 import { useDateFormatter } from '@/lib/hooks/useDateFormatter';
@@ -38,18 +39,12 @@ export function useClientsColumns({
       render: (phone: string | null) => (phone ? <FormattedPhone value={phone} /> : '—'),
     },
     {
-      title: t('columns.location'),
-      key: 'location',
+      title: t('columns.address'),
+      dataIndex: 'address',
+      key: 'address',
       responsive: ['md'],
-      render: (_, client) =>
-        client.city || client.state ? (
-          <Flex gap={6} align="center" wrap>
-            {client.city ? <span>{client.city}</span> : null}
-            {client.state ? <Tag>{client.state}</Tag> : null}
-          </Flex>
-        ) : (
-          '—'
-        ),
+      render: (address: string | null) =>
+        address ? <AddressLines address={address} lines={1} /> : '—',
     },
     {
       title: t('columns.status'),

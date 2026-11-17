@@ -1,5 +1,7 @@
 # Mach Bar — Especificaciones del Proyecto
 
+> Nota: el enum `state` (NY/NJ/CT) descrito acá fue reemplazado por la ubicación de operación (migración 0016, `docs/backend/architecture.md` §14.8).
+
 > Portal administrativo para gestión de cotizaciones, eventos, clientes y staff.
 > Stack: Next.js · tRPC · Express · Drizzle ORM · PostgreSQL
 

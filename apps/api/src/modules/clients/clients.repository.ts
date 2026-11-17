@@ -15,8 +15,6 @@ import { containsPattern } from '../../lib/utils/search';
 
 const sortColumns = {
   name: clients.name,
-  city: clients.city,
-  state: clients.state,
   createdAt: clients.createdAt,
 } as const;
 
