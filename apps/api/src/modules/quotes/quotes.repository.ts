@@ -50,6 +50,8 @@ import {
   user,
 } from '../../db/schema';
 import { TenancyRepository } from '../../lib/tenancy/tenancy.repository';
+import { LocationSettingsRepository } from '../locationSettings/locationSettings.repository';
+import { locationSettingsResource } from '../locationSettings/locationSettings.resource';
 import { tenantEq } from '../../lib/tenancy/tenantEq';
 import { resolvePagination } from '../../lib/utils/pagination';
 import { todayInBusinessTimezone } from '../../lib/utils/date';
@@ -154,6 +156,12 @@ export class QuotesRepository {
     return and(eq(quotes.id, id), tenantEq(quotes, this.tenantId));
   }
 
+  // Read on the same executor as the quote, so a request sees the settings of its own transaction.
+  async findLocationSettings() {
+    const { row, areas } = await new LocationSettingsRepository(this.db, this.tenantId).find();
+    return locationSettingsResource(row, areas);
+  }
+
   // 'own' scope (scopeFor) = created it OR it's assigned to me.
   private ownerFilter(ownerId?: string): SQL | undefined {
     return ownerId
@@ -166,7 +174,7 @@ export class QuotesRepository {
     const where = and(
       tenantEq(quotes, this.tenantId),
       this.archivedWhere(query),
-      this.filtersWhere(query),
+      this.filtersWhere(query, await this.regionCountry(query)),
       month ? sql`extract(month from ${quotes.eventDate}) = ${month}` : undefined,
       year ? sql`extract(year from ${quotes.eventDate}) = ${year}` : undefined,
       stageId ? eq(quotes.stageId, stageId) : undefined,
@@ -446,7 +454,7 @@ export class QuotesRepository {
         .leftJoin(assignedToUser, eq(quotes.assignedToId, assignedToUser.id));
 
     const ownerWhere = and(tenantEq(quotes, this.tenantId), this.ownerFilter(ownerId));
-    const filtersWhere = this.filtersWhere(query);
+    const filtersWhere = this.filtersWhere(query, await this.regionCountry(query));
     // Archived quotes get their own column instead of their stage's.
     const [activeRows, archivedRows] = await Promise.all([
       baseSelect()
@@ -470,15 +478,25 @@ export class QuotesRepository {
     return archived ? isNotNull(quotes.archivedAt) : undefined;
   }
 
-  private filtersWhere({
-    search,
-    states,
-    assignedToIds,
-    eventTypeIds,
-    isDraft,
-    stale,
-    hideStale,
-  }: QuotesFilters & QuotesViewOptions) {
+  // Region codes repeat across countries (US and NI share several), so a region filter is
+  // scoped to the country the organization is configured with now.
+  private async regionCountry({ regions }: QuotesFilters): Promise<string | null> {
+    if (!regions?.length) return null;
+    return (await this.findLocationSettings()).country;
+  }
+
+  private filtersWhere(
+    {
+      search,
+      regions,
+      assignedToIds,
+      eventTypeIds,
+      isDraft,
+      stale,
+      hideStale,
+    }: QuotesFilters & QuotesViewOptions,
+    regionCountry: string | null,
+  ) {
     return and(
       search
         ? or(
@@ -486,7 +504,12 @@ export class QuotesRepository {
             ilike(clients.name, containsPattern(search)),
           )
         : undefined,
-      states?.length ? inArray(quotes.state, states) : undefined,
+      regions?.length
+        ? and(
+            regionCountry ? eq(quotes.country, regionCountry) : undefined,
+            inArray(quotes.region, regions),
+          )
+        : undefined,
       assignedToIds?.length ? inArray(quotes.assignedToId, assignedToIds) : undefined,
       eventTypeIds?.length ? inArray(quotes.eventTypeId, eventTypeIds) : undefined,
       isDraft !== undefined ? eq(quotes.isDraft, isDraft) : undefined,

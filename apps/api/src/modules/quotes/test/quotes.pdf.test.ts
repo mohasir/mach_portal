@@ -173,3 +173,30 @@ describe('buildQuotePdfPayload fees', () => {
     ]);
   });
 });
+
+describe('buildQuotePdfPayload event location', () => {
+  const locationOf = (place: Partial<QuoteDetailRow>) =>
+    buildQuotePdfPayload({ ...quoteRow, ...place } as QuoteDetailRow, lines, [], [], undefined)
+      .event?.location;
+
+  it('combines the address, the locality and the region name from the dataset', () => {
+    expect(
+      locationOf({ country: 'US', region: 'NY', locality: 'Albany', address: '1 State St' }),
+    ).toBe('1 State St, Albany, New York');
+    expect(locationOf({ country: 'NI', region: 'RACCN', locality: null, address: null })).toBe(
+      'Región Autónoma de la Costa Caribe Norte',
+    );
+  });
+
+  it('falls back to the region code outside the dataset and skips missing parts', () => {
+    expect(locationOf({ country: 'US', region: 'ZZ', locality: 'Bronx', address: null })).toBe(
+      'Bronx, ZZ',
+    );
+    expect(locationOf({ country: null, region: null, locality: null, address: '9 Elm St' })).toBe(
+      '9 Elm St',
+    );
+    expect(
+      locationOf({ country: null, region: null, locality: null, address: null }),
+    ).toBeUndefined();
+  });
+});

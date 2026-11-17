@@ -6,6 +6,7 @@ import type {
   QuotePdfRequest,
 } from '../../lib/pdfService/types';
 import type { ProductWithGroups } from '../products/products.resource';
+import { formatQuotePlace } from './quotes.location';
 import type { QuoteChargeDetail, QuoteDetailRow, QuoteLineDetail } from './quotes.resource';
 
 function formatGroupTitle(group: ProductWithGroups['optionGroups'][number]): string {
@@ -80,10 +81,7 @@ export function buildQuotePdfPayload(
   catalog: ProductWithGroups[],
   template: QuotePdfTemplateContent | undefined,
 ): QuotePdfRequest {
-  // Same combining rule as AddressLines.tsx (street, then "city, state"), minus the
-  // state's translated display name — a US-facing PDF reads fine with the raw code.
-  const location =
-    [quoteRow.address, quoteRow.city, quoteRow.state].filter(Boolean).join(', ') || undefined;
+  const location = formatQuotePlace(quoteRow);
   const hasEventInfo = Boolean(
     quoteRow.eventDate ?? quoteRow.eventTypeName ?? quoteRow.eventTime ?? location,
   );
