@@ -1,4 +1,5 @@
 'use client';
+import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import { SidebarLogo } from './SidebarLogo';
 import { SidebarNav } from './SidebarNav';
 
@@ -12,9 +13,16 @@ export function SidebarContent({ collapsed = false, onNavigate }: SidebarContent
     <div className="bg-surface flex h-full flex-col">
       <SidebarLogo collapsed={collapsed} onNavigate={onNavigate} />
 
-      <div className={`flex-1 overflow-y-auto py-2 px-3`}>
+      <OverlayScrollbarsComponent
+        className="min-h-0 flex-1 px-3 py-2"
+        options={{
+          overflow: { x: 'hidden' },
+          scrollbars: { autoHide: 'leave', theme: 'os-theme-dark' },
+        }}
+        defer
+      >
         <SidebarNav collapsed={collapsed} onNavigate={onNavigate} />
-      </div>
+      </OverlayScrollbarsComponent>
     </div>
   );
 }
