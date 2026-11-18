@@ -646,12 +646,12 @@ Spec: `docs/superpowers/specs/2026-11-08-multitenant-fase1b-rls-design.md`. Runb
 | --- | --- | --- | --- |
 | `owner` | dueño de las tablas; debe tener `BYPASSRLS` o ser superusuario (requisito del administrador: ni `db:roles` ni `mt:verify` lo comprueban; las migraciones de datos cruzan organizaciones) | migraciones, `db:reset`, `db:baseline`, `db:roles`, `db:studio` | `DATABASE_OWNER_URL` |
 | `app` | sin `SUPERUSER`, `BYPASSRLS` ni `CREATEROLE`; solo `SELECT/INSERT/UPDATE/DELETE` y secuencias | la API en cada petición, jobs | `DATABASE_APP_URL` |
-| `platform` | `BYPASSRLS`; nunca atiende peticiones de usuarios | `db:seed`, `tenant:create`, `mt:verify` | `DATABASE_PLATFORM_URL` |
+| `platform` | `BYPASSRLS`; no atiende peticiones de usuarios, salvo las de la consola de plataforma (§15) | `db:seed`, `tenant:create`, `mt:verify` y los procedures de la consola (`platformDb()`) | `DATABASE_PLATFORM_URL` |
 
 - `pnpm --filter api db:roles` (idempotente) crea `app` y `platform`, concede permisos y fija `ALTER DEFAULT PRIVILEGES` para las tablas que cree el dueño. Se conecta con `DATABASE_OWNER_URL` y toma el nombre y la contraseña de cada rol del usuario y la contraseña de `DATABASE_APP_URL` y `DATABASE_PLATFORM_URL` (decodificados como los decodifica el driver, así que la contraseña va codificada con `encodeURIComponent` si tiene `@ : / % ? #`…). Falla nombrando la variable si falta alguna de las dos URLs o si no trae usuario y contraseña, y si los usuarios coinciden entre sí o con el dueño. No imprime URLs ni contraseñas.
 - `requireDatabaseUrl` (`db/databaseUrls.ts`) nunca cae a otra variable: un script sin su URL falla con un mensaje claro.
 - **Verificación al arrancar** (`db/roleGuard.ts`): la API no arranca si el rol de `DATABASE_APP_URL` es superusuario, tiene `BYPASSRLS` o `CREATEROLE` (podría concederse un rol que salta el RLS) o es **miembro** (transitivo) de un rol que salta el RLS; `mt:verify` hace la misma comprobación. Los roles creados desde la consola de Neon pertenecen a `neon_superuser`: el rol `app` debe crearse con `db:roles`.
-- Un administrador de plataforma (`user.isPlatformAdmin`) es una persona, no un rol de base: la API sigue usando `app` con una organización fijada, una a la vez.
+- Un administrador de plataforma (`user.isPlatformAdmin`) es una persona, no un rol de base: la API sigue usando `app` con una organización fijada, una a la vez. La consola de plataforma (§15) es la excepción acotada: sus procedures usan `platformDb()` con filtro explícito por organización.
 
 ### 12.2 Políticas
 
@@ -700,7 +700,7 @@ Cada petición con tenant retiene una conexión de principio a fin, así que una
 ### 12.6 Código que corre fuera de la cadena
 
 - **Better Auth** usa su propio pool, `authDb` (`db/index.ts`, `DB_AUTH_POOL_MAX`, por defecto 3). Corre dentro de peticiones que ya retienen una conexión de `DB_POOL_MAX`; con el mismo pool podría quedarse esperando una conexión que nunca se libera. Solo toca tablas sin RLS. Código que corra dentro de una petición pero fuera de `ctx.db` (ej. `auth.api.signUpEmail` en `users.create`) debe usar `authDb`, no el pool principal.
-- **Scripts que cruzan organizaciones** (`createTenant`, seeds, `mt:verify`) usan `platformDb()` (`db/platform.ts`, `DATABASE_PLATFORM_URL`); la API nunca lo importa.
+- **Scripts que cruzan organizaciones** (`createTenant`, seeds, `mt:verify`) usan `platformDb()` (`db/platform.ts`, `DATABASE_PLATFORM_URL`). La API solo lo usa en los procedures de la consola de plataforma (§15); el resto de módulos no lo importa.
 - **Jobs** (`jobs:event-reminders -- --tenant=<slug>` o `-- --all`) usan `app` y abren una transacción por organización.
 - **Pool:** `DB_POOL_MAX` (por defecto 10) dimensiona las transacciones de petición. Conexiones por instancia = `DB_POOL_MAX + DB_AUTH_POOL_MAX`; multiplicado por las instancias debe quedar por debajo del límite del plan de Postgres (dimensionado y prueba de carga en el runbook).
 
@@ -739,6 +739,7 @@ Spec: `docs/superpowers/specs/2026-11-13-multitenant-fase4a-features-design.md`.
 - **`products.price`:** entero nullable en centavos, **por unidad**. Un producto es *cotizable* si tiene `price` o si `priceTiers` está activo y tiene al menos un tier.
 - Migración `drizzle/0006_tenant_features.sql`: ver el runbook (sección 8).
 - Una tabla nueva de este tipo (que escribe solo `platform`) se añade a `PLATFORM_MANAGED_TABLES`, **no** a `TENANT_TABLES`, y lleva su comprobación en `mt:verify`.
+- `platform_audit_log` (§15.3) también está en `PLATFORM_MANAGED_TABLES`: RLS habilitado y forzado, sin política, como `tenant_feature_events`. Su `tenant_id` es opcional, otra razón para dejarla fuera del contrato `FOR ALL`.
 
 ### 13.3 Contexto y caché
 
@@ -746,7 +747,7 @@ Spec: `docs/superpowers/specs/2026-11-13-multitenant-fase4a-features-design.md`.
 - **Caché** (`lib/features/cache.ts`, `getTenantFeatures`): en memoria, **por organización**, TTL `FEATURE_CACHE_TTL_MS` = 30 s. Guarda las **filas**, no el conjunto resuelto, para que un vencimiento dentro del TTL se aplique a tiempo.
 - **Falla cerrado:** si la lectura falla, la petición sigue con **solo el núcleo** activo, el error se registra y **no se cachea** (la siguiente petición reintenta).
 - `clearFeatureCache(tenantId?)` vacía una organización o toda la caché (lo usan las pruebas).
-- **Consecuencia operativa:** los scripts (§13.6) son otro proceso y no invalidan la caché de la API. Un cambio hecho con `feature:set`/`feature:unset` se aplica **en hasta 30 s**. Una fase posterior añadirá un endpoint de plataforma que invalide al instante.
+- **Consecuencia operativa:** los scripts (§13.6) son otro proceso y no invalidan la caché de la API. Un cambio hecho con `feature:set`/`feature:unset` se aplica **en hasta 30 s**. Los cambios hechos desde la consola de plataforma (§15) corren en el proceso de la API y llaman a `clearFeatureCache(organizationId)` después del `COMMIT`: se aplican al instante en esa instancia.
 
 ### 13.4 Bloqueo: módulos automáticos, add-ons explícitos
 
@@ -880,3 +881,86 @@ Spec: `docs/superpowers/specs/2026-11-16-ubicacion-operacion-design.md`. Migraci
 - **PDF:** la ubicación del evento es `address, locality, nombre de la región` (`formatQuotePlace`, con `regionName`; el código si la región no está en el dataset).
 - **Zonas y país:** `tenant_location_areas` siempre pertenece al país configurado (`update` reemplaza fila y zonas en una transacción y valida cada zona contra el país nuevo), por eso no guarda país. El filtro `regions` se combina con `quotes.country = país configurado`, porque los códigos de región se repiten entre países.
 - **Precisión:** bajarla descarta los niveles más profundos en el siguiente guardado de cada cotización (`resolveQuotePlace`). Una cotización sin país (creada con la función apagada) cuenta como completa en el país configurado y el primer guardado lo fija.
+
+---
+
+## 15. Consola de plataforma
+
+Spec: `docs/superpowers/specs/2026-11-17-multitenant-fase4b-consola-design.md`. Runbook: `docs/superpowers/runbooks/multitenant-cutover.md`, sección 12. Front: `docs/frontend/architecture.md` §9.5. Es el único código de la API que cruza organizaciones: lo usan los administradores de plataforma para crear organizaciones, activar features y cambiar el tipo de catálogo sin pasar por los scripts (§13.6).
+
+### 15.1 `platformProcedure`
+
+`core/trpc/trpc.ts`: `authedProcedure` más un middleware que **relee de la base** `user.isPlatformAdmin` y `mustChangePassword` en **cada llamada**, con el cliente de plataforma. Nunca se confía en el flag de la sesión: una sesión en caché anterior a una revocación conservaría el acceso hasta expirar.
+
+- Sin sesión: `UNAUTHORIZED` (lo da `authedProcedure`). Usuario inexistente o sin el flag: `FORBIDDEN` **genérico**, sin `AppError` ni mensaje, para no revelar que la consola existe.
+- Con `mustChangePassword`: `FORBIDDEN` con `ErrorCodes.user.MUST_CHANGE_PASSWORD`.
+- No exige organización activa ni abre transacción de petición: un administrador de plataforma entra aquí sin membresía. El contexto añade `ctx.platformDb` (el cliente que usan los módulos) y `ctx.platformUser` (`{ id, email, name }`, leídos de la base).
+- `ctx.platformDatabase` (opcional en `Context`) sustituye al pool de plataforma y existe **solo para pruebas** y para `consoleCallerFor` (`src/test/trpcCaller.ts`). En producción no se define.
+
+### 15.2 `platformDb()` y filtro explícito
+
+Los procedures de la consola corren con `platformDb()` (`db/platform.ts`): rol `platform`, `BYPASSRLS`. El RLS **no** protege estas consultas, así que:
+
+- Cada consulta de cada repository filtra a mano por la organización (`tenantId = organizationId`, o la lista de ids que corresponda). El id de organización del `input` se resuelve primero con `OrganizationsRepository.findById` (`NOT_FOUND` si no existe).
+- Cada método de repository necesita su prueba de aislamiento: datos de dos organizaciones y aserción de que solo vuelven los de la pedida (§11.5).
+- **Requisito de runtime:** el proceso de la API necesita `DATABASE_PLATFORM_URL` para atender la consola. El cliente se crea de forma perezosa (importar el módulo no la exige), pero sin la variable cada petición de consola falla cerrado con un 500; nunca cae a otro rol. Pool de 4 conexiones (`max: 4`), independiente de `DB_POOL_MAX`.
+- El resto de módulos sigue sin importar `platformDb`.
+
+### 15.3 Tabla `platform_audit_log`
+
+`db/schema/platformAuditLog.ts`, migración `0017_platform_audit_log.sql`.
+
+| Columna | Detalle |
+| --- | --- |
+| `id` | `uuid`, PK, `gen_random_uuid()` |
+| `user_id` | `text` NOT NULL, FK a `user` sin cascada: borrar un usuario no borra su rastro |
+| `action` | `organization.create` \| `organization.view` \| `feature.set` \| `feature.unset` \| `catalog.set` (`PLATFORM_AUDIT_ACTIONS`) |
+| `tenant_id` | `text` nullable, FK a `organization` sin cascada |
+| `payload` | `jsonb` nullable |
+| `created_at` | `timestamp`, `now()` |
+
+Índices: `(tenant_id, created_at)`, `user_id` (la FK restrict revisa la tabla en cada borrado de usuario) y `created_at`.
+
+- **RLS habilitado y forzado, sin política** (el `FORCE` se agrega a mano en la migración): el rol `app` no ve ni escribe nada; solo `platform`. Está en `PLATFORM_MANAGED_TABLES` (§13.2) y `mt:verify` la comprueba.
+- **Qué se registra:**
+  - **Toda escritura**, siempre. En `feature.set`, `feature.unset` y `catalog.set` la fila se escribe en **la misma transacción** que el cambio (`db.transaction` + `recordPlatformAudit(tx, …)`): o se confirman las dos o ninguna.
+  - **`organization.create` se registra DESPUÉS de `createTenant`**, no dentro: `createTenant` provisiona la cuenta del administrador fuera de una transacción, así que no puede abarcarla. Si la escritura de auditoría falla, **la organización ya existe** y falta su fila de auditoría.
+  - **`organization.view`**: una vez por sesión y organización (`recordOrganizationView`, `core/trpc/platformAudit.ts`), en una transacción propia para que sobreviva a un fallo posterior de la petición. El control es un `Map` en memoria (tope de 10 000 claves, se descarta la más antigua): un reinicio cuesta a lo sumo una fila extra por sesión, y un insert fallido se desaloja para reintentarse. Puede registrar de más, nunca omitir.
+- **Qué no se registra:** listados, resúmenes e historial (lecturas masivas) y **el enlace de configuración inicial**: es una credencial y el `payload` de `organization.create` solo lleva `slug`, `name`, `adminEmail` y `catalogKind`.
+- Es distinta de `platform_access_log` (§12.3), que registra la entrada de un administrador a una organización donde no es miembro.
+
+### 15.4 Sub-routers
+
+`modules/console/console.router.ts` cuelga bajo `console.*` en el `appRouter`; `console.module.ts` expone `consoleModule(ctx)` (recibe `{ platformDb }`). Cada sub-módulo sigue `resource → repository → service → router` (§2). Todos los procedures son `platformProcedure`.
+
+| Router | Procedures | Notas |
+| --- | --- | --- |
+| `console.organizations` | `list`, `get`, `create` | `list` pagina y filtra por `catalogKind`; devuelve `activeFeatureCount` y `nextExpiry`. `get` registra `organization.view`. `create` usa `createTenant` y devuelve el enlace de configuración. |
+| `console.features` | `list`, `set`, `unset` | `list` devuelve solo las features activables (`isToggleable`) con `enabled` y `active`. `set` y `unset` reutilizan `setFeature`/`unsetFeature` de `lib/features/admin.ts` (§13.6) dentro de la transacción de auditoría. |
+| `console.catalog` | `setKind` | `setCatalogKind` (`lib/tenancy/profile.ts`) más auditoría en una transacción. |
+| `console.history` | `list` | Mezcla tres fuentes de una organización y devuelve las `limit` más recientes (por defecto 50, máximo 100). |
+| `console.summary` | `global`, `organization` | Totales de la plataforma con las features por vencer, y recuentos de una organización. |
+
+Los schemas Zod y los tipos de respuesta están en `packages/schemas/src/console.ts`.
+
+- **`expiresOn` es el último día activo** (como `--expires` en §13.6): `parseExpiryDate` (`lib/features/expiry.ts`) lo convierte al inicio del día siguiente en UTC, que es el instante en que la feature deja de resolverse como activa. Lanza `InvalidExpiryDateError` si no es una fecha real `YYYY-MM-DD`. En `set`, un campo omitido conserva su valor y `null` lo borra.
+- **Vencimiento (`@repo/guards`, `features/expiry.ts`):** `expiryStatus(expiresAt, now)` devuelve `permanent`, `active`, `expiringSoon` (quedan `EXPIRING_SOON_DAYS` = 30 días o menos) o `expired`. Es pura y la usan la API (resumen global) y la web.
+- **Etiquetas del historial:** cada ítem trae `source` (`feature` | `access` | `audit`) y un `label` estable que la web traduce: `feature.<action>` (de `tenant_feature_events`: `enabled`, `disabled`, `updated`), `access.<type>` (de `platform_access_log`) o `audit.<action>` (de `platform_audit_log`). Orden: fecha descendente, luego fuente (`feature`, `access`, `audit`) y `id`.
+- **`quotesByStage`** (`summary.organization`) usa **a propósito** las etiquetas globales de `quote_stages`, no el overlay por organización: la consola muestra el vocabulario de plataforma, igual para todas. Las etapas sin cotizaciones se omiten.
+- **Caché de features:** tras el `COMMIT` de `set`/`unset` el service llama a `clearFeatureCache(org.id)` (§13.3); nunca antes, porque una lectura concurrente repoblaría la caché con el estado anterior.
+
+### 15.5 Receta — Añadir un procedure a la consola
+
+1. **Schema** en `packages/schemas/src/console.ts` (input con `consoleOrganizationIdSchema.extend(...)` si actúa sobre una organización) y tipo de respuesta; reexportado por `@repo/schemas`.
+2. **Repository** en `modules/console/<sub>/` con el `platformDb` recibido y **filtro explícito por organización en cada consulta** (§15.2).
+3. **Service:** resolver la organización con `OrganizationsRepository.findById` antes de tocar nada. Si escribe, abrir `this.db.transaction` y llamar `recordPlatformAudit(tx, …)` dentro; si la escritura cambia features, `clearFeatureCache(org.id)` después del `COMMIT`. Reutilizar `lib/features/*` o `lib/tenancy/*` en vez de duplicar reglas.
+4. **Acción nueva:** añadirla a `PLATFORM_AUDIT_ACTIONS` (`db/schema/platformAuditLog.ts`). La columna es `text`, así que no requiere migración, pero el tipo sí cambia; si se muestra en el historial, añadir su traducción `audit.<action>` en `locales/{es,en}/console.json`. El `payload` nunca lleva credenciales ni enlaces.
+5. **Router:** `platformProcedure.input(...)` y `consoleModule(ctx).<sub>.<método>(...)`, pasando `ctx.platformUser.id` como actor. Registrar el sub-router en `console.router.ts` y su servicio en `console.module.ts`.
+6. **Pruebas** en `modules/console/test/` con `consoleCallerFor(user, { database })`: caso feliz, `FORBIDDEN` para quien no es administrador de plataforma, `NOT_FOUND` para una organización inexistente, aislamiento entre dos organizaciones y, si escribe, la fila de auditoría (y que un cambio rechazado no deja fila).
+7. **Web:** hook en `features/console/hooks/` e invalidación con `useInvalidateConsole` (docs/frontend/architecture.md §9.5).
+
+### 15.6 Pruebas de integración
+
+- Las suites `*.int.test.ts` necesitan una base **dedicada y local** en `TEST_DATABASE_URL`: el setup global la **vacía y recrea**, así que nunca debe apuntar a una base con datos que importen (el harness rechaza URLs no locales).
+- Correr un archivo: `pnpm --filter api exec vitest run --config vitest.int.config.ts <archivo>`. `pnpm test:int -- <archivo>` **ignora el filtro** y corre toda la suite.
+- Los procedures de consola se llaman con `consoleCallerFor(user, { database, sessionId })` (`src/test/trpcCaller.ts`): contexto sin organización activa y con `platformDatabase` apuntando a la base de prueba. El flag de la sesión que arma ese helper es irrelevante, porque `platformProcedure` lo relee de la base: para probar un usuario sin permisos hay que quitar el flag en la base, no en el helper.

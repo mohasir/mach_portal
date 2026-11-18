@@ -20,7 +20,7 @@ Valores por servicio (no hay comodines ni dominios por cliente: **un único host
 | Servicio | Variable | Valor |
 | --- | --- | --- |
 | API | `DATABASE_APP_URL` | Rol `app` (sección 7); no se usa para migrar ni para respaldar. Railway y Neon inyectan `DATABASE_URL`: la API la ignora, hay que copiar su valor a mano en la variable que corresponda (sección 7.1) |
-| Cutover / scripts | `DATABASE_OWNER_URL`, `DATABASE_PLATFORM_URL` | Conexión directa a Postgres (no pooler); ver sección 7.1 |
+| Cutover / scripts | `DATABASE_OWNER_URL`, `DATABASE_PLATFORM_URL` | Conexión directa a Postgres (no pooler); ver sección 7.1. `DATABASE_PLATFORM_URL` también la necesita el runtime de la API para la consola (sección 12.2) |
 | API | `BETTER_AUTH_URL` | URL pública de la API |
 | API | `WEB_ORIGIN` | Lista fija de orígenes permitidos separada por comas (CORS y `trustedOrigins`); normalmente solo `https://<host-único>`, sin barra final |
 | API | `WEB_APP_URL` | Origen canónico de la web para enlaces de contraseña y notificaciones (`https://<host-único>`) |
@@ -146,7 +146,7 @@ Spec: `docs/superpowers/specs/2026-11-08-multitenant-fase1b-rls-design.md`. Arqu
 | --- | --- | --- |
 | `DATABASE_APP_URL` | rol **`app`** (sin `SUPERUSER`, `BYPASSRLS` ni `CREATEROLE`) | API, jobs, `db:roles` (toma usuario y contraseña del rol), `mt:verify` (opcional, comprueba el rol de la API) |
 | `DATABASE_OWNER_URL` | **owner** (dueño de las tablas; debe poder cruzar organizaciones, ver nota abajo) | `db:roles` (se conecta con ella), `db:migrate`, `db:reset`, `db:baseline`, `db:studio` |
-| `DATABASE_PLATFORM_URL` | rol **`platform`** (`BYPASSRLS`) | `db:seed`, `tenant:create`, `mt:verify`, `db:roles` (toma usuario y contraseña del rol) |
+| `DATABASE_PLATFORM_URL` | rol **`platform`** (`BYPASSRLS`) | `db:seed`, `tenant:create`, `mt:verify`, `db:roles` (toma usuario y contraseña del rol) y, en el runtime de la API, las peticiones de la consola de plataforma (sin ella fallan cerradas con un 500; ver sección 12.2) |
 | `DB_POOL_MAX` (por defecto 10) | conexiones de la API para las transacciones de petición | API |
 | `DB_AUTH_POOL_MAX` (por defecto 3) | pool propio de Better Auth | API |
 
@@ -181,7 +181,7 @@ Por eso el orden es:
 2. **Aplicar la `0005`** con owner (`db:migrate`, `DATABASE_OWNER_URL`), con la app detenida o con el código nuevo desplegado en el mismo paso.
 3. **Definir `DATABASE_APP_URL` con el rol `app`** (y `DATABASE_OWNER_URL`, `DATABASE_PLATFORM_URL`, `DB_POOL_MAX`, `DB_AUTH_POOL_MAX`) en la API; quitar o ignorar la `DATABASE_URL` que inyecte el proveedor.
 4. **Desplegar el código** (API y web).
-5. **`mt:verify`** con `DATABASE_PLATFORM_URL` (y `DATABASE_APP_URL` definida, para que también compruebe el rol de la API): debe terminar con exit 0, con las 30 tablas con RLS habilitado, forzado y con su política.
+5. **`mt:verify`** con `DATABASE_PLATFORM_URL` (y `DATABASE_APP_URL` definida, para que también compruebe el rol de la API): debe terminar con exit 0, con RLS habilitado y forzado en las 36 tablas aisladas por tenant (cada una con su política `<tabla>_tenant_isolation`) y en las 4 tablas gestionadas por plataforma (`tenant_features` y `tenant_profile` con solo su política de lectura; `tenant_feature_events` y `platform_audit_log` sin ninguna).
 
 Por entorno:
 
@@ -235,7 +235,7 @@ Aplicar la `0006` con `db:migrate` (`DATABASE_OWNER_URL`) y desplegar API y web 
 
 ### 8.4 Verificación
 
-`mt:verify` (con `DATABASE_PLATFORM_URL`) debe terminar con exit 0. Además de lo de la sección 7.3 comprueba: RLS habilitado y forzado en las dos tablas, `tenant_features` con solo la política `tenant_features_tenant_read`, `tenant_feature_events` sin políticas, ninguna fila con clave `core` o desconocida, y ninguna organización con `events` activo sin `quotes`. Después, `feature:list --tenant <slug>` en una organización existente debe mostrar las 5 features activas.
+`mt:verify` (con `DATABASE_PLATFORM_URL`) debe terminar con exit 0. Además de lo de la sección 7.3 comprueba, sobre `tenant_features` y `tenant_feature_events`: RLS habilitado y forzado, `tenant_features` con solo la política `tenant_features_tenant_read`, `tenant_feature_events` sin políticas, ninguna fila con clave `core` o desconocida, y ninguna organización con `events` activo sin `quotes`. Después, `feature:list --tenant <slug>` en una organización existente debe mostrar las 5 features activas.
 
 ### 8.5 Reversión
 
@@ -450,3 +450,49 @@ Conversión, antes de eliminar las columnas:
 ### 11.4 Reversión
 
 No hay migración inversa. **Recomendado: restaurar el backup previo y desplegar la versión anterior de API y web.** A mano: recrear el tipo `state` (`NY`, `NJ`, `CT`) y las columnas `state`/`city` en `quotes`, `events` y `clients`; rellenar `quotes`/`events` con `state = region::state`, `city = locality` donde `country = 'US'` y `region IN ('NY','NJ','CT')` (otras regiones o países no tienen equivalente); los clientes solo recuperan sus datos desde lo guardado en el paso 1 de 11.2. Luego borrar `country`, `region` y `locality`, las tablas `tenant_location_areas` y `tenant_location`, los permisos `location_settings` y la fila de la migración en `drizzle.__drizzle_migrations` (`created_at` = su `when` en `apps/api/drizzle/meta/_journal.json`).
+
+---
+
+## 12. Consola de plataforma (fase 4b-1)
+
+Spec: `docs/superpowers/specs/2026-11-17-multitenant-fase4b-consola-design.md`. Arquitectura: `docs/backend/architecture.md` §15 y `docs/frontend/architecture.md` §9.5. **Nada de esta sección se ejecuta contra producción sin la aprobación del dueño del proyecto.**
+
+### 12.1 Qué reemplaza
+
+El panel `/console` es la herramienta del día a día para lo que hacían los scripts: crear organizaciones (`tenant:create`), activar, cambiar y desactivar features con vencimiento y precio (`feature:list|set|unset`) y cambiar el tipo de catálogo (`tenant:set-catalog-kind`). Además muestra el resumen global, el resumen y el historial de cada organización, y deja entrar a una organización (modo plataforma, auditado en `platform_access_log`).
+
+Los scripts **siguen disponibles** y funcionan igual (secciones 8.2 y 9); la consola no los quita ni los modifica. Un cambio hecho con un script aplica en hasta 30 s en la API (caché de features); uno hecho desde la consola, al instante.
+
+### 12.2 Variable de entorno
+
+El proceso de la API necesita `DATABASE_PLATFORM_URL` (rol `platform`, `BYPASSRLS`, sección 7) **en su runtime**, no solo en los scripts. Sin ella, la API arranca y atiende al resto de la app, pero cada petición de la consola falla con un 500 (falla cerrado; no usa otro rol). La conexión se crea al recibir la primera petición de consola. Revisar que la variable esté en el entorno de la API antes de desplegar.
+
+### 12.3 Migración `0017`
+
+`apps/api/drizzle/0017_platform_audit_log.sql` crea `platform_audit_log` con `ENABLE` y `FORCE ROW LEVEL SECURITY` y **sin ninguna política**: el rol `app` no puede leerla ni escribirla. Solo agrega una tabla y no modifica datos; va antes que el código (como en 8.3). Después de `db:migrate`, `pnpm --filter api mt:verify` (con `DATABASE_PLATFORM_URL`) debe terminar con exit 0: comprueba que la tabla existe, con RLS habilitado y forzado y sin políticas, igual que `tenant_feature_events`.
+
+### 12.4 Cómo se crea un administrador de plataforma
+
+El flag `user.is_platform_admin` **solo se asigna fuera de la app**: ni la web ni la API tienen forma de otorgarlo, y el panel de usuarios de una organización tampoco (un administrador de organización no puede crear ni degradar a uno). Los caminos que existen hoy:
+
+- **Cutover (sección 3):** la migración `0001` marca a las cuentas listadas en `mt.platform_admin_emails` o, si no se pasa, a quienes tienen `superadmin` entre sus roles.
+- **Seed de producción** (`db/seeds/prod.ts`): marca como administrador de plataforma al superadmin de producción si existe.
+- **Seed de demo** (`db/seeds/demo.ts`): crea `platform@demo.test`, administrador de plataforma sin membresía en ninguna organización; aterriza en `/console` al iniciar sesión.
+- **A mano** sobre una cuenta ya existente, con el dueño o `platform`: `UPDATE "user" SET is_platform_admin = true WHERE lower(email) = '<email>';`. Para revocarlo, `false`: la API relee el flag en cada llamada, así que el acceso a la consola se corta al instante aunque la sesión siga abierta. Un administrador recién promovido debe volver a iniciar sesión para que la web vea el flag (la web lo lee de la sesión; la API lo relee de la base en cada llamada).
+
+Una cuenta con `must_change_password` no entra a la consola hasta cambiar la contraseña.
+
+### 12.5 Qué se audita
+
+Cada escritura de la consola deja una fila en `platform_audit_log` (usuario, acción, organización y datos del cambio): `organization.create`, `feature.set`, `feature.unset` y `catalog.set`, más `organization.view` una vez por sesión y organización. Para features y tipo de catálogo la fila y el cambio van en la misma transacción. `organization.create` se registra **después** de crear la organización (la cuenta del administrador se provisiona fuera de una transacción): si la escritura de auditoría fallara, la organización existiría sin su fila. El enlace de configuración inicial (es una credencial) no se guarda en la auditoría: solo se muestra al crear la organización, así que hay que copiarlo en ese momento. Listados, resúmenes e historial no se auditan. El historial de cada organización (pestaña "Historial") junta los cambios de features, las entradas en modo plataforma y estas acciones.
+
+### 12.6 Reversión
+
+La `0017` solo agrega una tabla. **Recomendado:** desplegar la versión anterior de API y web; la tabla queda sin uso y no estorba. Como los scripts siguen funcionando, no se pierde ninguna capacidad operativa al volver atrás. Reversión manual (solo si hace falta quitar la tabla), con el dueño:
+
+```sql
+DROP TABLE platform_audit_log;
+DELETE FROM drizzle.__drizzle_migrations WHERE created_at = <when de la 0017 en apps/api/drizzle/meta/_journal.json>;
+```
+
+Se pierde el rastro de auditoría. El `DELETE` es obligatorio por la misma razón que en 8.5.
