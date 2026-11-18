@@ -18,6 +18,11 @@ const ROUTE_PATTERNS: { pattern: RegExp; guard?: PermissionCheck; feature?: Feat
     guard: { [RESOURCES.EVENT]: [ACTIONS.RESCHEDULE] },
     feature: 'events',
   },
+  { pattern: /^\/admin\/products\/new\/?$/, guard: { [RESOURCES.PRODUCT]: [ACTIONS.CREATE] } },
+  {
+    pattern: /^\/admin\/products\/[^/]+\/edit\/?$/,
+    guard: { [RESOURCES.PRODUCT]: [ACTIONS.UPDATE] },
+  },
   // No nav item: the notifications center is reached from the topbar bell.
   { pattern: /^\/admin\/notifications(\/.*)?$/, feature: 'notifications' },
 ];

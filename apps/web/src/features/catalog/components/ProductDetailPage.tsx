@@ -1,5 +1,4 @@
 'use client';
-import { useState } from 'react';
 import { Button, Empty, Skeleton, Tabs, Tag, Typography } from 'antd';
 import { Copy, Layers, Star, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -24,7 +23,6 @@ import { useProductMutations } from '../hooks/useProductMutations';
 import { NotQuotableAlert } from './NotQuotableAlert';
 import { NotQuotableTag } from './NotQuotableTag';
 import { OptionGroupList } from './OptionGroupList';
-import { ProductFormModal } from './ProductFormModal';
 import { PriceTiersForm } from './prices/PriceTiersForm';
 import { ProductGallery } from './ProductGallery';
 import { ProductThumb } from './ProductThumb';
@@ -50,7 +48,6 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const { data: product, isLoading } = useProduct(productId);
   const { disableProduct, enableProduct, duplicateProduct, isDuplicating } = useProductMutations();
   const [confirm, confirmContextHolder] = useActionConfirm();
-  const [isEditOpen, setEditOpen] = useState(false);
 
   const handleDisable = () =>
     product &&
@@ -257,7 +254,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
               </div>
 
               {canEdit && (
-                <Button type="primary" className="mt-2" onClick={() => setEditOpen(true)}>
+                <Button type="primary" className="mt-2" onClick={() => router.push(`/admin/products/${product.id}/edit`)}>
                   {t('product.edit.title', vocabulary)}
                 </Button>
               )}
@@ -294,12 +291,6 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
           )}
         </div>
       )}
-
-      <ProductFormModal
-        product={product ?? null}
-        open={isEditOpen}
-        onClose={() => setEditOpen(false)}
-      />
 
       {confirmContextHolder}
     </div>

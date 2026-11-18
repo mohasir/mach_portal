@@ -15,6 +15,24 @@ describe('resolveRouteAccess', () => {
     });
   });
 
+  it('requires PRODUCT:CREATE on the new product page', () => {
+    expect(resolveRouteAccess('/admin/products/new')).toEqual({
+      [RESOURCES.PRODUCT]: [ACTIONS.CREATE],
+    });
+  });
+
+  it('requires PRODUCT:UPDATE on the edit product page', () => {
+    expect(resolveRouteAccess('/admin/products/abc-123/edit')).toEqual({
+      [RESOURCES.PRODUCT]: [ACTIONS.UPDATE],
+    });
+  });
+
+  it('keeps PRODUCT:READ for the product detail', () => {
+    expect(resolveRouteAccess('/admin/products/abc-123')).toEqual({
+      [RESOURCES.PRODUCT]: [ACTIONS.READ],
+    });
+  });
+
   it('requires RESCHEDULE_REASON:VIEW on the reasons catalog', () => {
     expect(resolveRouteAccess('/admin/reschedule-reasons')).toEqual({
       [RESOURCES.RESCHEDULE_REASON]: [ACTIONS.VIEW],
