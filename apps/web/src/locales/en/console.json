@@ -1,0 +1,183 @@
+{
+  "nav": {
+    "home": "Home",
+    "organizations": "Organizations",
+    "enterOrganization": "Enter an organization",
+    "label": "Console navigation"
+  },
+  "menu": {
+    "backToConsole": "Back to the console"
+  },
+  "home": {
+    "title": "Platform console",
+    "subtitle": "Global overview of all organizations.",
+    "loadError": "The summary could not be loaded",
+    "retry": "Retry"
+  },
+  "stats": {
+    "organizations": "Organizations",
+    "products": "Products",
+    "quotes": "Quotes",
+    "events": "Events"
+  },
+  "expiring": {
+    "title": "Features about to expire",
+    "empty": "Nothing about to expire"
+  },
+  "expiry": {
+    "permanent": "No expiry",
+    "expired": "Expired",
+    "expiringSoon_one": "Expires in {{count}} day",
+    "expiringSoon_other": "Expires in {{count}} days"
+  },
+  "organizations": {
+    "title": "Organizations",
+    "add": "Create organization",
+    "empty": "No organizations",
+    "filterKind": "Catalog type",
+    "filterAll": "All",
+    "view": "View details",
+    "columns": {
+      "name": "Name",
+      "slug": "Identifier",
+      "catalog": "Catalog",
+      "features": "Active features",
+      "expiry": "Next expiry",
+      "createdAt": "Created"
+    },
+    "card": {
+      "features_one": "{{count}} active feature",
+      "features_other": "{{count}} active features"
+    }
+  },
+  "create": {
+    "title": "Create organization",
+    "form": {
+      "slug": "Identifier",
+      "slugPlaceholder": "my-company",
+      "slugHint": "Used in the URL; lowercase letters, numbers and hyphens only.",
+      "name": "Name",
+      "namePlaceholder": "My company",
+      "adminName": "Administrator name",
+      "adminEmail": "Administrator email",
+      "catalogKind": "What it sells",
+      "submit": "Create"
+    },
+    "validation": {
+      "slugRequired": "Enter the identifier",
+      "nameRequired": "Enter the name",
+      "adminNameRequired": "Enter the administrator name",
+      "emailRequired": "Enter the email",
+      "emailInvalid": "Invalid email"
+    }
+  },
+  "setup": {
+    "title": "Organization created",
+    "description": "{{name}} now exists. Share this link with the administrator so they can set their password.",
+    "linkLabel": "Setup link",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "once": "This link is shown only once. Copy it now: it cannot be viewed again after you close this window.",
+    "noLink": "The administrator account already existed, so no setup link was generated.",
+    "open": "View organization",
+    "close": "Close"
+  },
+  "detail": {
+    "loadError": "The organization could not be loaded",
+    "retry": "Retry",
+    "enter": "Enter this organization",
+    "backToList": "Back to organizations",
+    "createdAt": "Created on {{date}}",
+    "tabs": {
+      "label": "Organization sections",
+      "summary": "Summary",
+      "features": "Features",
+      "catalog": "Catalog",
+      "history": "History"
+    }
+  },
+  "summary": {
+    "products": "Products",
+    "clients": "Clients",
+    "events": "Events",
+    "quotesByStage": "Quotes by stage",
+    "quotesEmpty": "There are no quotes yet",
+    "loadError": "The summary could not be loaded"
+  },
+  "featureList": {
+    "title": "Organization features",
+    "loadError": "The features could not be loaded",
+    "kind": {
+      "module": "Module",
+      "addon": "Add-on"
+    },
+    "inactive": "Inactive",
+    "inactiveHint": "Enabled but not in effect: it expired or a requirement is missing.",
+    "requires": "Requires: {{features}}",
+    "blockedBy": "Needed by: {{features}}",
+    "switchLabel": "Enable {{feature}}",
+    "edit": "Edit terms",
+    "price": "{{amount}} / {{period}}",
+    "noPrice": "No price",
+    "period": {
+      "monthly": "month",
+      "yearly": "year"
+    },
+    "enabled": "Feature enabled",
+    "disabled": "Feature disabled"
+  },
+  "featureForm": {
+    "title": "Terms of {{feature}}",
+    "expiresOn": "Last active day",
+    "expiresOnHint": "Empty means no expiry.",
+    "price": "Price",
+    "priceHint": "Amount in major units, with two decimals.",
+    "billingPeriod": "Billing period",
+    "billingPeriodPlaceholder": "No period",
+    "currency": "Currency",
+    "currencyHint": "3-letter code, for example USD.",
+    "periodMonthly": "Monthly",
+    "periodYearly": "Yearly",
+    "save": "Save",
+    "unchanged": "There are no changes to save",
+    "validation": {
+      "currencyInvalid": "The currency must have 3 letters"
+    }
+  },
+  "catalog": {
+    "title": "Catalog type",
+    "description": "Sets how the things the organization sells are named.",
+    "current": "Current type",
+    "confirmTitle": "Change the catalog type?",
+    "confirmContent": "The organization's texts will refer to {{kind}}.",
+    "confirmOk": "Change"
+  },
+  "history": {
+    "title": "History",
+    "empty": "No activity recorded yet",
+    "loadError": "The history could not be loaded",
+    "by": "by {{actor}}",
+    "feature": {
+      "enabled": "Feature enabled",
+      "disabled": "Feature disabled",
+      "updated": "Feature updated"
+    },
+    "access": {
+      "query": "Organization queried",
+      "mutation": "Change made in the organization"
+    },
+    "audit": {
+      "organization": {
+        "create": "Organization created",
+        "view": "Organization viewed"
+      },
+      "feature": {
+        "set": "Feature configured",
+        "unset": "Feature disabled"
+      },
+      "catalog": {
+        "set": "Catalog type changed"
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@ export { SelectOrganizationPage } from './components/SelectOrganizationPage';
 export { TenantGate } from './components/TenantGate';
 export {
   useActiveTenant,
+  useActiveTenantStatus,
   useAllOrganizations,
   useCanSwitchTenant,
   useIsPlatformAdmin,

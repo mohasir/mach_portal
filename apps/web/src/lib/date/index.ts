@@ -64,6 +64,9 @@ export const formatMonthShort = (value: DateInput, locale: AppLocale) =>
 export const formatMonthYear = (value: DateInput, locale: AppLocale) =>
   toDayjs(value, locale).format('MMMM YYYY');
 
+/** Calendar day as sent to the API: 'YYYY-MM-DD', in the picker's (local) day. */
+export const formatIsoDay = (value: Dayjs) => value.format('YYYY-MM-DD');
+
 export const formatRelative = (value: DateInput, locale: AppLocale) =>
   toDayjs(value, locale).fromNow();
 

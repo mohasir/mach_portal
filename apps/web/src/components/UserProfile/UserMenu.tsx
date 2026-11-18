@@ -1,24 +1,38 @@
 'use client';
 import { Dropdown, Flex, Typography, type MenuProps } from 'antd';
-import { ArrowLeftRight, LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { ArrowLeftRight, LayoutDashboard, LogOut } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { AvatarUser } from '@/components/shared/AvatarUser';
-import { useCanSwitchTenant, useSignOut } from '@/features/tenant';
+import { useCanSwitchTenant, useIsPlatformAdmin, useSignOut } from '@/features/tenant';
 import { useSession } from '@/lib/auth/client';
-import { SELECT_ORGANIZATION_ROUTE } from '@/lib/auth/navigation';
+import { CONSOLE_ROUTE, SELECT_ORGANIZATION_ROUTE } from '@/lib/auth/navigation';
 
 export function UserMenu() {
   const { t } = useTranslation('admin');
   const { t: tt } = useTranslation('tenant');
+  const { t: tk } = useTranslation('console');
   const router = useRouter();
   const { data } = useSession();
   const user = data?.user;
   const canSwitchTenant = useCanSwitchTenant();
+  const isPlatformAdmin = useIsPlatformAdmin();
+  const pathname = usePathname() ?? '';
+  const showConsoleLink = isPlatformAdmin && !pathname.startsWith(CONSOLE_ROUTE);
 
   const onLogout = useSignOut();
 
   const items: MenuProps['items'] = [
+    ...(showConsoleLink
+      ? [
+          {
+            key: 'console',
+            icon: <LayoutDashboard size={16} />,
+            label: tk('menu.backToConsole'),
+            onClick: () => router.push(CONSOLE_ROUTE),
+          },
+        ]
+      : []),
     ...(canSwitchTenant
       ? [
           {

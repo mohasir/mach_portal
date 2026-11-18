@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { HomeRedirect } from '@/components/shared/HomeRedirect';
 
 export default function Home() {
-  redirect('/admin');
+  return <HomeRedirect />;
 }

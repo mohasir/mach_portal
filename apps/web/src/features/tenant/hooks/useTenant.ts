@@ -36,6 +36,20 @@ export function useActiveOrganizationId() {
   return data;
 }
 
+// Read-only view of the `tenant.active` cache for callers that only need to know whether an
+// organization is active. The gate's own observer keeps it revalidated, so this one neither
+// refetches on mount nor runs before `enabled` (the query throws UNAUTHORIZED without a session).
+export function useActiveTenantStatus(enabled: boolean) {
+  const trpc = useTRPC();
+  const { isSuccess, data } = useQuery({
+    ...trpc.tenant.active.queryOptions(),
+    staleTime: 0,
+    refetchOnMount: false,
+    enabled,
+  });
+  return { resolved: isSuccess, hasTenant: !!data };
+}
+
 export function useIsPlatformAdmin() {
   const { data } = useSession();
   return (data?.user as { isPlatformAdmin?: boolean | null } | undefined)?.isPlatformAdmin === true;

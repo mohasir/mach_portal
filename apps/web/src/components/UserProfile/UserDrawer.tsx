@@ -1,18 +1,20 @@
 'use client';
 import { Button, Drawer } from 'antd';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftRight, LogOut, Settings } from 'lucide-react';
+import { ArrowLeftRight, LayoutDashboard, LogOut, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AvatarUser } from '@/components/shared/AvatarUser';
 import { RoleTag } from '@/components/shared/RoleTag';
-import { useCanSwitchTenant, useSignOut } from '@/features/tenant';
+import { useCanSwitchTenant, useIsPlatformAdmin, useSignOut } from '@/features/tenant';
 import { useSession } from '@/lib/auth/client';
-import { SELECT_ORGANIZATION_ROUTE } from '@/lib/auth/navigation';
+import { CONSOLE_ROUTE, SELECT_ORGANIZATION_ROUTE } from '@/lib/auth/navigation';
 import { useCurrentRole } from '@/lib/auth/useCan';
 
 export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation('admin');
   const { t: tt } = useTranslation('tenant');
+  const { t: tk } = useTranslation('console');
+  const isPlatformAdmin = useIsPlatformAdmin();
   const canSwitchTenant = useCanSwitchTenant();
   const router = useRouter();
   const { data } = useSession();
@@ -24,6 +26,11 @@ export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   const onSettings = () => {
     onClose();
     router.push('/admin/settings');
+  };
+
+  const onBackToConsole = () => {
+    onClose();
+    router.push(CONSOLE_ROUTE);
   };
 
   const onSwitchTenant = () => {
@@ -58,6 +65,17 @@ export function UserDrawer({ open, onClose }: { open: boolean; onClose: () => vo
           >
             {t('nav.settings')}
           </Button>
+          {isPlatformAdmin && (
+            <Button
+              type="text"
+              block
+              icon={<LayoutDashboard size={16} />}
+              onClick={onBackToConsole}
+              className="justify-start"
+            >
+              {tk('menu.backToConsole')}
+            </Button>
+          )}
           {canSwitchTenant && (
             <Button
               type="text"

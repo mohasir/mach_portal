@@ -98,6 +98,24 @@
     "LOCATION_SETTINGS_AREA_BEYOND_DEPTH": "The areas must be within the selected precision",
     "QUOTE_INVALID_LOCATION": "The location is not valid: pick an option from the list",
     "QUOTE_LOCATION_NOT_COVERED": "The location is outside the areas the organization covers",
-    "QUOTE_LOCATION_INCOMPLETE": "Fill in the location details your organization requires to save the quote"
+    "QUOTE_LOCATION_INCOMPLETE": "Fill in the location details your organization requires to save the quote",
+    "TENANT_SLUG_TAKEN": "That identifier is already in use. If you just tried to create the organization, it may already exist: check the list",
+    "TENANT_INVALID_SLUG": "The identifier is not valid: use lowercase letters, numbers and hyphens",
+    "TENANT_INVALID_INPUT": "The organization data is not valid",
+    "TENANT_UNKNOWN_CATALOG_KIND": "The catalog type does not exist",
+    "FEATURE_UNKNOWN_KEY": "The feature does not exist",
+    "FEATURE_NOT_TOGGLEABLE": "This feature cannot be enabled or disabled",
+    "FEATURE_MISSING_DEPENDENCY": "It cannot be enabled: a required feature is not active",
+    "FEATURE_HAS_DEPENDENTS": "It cannot be disabled: other active features need it"
+  },
+  "console": {
+    "validation": {
+      "slugRequired": "Enter the identifier",
+      "nameRequired": "Enter the name",
+      "adminNameRequired": "Enter the administrator name",
+      "emailInvalid": "Invalid email",
+      "expiresOnInvalid": "The expiry date is not valid",
+      "currencyInvalid": "The currency must have 3 letters"
+    }
   }
 }

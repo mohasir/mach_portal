@@ -34,10 +34,10 @@ export function useUpdateUserPreferences() {
 // preference: the saved value wins when there is one; otherwise the language picked on this
 // browser (if any — the bare default doesn't count) is saved so other devices pick it up. Later changes go through UserPreferencesCard, which saves
 // and applies them itself.
-export function useSyncUserPreferences(userId: string | undefined) {
+export function useSyncUserPreferences(userId: string | undefined, enabled = true) {
   const trpc = useTRPC();
   const qc = useQueryClient();
-  const { data: preferences } = useUserPreferences(!!userId);
+  const { data: preferences } = useUserPreferences(!!userId && enabled);
   const { updateUserPreferences } = useUpdateUserPreferences();
   const locale = useLocaleStore((s) => s.locale);
   const chosen = useLocaleStore((s) => s.chosen);

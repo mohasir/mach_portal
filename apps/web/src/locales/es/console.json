@@ -1,0 +1,183 @@
+{
+  "nav": {
+    "home": "Portada",
+    "organizations": "Organizaciones",
+    "enterOrganization": "Entrar a una organización",
+    "label": "Navegación de la consola"
+  },
+  "menu": {
+    "backToConsole": "Volver a la consola"
+  },
+  "home": {
+    "title": "Consola de plataforma",
+    "subtitle": "Resumen global de todas las organizaciones.",
+    "loadError": "No se pudo cargar el resumen",
+    "retry": "Reintentar"
+  },
+  "stats": {
+    "organizations": "Organizaciones",
+    "products": "Productos",
+    "quotes": "Cotizaciones",
+    "events": "Eventos"
+  },
+  "expiring": {
+    "title": "Funciones por vencer",
+    "empty": "Nada por vencer"
+  },
+  "expiry": {
+    "permanent": "Sin vencimiento",
+    "expired": "Vencida",
+    "expiringSoon_one": "Vence en {{count}} día",
+    "expiringSoon_other": "Vence en {{count}} días"
+  },
+  "organizations": {
+    "title": "Organizaciones",
+    "add": "Crear organización",
+    "empty": "No hay organizaciones",
+    "filterKind": "Tipo de catálogo",
+    "filterAll": "Todos",
+    "view": "Ver detalle",
+    "columns": {
+      "name": "Nombre",
+      "slug": "Identificador",
+      "catalog": "Catálogo",
+      "features": "Funciones activas",
+      "expiry": "Próximo vencimiento",
+      "createdAt": "Creada"
+    },
+    "card": {
+      "features_one": "{{count}} función activa",
+      "features_other": "{{count}} funciones activas"
+    }
+  },
+  "create": {
+    "title": "Crear organización",
+    "form": {
+      "slug": "Identificador",
+      "slugPlaceholder": "mi-empresa",
+      "slugHint": "Se usa en la URL; solo minúsculas, números y guiones.",
+      "name": "Nombre",
+      "namePlaceholder": "Mi empresa",
+      "adminName": "Nombre del administrador",
+      "adminEmail": "Email del administrador",
+      "catalogKind": "Qué vende",
+      "submit": "Crear"
+    },
+    "validation": {
+      "slugRequired": "Ingresá el identificador",
+      "nameRequired": "Ingresá el nombre",
+      "adminNameRequired": "Ingresá el nombre del administrador",
+      "emailRequired": "Ingresá el email",
+      "emailInvalid": "Email inválido"
+    }
+  },
+  "setup": {
+    "title": "Organización creada",
+    "description": "{{name}} ya existe. Compartí este enlace con el administrador para que defina su contraseña.",
+    "linkLabel": "Enlace de configuración",
+    "copy": "Copiar enlace",
+    "copied": "Enlace copiado",
+    "once": "Este enlace se muestra una sola vez. Copialo ahora: al cerrar esta ventana no se podrá volver a ver.",
+    "noLink": "La cuenta del administrador ya existía, por eso no se generó un enlace de configuración.",
+    "open": "Ver organización",
+    "close": "Cerrar"
+  },
+  "detail": {
+    "loadError": "No se pudo cargar la organización",
+    "retry": "Reintentar",
+    "enter": "Entrar a esta organización",
+    "backToList": "Volver a organizaciones",
+    "createdAt": "Creada el {{date}}",
+    "tabs": {
+      "label": "Secciones de la organización",
+      "summary": "Resumen",
+      "features": "Funciones",
+      "catalog": "Catálogo",
+      "history": "Historial"
+    }
+  },
+  "summary": {
+    "products": "Productos",
+    "clients": "Clientes",
+    "events": "Eventos",
+    "quotesByStage": "Cotizaciones por etapa",
+    "quotesEmpty": "Todavía no hay cotizaciones",
+    "loadError": "No se pudo cargar el resumen"
+  },
+  "featureList": {
+    "title": "Funciones de la organización",
+    "loadError": "No se pudieron cargar las funciones",
+    "kind": {
+      "module": "Módulo",
+      "addon": "Complemento"
+    },
+    "inactive": "Inactiva",
+    "inactiveHint": "Habilitada, pero sin efecto: venció o le falta un requisito.",
+    "requires": "Requiere: {{features}}",
+    "blockedBy": "La necesitan: {{features}}",
+    "switchLabel": "Habilitar {{feature}}",
+    "edit": "Editar condiciones",
+    "price": "{{amount}} / {{period}}",
+    "noPrice": "Sin precio",
+    "period": {
+      "monthly": "mes",
+      "yearly": "año"
+    },
+    "enabled": "Función habilitada",
+    "disabled": "Función deshabilitada"
+  },
+  "featureForm": {
+    "title": "Condiciones de {{feature}}",
+    "expiresOn": "Último día activo",
+    "expiresOnHint": "Vacío significa sin vencimiento.",
+    "price": "Precio",
+    "priceHint": "Importe en unidades principales, con dos decimales.",
+    "billingPeriod": "Periodo de cobro",
+    "billingPeriodPlaceholder": "Sin periodo",
+    "currency": "Moneda",
+    "currencyHint": "Código de 3 letras, por ejemplo USD.",
+    "periodMonthly": "Mensual",
+    "periodYearly": "Anual",
+    "save": "Guardar",
+    "unchanged": "No hay cambios para guardar",
+    "validation": {
+      "currencyInvalid": "La moneda debe tener 3 letras"
+    }
+  },
+  "catalog": {
+    "title": "Tipo de catálogo",
+    "description": "Define cómo se nombran los elementos que vende la organización.",
+    "current": "Tipo actual",
+    "confirmTitle": "¿Cambiar el tipo de catálogo?",
+    "confirmContent": "Los textos de la organización pasarán a hablar de {{kind}}.",
+    "confirmOk": "Cambiar"
+  },
+  "history": {
+    "title": "Historial",
+    "empty": "Todavía no hay actividad registrada",
+    "loadError": "No se pudo cargar el historial",
+    "by": "por {{actor}}",
+    "feature": {
+      "enabled": "Función habilitada",
+      "disabled": "Función deshabilitada",
+      "updated": "Función actualizada"
+    },
+    "access": {
+      "query": "Consulta a la organización",
+      "mutation": "Cambio hecho en la organización"
+    },
+    "audit": {
+      "organization": {
+        "create": "Organización creada",
+        "view": "Organización consultada"
+      },
+      "feature": {
+        "set": "Función configurada",
+        "unset": "Función deshabilitada"
+      },
+      "catalog": {
+        "set": "Tipo de catálogo cambiado"
+      }
+    }
+  }
+}

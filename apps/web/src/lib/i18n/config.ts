@@ -25,6 +25,7 @@ import esVocabulary from '@/locales/es/vocabulary.json';
 import esUnitsOfMeasure from '@/locales/es/unitsOfMeasure.json';
 import esChargeTypes from '@/locales/es/chargeTypes.json';
 import esProductCategories from '@/locales/es/productCategories.json';
+import esConsole from '@/locales/es/console.json';
 import enCommon from '@/locales/en/common.json';
 import enApi from '@/locales/en/api.json';
 import enAuth from '@/locales/en/auth.json';
@@ -48,6 +49,7 @@ import enVocabulary from '@/locales/en/vocabulary.json';
 import enUnitsOfMeasure from '@/locales/en/unitsOfMeasure.json';
 import enChargeTypes from '@/locales/en/chargeTypes.json';
 import enProductCategories from '@/locales/en/productCategories.json';
+import enConsole from '@/locales/en/console.json';
 
 export const locales = LOCALES;
 export type Locale = AppLocale;
@@ -79,6 +81,7 @@ i18n.use(initReactI18next).init({
       unitsOfMeasure: esUnitsOfMeasure,
       chargeTypes: esChargeTypes,
       productCategories: esProductCategories,
+      console: esConsole,
     },
     en: {
       common: enCommon,
@@ -104,6 +107,7 @@ i18n.use(initReactI18next).init({
       unitsOfMeasure: enUnitsOfMeasure,
       chargeTypes: enChargeTypes,
       productCategories: enProductCategories,
+      console: enConsole,
     },
   },
   lng: defaultLocale,
@@ -132,6 +136,7 @@ i18n.use(initReactI18next).init({
     'unitsOfMeasure',
     'chargeTypes',
     'productCategories',
+    'console',
   ],
   defaultNS: 'common',
   interpolation: { escapeValue: false },

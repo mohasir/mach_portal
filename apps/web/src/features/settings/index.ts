@@ -1,4 +1,5 @@
 export { SettingsPage } from './components/SettingsPage';
+export { shouldLoadTenantSettings } from './helpers';
 export { useConfig } from './hooks/useConfig';
 export { useLocationSettings } from './hooks/useLocationSettings';
 export { useQuoteStages } from './hooks/useQuoteStages';
