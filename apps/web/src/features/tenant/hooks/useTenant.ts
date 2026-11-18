@@ -20,17 +20,22 @@ export function useAllOrganizations(enabled: boolean) {
 // so the session must never be the source for it.
 export function useActiveTenant() {
   const trpc = useTRPC();
-  return useQuery({ ...trpc.tenant.active.queryOptions(), staleTime: 0 });
+  const { data: session } = useSession();
+  return useQuery({ ...trpc.tenant.active.queryOptions(), staleTime: 0, enabled: !!session });
 }
 
 // Shares the `tenant.active` cache without refetching on every mount: it is read by every
 // permission check, and the gate's own observer already keeps it revalidated.
+// Mounted app-wide (e.g. via the API error handler), so it must not run without a session: the
+// query throws UNAUTHORIZED.
 export function useActiveOrganizationId() {
   const trpc = useTRPC();
+  const { data: session } = useSession();
   const { data } = useQuery({
     ...trpc.tenant.active.queryOptions(),
     staleTime: 0,
     refetchOnMount: false,
+    enabled: !!session,
     select: (tenant) => tenant?.id,
   });
   return data;
