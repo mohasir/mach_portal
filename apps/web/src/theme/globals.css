@@ -163,6 +163,12 @@
     font-weight: 600;
   }
 
+  /* The theme's per-component controlHeight (40px) leaks into the shared --ant-control-height var,
+     which tooltips use as a min-height and which leaves empty space under one-line text. */
+  .ant-tooltip .ant-tooltip-container {
+    min-height: 0;
+  }
+
   /* Kanban column scrollbar (OverlayScrollbars): keep the handle translucent
      so the tinted column background still shows through it. */
   .pipeline-column-scrollbar .os-theme-dark {

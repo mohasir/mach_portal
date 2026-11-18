@@ -35,6 +35,8 @@ export const oraviCloudTheme: ThemeConfig = {
     colorBgBase: BRAND.bg,
     colorBgContainer: '#ffffff',
     colorBgElevated: '#ffffff',
+    // Derived from colorTextBase otherwise, which tints tooltips navy instead of AntD's neutral dark.
+    colorBgSpotlight: 'rgba(0, 0, 0, 0.85)',
 
     // Text
     colorTextBase: BRAND.text,
