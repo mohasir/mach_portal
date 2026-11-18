@@ -11,7 +11,9 @@ export function AuthLayoutContainer({ children }: { children: ReactNode }) {
       <Flex justify="center" align="center" className="min-h-full bg-primary/5">
         <WrapperCard className="w-full max-w-90 ">
           <Flex justify="center" className="h-16 my-6">
-            <Logo />
+            <div className="w-55">
+              <Logo />
+            </div>
           </Flex>
           {children}
         </WrapperCard>

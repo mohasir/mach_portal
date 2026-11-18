@@ -4,7 +4,6 @@ import { AppSidebar } from '@/components/shared/Sidebar';
 import { Topbar } from '@/components/shared/Topbar';
 import { useLayoutMode } from '@/lib/navigation';
 import { useLayoutStore } from '@/lib/stores/layout.store';
-import { WrapperCard } from '../shared/WrapperCard';
 
 export function AdminLayoutDesktop({ children }: { children: React.ReactNode }) {
   const layoutMode = useLayoutMode();
@@ -12,33 +11,28 @@ export function AdminLayoutDesktop({ children }: { children: React.ReactNode }) 
   const toggleSidebarCollapsed = useLayoutStore((s) => s.toggleSidebarCollapsed);
 
   return (
-    <Layout hasSider className="bg-background h-full overflow-hidden">
+    <Layout hasSider className="h-full overflow-hidden bg-white">
       <AppSidebar />
-      <Layout className="h-full overflow-hidden">
-        <Layout.Header className="flex h-16 items-center">
+      <Layout className="h-full overflow-hidden bg-white">
+        <Layout.Header className="flex h-16 items-center px-8">
           <Topbar onToggleSidebar={toggleSidebarCollapsed} />
         </Layout.Header>
 
         <Layout.Content
-          className={`flex-1 px-4 ${fillViewport ? 'overflow-hidden pb-0' : 'overflow-y-auto pb-6'}`}
+          className={`flex-1 px-8 ${fillViewport ? 'overflow-hidden pb-0' : 'overflow-y-auto pb-6'}`}
         >
           {layoutMode === 'bare' ? (
             <div>{children}</div>
           ) : (
-            <WrapperCard
+            <div
               className={
                 fillViewport
-                  ? 'flex h-full flex-col overflow-hidden rounded-t-2xl! rounded-b-none!'
-                  : 'min-h-full rounded-2xl!'
+                  ? 'flex h-full min-h-0 flex-col overflow-hidden pt-4 pb-0 md:pt-8'
+                  : 'min-h-full py-4 md:py-8'
               }
-              classNames={{
-                body: fillViewport
-                  ? 'flex min-h-0 flex-1 flex-col overflow-hidden pt-4 px-4 pb-0 md:pt-8 md:px-8'
-                  : 'p-4 md:p-8',
-              }}
             >
               {children}
-            </WrapperCard>
+            </div>
           )}
         </Layout.Content>
       </Layout>
