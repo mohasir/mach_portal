@@ -41,10 +41,10 @@ role the API connects with.
           - a table with tenant_id whose RLS is not enabled or not forced, that lacks its
             <table>_tenant_isolation policy (FOR ALL, USING and WITH CHECK comparing tenant_id
             with app.tenant_id) or that has another permissive policy;
-          - tenant_features, tenant_profile or tenant_feature_events whose RLS is not enabled or
-            not forced, tenant_features or tenant_profile with any policy other than
-            <table>_tenant_read (FOR SELECT, USING comparing tenant_id with app.tenant_id), or
-            tenant_feature_events with any policy;
+          - tenant_features, tenant_profile, tenant_feature_events or platform_audit_log whose RLS
+            is not enabled or not forced, tenant_features or tenant_profile with any policy other
+            than <table>_tenant_read (FOR SELECT, USING comparing tenant_id with app.tenant_id),
+            or tenant_feature_events or platform_audit_log with any policy;
           - tenant_features rows whose feature_key is a core feature or not in the catalog;
           - organizations with events active (enabled and not expired) without quotes active;
           - the DATABASE_APP_URL role is a superuser, has BYPASSRLS or CREATEROLE, or is a member

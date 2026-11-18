@@ -2,6 +2,7 @@ import { userInfo } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { TRPCError } from '@trpc/server';
 import { AppError } from '../../lib/errors';
+import { InvalidExpiryDateError, parseExpiryDate as parseExpiry } from '../../lib/features/expiry';
 import { BILLING_PERIODS, listFeatures, setFeature, unsetFeature } from '../../lib/features/admin';
 import { closePlatformDb, platformDb } from '../platform';
 
@@ -47,25 +48,16 @@ export type FeatureArgs = {
 const CLEAR = 'none';
 const NEVER = 'never';
 
-const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
-
-// `--expires` names the last active day; the stored instant is the start of the following day,
-// which is when the feature stops resolving as active.
+// `--expires` names the last active day.
 export function parseExpiryDate(value: string): Date {
-  const match = DATE_PATTERN.exec(value);
-  const invalid = () =>
-    new FeatureUsageError(`Invalid --expires "${value}": use a real date as YYYY-MM-DD.`);
-  if (!match) throw invalid();
-  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
-  const lastDay = new Date(Date.UTC(year, month - 1, day));
-  if (
-    lastDay.getUTCFullYear() !== year ||
-    lastDay.getUTCMonth() !== month - 1 ||
-    lastDay.getUTCDate() !== day
-  ) {
-    throw invalid();
+  try {
+    return parseExpiry(value);
+  } catch (error) {
+    if (error instanceof InvalidExpiryDateError) {
+      throw new FeatureUsageError(`Invalid --expires "${value}": use a real date as YYYY-MM-DD.`);
+    }
+    throw error;
   }
-  return new Date(Date.UTC(year, month - 1, day + 1));
 }
 
 const FLAGS_BY_COMMAND: Record<Command, readonly string[]> = {

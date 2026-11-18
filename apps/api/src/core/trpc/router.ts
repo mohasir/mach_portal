@@ -20,6 +20,7 @@ import { notificationsRouter } from '../../modules/notifications/notifications.r
 import { tenantRouter } from '../../modules/tenant/tenant.router';
 import { rolesRouter } from '../../modules/roles/roles.router';
 import { featuresRouter } from '../../modules/features/features.router';
+import { consoleRouter } from '../../modules/console/console.router';
 
 export const appRouter = router({
   tenant: tenantRouter,
@@ -43,6 +44,7 @@ export const appRouter = router({
   payments: paymentsRouter,
   templates: templatesRouter,
   notifications: notificationsRouter,
+  console: consoleRouter,
 });
 
 export type AppRouter = typeof appRouter;

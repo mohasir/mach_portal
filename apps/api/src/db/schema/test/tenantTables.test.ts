@@ -150,6 +150,7 @@ describe('tenant scoping of the schema', () => {
         'invitation',
         'quote_stages',
         'platform_access_log',
+        'platform_audit_log',
       ].sort(),
     );
   });
