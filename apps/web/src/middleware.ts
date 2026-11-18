@@ -2,8 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionCookie, getCookieCache } from 'better-auth/cookies';
 import {
   ACCOUNT_LOCKED_ROUTE,
-  DEFAULT_REDIRECT_HOME,
   DEFAULT_REDIRECT_LOGIN,
+  ROOT_ROUTE,
   isAuthRoute,
   isProtectedRoute,
 } from '@/lib/auth/navigation';
@@ -34,7 +34,7 @@ export async function middleware(req: NextRequest) {
   }
 
   if (isAuthRoute(pathname)) {
-    return NextResponse.redirect(new URL(DEFAULT_REDIRECT_HOME, req.url));
+    return NextResponse.redirect(new URL(ROOT_ROUTE, req.url));
   }
 
   const cachedUser = await readCachedUser(req);
@@ -44,7 +44,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL(ACCOUNT_LOCKED_ROUTE, req.url));
     }
   } else if (pathname === ACCOUNT_LOCKED_ROUTE && cachedUser !== undefined) {
-    return NextResponse.redirect(new URL(DEFAULT_REDIRECT_HOME, req.url));
+    return NextResponse.redirect(new URL(ROOT_ROUTE, req.url));
   }
 
   return NextResponse.next();

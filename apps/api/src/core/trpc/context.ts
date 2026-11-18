@@ -20,4 +20,6 @@ export async function createContext({ req, res }: CreateExpressContextOptions) {
 export type Context = Awaited<ReturnType<typeof createContext>> & {
   // Client the tenant chain opens its transactions on; the app pool when absent.
   database?: Database;
+  // Client the console procedures read and write on; the platform pool when absent.
+  platformDatabase?: Database;
 };

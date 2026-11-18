@@ -7,8 +7,9 @@ import type { Database } from './index';
 let client: postgres.Sql | undefined;
 let database: Database | undefined;
 
-// Created on first use: the API never connects as `platform`, so importing this module must not
-// require DATABASE_PLATFORM_URL. Only scripts that cross organizations call it.
+// Created lazily so that importing this module does not require DATABASE_PLATFORM_URL. The API
+// runtime does need the variable once a console request arrives: without it those requests fail
+// closed instead of falling back to the app role.
 export function platformDb(): Database {
   if (!database) {
     client = postgres(requireDatabaseUrl('DATABASE_PLATFORM_URL'), { max: 4, onnotice: () => {} });

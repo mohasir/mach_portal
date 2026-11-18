@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { and, eq, sql } from 'drizzle-orm';
 import { DEFAULT_UNIT_CODE } from '@repo/schemas';
 import { resetPlatformAccessSessions } from '../core/trpc/platformAccess';
+import { resetPlatformAuditSessions } from '../core/trpc/platformAudit';
 import { FEATURE_KEYS, isToggleable, type FeatureKey, type RoleType } from '@repo/guards';
 import { db, type Database } from '../db';
 import { tenantFeatures, unitsOfMeasure } from '../db/schema';
@@ -33,6 +34,7 @@ export async function resetDb(): Promise<void> {
   invalidateTenantCache();
   clearFeatureCache();
   resetPlatformAccessSessions();
+  resetPlatformAuditSessions();
   const tables = await tablesToTruncate();
   if (!tables) return;
   await testDb.execute(sql.raw(`TRUNCATE ${tables} RESTART IDENTITY CASCADE`));

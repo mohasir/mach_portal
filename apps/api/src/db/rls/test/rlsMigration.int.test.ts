@@ -100,7 +100,7 @@ describe('RLS migration', () => {
     }
   });
 
-  it('gives tenant_features and tenant_profile a single read policy and tenant_feature_events none', async () => {
+  it('gives tenant_features and tenant_profile a single read policy and tenant_feature_events and platform_audit_log none', async () => {
     const policies = await sql`
       SELECT tablename AS table, policyname AS policy, permissive, roles, cmd,
              qual, with_check AS check

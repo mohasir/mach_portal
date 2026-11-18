@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { broadcastSessionChange } from '@/features/tenant';
 import { signIn } from '@/lib/auth/client';
+import { ROOT_ROUTE } from '@/lib/auth/navigation';
 import { getLoginErrorKey } from '../helpers';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 
@@ -38,7 +39,7 @@ export function AuthPage() {
       qc.clear();
       broadcastSessionChange('login');
       message.success(t('signinSuccess'));
-      router.replace('/admin');
+      router.replace(ROOT_ROUTE);
     } catch (err) {
       const isNetwork = err instanceof TypeError && err.message.includes('fetch');
       message.error(isNetwork ? t('errors.network') : t('errors.unexpected'));

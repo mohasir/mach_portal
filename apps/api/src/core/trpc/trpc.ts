@@ -2,7 +2,10 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import { ZodError } from 'zod';
 import { can, type FeatureKey, type PermissionCheck } from '@repo/guards';
 import type { Context } from './context';
+import { eq } from 'drizzle-orm';
 import { db, type Database, type TenantRunner } from '../../db';
+import { platformDb } from '../../db/platform';
+import { user as userTable } from '../../db/schema';
 import { withTenantTx } from '../../db/rls/tenantTx';
 import { AppError, ErrorCodes } from '../../lib/errors';
 import { getTenantFeatures } from '../../lib/features/cache';
@@ -71,6 +74,38 @@ export const tenantProcedure = authedProcedure.use(({ ctx, next }) => {
     throw new TRPCError({ code: 'NOT_FOUND', cause: new AppError(ErrorCodes.tenant.NOT_FOUND) });
   }
   return next({ ctx: { ...ctx, tenant: ctx.tenant } });
+});
+
+// The flag is read from the database on every call, never from the session: a session cached
+// before the flag was revoked would otherwise keep console access until it expires. The platform
+// client reads the identity tables directly, so a console caller needs no active organization.
+export const platformProcedure = authedProcedure.use(async ({ ctx, next }) => {
+  const database = ctx.platformDatabase ?? platformDb();
+  const [row] = await database
+    .select({
+      id: userTable.id,
+      email: userTable.email,
+      name: userTable.name,
+      isPlatformAdmin: userTable.isPlatformAdmin,
+      mustChangePassword: userTable.mustChangePassword,
+    })
+    .from(userTable)
+    .where(eq(userTable.id, ctx.session.user.id));
+  // Generic on purpose: nothing may hint that the console exists to anyone else.
+  if (!row?.isPlatformAdmin) throw new TRPCError({ code: 'FORBIDDEN' });
+  if (row.mustChangePassword) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      cause: new AppError(ErrorCodes.user.MUST_CHANGE_PASSWORD),
+    });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      platformDb: database,
+      platformUser: { id: row.id, email: row.email, name: row.name },
+    },
+  });
 });
 
 type TenantChainCtx = Context & {

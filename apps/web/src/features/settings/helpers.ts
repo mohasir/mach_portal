@@ -105,3 +105,15 @@ export function visibleSettingsSections(input: SettingsSectionGateInput) {
     quotePdfTemplate: input.quotesActive && input.canQuotePdfTemplate,
   };
 }
+
+// The config and preference queries are tenant-scoped: fired without an active organization they
+// fail with a tenant error, which the app answers by sending the user to the organization picker.
+export const shouldLoadTenantSettings = ({
+  hasSession,
+  tenantResolved,
+  hasActiveTenant,
+}: {
+  hasSession: boolean;
+  tenantResolved: boolean;
+  hasActiveTenant: boolean;
+}): boolean => hasSession && tenantResolved && hasActiveTenant;

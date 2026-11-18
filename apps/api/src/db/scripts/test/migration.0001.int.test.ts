@@ -314,6 +314,7 @@ describe('0001 on a legacy database with data', () => {
       role_audit_log: 0,
       tenant_features: BACKFILLED_FEATURES.length,
       tenant_feature_events: 0,
+      platform_audit_log: 0,
       tenant_profile: 1,
       units_of_measure: SYSTEM_UNITS.length,
       product_categories: 0,
@@ -535,10 +536,10 @@ describe('0001 backfill edge cases', () => {
     const post = await verifyMultitenant(db.url);
     // Migrated only up to 0003, so the RLS checks (0005), the feature tables (0006) and the
     // later tables (units_of_measure, 0009; product_categories, 0010; product_images, 0011;
-    // charge_types and quote_charges, 0015; tenant_location and its areas, 0016) legitimately fail
+    // charge_types and quote_charges, 0015; tenant_location and its areas, 0016; platform_audit_log, 0017) legitimately fail
     // here.
     const rlsProblem =
-      /row level security|policy|^tenant_(features?|profile)\w*: missing table$|^(units_of_measure|product_categories|product_images|charge_types|quote_charges|tenant_location|tenant_location_areas): missing table/;
+      /row level security|policy|^tenant_(features?|profile)\w*: missing table$|^(units_of_measure|product_categories|product_images|charge_types|quote_charges|tenant_location|tenant_location_areas|platform_audit_log): missing table/;
     expect(post.problems.filter((p) => !rlsProblem.test(p))).toEqual([
       'member: 2 row(s) without role_id',
       `organization: 1 without an owner role that has a member (${SLUG})`,

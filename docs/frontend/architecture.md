@@ -660,6 +660,17 @@ El catálogo de features (`FEATURES`, `FeatureKey`, `isToggleable`) vive en `@re
 - **La web no es la barrera:** ocultar es UX; la API rechaza las mutaciones con `FEATURE_NOT_ENABLED` (regla "ocultar y conservar", backend §13.4).
 - Los nombres de las features salen de `features.<key>` en `locales/{es,en}/common.json`.
 
+### 9.5 Consola de plataforma (`/console`)
+
+Feature `features/console` (páginas finas en `app/console/`). Backend: `docs/backend/architecture.md` §15. Es un segmento **fuera de `admin`**: no tiene `TenantGate` ni exige una organización activa, porque un administrador de plataforma entra sin membresía.
+
+- **`ConsoleGuard`** (en `app/console/layout.tsx`) es solo comodidad: con la sesión resuelta y sin `isPlatformAdmin` (`useIsPlatformAdmin`) muestra `NotFound`, sin revelar que la consola existe (decisión pura `resolveConsoleAccess`, en `features/console/helpers.ts`). **La barrera real es la API**: `platformProcedure` relee el flag de la base en cada llamada.
+- **Destino tras el login:** lo decide `/` (`app/page.tsx` → `HomeRedirect`, `components/shared/`) con `resolveHomeTarget` y `homeRouteFor` (`lib/auth/navigation.ts`): administrador de plataforma → `CONSOLE_ROUTE` (`/console`); el resto → `/admin`. **Sin sesión → `/admin`, no `/login`**: el middleware devuelve `/login` a `/` mientras exista una cookie de sesión (aunque esté vencida), y eso haría un bucle `/` ↔ `/login`; `AuthProvider` en la ruta protegida cierra la sesión vencida y redirige al login (o muestra el reintento si falló el servidor).
+- **Middleware:** las rutas de auth con sesión y `/account-locked` sin bloqueo redirigen a `ROOT_ROUTE` (`/`), no a `/admin`, para que `HomeRedirect` elija el destino. `/console` está en `PROTECTED_ROUTES`.
+- **Navegación:** `ConsoleLayout` usa su propio encabezado (menú horizontal de AntD, "Entrar a una organización" hacia `/select-organization`); el `UserMenu` muestra "Volver a la consola" a un administrador de plataforma cuando no está en `/console`.
+- **Datos:** hooks tRPC propios en `features/console/hooks/` sobre `console.*`; `useInvalidateConsole` invalida lo que cambia una mutación. Listado con `DataTable` y tarjeta en móvil (§4).
+- **i18n:** namespace `console` (`locales/{es,en}/console.json`, registrado en `lib/i18n/config.ts`). Los errores de validación del schema compartido llegan como claves `console.validation.*`.
+
 ---
 
 ## 10. Internacionalización (i18n)

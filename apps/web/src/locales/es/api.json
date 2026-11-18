@@ -98,6 +98,24 @@
     "LOCATION_SETTINGS_AREA_BEYOND_DEPTH": "Las zonas deben estar dentro de la precisión elegida",
     "QUOTE_INVALID_LOCATION": "La ubicación no es válida: elegí una opción de la lista",
     "QUOTE_LOCATION_NOT_COVERED": "La ubicación está fuera de las zonas que cubre la organización",
-    "QUOTE_LOCATION_INCOMPLETE": "Completá los datos de ubicación que pide la organización para guardar la cotización"
+    "QUOTE_LOCATION_INCOMPLETE": "Completá los datos de ubicación que pide la organización para guardar la cotización",
+    "TENANT_SLUG_TAKEN": "Ese identificador ya está en uso. Si acabás de intentar crear la organización, puede que ya exista: revisá el listado",
+    "TENANT_INVALID_SLUG": "El identificador no es válido: usá minúsculas, números y guiones",
+    "TENANT_INVALID_INPUT": "Los datos de la organización no son válidos",
+    "TENANT_UNKNOWN_CATALOG_KIND": "El tipo de catálogo no existe",
+    "FEATURE_UNKNOWN_KEY": "La función no existe",
+    "FEATURE_NOT_TOGGLEABLE": "Esta función no se puede habilitar ni deshabilitar",
+    "FEATURE_MISSING_DEPENDENCY": "No se puede habilitar: falta una función requerida activa",
+    "FEATURE_HAS_DEPENDENTS": "No se puede deshabilitar: otras funciones activas la necesitan"
+  },
+  "console": {
+    "validation": {
+      "slugRequired": "Ingresá el identificador",
+      "nameRequired": "Ingresá el nombre",
+      "adminNameRequired": "Ingresá el nombre del administrador",
+      "emailInvalid": "Email inválido",
+      "expiresOnInvalid": "La fecha de vencimiento no es válida",
+      "currencyInvalid": "La moneda debe tener 3 letras"
+    }
   }
 }
