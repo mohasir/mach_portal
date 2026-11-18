@@ -4,7 +4,7 @@ import { Button, InputNumber, Select, Tag } from 'antd';
 import { Eye, ListChecks, Minus, Plus, SquarePen, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ProductThumb, type Product } from '@/features/catalog';
-import { BottomSheet } from '@/components/shared/BottomSheet';
+import { WrapperDialog } from '@/components/shared/WrapperDialog';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { IconButton } from '@/components/shared/IconButton';
 import { MoneyInput } from '@/components/shared/Inputs/MoneyInput';
@@ -220,7 +220,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
       </div>
 
       {mode === 'edit' && (
-        <BottomSheet
+        <WrapperDialog
           open={editOpen}
           onClose={() => setEditOpen(false)}
           title={t('builder.lines.editTitle')}
@@ -279,7 +279,7 @@ export function QuickLineCard(props: QuickLineCardProps) {
               {t('builder.lines.editDone')}
             </Button>
           </div>
-        </BottomSheet>
+        </WrapperDialog>
       )}
     </div>
   );

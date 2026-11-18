@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { UpdateOptionGroupInput } from '@repo/schemas';
-import { BottomSheet } from '@/components/shared/BottomSheet';
+import { WrapperDialog } from '@/components/shared/WrapperDialog';
 import { useActionConfirm } from '@/components/shared/ConfirmDialogs';
 import { useCan } from '@/lib/auth/useCan';
 import { useOptionGroupMutations } from '../hooks/useOptionGroupMutations';
@@ -62,7 +62,7 @@ export function OptionGroupFormModal({
 
   return (
     <>
-      <BottomSheet
+      <WrapperDialog
         open={open}
         onClose={onClose}
         title={t(group ? 'optionGroup.edit.title' : 'optionGroup.create.title')}
@@ -105,7 +105,7 @@ export function OptionGroupFormModal({
             />
           </div>
         )}
-      </BottomSheet>
+      </WrapperDialog>
       {confirmContextHolder}
     </>
   );

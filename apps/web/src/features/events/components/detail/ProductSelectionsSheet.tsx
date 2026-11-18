@@ -4,7 +4,7 @@ import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { EventLineSelectionInput } from '@repo/schemas';
 import type { Product } from '@/features/catalog';
-import { BottomSheet } from '@/components/shared/BottomSheet';
+import { WrapperDialog } from '@/components/shared/WrapperDialog';
 import { OptionGroupSelectList } from '@/features/quotes';
 import { useUpdateEventSelections } from '../../hooks/useEventSelections';
 import type { EventDetail } from '../../types';
@@ -56,7 +56,7 @@ export function ProductSelectionsSheet({
   };
 
   return (
-    <BottomSheet
+    <WrapperDialog
       open={open}
       onClose={onClose}
       title={t('detail.selections.sheetTitle')}
@@ -89,6 +89,6 @@ export function ProductSelectionsSheet({
           ))}
         </div>
       </div>
-    </BottomSheet>
+    </WrapperDialog>
   );
 }

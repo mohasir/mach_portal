@@ -4,7 +4,7 @@ import { App } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useStaffAvailability } from '@/features/staff';
 import { AvatarUser } from '@/components/shared/AvatarUser';
-import { BottomSheet } from '@/components/shared/BottomSheet';
+import { WrapperDialog } from '@/components/shared/WrapperDialog';
 import { useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { WrapperAssign } from '@/components/shared/WrapperAssign';
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop';
@@ -68,7 +68,7 @@ export function AssignStaffSheet({
 
   return (
     <>
-      <BottomSheet open={open} onClose={onClose} title={t('assignStaff.title')}>
+      <WrapperDialog open={open} onClose={onClose} title={t('assignStaff.title')}>
         <WrapperAssign
           searchValue={search}
           onSearchChange={setSearch}
@@ -98,7 +98,7 @@ export function AssignStaffSheet({
           otherLabel={t('assignStaff.otherLabel')}
           emptyDescription={t('assignStaff.empty')}
         />
-      </BottomSheet>
+      </WrapperDialog>
       {deleteContextHolder}
     </>
   );

@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import { paymentMethodSchema, type PaymentMethod } from '@repo/schemas';
 import { AttachmentUploadModal } from '@/components/shared/Attachment';
-import { BottomSheet } from '@/components/shared/BottomSheet';
+import { WrapperDialog } from '@/components/shared/WrapperDialog';
 import { useDeleteConfirm } from '@/components/shared/ConfirmDialogs';
 import { FieldLabel } from '@/components/shared/Inputs/FieldLabel';
 import { IconButton } from '@/components/shared/IconButton';
@@ -238,7 +238,7 @@ export function EventPayments({ event }: EventPaymentsProps) {
         )}
       </WrapperCard>
 
-      <BottomSheet
+      <WrapperDialog
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
         title={t('detail.payments.register.title')}
@@ -329,7 +329,7 @@ export function EventPayments({ event }: EventPaymentsProps) {
             </div>
           </Form>
         </div>
-      </BottomSheet>
+      </WrapperDialog>
 
       <AttachmentUploadModal
         open={!!uploadPaymentId}

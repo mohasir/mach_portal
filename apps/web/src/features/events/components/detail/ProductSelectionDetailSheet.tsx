@@ -1,7 +1,7 @@
 'use client';
 import { useTranslation } from 'react-i18next';
 import type { Product } from '@/features/catalog';
-import { BottomSheet } from '@/components/shared/BottomSheet';
+import { WrapperDialog } from '@/components/shared/WrapperDialog';
 import { OptionGroupSelectList } from '@/features/quotes';
 import type { EventDetail } from '../../types';
 import { ProductSheetHeader } from './ProductSheetHeader';
@@ -28,7 +28,7 @@ export function ProductSelectionDetailSheet({
   });
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={t('detail.selections.detailTitle')}>
+    <WrapperDialog open={open} onClose={onClose} title={t('detail.selections.detailTitle')}>
       <div className="flex flex-col gap-4 px-4 pb-8">
         <ProductSheetHeader
           product={product}
@@ -45,6 +45,6 @@ export function ProductSelectionDetailSheet({
           />
         ))}
       </div>
-    </BottomSheet>
+    </WrapperDialog>
   );
 }

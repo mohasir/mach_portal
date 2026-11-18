@@ -4,7 +4,7 @@ import { Button, Divider } from 'antd';
 import { Check, SquarePen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toDisplayPercent } from '@/lib/utils/percent';
-import { BottomSheet } from '@/components/shared/BottomSheet';
+import { WrapperDialog } from '@/components/shared/WrapperDialog';
 import { IconBadge } from '@/components/shared/IconBadge';
 import { useMoneyFormatter } from '@/lib/hooks/useMoneyFormatter';
 import { chargeRowLabel, type BuilderCharge } from '../chargeHelpers';
@@ -99,7 +99,7 @@ export function QuoteSummary({
         <span>{money(depositAmount)}</span>
       </div>
       {onChangeDepositRate && (
-        <BottomSheet
+        <WrapperDialog
           open={depositSheetOpen}
           onClose={() => setDepositSheetOpen(false)}
           title={t('builder.pricing.editDepositTitle')}
@@ -124,7 +124,7 @@ export function QuoteSummary({
               );
             })}
           </div>
-        </BottomSheet>
+        </WrapperDialog>
       )}
     </div>
   );

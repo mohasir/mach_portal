@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUsersList } from '@/features/users';
 import { AvatarUser } from '@/components/shared/AvatarUser';
-import { BottomSheet } from '@/components/shared/BottomSheet';
+import { WrapperDialog } from '@/components/shared/WrapperDialog';
 import { WrapperAssign } from '@/components/shared/WrapperAssign';
 import { useAssignQuote } from '../../hooks/useQuotes';
 
@@ -52,7 +52,7 @@ export function AssignQuoteSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={t('pipeline.assignQuote.title')}>
+    <WrapperDialog open={open} onClose={onClose} title={t('pipeline.assignQuote.title')}>
       <WrapperAssign
         searchValue={search}
         onSearchChange={setSearch}
@@ -73,6 +73,6 @@ export function AssignQuoteSheet({
         otherLabel={t('pipeline.assignQuote.otherLabel')}
         emptyDescription={t('pipeline.assignQuote.empty')}
       />
-    </BottomSheet>
+    </WrapperDialog>
   );
 }

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import { ACTIONS, RESOURCES } from '@repo/guards';
 import type { UpdateOptionInput } from '@repo/schemas';
-import { BottomSheet } from '@/components/shared/BottomSheet';
+import { WrapperDialog } from '@/components/shared/WrapperDialog';
 import { useActionConfirm } from '@/components/shared/ConfirmDialogs';
 import { useCan } from '@/lib/auth/useCan';
 import { useOptionMutations } from '../hooks/useOptionMutations';
@@ -56,7 +56,7 @@ export function OptionFormModal({ optionGroupId, option, open, onClose }: Option
 
   return (
     <>
-      <BottomSheet
+      <WrapperDialog
         open={open}
         onClose={onClose}
         title={t(option ? 'option.edit.title' : 'option.create.title')}
@@ -95,7 +95,7 @@ export function OptionFormModal({ optionGroupId, option, open, onClose }: Option
             />
           </div>
         )}
-      </BottomSheet>
+      </WrapperDialog>
       {confirmContextHolder}
     </>
   );
