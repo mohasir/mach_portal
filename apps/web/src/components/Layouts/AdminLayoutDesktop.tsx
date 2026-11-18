@@ -13,7 +13,7 @@ export function AdminLayoutDesktop({ children }: { children: React.ReactNode }) 
 
   const content =
     layoutMode === 'bare' ? (
-      <div>{children}</div>
+      <div className="pt-4 md:pt-8">{children}</div>
     ) : (
       <div
         className={
