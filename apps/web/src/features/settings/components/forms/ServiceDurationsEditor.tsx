@@ -67,7 +67,7 @@ export function ServiceDurationsEditor({
       />
       <Input.TextArea
         autoSize={{ minRows: 1 }}
-        maxLength={200}
+        maxLength={500}
         placeholder={t('quotePdfTemplate.serviceDurationPlaceholder')}
         value={draft.duration}
         onChange={(e) => setDraft((d) => ({ ...d, duration: e.target.value }))}
