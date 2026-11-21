@@ -18,7 +18,7 @@ export function TermsAndConditionsEditor({
   value = [],
   onChange,
   disabled,
-  maxLength = 300,
+  maxLength = 500,
 }: TermsAndConditionsEditorProps) {
   const { t } = useTranslation('settings');
   const { t: tc } = useTranslation('common');
